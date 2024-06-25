@@ -318,6 +318,7 @@ async def back_from_decline_withdraw_order(
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
+        return ConversationHandler.END
 
 
 check_payment_handler = CallbackQueryHandler(

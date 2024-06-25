@@ -66,6 +66,7 @@ async def send_requested_order(
 
 async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        context.user_data['requested'] = False
         if context.user_data.get("requested", False):
             await update.callback_query.answer("يمكنك معالجة طلب واحد في المرة❗️")
             return ConversationHandler.END
