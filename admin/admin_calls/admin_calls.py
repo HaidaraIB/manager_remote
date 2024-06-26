@@ -19,7 +19,10 @@ from common.common import (
     build_methods_keyboard,
     payment_method_pattern,
     request_buttons,
-    back_button
+)
+
+from common.back_to_home_page import (
+    back_to_admin_home_page_button
 )
 
 from common.back_to_home_page import (
@@ -58,7 +61,7 @@ async def update_usdt_to_syp(update: Update, context: ContextTypes.DEFAULT_TYPE)
             context.bot_data["data"]["usdt_to_syp"] = 14200
         await update.callback_query.edit_message_text(
             text=f"أرسل سعر USDT مقابل الليرة السورية الجديد، السعر الحالي: <b>{context.bot_data['data']['usdt_to_syp']} SYP</b>",
-            reply_markup=InlineKeyboardMarkup(back_button),
+            reply_markup=InlineKeyboardMarkup(back_to_admin_home_page_button),
         )
         return NEW_USDT_TO_SYP
 
@@ -112,7 +115,7 @@ async def turn_payment_method_on_or_off(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         payment_methods_keyboard = build_methods_keyboard()
-        payment_methods_keyboard.append(back_button[0])
+        payment_methods_keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳.",
             reply_markup=InlineKeyboardMarkup(payment_methods_keyboard),
@@ -135,7 +138,7 @@ async def payment_method_to_turn_on_or_off(
             await update.callback_query.answer("تم تشغيل وسيلة الدفع✅")
 
         payment_methods_keyboard = build_methods_keyboard()
-        payment_methods_keyboard.append(back_button[0])
+        payment_methods_keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳.",
             reply_markup=InlineKeyboardMarkup(payment_methods_keyboard),
@@ -163,7 +166,7 @@ async def turn_user_calls_on_or_off(update: Update, context: ContextTypes.DEFAUL
             ],
             [InlineKeyboardButton(text="شراء USDT", callback_data="abuy usdt")],
             [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="amake complaint")],
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="اختر الزر🔘", reply_markup=InlineKeyboardMarkup(keyboard)
@@ -251,7 +254,7 @@ async def user_call_to_turn_on_or_off(
             ],
             [InlineKeyboardButton(text="شراء USDT", callback_data="abuy usdt")],
             [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="amake complaint")],
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="اختر الزر🔘", reply_markup=InlineKeyboardMarkup(keyboard)

@@ -17,7 +17,10 @@ from telegram.constants import (
 
 from common.common import (
     build_admin_keyboard,
-    back_button,
+)
+
+from common.back_to_home_page import (
+    back_to_admin_home_page_button
 )
 
 from common.back_to_home_page import back_to_admin_home_page_handler
@@ -46,7 +49,7 @@ async def admin_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="عرض آيديات الآدمنز الحاليين🆔", callback_data="show admins"
                 )
             ],
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="إعدادات الآدمن🪄",
@@ -144,7 +147,7 @@ async def back_to_admin_settings(update: Update, context: ContextTypes.DEFAULT_T
                     text="عرض آيديات الآدمنز الحاليين🆔", callback_data="show admins"
                 )
             ],
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="هل تريد:", reply_markup=InlineKeyboardMarkup(admin_settings_keyboard)

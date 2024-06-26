@@ -23,8 +23,11 @@ from common.common import (
     build_user_keyboard,
     build_admin_keyboard,
     build_worker_keyboard,
-    check_if_user_member,
     check_hidden_keyboard,
+)
+
+from common.force_join import (
+    check_if_user_member
 )
 
 from custom_filters.Admin import Admin
