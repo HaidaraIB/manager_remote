@@ -3,7 +3,6 @@ from telegram import (
     Chat,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    PhotoSize,
 )
 
 from telegram.ext import (
@@ -14,20 +13,19 @@ from telegram.ext import (
     filters,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from custom_filters.User import User
 
-import asyncio
-
-from common import (
+from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
-    check_if_user_member,
     payment_method_pattern,
+    build_back_button,
+)
+
+from common.force_join import check_if_user_member_decorator
+from common.back_to_home_page import (
     back_to_user_home_page_handler,
+    back_to_user_home_page_button,
 )
 
 from start import start_command
@@ -38,44 +36,12 @@ from DB import DB
     ACCOUNT_NUMBER_DEPOSIT,
     DEPOSIT_METHOD,
     SEND_TO_CHECK_DEPOSIT,
-) = range(12, 16)
-
-back_button = [
-    [
-        InlineKeyboardButton(
-            text="العودة إلى القائمة الرئيسية🔝", callback_data="back to user home page"
-        )
-    ]
-]
+) = range(4)
 
 
-async def send_photo_after(
-    send_after: int,
-    context: ContextTypes.DEFAULT_TYPE,
-    approval_screenshot: PhotoSize,
-    user_info: str,
-    check_button: list[list[InlineKeyboardButton]],
-    serial: int,
-):
-    await asyncio.sleep(send_after)
-
-    message = await context.bot.send_photo(
-        chat_id=context.bot_data["data"]["deposit_orders_group"],
-        photo=approval_screenshot,
-        caption=user_info,
-        reply_markup=InlineKeyboardMarkup(check_button),
-    )
-
-    await DB.add_deposit_pending_check_message_id(serial=serial, message_id=message.id)
-
-
+@check_if_user_member_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        is_user_member = await check_if_user_member(update=update, context=context)
-
-        if not is_user_member:
-            return ConversationHandler.END
-
         user = DB.get_user(user_id=update.effective_user.id)
         if not user:
             new_user = update.effective_user
@@ -89,7 +55,7 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.callback_query.edit_message_text(
             text="أرسل المبلغ الذي تريد إيداعه💵",
-            reply_markup=InlineKeyboardMarkup(back_button),
+            reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
         )
         return DEPOSIT_AMOUNT
 
@@ -98,12 +64,8 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         context.user_data["deposit_amount"] = int(update.message.text)
         back_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to deposit amount"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to deposit amount"),
+            back_to_user_home_page_button[0],
         ]
         await update.message.reply_text(
             text="أرسل رقم حسابك🔢", reply_markup=InlineKeyboardMarkup(back_buttons)
@@ -118,14 +80,8 @@ async def account_number_deposit(update: Update, context: ContextTypes.DEFAULT_T
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         context.user_data["account_number_deposit"] = update.message.text
         deposit_methods = build_methods_keyboard()
-        deposit_methods.append(
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to account number deposit"
-                )
-            ]
-        )
-        deposit_methods.append(back_button[0])
+        deposit_methods.append(build_back_button("back to account number deposit"))
+        deposit_methods.append(back_to_user_home_page_button[0])
         await update.message.reply_text(
             text="اختر وسيلة الدفع💳",
             reply_markup=InlineKeyboardMarkup(deposit_methods),
@@ -138,12 +94,8 @@ async def back_to_account_number_deposit(
 ):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         back_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to deposti amount"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to deposti amount"),
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="أرسل رقم حسابك.", reply_markup=InlineKeyboardMarkup(back_buttons)
@@ -160,12 +112,8 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         context.user_data["deposit_method"] = data
         back_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to deposit method"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to deposit method"),
+            back_to_user_home_page_button[0],
         ]
         text = (
             f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
@@ -185,14 +133,8 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def back_to_deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         deposit_methods = build_methods_keyboard()
-        deposit_methods.append(
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to account number deposit"
-                )
-            ]
-        )
-        deposit_methods.append(back_button[0])
+        deposit_methods.append(build_back_button("back to account number deposit"))
+        deposit_methods.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳",
             reply_markup=InlineKeyboardMarkup(deposit_methods),
@@ -221,17 +163,8 @@ Serial: <code>{serial}</code>
 
 <b>ملاحظة: تأكد من تطابق المبلغ في الرسالة مع الذي في لقطة الشاشة لأن ما سيضاف في حالة التأكيد هو الذي في الرسالة.</b>"""
 
-        callback_data_dict = {
-            "name": "check deposit",
-            "amount": context.user_data["deposit_amount"],
-            "method": context.user_data["deposit_method"],
-            "user_id": update.effective_user.id,
-            "acc_number": context.user_data["account_number_deposit"],
-            "serial": serial,
-        }
-
         check_button = [
-            [InlineKeyboardButton(text="التحقق☑️", callback_data=callback_data_dict)],
+            [InlineKeyboardButton(text="التحقق☑️", callback_data=f"check_deposit_{serial}")],
         ]
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["deposit_orders_group"],
@@ -260,10 +193,10 @@ deposit_handler = ConversationHandler(
         ],
         ACCOUNT_NUMBER_DEPOSIT: [
             MessageHandler(
-                filters=filters.Regex(".*") & ~filters.COMMAND,
+                filters=filters.Regex("^\d+$"),
                 callback=account_number_deposit,
             )
-        ],  # TODO add a regex
+        ],
         DEPOSIT_METHOD: [CallbackQueryHandler(deposit_method, payment_method_pattern)],
         SEND_TO_CHECK_DEPOSIT: [
             MessageHandler(filters=filters.PHOTO, callback=send_to_check_deposit)
@@ -278,6 +211,6 @@ deposit_handler = ConversationHandler(
             back_to_account_number_deposit, "^back to account number deposit$"
         ),
     ],
-    name='deposit_handler',
+    name="deposit_handler",
     persistent=True,
 )

@@ -14,25 +14,21 @@ from telegram.ext import (
     filters,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from custom_filters.User import User
 
-from common import (
+from common.common import (
     build_user_keyboard,
     build_complaint_keyboard,
-    back_to_user_home_page_handler
 )
 
-CORRECT_RETURNED_WITHDRAW = 1
+from common.back_to_home_page import back_to_user_home_page_handler
 
-CORRECT_RETURNED_DEPOSIT = 0
-
-CORRECT_RETURNED_BUY_USDT = 61
-
-CORRECT_RETURNED_COMPLAINT = 89
+(
+    CORRECT_RETURNED_WITHDRAW,
+    CORRECT_RETURNED_DEPOSIT,
+    CORRECT_RETURNED_BUY_USDT,
+    CORRECT_RETURNED_COMPLAINT,
+) = range(4)
 
 
 async def reply_to_returned_complaint(
@@ -87,7 +83,7 @@ async def correct_returned_complaint(
         data["text"] = "\n".join(text_list)
 
         chat_id = (
-            data['op']["worker_id"]
+            data["op"]["worker_id"]
             if data["from_worker"]
             else context.bot_data["data"]["complaints_group"]
         )
@@ -204,7 +200,7 @@ async def handle_returned_deposit(update: Update, context: ContextTypes.DEFAULT_
             update.callback_query.data[1]
         )
         context.user_data["effective_photo"] = update.callback_query.message.photo[-1]
-        context.user_data["returned_data"] = update.callback_query.data[3]
+        context.user_data["returned_order_serial"] = update.callback_query.data[3]
         return CORRECT_RETURNED_DEPOSIT
 
 
@@ -213,22 +209,16 @@ async def correct_returned_deposit(update: Update, context: ContextTypes.DEFAULT
         context.user_data["effective_deposit_details"] += (
             "<b>" + "\n\nطلب معاد، المرفقات:\n\n" + update.message.text + "</b>"
         )
-        verify_button_callback_data = {
-            **context.user_data["returned_data"],
-            "name": "verify deposit order",
-        }
-        verify_button = [
-            [
-                InlineKeyboardButton(
-                    text="قبول الطلب✅", callback_data=verify_button_callback_data
-                )
-            ]
-        ]
         await context.bot.send_photo(
             chat_id=context.user_data["return_to_chat_id_deposit"],
             photo=context.user_data["effective_photo"],
             caption=context.user_data["effective_deposit_details"],
-            reply_markup=InlineKeyboardMarkup(verify_button),
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="قبول الطلب✅",
+                    callback_data=f"verify_deposit_order_{context.user_data["returned_order_serial"]}"
+                )
+            ),
         )
 
         await update.message.reply_text(
@@ -338,13 +328,11 @@ handle_returned_buy_usdt_handler = ConversationHandler(
 )
 
 
-
 reply_to_returned_complaint_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             reply_to_returned_complaint,
-            lambda d: isinstance(d, dict)
-            and d["name"] == "user reply to complaint",
+            lambda d: isinstance(d, dict) and d["name"] == "user reply to complaint",
         )
     ],
     states={

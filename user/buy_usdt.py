@@ -13,23 +13,23 @@ from telegram.ext import (
     filters,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from custom_filters.User import User
 
-from common import (
+from common.common import (
     build_user_keyboard,
-    check_if_user_member,
     payment_method_pattern,
-    back_to_user_home_page_handler,
+)
+
+from common.force_join import (
+    check_if_user_member_decorator
+)
+from common.back_to_home_page import (
+    back_to_user_home_page_handler
 )
 
 from start import start_command
 
 from DB import DB
-import asyncio
 
 (
     USDT_TO_BUY_AMOUNT,
@@ -39,7 +39,7 @@ import asyncio
     CASH_CODE,
     BANK_ACCOUNT_NAME_BUY_USDT,
     BUY_USDT_CHECK,
-) = range(53, 60)
+) = range(7)
 
 back_button = [
     [
@@ -49,32 +49,9 @@ back_button = [
     ]
 ]
 
-
-async def send_photo_after(
-    send_after: int,
-    check_button: list[list[InlineKeyboardButton]],
-    user_info: str,
-    serial: int,
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-):
-    await asyncio.sleep(send_after)
-    message = await context.bot.send_photo(
-        chat_id=context.bot_data["data"]["buy_usdt_orders_group"],
-        photo=update.message.photo[-1],
-        caption=user_info,
-        reply_markup=InlineKeyboardMarkup(check_button),
-    )
-    await DB.add_buy_usdt_pending_check_message_id(serial=serial, message_id=message.id)
-
-
+@check_if_user_member_decorator
 async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        is_user_member = await check_if_user_member(update=update, context=context)
-
-        if not is_user_member:
-            return ConversationHandler.END
-
         if not context.bot_data["data"]["user_calls"]["buy_usdt"]:
             await update.callback_query.answer("شراء USDT متوقف حالياً❗️")
             return ConversationHandler.END

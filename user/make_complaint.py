@@ -20,15 +20,19 @@ from telegram.ext import (
 )
 
 
-from pyrogram.errors.exceptions.flood_420 import FloodWait
 from pyrogram.types import Message
-import asyncio
 
-from common import (
-    check_if_user_member,
+from common.common import (
     build_user_keyboard,
-    back_to_user_home_page_handler,
 )
+
+from common.force_join import (
+    check_if_user_member_decorator
+)
+from common.back_to_home_page import (
+    back_to_user_home_page_handler
+)
+
 from start import start_command
 
 from custom_filters.User import User
@@ -237,14 +241,9 @@ async def handle_complaint_about(
     return True
 
 
+@check_if_user_member_decorator
 async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-
-        is_user_member = await check_if_user_member(update=update, context=context)
-
-        if not is_user_member:
-            return ConversationHandler.END
-
         if not context.bot_data["data"]["user_calls"]["make_complaint"]:
             await update.callback_query.answer("قسم الشكاوي متوقف حالياً❗️")
             return ConversationHandler.END

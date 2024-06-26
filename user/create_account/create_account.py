@@ -13,26 +13,23 @@ from telegram.ext import (
     filters,
 )
 
-from common import (
+from common.common import (
     build_user_keyboard,
-    check_if_user_member,
+)
+from common.force_join import (
+    check_if_user_member_decorator
 )
 
 from DB import DB
-import asyncio
 
 from custom_filters.Account import Account
 
 FULL_NAME, NATIONAL_NUMBER = range(2)
 DECLINE_REASON = 18
 
-
+@check_if_user_member_decorator
 async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        is_user_member = await check_if_user_member(update=update, context=context)
-
-        if not is_user_member:
-            return ConversationHandler.END
 
         if not context.bot_data["data"]["user_calls"]["create_account"]:
             await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً❗️")

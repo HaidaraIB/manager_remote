@@ -1,4 +1,9 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Chat,
+)
 
 
 from telegram.ext import (
@@ -9,18 +14,19 @@ from telegram.ext import (
     filters,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from custom_filters.User import User
 
-from common import (
-    check_if_user_member,
+from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
     payment_method_pattern,
-    back_to_user_home_page_handler,
+)
+
+from common.force_join import (
+    check_if_user_member_decorator
+)
+from common.back_to_home_page import (
+    back_to_user_home_page_handler
 )
 
 from start import start_command
@@ -47,16 +53,11 @@ back_button = [
     ACCOUNT_NUMBER,
     PASSWORD,
     LAST_NAME,
-) = range(2, 12)
+) = range(10)
 
-
-
+@check_if_user_member_decorator
 async def withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        is_user_member = await check_if_user_member(update=update, context=context)
-
-        if not is_user_member:
-            return ConversationHandler.END
 
         user = DB.get_user(user_id=update.effective_user.id)
         if not user:
@@ -137,7 +138,8 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 Ⓜ️ الحد الأدنى للسحب: <b>10000$</b>
 📤 المبلغ المراد سحبه: <b>{amount}$</b>"""
             await update.message.reply_text(
-                text=text, reply_markup=build_user_keyboard(),
+                text=text,
+                reply_markup=build_user_keyboard(),
             )
 
             return ConversationHandler.END
@@ -437,9 +439,8 @@ async def get_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             method_info = f"""رقم حساب بركة: <code>{context.user_data['payment_method_number']}</code>
 اسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"""
 
-
         serial = await DB.add_withdraw_order(
-            group_id=context.bot_data['data']['withdraw_orders_group'],
+            group_id=context.bot_data["data"]["withdraw_orders_group"],
             user_id=update.effective_user.id,
             method=method,
             acc_number=context.user_data["account_number"],
@@ -487,12 +488,14 @@ Serial: <code>{serial}</code>
             ],
         ]
         message = await context.bot.send_message(
-            chat_id=context.bot_data['data']['withdraw_orders_group'],
+            chat_id=context.bot_data["data"]["withdraw_orders_group"],
             text=user_info,
             reply_markup=InlineKeyboardMarkup(check_button),
         )
 
-        await DB.add_withdraw_pending_check_message_id(serial=serial, message_id=message.id)
+        await DB.add_withdraw_pending_check_message_id(
+            serial=serial, message_id=message.id
+        )
 
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
@@ -563,6 +566,6 @@ withdraw_handler = ConversationHandler(
         back_to_user_home_page_handler,
         start_command,
     ],
-    name='withdraw_handler',
+    name="withdraw_handler",
     persistent=True,
 )

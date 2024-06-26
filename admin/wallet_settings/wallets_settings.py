@@ -19,12 +19,15 @@ from telegram.constants import (
 
 from custom_filters.Admin import Admin
 
-from common import (
+from common.common import (
     build_methods_keyboard,
     build_admin_keyboard,
     payment_method_pattern,
+)
+
+from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_button
+    back_to_admin_home_page_button
 )
 
 from start import start_command
@@ -34,7 +37,7 @@ from start import start_command
 async def wallets_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         methods = build_methods_keyboard()
-        methods.append(back_button[0])
+        methods.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳.", reply_markup=InlineKeyboardMarkup(methods)
         )
@@ -49,7 +52,7 @@ async def choose_method_to_update(update: Update, context: ContextTypes.DEFAULT_
                     text="الرجوع🔙", callback_data="back to wallets settings"
                 )
             ],
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
 
         context.user_data["wallet_settings_method"] = update.callback_query.data

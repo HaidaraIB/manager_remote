@@ -27,9 +27,7 @@ from jobs import (
     daily_reward_worker,
 )
 
-from common import (
-    back_to_user_home_page_handler,
-    back_to_admin_home_page_handler,
+from common.common import (
     invalid_callback_data,
     error_handler,
     create_dot_env,
@@ -37,7 +35,10 @@ from common import (
     disable_httpx,
 )
 
-import common
+from common.back_to_home_page import (
+    back_to_user_home_page_handler,
+    back_to_admin_home_page_handler,
+)
 
 from user.withdraw import (
     withdraw_section_handler,

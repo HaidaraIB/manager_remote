@@ -13,10 +13,6 @@ from telegram.ext import (
     MessageHandler,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 import asyncio
 
 from DB import DB
@@ -24,7 +20,7 @@ import os
 
 from custom_filters import Deposit, Returned
 
-from common import (
+from common.common import (
     build_worker_keyboard,
 )
 
@@ -42,11 +38,10 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
             )
             return
 
-        data = update.callback_query.data
-        data["worker_id"] = update.effective_user.id
+        serial = int(update.callback_query.data.split("_")[-1])
 
         await DB.add_order_worker_id(
-            serial=data["serial"],
+            serial=serial,
             worker_id=update.effective_user.id,
             order_type="deposit",
         )
@@ -55,14 +50,10 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
             text="قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
             show_alert=True,
         )
-        return_callback_data = {
-            **data,
-            "name": "return deposit order",
-        }
         return_button = [
             [
                 InlineKeyboardButton(
-                    text="إعادة الطلب📥", callback_data=return_callback_data
+                    text="إعادة الطلب📥", callback_data=f"return_deposit_order_{serial}"
                 )
             ]
         ]
@@ -72,74 +63,45 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
 
-async def reply_with_proof_after(
-    after: int,
-    context: ContextTypes.DEFAULT_TYPE,
-    media: list[InputMediaPhoto],
-    caption: list,
-    data: dict,
-):
-    await asyncio.sleep(after)
-    messages = await context.bot.send_media_group(
-        chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-        media=media,
-        caption="\n".join(caption),
-    )
-
-    await DB.add_message_ids(
-        archive_message_ids=f"{messages[0].id},{messages[1].id}",
-        serial=data["serial"],
-        order_type="deposit",
-    )
-
-
 async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
 
-        data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
-            0
-        ].callback_data
-
-        if update.effective_user.id != data["worker_id"]:
-
-            return
+        serial = int(
+            update.message.reply_to_message.reply_markup.inline_keyboard[0][
+                0
+            ].callback_data.split("_")[-1]
+        )
 
         await DB.change_order_state(
-            order_type="deposit", serial=data["serial"], state="approved"
+            order_type="deposit", serial=serial, state="approved"
         )
-        amount = data["amount"]
-        user_id = data["user_id"]
+        d_order = DB.get_one_order(order_type="deposit", serial=serial)
 
-        await DB.update_balance(user_id=user_id, amount=amount)
+        await DB.update_balance(user_id=d_order["user_id"], amount=d_order["amount"])
         await DB.update_worker_approved_deposits(
-            worder_id=update.effective_user.id, amount=amount
+            worder_id=update.effective_user.id, amount=d_order["amount"]
         )
         await DB.increment_worker_deposits(worder_id=update.effective_user.id)
 
-        user = DB.get_user(user_id=user_id)
+        user = DB.get_user(user_id=d_order["user_id"])
 
         gifts_amount = 0
 
         if user[3] >= 1_000_000:
             gifts_amount = 10_000 * context.bot_data["data"]["deposit_gift_percentage"]
-            await DB.million_gift_user(user_id=user_id, amount=gifts_amount)
+            await DB.million_gift_user(user_id=d_order["user_id"], amount=gifts_amount)
 
-        caption = f"""مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{amount}$</b> إلى رصيدك
-{f"بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>" if gifts_amount else ''}
-
-الرقم التسلسلي للطلب: <code>{data['serial']}</code>
-
-Congrats🎉, the deposit you made <b>{amount}$</b> was added to your balance
-{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}
-
-Serial: <code>{data['serial']}</code>
-"""
-
+        caption = (f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{d_order['amount']}$</b> إلى رصيدك\n"
+                   f"{f"بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>" if gifts_amount else ''}\n\n"
+                   f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
+                   f"Congrats🎉, the deposit you made <b>{d_order['amount']}$</b> was added to your balance\n"
+                   f"{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}\n\n"
+                   f"Serial: <code>{serial}</code>")
         try:
             await context.bot.send_photo(
-                chat_id=user_id,
+                chat_id=d_order["user_id"],
                 photo=update.message.photo[-1],
                 caption=caption,
             )
@@ -161,18 +123,18 @@ Serial: <code>{data['serial']}</code>
 
         await DB.add_message_ids(
             archive_message_ids=f"{messages[0].id},{messages[1].id}",
-            serial=data["serial"],
+            serial=serial,
             order_type="deposit",
         )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
-            reply_markup=InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton(text="تمت الموافقة✅", callback_data="تمت الموافقة✅"),
-                ]
-            ])
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
+                )
+            ),
         )
 
         await context.bot.send_message(
@@ -184,7 +146,7 @@ Serial: <code>{data['serial']}</code>
         await DB.set_working_on_it(
             order_type="deposit",
             working_on_it=0,
-            serial=data["serial"],
+            serial=serial,
         )
         context.user_data["requested"] = False
 
@@ -194,17 +156,12 @@ async def return_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYP
         Chat.PRIVATE,
     ]:
 
-        data = update.callback_query.data
-
-        back_button_callback_data = {
-            **data,
-            "name": "back from return deposit order",
-        }
+        serial = int(update.callback_query.data.split('_')[-1])
         back_from_deposit_button = [
             [
                 InlineKeyboardButton(
                     text="الرجوع عن الإعادة🔙",
-                    callback_data=back_button_callback_data,
+                    callback_data=f"back_from_return_deposit_order_{serial}",
                 )
             ],
         ]
@@ -219,27 +176,6 @@ async def return_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYP
         return RETURN_REASON
 
 
-async def return_order_after(
-    after: int,
-    context: ContextTypes.DEFAULT_TYPE,
-    update: Update,
-    caption: str,
-    data: dict,
-):
-    await asyncio.sleep(after)
-    message = await context.bot.send_photo(
-        chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-        photo=update.message.reply_to_message.photo[-1],
-        caption=caption,
-    )
-
-    await DB.add_message_ids(
-        archive_message_ids=str(message.id),
-        serial=data["serial"],
-        order_type="deposit",
-    )
-
-
 async def return_deposit_order_reason(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
@@ -247,30 +183,28 @@ async def return_deposit_order_reason(
         Chat.PRIVATE,
     ]:
 
-        data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
+        serial = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
-        ].callback_data
-
-        if update.effective_user.id != data["worker_id"]:
-            return
+        ].callback_data.split('_')[-1]
 
         await DB.change_order_state(
             order_type="deposit",
-            serial=data["serial"],
+            serial=serial,
             state="returned",
         )
         await DB.add_order_reason(
             order_type="deposit",
-            serial=data["serial"],
+            serial=serial,
             reason=update.message.text,
         )
 
-        caption = f"""تم إعادة طلب إيداع مبلغ: <b>{data['amount']}$</b>❗️
+        d_order = DB.get_one_order(order_type='deposit', serial=serial)
 
-السبب:
-<b>{update.message.text_html}</b>
-
-قم بالضغط على الزر أدناه وإرفاق المطلوب."""
+        caption = (f"تم إعادة طلب إيداع مبلغ: <b>{d_order['amount']}$</b>❗️\n\n"
+                   "السبب:\n"
+                   f"<b>{update.message.text_html}</b>\n\n"
+                   "قم بالضغط على الزر أدناه وإرفاق المطلوب."
+                   )
 
         attach_button = [
             [
@@ -280,7 +214,7 @@ async def return_deposit_order_reason(
                         "deposit",
                         update.effective_chat.id,
                         update.message.reply_to_message.caption_html,
-                        data,
+                        serial,
                     ],
                 )
             ]
@@ -288,7 +222,7 @@ async def return_deposit_order_reason(
 
         try:
             await context.bot.send_photo(
-                chat_id=data["user_id"],
+                chat_id=d_order["user_id"],
                 photo=update.message.reply_to_message.photo[-1],
                 caption=caption,
                 reply_markup=InlineKeyboardMarkup(attach_button),
@@ -309,20 +243,18 @@ async def return_deposit_order_reason(
 
         await DB.add_message_ids(
             archive_message_ids=str(message.id),
-            serial=data["serial"],
+            serial=serial,
             order_type="deposit",
         )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
-            reply_markup=InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton(text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥"),
-                ]
-            ])
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥")
+            )
         )
-        
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت إعادة الطلب📥",
@@ -331,7 +263,7 @@ async def return_deposit_order_reason(
         await DB.set_working_on_it(
             order_type="deposit",
             working_on_it=0,
-            serial=data["serial"],
+            serial=serial,
         )
         context.user_data["requested"] = False
         return ConversationHandler.END
@@ -342,16 +274,12 @@ async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT
         Chat.PRIVATE,
     ]:
 
-        data = update.callback_query.data
+        serial = int(update.callback_query.data.split("_")[-1])
 
-        return_button_callback_data = {
-            **data,
-            "name": "return deposit order",
-        }
         return_button = [
             [
                 InlineKeyboardButton(
-                    text="إعادة الطلب📥", callback_data=return_button_callback_data
+                    text="إعادة الطلب📥", callback_data=f"return_deposit_order_{serial}"
                 )
             ]
         ]
@@ -366,8 +294,7 @@ async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT
 
 user_deposit_verified_handler = CallbackQueryHandler(
     callback=user_deposit_verified,
-    pattern=lambda d: isinstance(d, dict)
-    and d.get("name", False) == "verify deposit order",
+    pattern="^verify_deposit_order",
 )
 
 
@@ -381,8 +308,7 @@ return_deposit_order_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             callback=return_deposit_order,
-            pattern=lambda d: isinstance(d, dict)
-            and d.get("name", False) == "return deposit order",
+            pattern="^return_deposit_order",
         )
     ],
     states={
@@ -396,10 +322,9 @@ return_deposit_order_handler = ConversationHandler(
     fallbacks=[
         CallbackQueryHandler(
             callback=back_from_return_deposit_order,
-            pattern=lambda d: isinstance(d, dict)
-            and d.get("name", False) == "back from return deposit order",
+            pattern="^back_from_return_deposit_order",
         )
     ],
-    name='return_deposit_order_handler',
+    name="return_deposit_order_handler",
     persistent=True,
 )

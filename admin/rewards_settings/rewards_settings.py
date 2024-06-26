@@ -11,14 +11,13 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from telegram.constants import (
-    ParseMode,
+from common.common import (
+    build_admin_keyboard,
 )
 
-from common import (
-    build_admin_keyboard,
+from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_button,
+    back_to_admin_home_page_button
 )
 
 from start import start_command
@@ -48,7 +47,7 @@ async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     callback_data="update deposit_gift_percentage",
                 )
             ],
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="اختر النسبة التي تريد تعديلها:",
@@ -73,7 +72,7 @@ async def update_percentage(
             context.bot_data["data"][target_percentage] = 2
         await update.callback_query.edit_message_text(
             text=f"أرسل نسبة {reward_percentages_dict[target_percentage]}، النسبة الحالية هي: <b>{context.bot_data['data'][target_percentage]}%</b>",
-            reply_markup=InlineKeyboardMarkup(back_button),
+            reply_markup=InlineKeyboardMarkup(back_to_admin_home_page_button),
         )
         return NEW_PERCENTAGE
 

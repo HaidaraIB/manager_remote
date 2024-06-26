@@ -13,17 +13,17 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from telegram.constants import (
-    ParseMode,
-)
 
-from common import (
+from common.common import (
     build_admin_keyboard,
     build_methods_keyboard,
     payment_method_pattern,
-    back_to_admin_home_page_handler,
     request_buttons,
     back_button
+)
+
+from common.back_to_home_page import (
+    back_to_admin_home_page_handler
 )
 
 from start import start_command

@@ -12,10 +12,13 @@ from telegram.ext import (
     filters,
 )
 
-from common import (
+from common.common import (
     build_admin_keyboard,
+)
+
+from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_button
+    back_to_admin_home_page_button
 )
 
 from start import start_command
@@ -34,7 +37,7 @@ from custom_filters.Admin import Admin
 async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         await update.callback_query.edit_message_text(
-            text="أرسل الرسالة.", reply_markup=InlineKeyboardMarkup(back_button)
+            text="أرسل الرسالة.", reply_markup=InlineKeyboardMarkup(back_to_admin_home_page_button)
         )
         return THE_MESSAGE
 
@@ -51,7 +54,7 @@ async def the_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="مستخدمين محددين👤", callback_data="specific users"
                 ),
             ],
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
         await update.message.reply_text(
             text="هل تريد إرسال الرسالة إلى:",
@@ -100,7 +103,7 @@ async def send_to(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text="تم الانتهاء👍", callback_data="done entering users"
                     )
                 ],
-                back_button[0],
+                back_to_admin_home_page_button[0],
             ]
             await update.callback_query.edit_message_text(
                 text="قم بإرسال آيديات المستخدمين الذين تريد إرسال الرسالة لهم عند الانتهاء اضغط تم الانتهاء.",

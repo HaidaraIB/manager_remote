@@ -15,12 +15,15 @@ from telegram.ext import (
     filters,
 )
 
-from common import (
+from common.common import (
     build_admin_keyboard,
     build_groups_keyboard,
     check_hidden_keyboard,
+)
+
+from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_button,
+    back_to_admin_home_page_button
 )
 
 from start import start_command
@@ -29,12 +32,11 @@ from custom_filters.Admin import Admin
 
 NEW_GROUP_ID = 0
 
-
 async def change_groups(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         change_groups_keyboard = [
             *build_groups_keyboard(op="change"),
-            back_button[0],
+            back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="اختر الغروب الذي تريد تغييره:",
