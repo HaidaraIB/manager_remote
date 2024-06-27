@@ -116,7 +116,7 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     InlineKeyboardButton(text="MTN Cash🇸🇾", callback_data="MTN Cash🇸🇾"),
                 ],
                 build_back_button("back to yes no buy usdt"),
-                *back_to_user_home_page_button[0],
+                back_to_user_home_page_button[0],
             ]
             await update.callback_query.edit_message_text(
                 text="اختر وسيلة الدفع لاستلام أموالك💳",
@@ -273,7 +273,7 @@ async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_
                 InlineKeyboardButton(text="MTN Cash🇸🇾", callback_data="MTN Cash🇸🇾"),
             ],
             build_back_button("back to yes no buy usdt"),
-            back_to_user_home_page_button[0]
+            back_to_user_home_page_button[0],
         ]
 
         await update.callback_query.edit_message_text(
@@ -299,19 +299,20 @@ async def cash_code_bank_account_name_buy_usdt(
             context.user_data["bank_account_name_buy_usdt"] = update.message.text
 
         back_keyboard = [
-            build_back_button("back to cash code buy usdt"
-                        if context.user_data["payment_method_buy_usdt"]
-                        not in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]
-                        else "back to bank account name buy usdt"),
+            build_back_button(
+                "back to cash code buy usdt"
+                if context.user_data["payment_method_buy_usdt"]
+                not in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]
+                else "back to bank account name buy usdt"
+            ),
             back_to_user_home_page_button[0],
         ]
-        text = (f"أرسل الآن العملات إلى المحفظة:\n\n"
-
-f"<code>{context.bot_data['data']['USDT_number']}</code>\n\n"
-
-"ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-
-"<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>")
+        text = (
+            f"أرسل الآن العملات إلى المحفظة:\n\n"
+            f"<code>{context.bot_data['data']['USDT_number']}</code>\n\n"
+            "ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+            "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
+        )
         await update.message.reply_text(
             text=text,
             reply_markup=InlineKeyboardMarkup(back_keyboard),
@@ -326,19 +327,12 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         method = context.user_data["payment_method_buy_usdt"]
         method_info = ""
 
-        if method == "بيمو🇸🇦🇫🇷":
-            method_info = (f"رقم حساب بيمو: <code>{context.user_data['payment_method_number_buy_usdt']}</code>\n"
-"اسم صاحب الحساب: <code>{context.user_data['bank_account_name_buy_usdt']}</code>")
-
-        elif method == "بركة🇧🇭":
-            method_info = (f"رقم حساب بركة: <code>{context.user_data['payment_method_number_buy_usdt']}</code>\n"
-"اسم صاحب الحساب: <code>{context.user_data['bank_account_name_buy_usdt']}</code>")
-
-        elif method == "MTN Cash🇸🇾":
-            method_info = f"""MTN Cash number: <code>{context.user_data['payment_method_number_buy_usdt']}</code>"""
-
-        elif method == "Syriatel Cash🇸🇾":
-            method_info = f"""Syriatel Cash number: <code>{context.user_data['payment_method_number_buy_usdt']}</code>"""
+        method_info = f"<b>Payment info</b>: <code>{context.user_data['payment_method_number_buy_usdt']}</code>"
+        method_info += (
+            f"\nاسم صاحب الحساب: <b>{context.user_data['bank_account_name_buy_usdt']}</b>"
+            if method in ["بركة🇧🇭", "بيمو🇸🇦🇫🇷"]
+            else ""
+        )
 
         serial = await DB.add_buy_usdt_order(
             group_id=context.bot_data["data"]["buy_usdt_orders_group"],
@@ -349,23 +343,20 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             bank_account_name=context.user_data["bank_account_name_buy_usdt"],
         )
 
-        user_info = (f"طلب شراء USDT جديد:\n\n"
-
-f"المبلغ💵: <code>{context.user_data['usdt_to_buy_amount']}</code> USDT\n"
-f"وسيلة الدفع💳: <b>{method}</b>\n\n"
-
-f"Serial: <code>{serial}</code>\n\n"
-f"{method_info}\n"
-)
-
-        check_button = [
-            [InlineKeyboardButton(text="التحقق☑️", callback_data=f"check_buy_usdt_order_{serial}")],
-        ]
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["buy_usdt_orders_group"],
             photo=update.message.photo[-1],
-            caption=user_info,
-            reply_markup=InlineKeyboardMarkup(check_button),
+            caption=stringify_order(
+                context.user_data["usdt_to_buy_amount"],
+                method=method,
+                serial=serial,
+                method_info=method_info,
+            ),
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="التحقق☑️", callback_data=f"check_buy_usdt_order_{serial}"
+                )
+            ),
         )
         await DB.add_buy_usdt_pending_check_message_id(
             serial=serial, message_id=message.id
@@ -375,6 +366,16 @@ f"{method_info}\n"
             reply_markup=build_user_keyboard(),
         )
         return ConversationHandler.END
+
+
+def stringify_order(amount, method, serial, method_info):
+    return (
+        f"طلب شراء USDT جديد:\n\n"
+        f"المبلغ💵: <code>{amount}</code> USDT\n"
+        f"وسيلة الدفع💳: <b>{method}</b>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        f"{method_info}\n"
+    )
 
 
 buy_usdt_handler = ConversationHandler(

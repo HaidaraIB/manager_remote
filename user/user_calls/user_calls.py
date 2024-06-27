@@ -30,6 +30,12 @@ from common.back_to_home_page import back_to_user_home_page_handler
     CORRECT_RETURNED_COMPLAINT,
 ) = range(4)
 
+from worker.check_buy_usdt import check_buy_usdt
+from worker.check_deposit import check_deposit
+from worker.check_withdraw import check_withdraw
+
+from DB import DB
+
 
 async def reply_to_returned_complaint(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -156,24 +162,30 @@ async def handle_returned_withdraw(update: Update, context: ContextTypes.DEFAULT
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         await update.callback_query.answer(text="قم بإرسال المطلوب في السبب.")
         await update.callback_query.edit_message_reply_markup()
-        context.user_data["effective_withdraw_details"] = update.callback_query.data[2]
-        context.user_data["return_to_chat_id"] = int(update.callback_query.data[1])
-        context.user_data["returned_withdraw_order_serial"] = int(update.callback_query.data[3])
+        data = update.callback_query.data.split("_")
+        context.user_data["return_to_chat_id"] = int(data[2])
+        context.user_data["returned_withdraw_order_serial"] = int(data[3])
         return CORRECT_RETURNED_WITHDRAW
 
 
 async def correct_returned_withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        context.user_data["effective_withdraw_details"] += (
-            "<b>" + "\n\nطلب معاد، المرفقات:\n\n" + update.message.text + "</b>"
-        )
+        serial = context.user_data["returned_withdraw_order_serial"]
+        w_order = DB.get_one_order(order_type="withdraw", serial=serial)
         await context.bot.send_message(
             chat_id=context.user_data["return_to_chat_id"],
-            text=context.user_data["effective_withdraw_details"],
+            text=stringify_returned_order(
+                update.message.text,
+                check_withdraw.stringify_order,
+                w_order["amount"],
+                serial,
+                w_order["method"],
+                w_order["payment_method_number"],
+            ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب✅",
-                    callback_data=f"verify_withdraw_order_{context.user_data['returned_withdraw_order_serial']}",
+                    callback_data=f"verify_withdraw_order_{serial}",
                 )
             ),
         )
@@ -189,30 +201,31 @@ async def handle_returned_deposit(update: Update, context: ContextTypes.DEFAULT_
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         await update.callback_query.answer(text="قم بإرسال المطلوب في السبب.")
         await update.callback_query.edit_message_reply_markup()
-        context.user_data["effective_deposit_details"] = update.callback_query.data[2]
-        context.user_data["return_to_chat_id_deposit"] = int(
-            update.callback_query.data[1]
-        )
-        context.user_data["effective_photo"] = update.callback_query.message.photo[-1]
-        context.user_data["returned_deposit_order_serial"] = int(update.callback_query.data[
-            3
-        ])
+        data = update.callback_query.data.split("_")
+        context.user_data["return_to_chat_id_deposit"] = int(data[2])
+        context.user_data["effective_photo"] = update.effective_message.photo[-1]
+        context.user_data["returned_deposit_order_serial"] = int(data[3])
         return CORRECT_RETURNED_DEPOSIT
 
 
 async def correct_returned_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        context.user_data["effective_deposit_details"] += (
-            "<b>" + "\n\nطلب معاد، المرفقات:\n\n" + update.message.text + "</b>"
-        )
+        serial = context.user_data["returned_deposit_order_serial"]
+        d_order = DB.get_one_order(order_type="deposit", serial=serial)
         await context.bot.send_photo(
             chat_id=context.user_data["return_to_chat_id_deposit"],
             photo=context.user_data["effective_photo"],
-            caption=context.user_data["effective_deposit_details"],
+            caption=stringify_returned_order(
+                update.message.text,
+                check_deposit.stringify_order,
+                d_order["amount"],
+                d_order["method"],
+                d_order["account_number"],
+                serial,
+            ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="قبول الطلب✅",
-                    callback_data=f"verify_deposit_order_{context.user_data["returned_deposit_order_serial"]}"
+                    text="قبول الطلب✅", callback_data=f"verify_deposit_order_{serial}"
                 )
             ),
         )
@@ -228,32 +241,32 @@ async def handle_returned_buy_usdt(update: Update, context: ContextTypes.DEFAULT
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         await update.callback_query.answer(text="قم بإرسال المطلوب في السبب.")
         await update.callback_query.edit_message_reply_markup()
-        context.user_data["effective_buy_usdt_details"] = update.callback_query.data[2]
-        context.user_data["return_to_chat_id_buy_usdt"] = int(
-            update.callback_query.data[1]
-        )
-        context.user_data["effective_photo_buy_usdt"] = (
-            update.callback_query.message.photo[-1]
-        )
-        context.user_data["returned_buy_usdt_order_serial"] = int(
-            update.callback_query.data[3]
-        )
+        data = update.callback_query.data.split("_")
+        context.user_data["return_to_chat_id_buy_usdt"] = int(data[3])
+        context.user_data["effective_photo"] = update.effective_message.photo[-1]
+        context.user_data["returned_buy_usdt_order_serial"] = int(data[4])
         return CORRECT_RETURNED_BUY_USDT
 
 
 async def correct_returned_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        context.user_data["effective_buy_usdt_details"] += (
-            "<b>" + "\n\nطلب معاد، المرفقات:\n\n" + update.message.text + "</b>"
-        )
+        serial = context.user_data["returned_buy_usdt_order_serial"]
+        b_order = DB.get_one_order(order_type="buy_usdt", serial=serial)
         await context.bot.send_photo(
             chat_id=context.user_data["return_to_chat_id_buy_usdt"],
-            photo=context.user_data["effective_photo_buy_usdt"],
-            caption=context.user_data["effective_buy_usdt_details"],
+            photo=context.user_data["effective_photo"],
+            caption=stringify_returned_order(
+                update.message.text,
+                check_buy_usdt.stringify_order,
+                b_order["amount"],
+                serial,
+                b_order["method"],
+                b_order["payment_method_number"],
+            ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب✅",
-                    callback_data=f"verify_buy_usdt_order_{context.user_data['returned_buy_usdt_order_serial']}",
+                    callback_data=f"verify_buy_usdt_order_{serial}",
                 )
             ),
         )
@@ -265,11 +278,17 @@ async def correct_returned_buy_usdt(update: Update, context: ContextTypes.DEFAUL
         return ConversationHandler.END
 
 
+def stringify_returned_order(attachments: str, stringify_order, *args):
+    order = stringify_order(*args)
+    order += "<b>" + "\n\nطلب معاد، المرفقات:\n\n" + attachments + "</b>"
+    return order
+
+
 handle_returned_deposit_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             handle_returned_deposit,
-            lambda x: isinstance(x, list) and x[0] == "deposit",
+            "^return_deposit",
         )
     ],
     states={
@@ -287,7 +306,7 @@ handle_returned_withdraw_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             handle_returned_withdraw,
-            lambda x: isinstance(x, list) and x[0] == "withdraw",
+            "^return_withdraw",
         )
     ],
     states={
@@ -305,7 +324,7 @@ handle_returned_buy_usdt_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             handle_returned_buy_usdt,
-            lambda x: isinstance(x, list) and x[0] == "buy usdt",
+            "^return_buy_usdt",
         )
     ],
     states={

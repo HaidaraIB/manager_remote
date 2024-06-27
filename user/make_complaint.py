@@ -7,10 +7,6 @@ from telegram import (
     PhotoSize,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -30,7 +26,8 @@ from common.force_join import (
     check_if_user_member_decorator
 )
 from common.back_to_home_page import (
-    back_to_user_home_page_handler
+    back_to_user_home_page_handler,
+    back_to_user_home_page_button,
 )
 
 from start import start_command
@@ -40,14 +37,6 @@ from PyroClientSingleton import PyroClientSingleton
 from DB import DB
 import datetime
 import os
-
-back_button = [
-    [
-        InlineKeyboardButton(
-            text="العودة إلى القائمة الرئيسية🔝", callback_data="back to user home page"
-        )
-    ]
-]
 
 (
     COMPLAINT_ABOUT,
@@ -230,7 +219,7 @@ async def handle_complaint_about(
             )
         ]
     )
-    keyboard.append(back_button[0])
+    keyboard.append(back_to_user_home_page_button[0])
 
     context.user_data["operations_keyboard"] = keyboard
 
@@ -263,7 +252,7 @@ async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="شراء USDT💰", callback_data="buy_usdt complaint"
                 )
             ],
-            back_button[0],
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="شكوى فيما يخص:",
@@ -340,7 +329,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             text="الرجوع🔙", callback_data=f"back to choose operation"
                         )
                     ],
-                    back_button[0],
+                    back_to_user_home_page_button[0],
                 ]
                 text = op_text + "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير في شأنها.</b>"
 
@@ -367,7 +356,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             text="الرجوع🔙", callback_data=f"back to choose operation"
                         )
                     ],
-                    back_button[0],
+                    back_to_user_home_page_button[0],
                 ]
                 text = op_text + "<b>عملية قيد التحقق، يمكنك إرسال تذكير في شأنها.</b>"
 
@@ -384,7 +373,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     callback_data=f"back to choose operation",
                 )
             ],
-            back_button[0],
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text=op_text + "<b>أرسل سبب هذه الشكوى</b>",
@@ -498,7 +487,7 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="الرجوع🔙", callback_data=f"back to complaint reason"
                 )
             ],
-            back_button[0],
+            back_to_user_home_page_button[0],
         ]
 
         await update.message.reply_text(
@@ -642,7 +631,7 @@ async def back_to_complaint_reason(update: Update, context: ContextTypes.DEFAULT
                     callback_data=f"back to choose operation",
                 )
             ],
-            back_button[0],
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="أرسل سبب هذه الشكوى",
@@ -662,7 +651,7 @@ async def back_to_complaint_about(update: Update, context: ContextTypes.DEFAULT_
                     callback_data="buy_usdt complaint",
                 )
             ],
-            back_button[0],
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="شكوى فيما يخص:",

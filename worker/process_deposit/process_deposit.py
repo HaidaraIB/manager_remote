@@ -93,12 +93,14 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             gifts_amount = 10_000 * context.bot_data["data"]["deposit_gift_percentage"]
             await DB.million_gift_user(user_id=d_order["user_id"], amount=gifts_amount)
 
-        caption = (f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{d_order['amount']}$</b> إلى رصيدك\n"
-                   f"{f"بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>" if gifts_amount else ''}\n\n"
-                   f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
-                   f"Congrats🎉, the deposit you made <b>{d_order['amount']}$</b> was added to your balance\n"
-                   f"{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}\n\n"
-                   f"Serial: <code>{serial}</code>")
+        # caption = (
+        #     f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{d_order['amount']}$</b> إلى رصيدك\n"
+        #     f"{f"بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>" if gifts_amount else ''}\n\n"
+        #     f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
+        #     f"Congrats🎉, the deposit you made <b>{d_order['amount']}$</b> was added to your balance\n"
+        #     f"{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}\n\n"
+        #     f"Serial: <code>{serial}</code>"
+        # )
         try:
             await context.bot.send_photo(
                 chat_id=d_order["user_id"],
@@ -156,21 +158,18 @@ async def return_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYP
         Chat.PRIVATE,
     ]:
 
-        serial = int(update.callback_query.data.split('_')[-1])
-        back_from_deposit_button = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع عن الإعادة🔙",
-                    callback_data=f"back_from_return_deposit_order_{serial}",
-                )
-            ],
-        ]
+        serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بسبب الإعادة", show_alert=True
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(back_from_deposit_button)
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="الرجوع عن الإعادة🔙",
+                    callback_data=f"back_from_return_deposit_order_{serial}",
+                )
+            )
         )
 
         return RETURN_REASON
@@ -185,7 +184,7 @@ async def return_deposit_order_reason(
 
         serial = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
-        ].callback_data.split('_')[-1]
+        ].callback_data.split("_")[-1]
 
         await DB.change_order_state(
             order_type="deposit",
@@ -198,34 +197,26 @@ async def return_deposit_order_reason(
             reason=update.message.text,
         )
 
-        d_order = DB.get_one_order(order_type='deposit', serial=serial)
+        d_order = DB.get_one_order(order_type="deposit", serial=serial)
 
-        caption = (f"تم إعادة طلب إيداع مبلغ: <b>{d_order['amount']}$</b>❗️\n\n"
-                   "السبب:\n"
-                   f"<b>{update.message.text_html}</b>\n\n"
-                   "قم بالضغط على الزر أدناه وإرفاق المطلوب."
-                   )
-
-        attach_button = [
-            [
-                InlineKeyboardButton(
-                    text="إرفاق المطلوب",
-                    callback_data=[
-                        "deposit",
-                        update.effective_chat.id,
-                        update.message.reply_to_message.caption_html,
-                        serial,
-                    ],
-                )
-            ]
-        ]
+        caption = (
+            f"تم إعادة طلب إيداع مبلغ: <b>{d_order['amount']}$</b>❗️\n\n"
+            "السبب:\n"
+            f"<b>{update.message.text_html}</b>\n\n"
+            "قم بالضغط على الزر أدناه وإرفاق المطلوب."
+        )
 
         try:
             await context.bot.send_photo(
                 chat_id=d_order["user_id"],
                 photo=update.message.reply_to_message.photo[-1],
                 caption=caption,
-                reply_markup=InlineKeyboardMarkup(attach_button),
+                reply_markup=InlineKeyboardMarkup.from_button(
+                    InlineKeyboardButton(
+                        text="إرفاق المطلوب",
+                        callback_data=f"return_deposit_{update.effective_chat.id}_{serial}",
+                    )
+                ),
             )
         except:
             pass
@@ -251,8 +242,10 @@ async def return_deposit_order_reason(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥")
-            )
+                InlineKeyboardButton(
+                    text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥"
+                )
+            ),
         )
 
         await context.bot.send_message(

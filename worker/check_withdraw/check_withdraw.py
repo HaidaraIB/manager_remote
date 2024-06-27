@@ -16,7 +16,6 @@ from telegram.ext import (
 from custom_filters import Withdraw, Declined
 
 from DB import DB
-import asyncio
 import os
 
 from common.common import (
@@ -24,6 +23,22 @@ from common.common import (
 )
 
 DECLINE_REASON = 0
+
+
+def stringify_order(
+    amount: float,
+    serial: int,
+    method: str,
+    payment_method_number: str,
+):
+    return (
+        "تفاصيل طلب سحب :\n\n"
+        f"المبلغ💵: <code>{amount}</code>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n\n"
+        f"Payment Info: <code>{payment_method_number}</code>\n\n"
+        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
+    )
 
 
 async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -67,28 +82,17 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         serial = int(update.callback_query.data.split("_")[-1])
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
-        text = update.callback_query.message.text_html.split("\n")
-
-        del text[2]
-        del text[2]
-        del text[2]
-        del text[2]
-        del text[3]
-        del text[7]
-        del text[7]
-
-        text.insert(
-            7,
-            "\n<b>تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ.</b>",
-        )
-
         method = w_order["method"]
-
         chat_id = f"{method}_group"
 
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"][chat_id],
-            text="\n".join(text),
+            text=stringify_order(
+                w_order["amount"],
+                serial=serial,
+                method=method,
+                payment_method_number=w_order["payment_method_number"],
+            ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب✅", callback_data=f"verify_withdraw_order_{serial}"

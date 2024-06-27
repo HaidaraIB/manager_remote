@@ -25,6 +25,22 @@ from common.common import (
 DECLINE_REASON = 0
 
 
+def stringify_order(
+    amount: float,
+    serial: int,
+    method: str,
+    payment_method_number: str,
+):
+    return (
+        "طلب شراء USDT جديد:\n\n"
+        f"المبلغ💵: <code>{amount}</code>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n\n"
+        f"Payment Info: <code>{payment_method_number}</code>\n\n"
+        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
+    )
+
+
 async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
@@ -68,18 +84,15 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         chat_id = f"{method}_group"
 
         amount = b_order["amount"]
-        text = (
-            update.effective_message.caption_html
-            + "\n\n<b>تنبيه: اضغط على المعلومات لنسخها كما هي في الرسالة تفادياً للخطأ.</b>"
-        ).split("\n")
-        text[2] = (
-            f"المبلغ💵: <code>{amount * context.bot_data['data']['usdt_to_syp']}</code> SYP"
-        )
-        del text[3]
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"][chat_id],
             photo=update.effective_message.photo[-1],
-            caption="\n".join(text),
+            caption=stringify_order(
+                amount=amount * context.bot_data["data"]["usdt_to_syp"],
+                serial=serial,
+                method=method,
+                payment_method_number=b_order["payment_method_number"],
+            ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب✅", callback_data=f"verify_buy_usdt_order_{serial}"
@@ -110,7 +123,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.send_message(
             chat_id=update.effective_user.id,
             text="تم إرسال الطلب✅",
-            reply_markup=build_worker_keyboard,
+            reply_markup=build_worker_keyboard(),
         )
 
         context.user_data["requested"] = False

@@ -24,6 +24,22 @@ from common.common import (
 NEW_DEPOSIT_AMOUNT, REF_NUMBER, DECLINE_REASON = range(3)
 
 
+def stringify_order(
+    amount: float,
+    method: str,
+    account_number: int,
+    serial: int,
+):
+    return (
+        "إيداع جديد:\n"
+        f"المبلغ: <code>{amount}</code>\n"
+        f"رقم الحساب: <code>{account_number}</code>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ.\n\n"
+        "ملاحظة: تأكد من تطابق المبلغ في الرسالة مع الذي في لقطة الشاشة لأن ما سيضاف في حالة التأكيد هو الذي في الرسالة."
+    )
+
+
 def build_approve_deposit_keyboard(order):
     approve_deposit_buttons = [
         [
@@ -234,6 +250,7 @@ async def send_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]:
 
         serial = int(update.callback_query.data.split("_")[-1])
+        d_order = DB.get_one_order(order_type="deposit", serial=serial)
 
         if not context.user_data[serial]["add_ref_number"]:
             await update.callback_query.answer("عليك إضافة رقم مرجعي أولاً❗️")
@@ -243,18 +260,15 @@ async def send_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("عليك تحرير المبلغ أولاً❗️")
             return
 
-        caption = update.callback_query.message.caption_html.split("\n")
-
-        del caption[2]
-        del caption[3]
-        caption.insert(
-            5,
-            "\n<b>تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ.</b>",
-        )
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
             photo=update.callback_query.message.photo[-1],
-            caption="\n".join(caption),
+            caption=stringify_order(
+                amount=d_order["amount"],
+                method=d_order["method"],
+                account_number=d_order["account_number"],
+                serial=serial,
+            ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب✅", callback_data=f"verify_deposit_order_{serial}"

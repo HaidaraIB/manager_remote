@@ -20,7 +20,7 @@ from DB import DB
 from custom_filters import BuyUSDT, Returned
 
 from common.common import (
-    build_user_keyboard,
+    build_worker_keyboard,
 )
 
 RETURN_REASON = 0
@@ -141,7 +141,7 @@ async def reply_with_payment_proof_buy_usdt(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت الموافقة✅",
-            reply_markup=build_user_keyboard(),
+            reply_markup=build_worker_keyboard(),
         )
 
         context.user_data["requested"] = False
@@ -211,25 +211,17 @@ async def return_buy_usdt_order_reason(
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
-        attach_button = [
-            [
-                InlineKeyboardButton(
-                    text="إرفاق المطلوب",
-                    callback_data=[
-                        "buy usdt",
-                        update.effective_chat.id,
-                        update.message.reply_to_message.caption_html,
-                        serial,
-                    ],
-                )
-            ]
-        ]
         try:
             await context.bot.send_photo(
                 chat_id=b_order["user_id"],
                 photo=update.message.reply_to_message.photo[-1],
                 caption=text,
-                reply_markup=InlineKeyboardMarkup(attach_button),
+                reply_markup=InlineKeyboardMarkup.from_button(
+                    InlineKeyboardButton(
+                        text="إرفاق المطلوب",
+                        callback_data=f"return_buy_usdt_{update.effective_chat.id}_{serial}",
+                    )
+                ),
             )
         except:
             pass
@@ -264,7 +256,7 @@ async def return_buy_usdt_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت إعادة الطلب📥",
-            reply_markup=build_user_keyboard(),
+            reply_markup=build_worker_keyboard(),
         )
         context.user_data["requested"] = False
         await DB.set_working_on_it(

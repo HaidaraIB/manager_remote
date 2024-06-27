@@ -154,23 +154,20 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             group_id=context.bot_data["data"]["deposit_orders_group"],
         )
 
-        user_info = f"""إيداع جديد:
-المبلغ: <code>{context.user_data['deposit_amount']}</code>
-وسيلة الدفع: {context.user_data['deposit_method']}
-رقم الحساب: <code>{context.user_data['account_number_deposit']}</code>
-
-Serial: <code>{serial}</code>
-
-<b>ملاحظة: تأكد من تطابق المبلغ في الرسالة مع الذي في لقطة الشاشة لأن ما سيضاف في حالة التأكيد هو الذي في الرسالة.</b>"""
-
-        check_button = [
-            [InlineKeyboardButton(text="التحقق☑️", callback_data=f"check_deposit_{serial}")],
-        ]
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["deposit_orders_group"],
             photo=approval_screenshot,
-            caption=user_info,
-            reply_markup=InlineKeyboardMarkup(check_button),
+            caption=stringify_order(
+                amount=context.user_data["deposit_amount"],
+                method=context.user_data["deposit_method"],
+                account_number=context.user_data["account_number_deposit"],
+                serial=serial,
+            ),
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="التحقق☑️", callback_data=f"check_deposit_{serial}"
+                )
+            ),
         )
 
         await DB.add_deposit_pending_check_message_id(
@@ -181,6 +178,22 @@ Serial: <code>{serial}</code>
             reply_markup=build_user_keyboard(),
         )
         return ConversationHandler.END
+
+
+def stringify_order(
+    amount: float,
+    method: str,
+    account_number: int,
+    serial: int,
+):
+    return (
+        "إيداع جديد:\n"
+        f"المبلغ: <code>{amount}</code>\n"
+        f"وسيلة الدفع: <code>{method}</code>\n"
+        f"رقم الحساب: <code>{account_number}</code>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        "ملاحظة: تأكد من تطابق المبلغ في الرسالة مع الذي في لقطة الشاشة لأن ما سيضاف في حالة التأكيد هو الذي في الرسالة."
+    )
 
 
 deposit_handler = ConversationHandler(

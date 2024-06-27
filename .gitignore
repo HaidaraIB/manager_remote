@@ -2,6 +2,5 @@ __pycache__
 .env
 test.py
 data/*
-errors.txt
 his_session.session
 session.session
