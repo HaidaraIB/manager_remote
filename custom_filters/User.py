@@ -3,10 +3,9 @@ from telegram import (
 )
 
 from telegram import Chat
-from telegram.ext.filters import (
-    UpdateFilter
-)
+from telegram.ext.filters import UpdateFilter
 from DB import DB
+
 
 class User(UpdateFilter):
     def filter(self, update: Update):

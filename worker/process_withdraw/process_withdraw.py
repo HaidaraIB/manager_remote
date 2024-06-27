@@ -5,10 +5,6 @@ from telegram import (
     InlineKeyboardMarkup,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -18,7 +14,6 @@ from telegram.ext import (
 )
 
 from DB import DB
-import asyncio
 import os
 
 from custom_filters import Withdraw, Returned
@@ -41,10 +36,10 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
             )
             return
 
-        data = update.callback_query.data
+        serial = int(update.callback_query.data.split("_")[-1])
 
         await DB.add_order_worker_id(
-            serial=data["serial"],
+            serial=serial,
             worker_id=update.effective_user.id,
             order_type="withdraw",
         )
@@ -54,43 +49,14 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
             show_alert=True,
         )
 
-        return_button_callback_data = {
-            **data,
-            "name": "return withdraw order",
-            "worker_id": update.effective_user.id,
-        }
-        return_button = [
-            [
-                InlineKeyboardButton(
-                    text="إعادة الطلب📥", callback_data=return_button_callback_data
-                )
-            ]
-        ]
-
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(return_button)
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="إعادة الطلب📥",
+                    callback_data=f"return_withdraw_order_{serial}",
+                )
+            )
         )
-
-
-async def reply_with_proof_after(
-    after: int,
-    context: ContextTypes.DEFAULT_TYPE,
-    update: Update,
-    text: list,
-    data: dict,
-):
-    await asyncio.sleep(after)
-    message = await context.bot.send_photo(
-        chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-        photo=update.message.photo[-1],
-        caption="\n".join(text),
-    )
-
-    await DB.add_message_ids(
-        archive_message_ids=str(message.id),
-        serial=data["serial"],
-        order_type="withdraw",
-    )
 
 
 async def reply_with_payment_proof_withdraw(
@@ -100,32 +66,36 @@ async def reply_with_payment_proof_withdraw(
         Chat.PRIVATE,
     ]:
 
-        data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
-            0
-        ].callback_data
+        serial = int(
+            update.message.reply_to_message.reply_markup.inline_keyboard[0][
+                0
+            ].callback_data.split("_")[-1]
+        )
+        w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
         await DB.change_order_state(
-            order_type="withdraw", serial=data["serial"], state="approved"
+            order_type="withdraw", serial=serial, state="approved"
         )
 
-        amount = data["amount"]
-        user_id = data["user_id"]
+        amount = w_order["amount"]
+        user_id = w_order["user_id"]
 
         await DB.increment_worker_withdraws(
             worder_id=update.effective_user.id,
-            method=data["method"],
+            method=w_order["method"],
         )
         await DB.update_worker_approved_withdraws(
             worder_id=update.effective_user.id,
-            method=data["method"],
+            method=w_order["method"],
             amount=amount,
         )
 
-        caption = f"""مبروك، تم تأكيد عملية سحب <b>{f'مكافأة {amount}' if update.message.reply_to_message.text.startswith(
-            "تفاصيل طلب سحب مكافأة") else f'{amount}'}$</b> بنجاح✅
-            
-الرقم التسلسلي للطلب: <code>{data['serial']}</code>
-"""
+        caption = (
+            f"مبروك، تم تأكيد عملية سحب "
+            f"<b>{f'مكافأة {amount}' if update.message.reply_to_message.text.startswith("تفاصيل طلب سحب مكافأة") else f'{amount}'}$</b> "
+            "بنجاح✅\n\n"
+            "الرقم التسلسلي للطلب: <code>{data['serial']}</code>"
+        )
 
         try:
             await context.bot.send_photo(
@@ -146,29 +116,29 @@ async def reply_with_payment_proof_withdraw(
 
         await DB.add_message_ids(
             archive_message_ids=str(message.id),
-            serial=data["serial"],
+            serial=serial,
             order_type="withdraw",
         )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
-            reply_markup=InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton(text="تمت الموافقة✅", callback_data="تمت الموافقة✅"),
-                ]
-            ])
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
+                ),
+            ),
         )
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت الموافقة✅",
-            reply_markup=build_worker_keyboard()
+            reply_markup=build_worker_keyboard(),
         )
         await DB.set_working_on_it(
             order_type="withdraw",
             working_on_it=0,
-            serial=data["serial"],
+            serial=serial,
         )
         context.user_data["requested"] = False
 
@@ -178,44 +148,19 @@ async def return_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TY
         Chat.PRIVATE,
     ]:
 
-        data = update.callback_query.data
-
-        back_button_callback_data = {
-            **data,
-            "name": "back from return withdraw order",
-        }
-        return_withdraw_button = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع عن الإعادة🔙",
-                    callback_data=back_button_callback_data,
-                )
-            ],
-        ]
+        serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بسبب الإعادة",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(return_withdraw_button)
+            reply_markup=InlineKeyboardMarkup.from_button(InlineKeyboardButton(
+                    text="الرجوع عن الإعادة🔙",
+                    callback_data=f"back_from_return_withdraw_order_{serial}",
+                ))
         )
         return RETURN_REASON
-
-
-async def archive_returned_after(
-    after: int, context: ContextTypes.DEFAULT_TYPE, text: str, data: dict
-):
-    message = await context.bot.send_message(
-        chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-        text=text,
-    )
-
-    await DB.add_message_ids(
-        archive_message_ids=str(message.id),
-        serial=data["serial"],
-        order_type="withdraw",
-    )
 
 
 async def return_withdraw_order_reason(
@@ -225,53 +170,50 @@ async def return_withdraw_order_reason(
         Chat.PRIVATE,
     ]:
 
-        data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
+        serial = int(update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
-        ].callback_data
-
+        ].callback_data.split("_")[-1])
+        w_order = DB.get_one_order(
+            order_type='withdraw',
+            serial=serial
+        )
         await DB.change_order_state(
-            order_type="withdraw", serial=data["serial"], state="returned"
+            order_type="withdraw", serial=serial, state="returned"
         )
         await DB.add_order_reason(
             order_type="withdraw",
-            serial=data["serial"],
+            serial=serial,
             reason=update.message.text,
         )
 
-        amount = data["amount"]
-        user_id = data["user_id"]
+        amount = w_order["amount"]
+        user_id = w_order["user_id"]
 
         if update.message.reply_to_message.text.split("\n")[0].startswith(
             "تفاصيل طلب سحب مكافأة"
         ):
             await DB.update_gifts_balance(user_id=user_id, amount=amount)
 
-        text = f"""تم إعادة طلب سحب مبلغ: <b>{amount}$</b>❗️
+        text = (f"تم إعادة طلب سحب مبلغ: <b>{amount}$</b>❗️\n\n"
 
-السبب:
-<b>{update.message.text_html}</b>
+"السبب:\n"
+f"<b>{update.message.text_html}</b>\n\n"
 
-قم بالضغط على الزر أدناه وإرفاق المطلوب."""
-
-        attach_button = [
-            [
-                InlineKeyboardButton(
-                    text="إرفاق المطلوب",
-                    callback_data=[
-                        "withdraw",
-                        update.effective_chat.id,
-                        update.message.reply_to_message.text_html,
-                        data,
-                    ],
-                )
-            ]
-        ]
+"قم بالضغط على الزر أدناه وإرفاق المطلوب.")
 
         try:
             await context.bot.send_message(
                 chat_id=user_id,
                 text=text,
-                reply_markup=InlineKeyboardMarkup(attach_button),
+                reply_markup=InlineKeyboardMarkup.from_button(InlineKeyboardButton(
+                    text="إرفاق المطلوب",
+                    callback_data=[
+                        "withdraw",
+                        update.effective_chat.id,
+                        update.message.reply_to_message.text_html,
+                        serial,
+                    ],
+                )),
             )
         except:
             pass
@@ -286,18 +228,17 @@ async def return_withdraw_order_reason(
 
         await DB.add_message_ids(
             archive_message_ids=str(message.id),
-            serial=data["serial"],
+            serial=serial,
             order_type="withdraw",
         )
-            
+
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
-            reply_markup=InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton(text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥"),
-                ]
-            ])
+            reply_markup=InlineKeyboardMarkup.from_button(InlineKeyboardButton(
+                            text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥"
+                        ),
+            ),
         )
 
         await context.bot.send_message(
@@ -308,7 +249,7 @@ async def return_withdraw_order_reason(
         await DB.set_working_on_it(
             order_type="withdraw",
             working_on_it=0,
-            serial=data["serial"],
+            serial=serial,
         )
         context.user_data["requested"] = False
         return ConversationHandler.END
@@ -321,33 +262,23 @@ async def back_from_return_withdraw_order(
         Chat.PRIVATE,
     ]:
 
-        data = update.callback_query.data
+        serial = int(update.callback_query.data.split("_")[-1])
 
-        return_button_callback_data = {
-            **data,
-            "name": "return withdraw order",
-        }
-        return_button = [
-            [
-                InlineKeyboardButton(
-                    text="إعادة الطلب📥", callback_data=return_button_callback_data
-                )
-            ]
-        ]
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(return_button)
+            reply_markup=InlineKeyboardMarkup.from_button(InlineKeyboardButton(
+                    text="إعادة الطلب📥", callback_data=f"return_withdraw_order{serial}"
+                ))
         )
         return ConversationHandler.END
 
 
 user_payment_verified_handler = CallbackQueryHandler(
     callback=user_payment_verified,
-    pattern=lambda d: isinstance(d, dict)
-    and d.get("name", False) == "verify withdraw order",
+    pattern="^verify_withdraw_order",
 )
 
 reply_with_payment_proof_withdraw_handler = MessageHandler(
@@ -359,8 +290,7 @@ return_withdraw_order_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             callback=return_withdraw_order,
-            pattern=lambda d: isinstance(d, dict)
-            and d.get("name", False) == "return withdraw order",
+            pattern="^return_withdraw_order",
         )
     ],
     states={
@@ -374,10 +304,9 @@ return_withdraw_order_handler = ConversationHandler(
     fallbacks=[
         CallbackQueryHandler(
             callback=back_from_return_withdraw_order,
-            pattern=lambda d: isinstance(d, dict)
-            and d.get("name", False) == "back from return withdraw order",
+            pattern="^back_from_return_withdraw_order",
         )
     ],
-    name='return_withdraw_order_handler',
+    name="return_withdraw_order_handler",
     persistent=True,
 )

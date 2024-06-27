@@ -20,27 +20,18 @@ from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
     payment_method_pattern,
+    build_back_button,
 )
 
-from common.force_join import (
-    check_if_user_member_decorator
-)
+from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
-    back_to_user_home_page_handler
+    back_to_user_home_page_handler,
+    back_to_user_home_page_button,
 )
 
 from start import start_command
 
 from DB import DB
-import asyncio
-
-back_button = [
-    [
-        InlineKeyboardButton(
-            text="العودة إلى القائمة الرئيسية🔝", callback_data="back to user home page"
-        )
-    ]
-]
 
 (
     AMOUNT,
@@ -54,6 +45,7 @@ back_button = [
     PASSWORD,
     LAST_NAME,
 ) = range(10)
+
 
 @check_if_user_member_decorator
 async def withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -79,7 +71,7 @@ async def withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="سحب رصيد👝", callback_data="withdraw balance"
                 ),
             ],
-            back_button[0],
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="اختر ما الذي تريد سحبه❔", reply_markup=InlineKeyboardMarkup(keyboard)
@@ -90,12 +82,8 @@ async def withdraw_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         context.user_data["withdraw_type"] = update.callback_query.data
         back_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to withdraw section"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to withdraw section"),
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="أرسل المبلغ المراد سحبه💵",
@@ -115,7 +103,7 @@ async def back_to_withdraw_section(update: Update, context: ContextTypes.DEFAULT
                     text="سحب رصيد👝", callback_data="withdraw balance"
                 ),
             ],
-            back_button[0],
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="اختر ما الذي تريد سحبه❔", reply_markup=InlineKeyboardMarkup(keyboard)
@@ -132,11 +120,12 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if (user[4] < amount or user[4] < 10_000) and context.user_data[
             "withdraw_type"
         ] == "withdraw gifts":
-            text = f"""❌ عذراً يا عزيزي رصيد مكافآتك غير كافي لعملية السحب.
-
-🎁 رصيد مكافآتك الحالي هو: <b>{user[4]}$</b>
-Ⓜ️ الحد الأدنى للسحب: <b>10000$</b>
-📤 المبلغ المراد سحبه: <b>{amount}$</b>"""
+            text = (
+                f"❌ عذراً يا عزيزي رصيد مكافآتك غير كافي لعملية السحب.\n\n"
+                f"🎁 رصيد مكافآتك الحالي هو: <b>{user[4]}$</b>\n"
+                f"Ⓜ️ الحد الأدنى للسحب: <b>10000$</b>\n"
+                f"📤 المبلغ المراد سحبه: <b>{amount}$</b>\n"
+            )
             await update.message.reply_text(
                 text=text,
                 reply_markup=build_user_keyboard(),
@@ -145,14 +134,8 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return ConversationHandler.END
 
         payment_methods = build_methods_keyboard()
-        payment_methods.append(
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to withdraw type"
-                )
-            ]
-        )
-        payment_methods.append(back_button[0])
+        payment_methods.append(build_back_button("back to withdraw type"))
+        payment_methods.append(back_to_user_home_page_button[0])
 
         await update.message.reply_text(
             text="اختر وسيلة الدفع💳",
@@ -177,12 +160,8 @@ async def payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["payment_method"] = data
 
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to payment method"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to payment method"),
+            back_to_user_home_page_button[0],
         ]
 
         if context.user_data["payment_method"] in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]:
@@ -216,12 +195,8 @@ async def payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def back_to_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         back_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to withdraw type"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to withdraw type"),
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="أرسل المبلغ المراد سحبه💵",
@@ -233,12 +208,8 @@ async def back_to_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_
 async def bank_number_withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to bank number withdraw"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to bank number withdraw"),
+            back_to_user_home_page_button[0],
         ]
         context.user_data["payment_method_number"] = update.message.text
 
@@ -252,14 +223,8 @@ async def bank_number_withdraw(update: Update, context: ContextTypes.DEFAULT_TYP
 async def back_to_payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         payment_methods = build_methods_keyboard()
-        payment_methods.append(
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to withdraw type"
-                )
-            ]
-        )
-        payment_methods.append(back_button[0])
+        payment_methods.append(build_back_button("back to withdraw type"))
+        payment_methods.append(back_to_user_home_page_button[0])
 
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳",
@@ -281,18 +246,12 @@ async def wallet_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["bank_account_name"] = update.message.text
 
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙",
-                    callback_data=(
-                        "back to payment method"
-                        if context.user_data["payment_method"]
-                        not in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]
-                        else "back to bank account name"
-                    ),
-                )
-            ],
-            back_button[0],
+            (
+                build_back_button("back to payment method")
+                if context.user_data["payment_method"] not in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]
+                else build_back_button("back to bank account name")
+            ),
+            back_to_user_home_page_button[0],
         ]
         await update.message.reply_text(
             text="أرسل رقم حسابك🔢", reply_markup=InlineKeyboardMarkup(back_keyboard)
@@ -305,12 +264,8 @@ async def back_to_bank_number_withdraw(
 ):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to payment method"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to payment method"),
+            back_to_user_home_page_button[0],
         ]
         name = "بركة" if context.user_data["payment_method"] == "بركة🇧🇭" else "بيمو"
         await update.callback_query.edit_message_text(
@@ -326,12 +281,8 @@ bank_account_name = wallet_code
 async def back_to_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data=f"back to bank number withdraw"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to bank number withdraw"),
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
@@ -348,12 +299,8 @@ async def account_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["account_number"] = update.message.text
 
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to account number"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to account number"),
+            back_to_user_home_page_button[0],
         ]
         await update.message.reply_text(
             text="أرسل كلمة مرور حسابك🈴",
@@ -365,12 +312,8 @@ async def account_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def back_to_account_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to payment info"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to payment info"),
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="أرسل رقم حسابك🔢", reply_markup=InlineKeyboardMarkup(back_keyboard)
@@ -382,8 +325,8 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         context.user_data["password"] = update.message.text
         back_keyboard = [
-            [InlineKeyboardButton(text="الرجوع🔙", callback_data="back to password")],
-            back_button[0],
+            build_back_button("back to password"),
+            back_to_user_home_page_button[0],
         ]
         await update.message.reply_text(
             text="أرسل الكنية/العائلة🔤",
@@ -395,12 +338,8 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def back_to_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         back_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to account number"
-                )
-            ],
-            back_button[0],
+            build_back_button("back to account number"),
+            back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text="أرسل كلمة مرور حسابك🈴",
@@ -432,12 +371,16 @@ async def get_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             method_info = f"""Syriatel Cash number: <code>{context.user_data['payment_method_number']}</code>"""
 
         elif method == "بيمو🇸🇦🇫🇷":
-            method_info = f"""رقم حساب بيمو: <code>{context.user_data['payment_method_number']}</code>
-اسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"""
+            method_info = (
+                f"رقم حساب بيمو: <code>{context.user_data['payment_method_number']}</code>\n"
+                f"اسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"
+            )
 
         elif method == "بركة🇧🇭":
-            method_info = f"""رقم حساب بركة: <code>{context.user_data['payment_method_number']}</code>
-اسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"""
+            method_info = (
+                f"رقم حساب بركة: <code>{context.user_data['payment_method_number']}</code>\n"
+                f"اسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"
+            )
 
         serial = await DB.add_withdraw_order(
             group_id=context.bot_data["data"]["withdraw_orders_group"],
@@ -451,39 +394,21 @@ async def get_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             payment_method_number=context.user_data["payment_method_number"],
         )
 
-        user_info = f"""تفاصيل طلب سحب {'مكافأة' if context.user_data['withdraw_type'] == 'withdraw gifts' else ''}:
-
-رقم حسابه🔢: <code>{context.user_data['account_number']}</code>
-كلمة المرور🈴: <code>{context.user_data['password']}</code>
-الكنية: <code>{update.message.text}</code>
-
-المبلغ💵: <code>{amount}</code>
-وسيلة الدفع💳: <b>{method}</b>
-
-Serial: <code>{serial}</code>
-
-{method_info}
-
-تحقق من توفر المبلغ وقم بقبول/رفض الطلب بناء على ذلك.
-"""
-
-        check_withdraw_callback_data = {
-            "name": "check withdraw",
-            "serial": serial,
-            "amount": amount,
-            "method": method,
-            "acc_number": context.user_data["account_number"],
-            "password": context.user_data["password"],
-            "user_id": update.effective_user.id,
-            "last_name": update.message.text,
-            "payment_method_number": context.user_data["payment_method_number"],
-            "bank_account_name": context.user_data["bank_account_name"],
-        }
-
+        user_info = (
+            f"تفاصيل طلب سحب {'مكافأة' if context.user_data['withdraw_type'] == 'withdraw gifts' else ''}:\n\n"
+            f"رقم حسابه🔢: <code>{context.user_data['account_number']}</code>\n"
+            f"كلمة المرور🈴: <code>{context.user_data['password']}</code>\n"
+            f"الكنية: <code>{update.message.text}</code>\n\n"
+            f"المبلغ💵: <code>{amount}</code>\n"
+            f"وسيلة الدفع💳: <b>{method}</b>\n\n"
+            f"Serial: <code>{serial}</code>\n\n"
+            f"{method_info}\n\n"
+            f"تحقق من توفر المبلغ وقم بقبول/رفض الطلب بناء على ذلك.\n"
+        )
         check_button = [
             [
                 InlineKeyboardButton(
-                    text="التحقق☑️", callback_data=check_withdraw_callback_data
+                    text="التحقق☑️", callback_data=f"check_withdraw_order_{serial}"
                 )
             ],
         ]
@@ -537,9 +462,9 @@ withdraw_handler = ConversationHandler(
         ],
         ACCOUNT_NUMBER: [
             MessageHandler(
-                filters=filters.Regex(".*") & ~filters.COMMAND, callback=account_number
+                filters=filters.Regex("^\d+$"), callback=account_number
             )
-        ],  # TODO add a regex
+        ], 
         PASSWORD: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND, callback=get_password
