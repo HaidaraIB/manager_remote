@@ -5,10 +5,6 @@ from telegram import (
     InlineKeyboardMarkup,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -19,7 +15,6 @@ from telegram.ext import (
 
 import os
 from DB import DB
-import asyncio
 
 from custom_filters import BuyUSDT, Declined
 
@@ -39,33 +34,21 @@ async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         #     await update.callback_query.answer("تم إيقافك عن العمل إلى حين معالجة الشكاوى الصادرة باسمك.")
         #     return
 
-        data: dict = update.callback_query.data
+        serial = int(update.callback_query.data.split("_")[-1])
 
         await DB.add_checker_id(
             order_type="buy_usdt",
-            serial=data["serial"],
+            serial=serial,
             checker_id=update.effective_user.id,
         )
 
-        data_dict = {
-            **data,
-            "worker_id": update.effective_user.id,
-        }
-        send_order_callback_data = {
-            **data_dict,
-            "name": "send buy usdt order",
-        }
-        decline_order_callback_data = {
-            **data_dict,
-            "name": "decline buy usdt order",
-        }
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=send_order_callback_data
+                    text="إرسال الطلب⬅️", callback_data=f"send_buy_usdt_order_{serial}"
                 ),
                 InlineKeyboardButton(
-                    text="رفض الطلب❌", callback_data=decline_order_callback_data
+                    text="رفض الطلب❌", callback_data=f"decline_buy_usdt_order_{serial}"
                 ),
             ]
         ]
@@ -74,62 +57,19 @@ async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def send_buy_usdt_order_after(
-    after: int,
-    context: ContextTypes.DEFAULT_TYPE,
-    agent_id: int,
-    update: Update,
-    text: str,
-    verify_button: list[list[InlineKeyboardButton]],
-    data: dict,
-):
-    await asyncio.sleep(after)
-    message = await context.bot.send_photo(
-        chat_id=agent_id,
-        photo=update.callback_query.message.photo[-1],
-        caption="\n".join(text),
-        reply_markup=InlineKeyboardMarkup(verify_button),
-    )
-
-    await DB.change_order_state(
-        order_type="buy_usdt",
-        serial=data["serial"],
-        state="sent",
-    )
-    await DB.add_message_ids(
-        serial=data["serial"],
-        order_type="buy_usdt",
-        pending_process_message_id=message.id,
-    )
-
-
 async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
-
-        data = update.callback_query.data
-
-        method = data["method"]
+        serial = int(update.callback_query.data.split("_")[-1])
+        b_order = DB.get_one_order(order_type="buy_usdt", serial=serial)
+        method = b_order["method"]
 
         chat_id = f"{method}_group"
 
-        verify_button_callback_data = {
-            **data,
-            "name": "verify buy usdt order",
-        }
-
-        verify_button = [
-            [
-                InlineKeyboardButton(
-                    text="قبول الطلب✅", callback_data=verify_button_callback_data
-                )
-            ]
-        ]
-
-        amount = data["amount"]
+        amount = b_order["amount"]
         text = (
-            update.callback_query.message.caption_html
+            update.effective_message.caption_html
             + "\n\n<b>تنبيه: اضغط على المعلومات لنسخها كما هي في الرسالة تفادياً للخطأ.</b>"
         ).split("\n")
         text[2] = (
@@ -138,32 +78,32 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         del text[3]
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"][chat_id],
-            photo=update.callback_query.message.photo[-1],
+            photo=update.effective_message.photo[-1],
             caption="\n".join(text),
-            reply_markup=InlineKeyboardMarkup(verify_button),
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="قبول الطلب✅", callback_data=f"verify_buy_usdt_order_{serial}"
+                )
+            ),
         )
 
         await DB.change_order_state(
             order_type="buy_usdt",
-            serial=data["serial"],
+            serial=serial,
             state="sent",
         )
         await DB.add_message_ids(
-            serial=data["serial"],
+            serial=serial,
             order_type="buy_usdt",
             pending_process_message_id=message.id,
         )
 
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            text="تم إرسال الطلب✅",
-                            callback_data="تم إرسال الطلب✅",
-                        )
-                    ]
-                ]
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="تم إرسال الطلب✅",
+                    callback_data="تم إرسال الطلب✅",
+                )
             )
         )
 
@@ -177,7 +117,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         await DB.set_working_on_it(
             order_type="buy_usdt",
             working_on_it=0,
-            serial=data["serial"],
+            serial=serial,
         )
 
 
@@ -186,49 +126,21 @@ async def decline_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
         Chat.PRIVATE,
     ]:
 
-        data: dict = update.callback_query.data
-
-        back_button_callback_data = {
-            **data,
-            "name": "back from decline buy usdt order",
-        }
-        decline_buy_usdt_button = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع عن الرفض🔙",
-                    callback_data=back_button_callback_data,
-                )
-            ],
-        ]
+        serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بسبب الرفض",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(decline_buy_usdt_button)
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="الرجوع عن الرفض🔙",
+                    callback_data=f"back_from_decline_buy_usdt_order_{serial}",
+                )
+            )
         )
         return DECLINE_REASON
-
-
-async def archive_declined_usdt_after(
-    after: int,
-    context: ContextTypes.DEFAULT_TYPE,
-    update: Update,
-    caption: str,
-    data: dict,
-):
-    await asyncio.sleep(after)
-    message = await context.bot.send_photo(
-        chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-        photo=update.message.reply_to_message.photo[-1],
-        caption=caption,
-    )
-    await DB.add_message_ids(
-        order_type="buy_usdt",
-        archive_message_ids=str(message.id),
-        serial=data["serial"],
-    )
 
 
 async def decline_buy_usdt_order_reason(
@@ -238,11 +150,12 @@ async def decline_buy_usdt_order_reason(
         Chat.PRIVATE,
     ]:
 
-        data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
-            0
-        ].callback_data
+        serial = int(
+            update.message.reply_to_message.reply_markup.inline_keyboard[0][
+                0
+            ].callback_data.split("_")[-1]
+        )
 
-        serial = data["serial"]
         await DB.change_order_state(
             order_type="buy_usdt",
             serial=serial,
@@ -254,19 +167,18 @@ async def decline_buy_usdt_order_reason(
             reason=update.message.text,
         )
 
-        amount = data["amount"]
+        b_order = DB.get_one_order(order_type="buy_usdt", serial=serial)
 
-        text = f"""تم رفض عملية شراء <b>{amount} USDT</b>❗️
+        amount = b_order["amount"]
 
-السبب:
-<b>{update.message.text_html}</b>
-
-الرقم التسلسلي للطلب: <code>{data['serial']}</code>
-"""
+        text = (
+            f"تم رفض عملية شراء <b>{amount} USDT</b>❗️\n\n"
+            "السبب:\n"
+            f"<b>{update.message.text_html}</b>\n\n"
+            f"الرقم التسلسلي للطلب: <code>{serial}</code>"
+        )
         try:
-            await context.bot.send_message(
-                chat_id=data["user_id"], text=text
-            )
+            await context.bot.send_message(chat_id=b_order["user_id"], text=text)
         except:
             pass
 
@@ -282,17 +194,17 @@ async def decline_buy_usdt_order_reason(
         await DB.add_message_ids(
             order_type="buy_usdt",
             archive_message_ids=str(message.id),
-            serial=data["serial"],
+            serial=serial,
         )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
-            reply_markup=InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton(text="تم رفض الطلب❌", callback_data="تم رفض الطلب❌"),
-                ]
-            ])
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="تم رفض الطلب❌", callback_data="تم رفض الطلب❌"
+                )
+            ),
         )
 
         await context.bot.send_message(
@@ -304,7 +216,7 @@ async def decline_buy_usdt_order_reason(
         await DB.set_working_on_it(
             order_type="buy_usdt",
             working_on_it=0,
-            serial=data["serial"],
+            serial=serial,
         )
         return ConversationHandler.END
 
@@ -314,23 +226,15 @@ async def back_from_decline_buy_usdt_order(
 ):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
 
-        data: dict = update.callback_query.data
+        serial = int(update.callback_query.data.split("_")[-1])
 
-        send_order_callback_data = {
-            **data,
-            "name": "send buy usdt order",
-        }
-        decline_order_callback_data = {
-            **data,
-            "name": "decline buy usdt order",
-        }
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=send_order_callback_data
+                    text="إرسال الطلب⬅️", callback_data=f"send_buy_usdt_order_{serial}"
                 ),
                 InlineKeyboardButton(
-                    text="رفض الطلب❌", callback_data=decline_order_callback_data
+                    text="رفض الطلب❌", callback_data=f"decline_buy_usdt_order_{serial}"
                 ),
             ]
         ]
@@ -342,21 +246,19 @@ async def back_from_decline_buy_usdt_order(
 
 check_buy_usdt_handler = CallbackQueryHandler(
     callback=check_buy_usdt,
-    pattern=lambda d: isinstance(d, dict) and d.get("name", False) == "check buy usdt",
+    pattern="^check_buy_usdt",
 )
 
 send_buy_usdt_order_handler = CallbackQueryHandler(
     callback=send_buy_usdt_order,
-    pattern=lambda d: isinstance(d, dict)
-    and d.get("name", False) == "send buy usdt order",
+    pattern="^send_buy_usdt_order",
 )
 
 decline_buy_usdt_order_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             callback=decline_buy_usdt_order,
-            pattern=lambda d: isinstance(d, dict)
-            and d.get("name", False) == "decline buy usdt order",
+            pattern="^decline_buy_usdt_order",
         )
     ],
     states={
@@ -370,10 +272,9 @@ decline_buy_usdt_order_handler = ConversationHandler(
     fallbacks=[
         CallbackQueryHandler(
             callback=back_from_decline_buy_usdt_order,
-            pattern=lambda d: isinstance(d, dict)
-            and d.get("name", False) == "back from decline buy usdt order",
+            pattern="^back_from_decline_buy_usdt_order",
         )
     ],
-    name='decline_buy_usdt_order_handler',
+    name="decline_buy_usdt_order_handler",
     persistent=True,
 )
