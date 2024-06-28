@@ -23,20 +23,34 @@ from common.common import (
     build_complaint_keyboard,
 )
 
+from PyroClientSingleton import PyroClientSingleton
+
 import user.make_complaint as mkc
 
 
-async def make_complaint_data(context: ContextTypes.DEFAULT_TYPE, callback_data: list):
+async def make_complaint_data(
+    context: ContextTypes.DEFAULT_TYPE,
+    callback_data: list,
+):
     try:
         data = context.user_data["complaint_data"]
     except KeyError:
+        cpyro = PyroClientSingleton()
+        async with cpyro:
+            reason = "\n".join(
+                (
+                    await cpyro.get_messages(
+                        chat_id=int(context.bot_data["data"]["complaints_group"]),
+                        message_ids=int(callback_data[-4]),
+                    )
+                ).text.split("\n")[1:]
+            )
         data = {
             "text": (
                 f"شكوى جديدة:\n\n"
-                f"{mkc.stringify_order(serial=int(callback_data[-1]), order_type=callback_data[-2])}\n"
-                "سبب الشكوى:\n"
-                f"<b>{context.user_data['reason']}</b>"
+                f"{mkc.stringify_order(serial=int(callback_data[-1]), order_type=callback_data[-2])}"
             ),
+            "reason": ("سبب الشكوى:\n" f"<b>{reason}</b>\n"),
             "media": (
                 await mkc.get_photos_from_archive(
                     message_ids=[
@@ -61,11 +75,11 @@ async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [
                     InlineKeyboardButton(
                         text="تخطي⬅️",
-                        callback_data=f"skip_close_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                        callback_data=f"skip_close_complaint_{data[-4]}_{data[-3]}_{data[-2]}_{data[-1]}",
                     ),
                     InlineKeyboardButton(
                         text="الرجوع عن إغلاق الشكوى🔙",
-                        callback_data=f"back_from_close_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                        callback_data=f"back_from_close_complaint_{data[-4]}_{data[-3]}_{data[-2]}_{data[-1]}",
                     ),
                 ]
             )
@@ -136,7 +150,7 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             order_type=callback_data[-2], serial=int(callback_data[-1])
         )
 
-        text_list: list = data["text"].split("\n")
+        text_list: list = data["reason"].split("\n")
         if update.message.text:
             text_list.insert(
                 len(text_list), f"رد الدعم على الشكوى:\n<b>{update.message.text}</b>"
@@ -216,7 +230,7 @@ async def handle_respond_to_user_complaint(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الرد على المستخدم🔙",
-                    callback_data=f"back_from_respond_to_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                    callback_data=f"back_from_respond_to_user_complaint_{data[-4]}_{data[-3]}_{data[-2]}_{data[-1]}",
                 )
             )
         )
@@ -235,7 +249,7 @@ async def handle_edit_amount_user_complaint(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن تعديل المبلغ🔙",
-                    callback_data=f"back_from_mod_amount_to_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                    callback_data=f"back_from_mod_amount_to_user_complaint_{data[-4]}_{data[-3]}_{data[-2]}_{data[-1]}",
                 )
             )
         )
@@ -306,8 +320,9 @@ async def edit_order_amount_user_complaint(
                 from_worker=(
                     True if update.effective_chat.type == Chat.PRIVATE else False
                 ),
-                send_to_worker="_".join(callback_data[:-3])
-                == "send_to_worker_user_complaint",
+                send_to_worker="_".join(callback_data).startswith(
+                    "send_to_worker_user_complaint"
+                ),
             ),
         )
 
@@ -335,7 +350,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         except:
             pass
 
-        text_list: list = data["text"].split("\n")
+        text_list: list = data["reason"].split("\n")
 
         if update.message.text:
             text_list.insert(
@@ -347,7 +362,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 f"رد الدعم على الشكوى:\n<b>{update.message.caption}</b>",
             )
 
-        data["text"] = "\n".join(text_list)
+        data["reason"] = "\n".join(text_list)
 
         context.user_data["complaint_data"] = data
 
@@ -358,16 +373,15 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         )
 
         try:
+            respond_button = InlineKeyboardButton(
+                text="إرسال رد⬅️",
+                callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{callback_data[-4]}_{callback_data[-3]}_{callback_data[-2]}_{callback_data[-1]}",
+            )
             if not update.message.photo and not data["media"]:
                 await context.bot.send_message(
                     chat_id=op["user_id"],
                     text=button_text if data["media"] else "\n".join(text_list),
-                    reply_markup=InlineKeyboardMarkup.from_button(
-                        InlineKeyboardButton(
-                            text="إرسال رد⬅️",
-                            callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{data[-3]}_{data[-2]}_{data[-1]}",
-                        )
-                    ),
+                    reply_markup=InlineKeyboardMarkup.from_button(respond_button),
                 )
             else:
                 photos = data["media"] if data["media"] else []
@@ -382,12 +396,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 await context.bot.send_message(
                     chat_id=op["user_id"],
                     text=button_text,
-                    reply_markup=InlineKeyboardMarkup.from_button(
-                        InlineKeyboardButton(
-                            text="إرسال رد⬅️",
-                            callback_data=f"user_reply_to_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
-                        )
-                    ),
+                    reply_markup=InlineKeyboardMarkup.from_button(respond_button),
                 )
 
         except:
@@ -403,6 +412,8 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 )
             ),
         )
+
+        del context.user_data["complaint_data"]
 
 
 async def send_to_worker_user_complaint(
@@ -427,6 +438,10 @@ async def send_to_worker_user_complaint(
                 )
                 await context.bot.send_message(
                     chat_id=op["worker_id"],
+                    text=data["reason"],
+                )
+                await context.bot.send_message(
+                    chat_id=op["worker_id"],
                     text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {op['serial']}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
                     reply_markup=build_complaint_keyboard(
                         data=callback_data,
@@ -435,8 +450,9 @@ async def send_to_worker_user_complaint(
                             if update.effective_chat.type == Chat.PRIVATE
                             else False
                         ),
-                        send_to_worker="_".join(callback_data[:-3])
-                        == "send_to_worker_user_complaint",
+                        send_to_worker="_".join(callback_data).startswith(
+                            "send_to_worker_user_complaint"
+                        ),
                     ),
                 )
             else:
@@ -450,9 +466,14 @@ async def send_to_worker_user_complaint(
                             if update.effective_chat.type == Chat.PRIVATE
                             else False
                         ),
-                        send_to_worker="_".join(callback_data[:-3])
-                        == "send_to_worker_user_complaint",
+                        send_to_worker="_".join(callback_data).startswith(
+                            "send_to_worker_user_complaint"
+                        ),
                     ),
+                )
+                await context.bot.send_message(
+                    chat_id=op["worker_id"],
+                    text=data["reason"],
                 )
 
             await update.callback_query.answer(
@@ -484,8 +505,9 @@ async def back_from_respond_to_user_complaint(
                 from_worker=(
                     True if update.effective_chat.type == Chat.PRIVATE else False
                 ),
-                send_to_worker="_".join(callback_data[:-3])
-                == "send_to_worker_user_complaint",
+                send_to_worker="_".join(callback_data).startswith(
+                    "send_to_worker_user_complaint"
+                ),
             )
         )
 

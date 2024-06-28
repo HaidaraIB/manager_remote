@@ -34,6 +34,7 @@ def stringify_order(
         "إيداع جديد:\n"
         f"المبلغ: <code>{amount}</code>\n"
         f"رقم الحساب: <code>{account_number}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ.\n\n"
         "ملاحظة: تأكد من تطابق المبلغ في الرسالة مع الذي في لقطة الشاشة لأن ما سيضاف في حالة التأكيد هو الذي في الرسالة."
@@ -265,8 +266,8 @@ async def send_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             photo=update.callback_query.message.photo[-1],
             caption=stringify_order(
                 amount=d_order["amount"],
+                account_number=d_order["acc_number"],
                 method=d_order["method"],
-                account_number=d_order["account_number"],
                 serial=serial,
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
@@ -329,14 +330,13 @@ async def decline_deposit_order_reason(
         Chat.PRIVATE,
     ]:
 
-        serial = int(update.message.reply_to_message.reply_markup.inline_keyboard[0][
-            0
-        ].callback_data.split("_")[-1])
-
-        d_order = DB.get_one_order(
-            order_type='deposit',
-            serial=serial
+        serial = int(
+            update.message.reply_to_message.reply_markup.inline_keyboard[0][
+                0
+            ].callback_data.split("_")[-1]
         )
+
+        d_order = DB.get_one_order(order_type="deposit", serial=serial)
         text = (
             f"للأسف، تم إلغاء عملية الإيداع <b>{d_order['amount']}$</b> التي قمت بها.\n\n"
             "السبب:\n"

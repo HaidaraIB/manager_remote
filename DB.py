@@ -183,6 +183,12 @@ class DB:
             UNIQUE(number, method) ON CONFLICT IGNORE
         );
 
+        CREATE TABLE IF NOT EXISTS compalints (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_serial INTEGER,
+            reason TEXT
+        )
+
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
 
         -- init payment methods

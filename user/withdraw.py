@@ -211,10 +211,9 @@ async def back_to_payment_method(update: Update, context: ContextTypes.DEFAULT_T
 
 async def wallet_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        if context.user_data["payment_method"] in (
-            USDT,
-            SYRCASH,
-            MTNCASH,
+        if context.user_data["payment_method"] not in (
+            BARAKAH,
+            BEMO
         ):
             context.user_data["payment_method_number"] = update.message.text
             context.user_data["bank_account_name"] = ""

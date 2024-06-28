@@ -15,10 +15,9 @@ from telegram.ext import (
 
 from common.common import (
     build_user_keyboard,
+    build_back_button,
 )
-from common.force_join import (
-    check_if_user_member_decorator
-)
+from common.force_join import check_if_user_member_decorator
 
 from DB import DB
 
@@ -26,6 +25,7 @@ from custom_filters.Account import Account
 
 FULL_NAME, NATIONAL_NUMBER = range(2)
 DECLINE_REASON = 18
+
 
 @check_if_user_member_decorator
 async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -66,14 +66,6 @@ async def full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
-        decline_button = [
-            [
-                InlineKeyboardButton(
-                    text="الرفض❌",
-                    callback_data=f"decline create account {update.effective_user.id}",
-                )
-            ]
-        ]
         text = (
             f"الاسم الثلاثي: {context.user_data["full_name"]}\n"
             f"الرقم الوطني: {update.message.text}\n\n"
@@ -82,7 +74,12 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=context.bot_data["data"]["accounts_orders_group"],
             text=text,
-            reply_markup=InlineKeyboardMarkup(decline_button),
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="الرفض❌",
+                    callback_data=f"decline create account {update.effective_user.id}",
+                )
+            ),
         )
 
         text = "شكراً لك، سيتم مراجعة الصور المرسلة والرد عليك بأقرب وقت."
@@ -96,9 +93,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def cancel_create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        text = f"""تم الإلغاء👍
-
-قم بإرسال اسمك الثلاثي الآن 👤🪪"""
+        text = f"تم الإلغاء👍\n\n" "قم بإرسال اسمك الثلاثي الآن 👤🪪"
 
         await update.callback_query.edit_message_text(
             text=text,
@@ -153,21 +148,15 @@ async def reply_to_create_account_order(
 async def decline_create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
         user_id = int(update.callback_query.data.split(" ")[-1])
-        context.user_data['create_account_user_id'] = user_id
-        decline_create_account_button = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙",
-                    callback_data=f"back from decline create account {user_id}",
-                )
-            ],
-        ]
+        context.user_data["create_account_user_id"] = user_id
         await update.callback_query.answer(
-            text=f"<code>{user_id}</code>\nقم بالرد على هذه الرسالة بسبب الرفض",
+            text=f"قم بالرد على هذه الرسالة بسبب الرفض",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(decline_create_account_button),
+            reply_markup=InlineKeyboardMarkup.from_row(
+                build_back_button(f"back from decline create account {user_id}")
+            ),
         )
         return DECLINE_REASON
 
@@ -177,7 +166,7 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = "تم رفض طلبك لإنشاء حساب، السبب:\n\n"
         try:
             await context.bot.send_message(
-                chat_id=context.user_data['create_account_user_id'],
+                chat_id=context.user_data["create_account_user_id"],
                 text=text + update.effective_message.text_html,
             )
         except:

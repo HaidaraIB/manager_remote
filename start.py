@@ -1,6 +1,7 @@
 from telegram import (
     Update,
     Chat,
+    BotCommandScopeChat,
 )
 
 from telegram.ext import (
@@ -12,7 +13,6 @@ from telegram.ext import (
 )
 
 from telegram.constants import (
-    ParseMode,
     ChatMemberStatus,
 )
 
@@ -31,6 +31,7 @@ from common.force_join import (
 )
 
 from custom_filters.Admin import Admin
+from custom_filters.Worker import Worker
 
 
 async def inits(app: Application):
@@ -51,8 +52,21 @@ async def inits(app: Application):
         app.bot_data["suspended_workers"] = set()
 
 
+async def set_commands(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    if Worker().filter(update):
+        commands=[("worker", "worker command")]
+    elif Admin().filter(update):
+        commands=[("admin", "admin command")]
+    else:
+        commands=[("start", "start command")]
+    await context.bot.set_my_commands(
+        commands=commands,
+        scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
+    )
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        await set_commands(update, context)
         old_user = DB.get_user(user_id=update.effective_user.id)
         if not old_user:
             new_user = update.effective_user
@@ -76,17 +90,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        d_agent = DB.get_deposit_agent(user_id=update.effective_user.id)
-        p_agent = DB.get_payment_agent(user_id=update.effective_user.id)
-        checker = DB.get_checker(user_id=update.effective_user.id)
-        if p_agent or d_agent or checker:
-            text = "أهلاً بك..."
-            keyboard = build_worker_keyboard()
-            await update.message.reply_text(
-                text=text, reply_markup=keyboard
-            )
-            return ConversationHandler.END
+    if update.effective_chat.type == Chat.PRIVATE and Worker().filter(update):
+        text = "أهلاً بك..."
+        keyboard = build_worker_keyboard()
+        await update.message.reply_text(
+            text=text, reply_markup=keyboard
+        )
+        return ConversationHandler.END
 
 
 async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):

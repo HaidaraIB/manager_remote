@@ -208,7 +208,7 @@ def build_complaint_keyboard(data: list, from_worker: bool, send_to_worker: bool
             ),
         ],
     ]
-    if from_worker or send_to_worker:
+    if from_worker or not send_to_worker:
         complaint_keyboard[0].append(
             InlineKeyboardButton(
                 text="إرسال إلى الموظف المسؤول",

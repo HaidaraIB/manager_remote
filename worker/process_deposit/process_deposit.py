@@ -50,16 +50,12 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
             text="قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
             show_alert=True,
         )
-        return_button = [
-            [
+        await update.callback_query.edit_message_reply_markup(
+            reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إعادة الطلب📥", callback_data=f"return_deposit_order_{serial}"
                 )
-            ]
-        ]
-
-        await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(return_button)
+            )
         )
 
 
@@ -84,14 +80,14 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             gifts_amount = 10_000 * context.bot_data["data"]["deposit_gift_percentage"]
             await DB.million_gift_user(user_id=d_order["user_id"], amount=gifts_amount)
 
-        # caption = (
-        #     f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{d_order['amount']}$</b> إلى رصيدك\n"
-        #     f"{f"بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>" if gifts_amount else ''}\n\n"
-        #     f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
-        #     f"Congrats🎉, the deposit you made <b>{d_order['amount']}$</b> was added to your balance\n"
-        #     f"{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}\n\n"
-        #     f"Serial: <code>{serial}</code>"
-        # )
+        caption = (
+            f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{d_order['amount']}$</b> إلى رصيدك\n"
+            f"{f"بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>" if gifts_amount else ''}\n\n"
+            f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
+            f"Congrats🎉, the deposit you made <b>{d_order['amount']}$</b> was added to your balance\n"
+            f"{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}\n\n"
+            f"Serial: <code>{serial}</code>"
+        )
         try:
             await context.bot.send_photo(
                 chat_id=d_order["user_id"],
@@ -192,7 +188,7 @@ async def return_deposit_order_reason(
                 reply_markup=InlineKeyboardMarkup.from_button(
                     InlineKeyboardButton(
                         text="إرفاق المطلوب",
-                        callback_data=f"return_deposit_{update.effective_chat.id}_{serial}",
+                        callback_data=f"handle_return_deposit_{update.effective_chat.id}_{serial}",
                     )
                 ),
             )

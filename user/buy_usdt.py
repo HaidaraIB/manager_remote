@@ -215,9 +215,9 @@ async def cash_code_bank_account_name_buy_usdt(
 ):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
 
-        if context.user_data["payment_method_buy_usdt"] in (
-            SYRCASH,
-            MTNCASH,
+        if context.user_data["payment_method_buy_usdt"] not in (
+            BARAKAH,
+            BEMO,
         ):
             context.user_data["payment_method_number_buy_usdt"] = update.message.text
             context.user_data["bank_account_name_buy_usdt"] = ""

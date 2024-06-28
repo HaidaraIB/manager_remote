@@ -118,7 +118,7 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
             f"<code>{context.bot_data['data'][f'{data}_number']}</code>\n\n"
-            f"ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها."
+            f"ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
         )
         if data == "USDT":
             text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n"

@@ -21,6 +21,7 @@ from pyrogram.types import Message
 from common.common import (
     build_user_keyboard,
     build_back_button,
+    build_complaint_keyboard
 )
 
 from common.force_join import check_if_user_member_decorator
@@ -83,10 +84,12 @@ def stringify_order(serial: int, order_type: str):
 
 
 async def check_complaint_date(
-    context: ContextTypes.DEFAULT_TYPE, update: Update, serial: int
+    context: ContextTypes.DEFAULT_TYPE,
+    serial: int,
+    order_type: str,
 ):
-    if not context.user_data.get("notified_operations", False):
-        context.user_data["notified_operations"] = {
+    if not context.user_data.get(f"notified_{order_type}_operations", False):
+        context.user_data[f"notified_{order_type}_operations"] = {
             serial: {
                 "serial": serial,
                 "date": datetime.datetime.now(),
@@ -94,14 +97,16 @@ async def check_complaint_date(
         }
         return True
 
-    elif not context.user_data["notified_operations"].get(serial, False):
-        context.user_data["notified_operations"][serial] = {
+    elif not context.user_data[f"notified_{order_type}_operations"].get(serial, False):
+        context.user_data[f"notified_{order_type}_operations"][serial] = {
             "serial": serial,
             "date": datetime.datetime.now(),
         }
         return True
 
-    date: datetime.datetime = context.user_data["notified_operations"][serial]["date"]
+    date: datetime.datetime = context.user_data[f"notified_{order_type}_operations"][
+        serial
+    ]["date"]
 
     if (datetime.datetime.now() - date).days < 1:
 
@@ -347,7 +352,6 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         res = await check_complaint_date(
             context=context,
-            update=update,
             serial=serial,
         )
 
@@ -421,9 +425,9 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     pending_check_message_id=message.id,
                 )
 
-        context.user_data["notified_operations"][serial][
-            "date"
-        ] = datetime.datetime.now()
+        context.user_data[
+            f"notified_{context.user_data['complaint_about']}_operations"
+        ][serial]["date"] = datetime.datetime.now()
 
         await update.callback_query.edit_message_text(
             text="شكراً لك، لقد تمت العملية بنجاح.",
@@ -481,30 +485,12 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
             if op["worker_id"]:
                 context.bot_data["suspended_workers"].add(op["worker_id"])
 
-            complaint_keyboard = [
-                [
-                    InlineKeyboardButton(
-                        text="الرد على المستخدم",
-                        callback_data=f"respond_to_user_complaint_{archive_message_ids}_{order_type}_{serial}",
-                    ),
-                    InlineKeyboardButton(
-                        text="إرسال إلى الموظف المسؤول",
-                        callback_data=f"send_to_worker_user_complaint_{archive_message_ids}_{order_type}_{serial}",
-                    ),
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="تعديل المبلغ",
-                        callback_data=f"mod_amount_user_complaint_{archive_message_ids}_{order_type}_{serial}",
-                    ),
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="إغلاق الشكوى🔐",
-                        callback_data=f"close_complaint_{archive_message_ids}_{order_type}_{serial}",
-                    ),
-                ],
+            data = [
+                archive_message_ids,
+                order_type,
+                serial
             ]
+            complaint_keyboard = build_complaint_keyboard(data, False, False)
 
             if not photos:  # Means there's no picture, it's a declined withdraw order.
                 await context.bot.send_message(
@@ -523,13 +509,15 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 await context.bot.send_message(
                     chat_id=context.bot_data["data"]["complaints_group"],
                     text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {serial}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
-                    reply_markup=InlineKeyboardMarkup(complaint_keyboard),
+                    reply_markup=complaint_keyboard,
                 )
 
             await update.callback_query.edit_message_text(
                 text="شكراً لك، تم إرسال الشكوى خاصتك إلى قسم المراجعة بنجاح، سنعمل على إصلاح المشكلة والرد عليك في أقرب وقت ممكن.",
                 reply_markup=build_user_keyboard(),
             )
+
+            
 
             return ConversationHandler.END
 
