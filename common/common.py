@@ -280,30 +280,9 @@ chat_data = {str(context.chat_data)}
             f.write(error)
 
 
-def create_dot_env():
-    if os.path.exists(".env"):
-        return
-    content = f"""
-API_ID = '25770272'
-API_HASH = 'd122d5cd1975d6e4db7cfed59502f257'
-
-BOT_TOKEN = '6994000356:AAEQlhyQkQCB9jzaqz_84lLIrDE37BhwmcM'
-
-OWNER_ID = '6190159711'
-
-CHANNEL_ID = '-1001553443218'
-CHANNEL_LINK = 'https://t.me/melbetsy'
-
-ARCHIVE_CHANNEL = "-1001997728650"
-
-DB_PATH = 'data/database.sqlite3'
-"""
-    with open(".env", mode="w") as f:
-        f.write(content)
-
-
 def create_folders():
     os.makedirs("data/", exist_ok=True)
+    os.makedirs("data_test/", exist_ok=True)
 
 
 request_buttons = [

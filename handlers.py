@@ -30,9 +30,7 @@ from jobs import (
 from common.common import (
     invalid_callback_data,
     error_handler,
-    create_dot_env,
     create_folders,
-    disable_httpx,
 )
 
 from common.back_to_home_page import (
@@ -77,18 +75,15 @@ from DB import DB
 
 
 def main():
-    create_dot_env()
     create_folders()
     load_dotenv()
-    # disable_httpx()
     DB.creat_tables()
     defaults = Defaults(parse_mode=ParseMode.HTML)
-    my_persistence = PicklePersistence(filepath="data/persistence", single_file=False)
+    my_persistence = PicklePersistence(filepath=os.getenv("PERSISTENCE_PATH"), single_file=False)
     app = (
         Application.builder()
         .token(os.getenv("BOT_TOKEN"))
         .post_init(inits)
-        # .arbitrary_callback_data(True)
         .persistence(persistence=my_persistence)
         .defaults(defaults)
         .concurrent_updates(True)
