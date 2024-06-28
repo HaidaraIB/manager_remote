@@ -19,6 +19,7 @@ from common.common import (
     build_user_keyboard,
     payment_method_pattern,
     build_back_button,
+    build_methods_keyboard
 )
 
 from common.force_join import check_if_user_member_decorator
@@ -42,19 +43,6 @@ from constants import *
     BANK_ACCOUNT_NAME_BUY_USDT,
     BUY_USDT_CHECK,
 ) = range(7)
-
-buy_usdt_methods = [
-    [
-        InlineKeyboardButton(text=f"{BEMO}", callback_data=f"{BEMO}"),
-        InlineKeyboardButton(text=f"{BARAKAH}", callback_data=f"{BARAKAH}"),
-    ],
-    [
-        InlineKeyboardButton(text=f"{SYRCASH}", callback_data=f"{SYRCASH}"),
-        InlineKeyboardButton(text=f"{MTNCASH}", callback_data=f"{MTNCASH}"),
-    ],
-    build_back_button("back to yes no buy usdt"),
-    back_to_user_home_page_button[0],
-]
 
 
 @check_if_user_member_decorator
@@ -119,6 +107,9 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return ConversationHandler.END
         else:
+            buy_usdt_methods = build_methods_keyboard(buy_usdt=True)
+            buy_usdt_methods.append(build_back_button("back to yes no buy usdt"))
+            buy_usdt_methods.append(back_to_user_home_page_button[0])
             await update.callback_query.edit_message_text(
                 text="اختر وسيلة الدفع لاستلام أموالك💳",
                 reply_markup=InlineKeyboardMarkup(buy_usdt_methods),
@@ -209,6 +200,9 @@ async def back_to_bank_account_name_buy_usdt(
 
 async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+        buy_usdt_methods = build_methods_keyboard(buy_usdt=True)
+        buy_usdt_methods.append(build_back_button("back to yes no buy usdt"))
+        buy_usdt_methods.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع لاستلام أموالك💳",
             reply_markup=InlineKeyboardMarkup(buy_usdt_methods),

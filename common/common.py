@@ -149,7 +149,7 @@ def build_admin_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-def build_methods_keyboard():
+def build_methods_keyboard(buy_usdt: bool = False):
     methods = DB.get_payment_methods()
     if len(methods) == 1:
         payment_methods = [
@@ -178,6 +178,8 @@ def build_methods_keyboard():
         payment_methods.append(
             [InlineKeyboardButton(text=methods[-1][0], callback_data=methods[-1][0])]
         )
+    if buy_usdt:
+        payment_methods[0].pop(0)
     return payment_methods
 
 
