@@ -23,10 +23,10 @@ from common.common import (
 
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_to_admin_home_page_button
+    back_to_admin_home_page_button,
 )
 
-from start import start_command
+from start import admin_command
 
 from DB import DB
 from custom_filters.Admin import Admin
@@ -141,10 +141,19 @@ def build_positions_keyboard(op: str = "add"):
             ),
         ],
         [
-            InlineKeyboardButton(text=f"دفع {USDT}", callback_data=f"{op} {USDT} worker"),
+            InlineKeyboardButton(
+                text=f"دفع {USDT}", callback_data=f"{op} {USDT} worker"
+            ),
+        ],
+        [
             InlineKeyboardButton(
                 text=f"دفع {BARAKAH}", callback_data=f"{op} {BARAKAH} worker"
             ),
+            InlineKeyboardButton(
+                text=f"دفع {BEMO}", callback_data=f"{op} {BEMO} worker"
+            ),
+        ],
+        [
             InlineKeyboardButton(
                 text=f"دفع {SYRCASH}",
                 callback_data=f"{op} {SYRCASH} worker",
@@ -152,8 +161,14 @@ def build_positions_keyboard(op: str = "add"):
             InlineKeyboardButton(
                 text=f"دفع {MTNCASH}", callback_data=f"{op} {MTNCASH} worker"
             ),
+        ],
+        [
             InlineKeyboardButton(
-                text=f"دفع {BEMO}", callback_data=f"{op} {BEMO} worker"
+                text=f"دفع {PAYEER}", callback_data=f"{op} {PAYEER} worker"
+            ),
+            InlineKeyboardButton(
+                text=f"دفع {PERFECT_MONEY}",
+                callback_data=f"{op} {PERFECT_MONEY} worker",
             ),
         ],
         (
@@ -161,7 +176,7 @@ def build_positions_keyboard(op: str = "add"):
             if op == "add"
             else []
         ),
-        back_to_admin_home_page_button[0] if op != 'add' else []
+        back_to_admin_home_page_button[0] if op != "add" else [],
     ]
     return InlineKeyboardMarkup(add_worker_keyboard)
 
@@ -231,7 +246,7 @@ async def worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=ReplyKeyboardRemove(),
         )
         await update.message.reply_text(
-            text="اختر الوظيفة:\n\nللإنهاء اضغط /start",
+            text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
             reply_markup=build_positions_keyboard(),
         )
         return POSITION
@@ -263,7 +278,7 @@ async def position(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         await update.callback_query.answer("تمت إضافة الموظف بنجاح✅")
         await update.callback_query.edit_message_text(
-            text="تمت إضافة الموظف بنجاح✅\n\n\nاختر وظيفة أخرى إن إردت، للإنهاء اضغط /start.",
+            text="تمت إضافة الموظف بنجاح✅\n\n\nاختر وظيفة أخرى إن إردت، للإنهاء اضغط /admin.",
             reply_markup=build_positions_keyboard(),
         )
         return
@@ -454,7 +469,7 @@ add_worker_cp_handler = ConversationHandler(
     },
     fallbacks=[
         back_to_admin_home_page_handler,
-        start_command,
+        admin_command,
         CallbackQueryHandler(back_to_worker_id, "^back to worker id$"),
     ],
 )
@@ -475,7 +490,7 @@ remove_worker_handler = ConversationHandler(
     },
     fallbacks=[
         back_to_admin_home_page_handler,
-        start_command,
+        admin_command,
         CallbackQueryHandler(
             back_to_pos_to_remove_from, "^back to pos to remove from$"
         ),
@@ -495,7 +510,7 @@ show_worker_handler = ConversationHandler(
     },
     fallbacks=[
         back_to_admin_home_page_handler,
-        start_command,
+        admin_command,
         CallbackQueryHandler(back_to_pos_to_show, "^back to pos to show$"),
     ],
 )

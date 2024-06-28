@@ -400,6 +400,18 @@ def build_groups_keyboard(op: str):
         ],
         [
             InlineKeyboardButton(
+                text=f"سحب {PAYEER}",
+                callback_data=f"{op} {PAYEER}_group",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=f"سحب {PERFECT_MONEY}",
+                callback_data=f"{op} {PERFECT_MONEY}_group",
+            )
+        ],
+        [
+            InlineKeyboardButton(
                 text="شكاوي العملاء",
                 callback_data=f"{op} complaints_group",
             )

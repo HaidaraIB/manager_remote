@@ -19,6 +19,8 @@ from common.common import (
 )
 from start import start_command, worker_command
 
+from constants import *
+
 REQUEST_WHAT = 0
 
 orders_dict = {
@@ -26,6 +28,27 @@ orders_dict = {
     "deposit": "إيداع",
     "buyusdt": "شراء usdt",
 }
+
+
+def build_payment_agent_keyboard(agent):
+    usdt = []
+    syr = []
+    banks = []
+    payeer = []
+    for m in agent:
+        button = InlineKeyboardButton(
+            text=f"دفع {m['method']}",
+            callback_data=f"request {m['method']}",
+        )
+        if m["method"] == USDT:
+            usdt.append(button)
+        elif m["method"] in [BARAKAH, BEMO]:
+            banks.append(button)
+        elif m["method"] in [SYRCASH, MTNCASH]:
+            syr.append(button)
+        else:
+            payeer.append(button)
+    return [usdt, syr, banks, payeer]
 
 
 async def send_requested_order(
@@ -103,19 +126,12 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
         payment_agent = DB.get_payment_agent(user_id=update.effective_user.id)
-        payment_agent_keyboard = []
-        for p in payment_agent:
-            payment_agent_keyboard.append(
-                InlineKeyboardButton(
-                    text=f"دفع {p['method']}",
-                    callback_data=f"request {p['method']}",
-                )
-            )
+        payment_agent_keyboard = build_payment_agent_keyboard(payment_agent)
 
         keyboard = [
             deposit_agent_button,
             checker_keyboard,
-            payment_agent_keyboard,
+            *payment_agent_keyboard,
             [
                 InlineKeyboardButton(
                     text="إلغاء❌", callback_data="cancel request order"
@@ -164,9 +180,13 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             group_id = c_order["group_id"]
 
         else:
-            w_order = await DB.get_payment_order(order_type='withdraw', method=order_type)
+            w_order = await DB.get_payment_order(
+                order_type="withdraw", method=order_type
+            )
             if not w_order:
-                bu_order = await DB.get_payment_order(order_type='buyusdt', method=order_type)
+                bu_order = await DB.get_payment_order(
+                    order_type="buyusdt", method=order_type
+                )
                 if not bu_order:
                     await update.callback_query.answer(
                         f"ليس هناك طلبات دفع {order_type} حالياً."
