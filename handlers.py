@@ -48,6 +48,7 @@ from user.buy_usdt import buy_usdt_handler
 from user.make_complaint import complaint_handler
 from user.user_calls import *
 from user.create_account import *
+from user.respond_to_complaint import reply_to_returned_complaint_handler
 
 from admin.admin_calls import *
 from admin.admin_settings import *

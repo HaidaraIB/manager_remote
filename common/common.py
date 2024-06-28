@@ -192,19 +192,19 @@ def build_complaint_keyboard(data: list, from_worker: bool, send_to_worker: bool
         [
             InlineKeyboardButton(
                 text="الرد على المستخدم",
-                callback_data=f"respond_to_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                callback_data=f"respond_to_user_complaint_{data[-2]}_{data[-1]}",
             ),
         ],
         [
             InlineKeyboardButton(
                 text="تعديل المبلغ",
-                callback_data=f"mod_amount_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                callback_data=f"mod_amount_user_complaint_{data[-2]}_{data[-1]}",
             ),
         ],
         [
             InlineKeyboardButton(
                 text="إغلاق الشكوى🔐",
-                callback_data=f"close_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                callback_data=f"close_complaint_{data[-2]}_{data[-1]}",
             ),
         ],
     ]
@@ -212,7 +212,7 @@ def build_complaint_keyboard(data: list, from_worker: bool, send_to_worker: bool
         complaint_keyboard[0].append(
             InlineKeyboardButton(
                 text="إرسال إلى الموظف المسؤول",
-                callback_data=f"send_to_worker_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                callback_data=f"send_to_worker_user_complaint_{data[-2]}_{data[-1]}",
             )
         )
     return InlineKeyboardMarkup(complaint_keyboard)
@@ -319,6 +319,12 @@ def build_groups_keyboard(op: str):
         ],
         [
             InlineKeyboardButton(
+                text="معالجة الإيداع قبل التحقق",
+                callback_data=f"{op} deposit_orders_group",
+            )
+        ],
+        [
+            InlineKeyboardButton(
                 text="معالجة الإيداع بعد التحقق",
                 callback_data=f"{op} deposit_after_check_group",
             )
@@ -333,12 +339,6 @@ def build_groups_keyboard(op: str):
             InlineKeyboardButton(
                 text="طلبات شراء USDT",
                 callback_data=f"{op} buy_usdt_orders_group",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="معالجة الإيداع قبل التحقق",
-                callback_data=f"{op} deposit_orders_group",
             )
         ],
         [

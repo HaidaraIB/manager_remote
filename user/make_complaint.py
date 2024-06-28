@@ -21,7 +21,7 @@ from pyrogram.types import Message
 from common.common import (
     build_user_keyboard,
     build_back_button,
-    build_complaint_keyboard
+    build_complaint_keyboard,
 )
 
 from common.force_join import check_if_user_member_decorator
@@ -348,11 +348,13 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         serial = int(update.callback_query.data.split("_")[-1])
 
         op = DB.get_one_order(
-            order_type=context.user_data["complaint_about"], serial=serial
+            order_type=context.user_data["complaint_about"],
+            serial=serial,
         )
         res = await check_complaint_date(
             context=context,
             serial=serial,
+            order_type=context.user_data["complaint_about"],
         )
 
         if not res:
@@ -476,7 +478,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 f"شكوى جديدة:\n\n"
                 f"{stringify_order(serial=serial, order_type=order_type)}\n"
                 "سبب الشكوى:\n"
-                f"<b>{context.user_data['reason']}</b>"
+                f"<b>{context.user_data['reason']}</b>\n"
             )
             photos = await get_photos_from_archive(
                 message_ids=[m_id for m_id in map(int, archive_message_ids.split(","))]
@@ -485,18 +487,13 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
             if op["worker_id"]:
                 context.bot_data["suspended_workers"].add(op["worker_id"])
 
-            data = [
-                archive_message_ids,
-                order_type,
-                serial
-            ]
+            data = [order_type, serial]
             complaint_keyboard = build_complaint_keyboard(data, False, False)
 
             if not photos:  # Means there's no picture, it's a declined withdraw order.
                 await context.bot.send_message(
                     chat_id=context.bot_data["data"]["complaints_group"],
                     text=complaint_text,
-                    reply_markup=InlineKeyboardMarkup(complaint_keyboard),
                 )
             else:
                 media_group = [InputMediaPhoto(media=photo) for photo in photos]
@@ -506,18 +503,22 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                     caption=complaint_text,
                 )
 
-                await context.bot.send_message(
-                    chat_id=context.bot_data["data"]["complaints_group"],
-                    text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {serial}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
-                    reply_markup=complaint_keyboard,
-                )
+            await context.bot.send_message(
+                chat_id=context.bot_data["data"]["complaints_group"],
+                text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {serial}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️\n\n",
+                reply_markup=complaint_keyboard,
+            )
 
             await update.callback_query.edit_message_text(
                 text="شكراً لك، تم إرسال الشكوى خاصتك إلى قسم المراجعة بنجاح، سنعمل على إصلاح المشكلة والرد عليك في أقرب وقت ممكن.",
                 reply_markup=build_user_keyboard(),
             )
 
-            
+            await DB.add_complaint(
+                order_serial=serial,
+                order_type=order_type,
+                reason=context.user_data["reason"],
+            )
 
             return ConversationHandler.END
 

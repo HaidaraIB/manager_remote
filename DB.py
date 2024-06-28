@@ -183,11 +183,12 @@ class DB:
             UNIQUE(number, method) ON CONFLICT IGNORE
         );
 
-        CREATE TABLE IF NOT EXISTS compalints (
+        CREATE TABLE IF NOT EXISTS complaints (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             order_serial INTEGER,
+            order_type TEXT,
             reason TEXT
-        )
+        );
 
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
 
@@ -207,6 +208,33 @@ class DB:
         cr.close()
         db.close()
 
+    @staticmethod
+    @lock_and_release
+    async def add_complaint(
+        order_serial: int, order_type: str, reason: str, cr: sqlite3.Cursor = None
+    ):
+        cr.execute(
+            "INSERT INTO complaints(order_serial, order_type, reason) VALUES (?, ?, ?)",
+            (
+                order_serial,
+                order_type,
+                reason,
+            ),
+        )
+
+    @staticmethod
+    @connect_and_close
+    def get_complaint(
+        order_serial: int, order_type: str, cr: sqlite3.Cursor = None
+    ):
+        cr.execute(
+            "SELECT * FROM complaints WHERE order_serial = ? AND order_type = ? ORDER BY id",
+            (
+                order_serial,
+                order_type,
+            ),
+        )
+        return cr.fetchall()[-1]
 
     @staticmethod
     @lock_and_release
@@ -362,7 +390,6 @@ class DB:
             (amount, user_id),
         )
 
-
     @staticmethod
     @lock_and_release
     async def add_deposit_order(
@@ -474,7 +501,6 @@ class DB:
 
         return cr.fetchone()[0]
 
-
     @staticmethod
     @connect_and_close
     def get_checker(user_id: int, cr: sqlite3.Cursor = None):
@@ -519,7 +545,9 @@ class DB:
 
     @staticmethod
     @lock_and_release
-    async def get_payment_order(order_type:str, method: str, cr: sqlite3.Cursor = None):
+    async def get_payment_order(
+        order_type: str, method: str, cr: sqlite3.Cursor = None
+    ):
         cr.execute(
             f"""
                 SELECT * FROM {order_type}_orders
@@ -529,7 +557,6 @@ class DB:
             (method,),
         )
         return cr.fetchone()
-
 
     @staticmethod
     @lock_and_release
@@ -649,7 +676,6 @@ class DB:
             f"UPDATE {order_type}_orders SET complaint_took_care_of = ? WHERE serial = ?",
             (took_care_of, serial),
         )
-
 
     @staticmethod
     @connect_and_close
@@ -898,7 +924,7 @@ class DB:
             "UPDATE users SET gifts_balance = gifts_balance + ? WHERE id = ?",
             (amount, user_id),
         )
-        
+
     @staticmethod
     @lock_and_release
     async def million_gift_user(
@@ -911,7 +937,6 @@ class DB:
                    WHERE id = ?""",
             (amount, user_id),
         )
-
 
     @staticmethod
     @lock_and_release
