@@ -23,7 +23,7 @@ from common.common import (
 
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_to_admin_home_page_button
+    back_to_admin_home_page_button,
 )
 
 from start import start_command
@@ -31,6 +31,7 @@ from start import start_command
 from custom_filters.Admin import Admin
 
 NEW_GROUP_ID = 0
+
 
 async def change_groups(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
@@ -56,18 +57,14 @@ async def change_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"الغروب الحالي: <code>{context.bot_data["data"][target_group]}</code>\n\nاختر الغروب الذي تريد تعديله بالضغط على الزر أدناه، يمكنك إلغاء العملية بالضغط على /admin.",
-            reply_markup=ReplyKeyboardMarkup(
-                keyboard=[
-                    [
-                        KeyboardButton(
-                            text="اختيار غروب جديد 👥",
-                            request_chat=KeyboardButtonRequestChat(
-                                request_id=5,
-                                chat_is_channel=False,
-                            ),
-                        )
-                    ]
-                ],
+            reply_markup=ReplyKeyboardMarkup.from_button(
+                KeyboardButton(
+                    text="اختيار غروب جديد 👥",
+                    request_chat=KeyboardButtonRequestChat(
+                        request_id=5,
+                        chat_is_channel=False,
+                    ),
+                ),
                 resize_keyboard=True,
             ),
         )

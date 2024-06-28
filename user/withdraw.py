@@ -33,18 +33,27 @@ from start import start_command
 
 from DB import DB
 
+from constants import *
+
 (
     AMOUNT,
     PAYMENT_METHOD,
     WALLET_CODE,
     BANK_NUMBER_WITHDRAW,
-    MTN_CASH_NUMBER_WITHDRAW,
-    SYR_CASH_NUMBER_WITHDRAW,
     BANK_ACCOUNT_NAME,
     ACCOUNT_NUMBER,
     PASSWORD,
     LAST_NAME,
-) = range(10)
+) = range(8)
+
+
+withdraw_type_keyboard = [
+    [
+        InlineKeyboardButton(text="سحب مكافآت🎁", callback_data="withdraw gift"),
+        InlineKeyboardButton(text="سحب رصيد👝", callback_data="withdraw balance"),
+    ],
+    back_to_user_home_page_button[0],
+]
 
 
 @check_if_user_member_decorator
@@ -62,17 +71,9 @@ async def withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("السحوبات متوقفة حالياً❗️")
             return ConversationHandler.END
 
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="سحب مكافآت🎁", callback_data="withdraw مكافأة"
-                ),
-                InlineKeyboardButton(text="سحب رصيد👝", callback_data="withdraw رصيد"),
-            ],
-            back_to_user_home_page_button[0],
-        ]
         await update.callback_query.edit_message_text(
-            text="اختر ما الذي تريد سحبه❔", reply_markup=InlineKeyboardMarkup(keyboard)
+            text="اختر ما الذي تريد سحبه❔",
+            reply_markup=InlineKeyboardMarkup(withdraw_type_keyboard),
         )
 
 
@@ -92,17 +93,10 @@ async def withdraw_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def back_to_withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="سحب مكافآت🎁", callback_data="withdraw مكافأة"
-                ),
-                InlineKeyboardButton(text="سحب رصيد👝", callback_data="withdraw رصيد"),
-            ],
-            back_to_user_home_page_button[0],
-        ]
+
         await update.callback_query.edit_message_text(
-            text="اختر ما الذي تريد سحبه❔", reply_markup=InlineKeyboardMarkup(keyboard)
+            text="اختر ما الذي تريد سحبه❔",
+            reply_markup=InlineKeyboardMarkup(withdraw_type_keyboard),
         )
         return ConversationHandler.END
 
@@ -115,7 +109,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = DB.get_user(user_id=update.effective_user.id)
         if (user[4] < amount or user[4] < 10_000) and context.user_data[
             "withdraw_type"
-        ] == "withdraw مكافأة":
+        ] == "withdraw gift":
             text = (
                 f"❌ عذراً يا عزيزي رصيد مكافآتك غير كافي لعملية السحب.\n\n"
                 f"🎁 رصيد مكافآتك الحالي هو: <b>{user[4]}$</b>\n"
@@ -159,32 +153,18 @@ async def payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back to payment method"),
             back_to_user_home_page_button[0],
         ]
-
-        if context.user_data["payment_method"] in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]:
-
-            if context.user_data["payment_method"] == "بيمو🇸🇦🇫🇷":
-                text = "أرسل رقم حساب بيمو👝"
-            else:
-                text = "أرسل رقم حساب بركة👝"
-
-            await update.callback_query.edit_message_text(
-                text=text, reply_markup=InlineKeyboardMarkup(back_keyboard)
-            )
-            return BANK_NUMBER_WITHDRAW
-
-        elif context.user_data["payment_method"] == "USDT":
+        if context.user_data["payment_method"] == USDT:
             text = "أرسل كود محفظتك👝\n\n<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
-
-        elif context.user_data["payment_method"] == "Syriatel Cash🇸🇾":
-            text = "أرسل رقم حساب سيريتيل كاش👝"
-
-        elif context.user_data["payment_method"] == "MTN Cash🇸🇾":
-            text = "أرسل رقم حساب MTN كاش👝"
+        else:
+            text = f"أرسل رقم حساب {data}"
 
         await update.callback_query.edit_message_text(
             text=text,
             reply_markup=InlineKeyboardMarkup(back_keyboard),
         )
+
+        if context.user_data["payment_method"] in [BEMO, BARAKAH]:
+            return BANK_NUMBER_WITHDRAW
         return WALLET_CODE
 
 
@@ -232,9 +212,9 @@ async def back_to_payment_method(update: Update, context: ContextTypes.DEFAULT_T
 async def wallet_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         if context.user_data["payment_method"] in (
-            "USDT",
-            "Syriatel Cash🇸🇾",
-            "MTN Cash🇸🇾",
+            USDT,
+            SYRCASH,
+            MTNCASH,
         ):
             context.user_data["payment_method_number"] = update.message.text
             context.user_data["bank_account_name"] = ""
@@ -244,7 +224,7 @@ async def wallet_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         back_keyboard = [
             (
                 build_back_button("back to payment method")
-                if context.user_data["payment_method"] not in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]
+                if context.user_data["payment_method"] not in [BEMO, BARAKAH]
                 else build_back_button("back to bank account name")
             ),
             back_to_user_home_page_button[0],
@@ -263,7 +243,7 @@ async def back_to_bank_number_withdraw(
             build_back_button("back to payment method"),
             back_to_user_home_page_button[0],
         ]
-        name = "بركة" if context.user_data["payment_method"] == "بركة🇧🇭" else "بيمو"
+        name = "بركة" if context.user_data["payment_method"] == BARAKAH else "بيمو"
         await update.callback_query.edit_message_text(
             text=f"أرسل رقم حساب {name} 👝",
             reply_markup=InlineKeyboardMarkup(back_keyboard),
@@ -349,7 +329,7 @@ async def get_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         amount = context.user_data["withdrawal_amount"]
 
-        if context.user_data["withdraw_type"] == "withdraw مكافأة":
+        if context.user_data["withdraw_type"] == "withdraw gift":
             await DB.update_gifts_balance(
                 user_id=update.effective_user.id, amount=-amount
             )
@@ -359,7 +339,7 @@ async def get_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
         method_info = f"<b>Payment info</b>: <code>{context.user_data['payment_method_number']}</code>"
         method_info += (
             f"\nاسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"
-            if method in ["بركة🇧🇭", "بيمو🇸🇦🇫🇷"]
+            if method in [BARAKAH, BARAKAH]
             else ""
         )
 
@@ -394,8 +374,10 @@ async def get_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-        await DB.add_withdraw_pending_check_message_id(
-            serial=serial, message_id=message.id
+        await DB.add_message_ids(
+            order_type="withdraw",
+            serial=serial,
+            pending_check_message_id=message.id,
         )
 
         await update.message.reply_text(
@@ -416,8 +398,9 @@ def stringify_order(
     serial: int,
     method_info: str,
 ):
+    g_b_dict = {"gift": "مكافأة", "balance": "رصيد"}
     return (
-        f"تفاصيل طلب سحب {w_type}:\n\n"
+        f"تفاصيل طلب سحب {g_b_dict[w_type]}:\n\n"
         f"رقم حسابه🔢: <code>{acc_number}</code>\n"
         f"كلمة المرور🈴: <code>{password}</code>\n"
         f"الكنية: <code>{last_name}</code>\n\n"
@@ -433,7 +416,7 @@ withdraw_section_handler = CallbackQueryHandler(withdraw_section, "^withdraw$")
 
 withdraw_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(withdraw_type, "^withdraw مكافأة$|^withdraw رصيد$")
+        CallbackQueryHandler(withdraw_type, "^withdraw gift$|^withdraw balance$")
     ],
     states={
         PAYMENT_METHOD: [CallbackQueryHandler(payment_method, payment_method_pattern)],

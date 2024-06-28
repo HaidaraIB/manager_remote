@@ -3,6 +3,7 @@ import os
 import re
 import traceback
 from asyncio import Lock
+from constants import *
 
 lock = Lock()
 
@@ -116,10 +117,11 @@ class DB:
             processing_message_id INTEGER DEFAULT 0,
             archive_message_ids TEXT DEFAULT '',
             complaint_took_care_of INTEGER DEFAULT 0,
-            working_on_it INTEGER DEFAULT 0
+            working_on_it INTEGER DEFAULT 0,
+            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        CREATE TABLE IF NOT EXISTS buy_usdt_orders (
+        CREATE TABLE IF NOT EXISTS buyusdt_orders (
             serial INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             group_id INTEGER,
@@ -137,7 +139,8 @@ class DB:
             processing_message_id INTEGER DEFAULT 0,
             archive_message_ids TEXT DEFAULT '',
             complaint_took_care_of INTEGER DEFAULT 0,
-            working_on_it INTEGER DEFAULT 0
+            working_on_it INTEGER DEFAULT 0,
+            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS withdraw_orders (
@@ -161,7 +164,8 @@ class DB:
             processing_message_id INTEGER DEFAULT 0, -- message in agent pm
             archive_message_ids TEXT DEFAULT '',
             complaint_took_care_of INTEGER DEFAULT 0,
-            working_on_it INTEGER DEFAULT 0
+            working_on_it INTEGER DEFAULT 0,
+            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS payment_methods (
@@ -182,11 +186,13 @@ class DB:
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
 
         -- init payment methods
-        INSERT OR IGNORE INTO payment_methods(name) VALUES('USDT');
-        INSERT OR IGNORE INTO payment_methods(name) VALUES('بيمو🇸🇦🇫🇷');
-        INSERT OR IGNORE INTO payment_methods(name) VALUES('بركة🇧🇭');
-        INSERT OR IGNORE INTO payment_methods(name) VALUES('MTN Cash🇸🇾');
-        INSERT OR IGNORE INTO payment_methods(name) VALUES('Syriatel Cash🇸🇾');
+        INSERT OR IGNORE INTO payment_methods(name) VALUES('{USDT}');
+        INSERT OR IGNORE INTO payment_methods(name) VALUES('{BEMO}');
+        INSERT OR IGNORE INTO payment_methods(name) VALUES('{BARAKAH}');
+        INSERT OR IGNORE INTO payment_methods(name) VALUES('{MTNCASH}');
+        INSERT OR IGNORE INTO payment_methods(name) VALUES('{SYRCASH}');
+        INSERT OR IGNORE INTO payment_methods(name) VALUES('{PAYEER}');
+        INSERT OR IGNORE INTO payment_methods(name) VALUES('{PERFECT_MONEY}');
 
         """
         cr.executescript(script)
@@ -194,6 +200,162 @@ class DB:
         db.commit()
         cr.close()
         db.close()
+
+
+    @staticmethod
+    @lock_and_release
+    async def send_order(
+        order_type: str,
+        pending_process_message_id: int,
+        serial: int,
+        group_id: int,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            f"""
+            
+            UPDATE {order_type}_orders SET state = 'sent',
+                                           pending_process_message_id = ?,
+                                           working_on_it = 0,
+                                           group_id = ?
+            WHERE serial = ?
+            """,
+            (
+                pending_process_message_id,
+                group_id,
+                serial,
+            ),
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def decline_order(
+        order_type: str,
+        archive_message_ids: int,
+        reason: str,
+        serial: int,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            f"""
+
+            UPDATE {order_type}_orders SET state = 'declined',
+                                           working_on_it = 0,
+                                           reason = ?,
+                                           archive_message_ids = ?
+            WHERE serial = ?
+
+            """,
+            (
+                reason,
+                archive_message_ids,
+                serial,
+            ),
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def reply_with_payment_proof(
+        order_type: str,
+        archive_message_ids: int,
+        serial: int,
+        worker_id: int,
+        method: str,
+        amount: float,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            f"""
+
+            UPDATE {order_type}_orders SET state = 'approved',
+                                           working_on_it = 0,
+                                           archive_message_ids = ?
+            WHERE serial = ?
+
+            """,
+            (
+                archive_message_ids,
+                serial,
+            ),
+        )
+
+        cr.execute(
+            """
+            UPDATE payment_agents SET approved_withdraws = approved_withdraws + ?,
+                                      approved_withdraws_day = approved_withdraws_day + ?,
+                                      approved_withdraws_num = approved_withdraws_num + 1
+
+            WHERE id = ? AND method = ?
+            """,
+            (amount, amount, worker_id, method),
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def return_order(
+        order_type: str,
+        archive_message_ids: str,
+        reason: str,
+        serial: int,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            f"""
+
+            UPDATE {order_type}_orders SET state = 'returned',
+                                           reason = ?,
+                                           working_on_it = 0,
+                                           archive_message_ids = ?
+            WHERE serial = ?
+
+            """,
+            (
+                archive_message_ids,
+                reason,
+                serial,
+            ),
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def reply_with_deposit_proof(
+        order_type: str,
+        archive_message_ids: int,
+        serial: int,
+        worker_id: int,
+        user_id: int,
+        amount: float,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            f"""
+
+            UPDATE {order_type}_orders SET state = 'approved',
+                                           working_on_it = 0,
+                                           archive_message_ids = ?
+            WHERE serial = ?
+
+            """,
+            (
+                archive_message_ids,
+                serial,
+            ),
+        )
+
+        cr.execute(
+            """
+                   UPDATE deposit_agents SET approved_deposits = approved_deposits + ?,
+                                             approved_deposits_week = approved_deposits_week + ?,
+                                             approved_deposits_num = approved_deposits_num + 1
+                   WHERE id = ?""",
+            (amount, amount, worker_id),
+        )
+
+        cr.execute(
+            "UPDATE users SET deposit_balance = deposit_balance + ? WHERE id = ?",
+            (amount, user_id),
+        )
+
 
     @staticmethod
     @lock_and_release
@@ -240,7 +402,7 @@ class DB:
     ):
         cr.execute(
             """
-                INSERT OR IGNORE INTO buy_usdt_orders(
+                INSERT OR IGNORE INTO buyusdt_orders(
                     user_id,
                     group_id,
                     method,
@@ -306,35 +468,6 @@ class DB:
 
         return cr.fetchone()[0]
 
-    @staticmethod
-    @lock_and_release
-    async def add_deposit_pending_check_message_id(
-        serial: int, message_id: int, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            "UPDATE deposit_orders SET pending_check_message_id = ? WHERE serial = ?",
-            (message_id, serial),
-        )
-
-    @staticmethod
-    @lock_and_release
-    async def add_buy_usdt_pending_check_message_id(
-        serial: int, message_id: int, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            "UPDATE buy_usdt_orders SET pending_check_message_id = ? WHERE serial = ?",
-            (message_id, serial),
-        )
-
-    @staticmethod
-    @lock_and_release
-    async def add_withdraw_pending_check_message_id(
-        serial: int, message_id: int, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            "UPDATE withdraw_orders SET pending_check_message_id = ? WHERE serial = ?",
-            (message_id, serial),
-        )
 
     @staticmethod
     @connect_and_close
@@ -352,12 +485,6 @@ class DB:
     @connect_and_close
     def get_deposit_agent(user_id: int, cr: sqlite3.Cursor = None):
         cr.execute("SELECT * FROM deposit_agents WHERE id = ?", (user_id,))
-        return cr.fetchone()
-
-    @staticmethod
-    @connect_and_close
-    def get_checkers(user_id: int, cr: sqlite3.Cursor = None):
-        cr.execute("SELECT * FROM checkers WHERE id = ?", (user_id,))
         return cr.fetchone()
 
     @staticmethod
@@ -386,10 +513,10 @@ class DB:
 
     @staticmethod
     @lock_and_release
-    async def get_buy_usdt_payment_order(method: str, cr: sqlite3.Cursor = None):
+    async def get_payment_order(order_type:str, method: str, cr: sqlite3.Cursor = None):
         cr.execute(
             f"""
-                SELECT * FROM buy_usdt_orders
+                SELECT * FROM {order_type}_orders
                 WHERE working_on_it = 0 AND method = ? AND state = 'sent'
                 LIMIT 1
             """,
@@ -397,18 +524,6 @@ class DB:
         )
         return cr.fetchone()
 
-    @staticmethod
-    @lock_and_release
-    async def get_withdraw_payment_order(method: str, cr: sqlite3.Cursor = None):
-        cr.execute(
-            f"""
-                SELECT * FROM withdraw_orders
-                WHERE working_on_it = 0 AND method = ? AND state = 'sent'
-                LIMIT 1
-            """,
-            (method,),
-        )
-        return cr.fetchone()
 
     @staticmethod
     @lock_and_release
@@ -416,9 +531,9 @@ class DB:
         serial: int,
         order_type: str,
         checking_message_id: int = 0,
-        pending_process_message_id: int = 0,
         pending_check_message_id: int = 0,
         processing_message_id: int = 0,
+        pending_process_message_id: int = 0,
         archive_message_ids: str = 0,
         cr: sqlite3.Cursor = None,
     ):
@@ -529,15 +644,6 @@ class DB:
             (took_care_of, serial),
         )
 
-    @staticmethod
-    @lock_and_release
-    async def change_order_group_id(
-        serial: int, group_id: int, order_type: str, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            f"UPDATE {order_type}_orders SET group_id = ? WHERE serial = ?",
-            (group_id, serial),
-        )
 
     @staticmethod
     @connect_and_close
@@ -577,7 +683,6 @@ class DB:
             cr.execute("SELECT * FROM deposit_agents")
         return cr.fetchall()
 
-
     @staticmethod
     @connect_and_close
     def get_worker(
@@ -599,7 +704,6 @@ class DB:
         else:
             cr.execute("SELECT * FROM deposit_agents WHERE id = ?", (worker_id,))
         return cr.fetchone()
-
 
     @staticmethod
     @lock_and_release
@@ -731,24 +835,6 @@ class DB:
 
     @staticmethod
     @lock_and_release
-    async def increment_worker_withdraws(
-        worder_id: int, method: str, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            "UPDATE payment_agents SET approved_withdraws_num = approved_withdraws_num + 1 WHERE id = ? AND method = ?",
-            (worder_id, method),
-        )
-
-    @staticmethod
-    @lock_and_release
-    async def increment_worker_deposits(worder_id: int, cr: sqlite3.Cursor = None):
-        cr.execute(
-            "UPDATE deposit_agents SET approved_deposits_num = approved_deposits_num + 1 WHERE id = ?",
-            (worder_id,),
-        )
-
-    @staticmethod
-    @lock_and_release
     async def update_worker_approved_deposits(
         worder_id: int, amount: float, cr: sqlite3.Cursor = None
     ):
@@ -799,6 +885,16 @@ class DB:
 
     @staticmethod
     @lock_and_release
+    async def update_gifts_balance(
+        user_id: int, amount: int = None, cr: sqlite3.Cursor = None
+    ):
+        cr.execute(
+            "UPDATE users SET gifts_balance = gifts_balance + ? WHERE id = ?",
+            (amount, user_id),
+        )
+        
+    @staticmethod
+    @lock_and_release
     async def million_gift_user(
         user_id: int, amount: int = None, cr: sqlite3.Cursor = None
     ):
@@ -810,15 +906,6 @@ class DB:
             (amount, user_id),
         )
 
-    @staticmethod
-    @lock_and_release
-    async def update_gifts_balance(
-        user_id: int, amount: int = None, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            "UPDATE users SET gifts_balance = gifts_balance + ? WHERE id = ?",
-            (amount, user_id),
-        )
 
     @staticmethod
     @lock_and_release

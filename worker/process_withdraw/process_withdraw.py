@@ -73,22 +73,8 @@ async def reply_with_payment_proof_withdraw(
         )
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
-        await DB.change_order_state(
-            order_type="withdraw", serial=serial, state="approved"
-        )
-
         amount = w_order["amount"]
         user_id = w_order["user_id"]
-
-        await DB.increment_worker_withdraws(
-            worder_id=update.effective_user.id,
-            method=w_order["method"],
-        )
-        await DB.update_worker_approved_withdraws(
-            worder_id=update.effective_user.id,
-            method=w_order["method"],
-            amount=amount,
-        )
 
         caption = (
             f"مبروك، تم تأكيد عملية سحب "
@@ -114,18 +100,13 @@ async def reply_with_payment_proof_withdraw(
             caption="\n".join(text),
         )
 
-        await DB.add_message_ids(
-            archive_message_ids=str(message.id),
-            serial=serial,
-            order_type="withdraw",
-        )
-
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
+                    text="تمت الموافقة✅",
+                    callback_data="✅✅✅✅✅✅✅✅✅",
                 ),
             ),
         )
@@ -135,10 +116,13 @@ async def reply_with_payment_proof_withdraw(
             text="تمت الموافقة✅",
             reply_markup=build_worker_keyboard(),
         )
-        await DB.set_working_on_it(
-            order_type="withdraw",
-            working_on_it=0,
+        await DB.reply_with_payment_proof(
+            order_type='withdraw',
+            amount=amount,
+            archive_message_ids=str(message.id),
+            method=w_order['method'],
             serial=serial,
+            worker_id=update.effective_user.id,
         )
         context.user_data["requested"] = False
 
@@ -178,14 +162,6 @@ async def return_withdraw_order_reason(
             ].callback_data.split("_")[-1]
         )
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
-        await DB.change_order_state(
-            order_type="withdraw", serial=serial, state="returned"
-        )
-        await DB.add_order_reason(
-            order_type="withdraw",
-            serial=serial,
-            reason=update.message.text,
-        )
 
         amount = w_order["amount"]
         user_id = w_order["user_id"]
@@ -224,18 +200,13 @@ async def return_withdraw_order_reason(
             text=text,
         )
 
-        await DB.add_message_ids(
-            archive_message_ids=str(message.id),
-            serial=serial,
-            order_type="withdraw",
-        )
-
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥"
+                    text="تمت إعادة الطلب📥",
+                    callback_data="📥📥📥📥📥📥📥📥",
                 ),
             ),
         )
@@ -245,9 +216,10 @@ async def return_withdraw_order_reason(
             text="تمت إعادة الطلب📥",
             reply_markup=build_worker_keyboard(),
         )
-        await DB.set_working_on_it(
-            order_type="withdraw",
-            working_on_it=0,
+        await DB.return_order(
+            order_type='withdraw',
+            archive_message_ids=str(message.id),
+            reason=update.message.text,
             serial=serial,
         )
         context.user_data["requested"] = False

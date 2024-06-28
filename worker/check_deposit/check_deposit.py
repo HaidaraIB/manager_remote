@@ -271,32 +271,17 @@ async def send_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="قبول الطلب✅", callback_data=f"verify_deposit_order_{serial}"
+                    text="قبول الطلب✅",
+                    callback_data=f"verify_deposit_order_{serial}",
                 )
             ),
-        )
-
-        await DB.change_order_state(
-            order_type="deposit",
-            serial=serial,
-            state="sent",
-        )
-        await DB.change_order_group_id(
-            serial=serial,
-            group_id=context.bot_data["data"]["deposit_after_check_group"],
-            order_type="deposit",
-        )
-        await DB.add_message_ids(
-            serial=serial,
-            pending_process_message_id=message.id,
-            order_type="deposit",
         )
 
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="تم إرسال الطلب✅",
-                    callback_data="تم إرسال الطلب✅",
+                    callback_data="✅✅✅✅✅✅✅✅✅",
                 )
             )
         )
@@ -308,11 +293,11 @@ async def send_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         context.user_data["requested"] = False
-        del context.user_data[serial]
-        await DB.set_working_on_it(
+        await DB.send_order(
             order_type="deposit",
-            working_on_it=0,
+            pending_process_message_id=message.id,
             serial=serial,
+            group_id=context.bot_data["data"]["deposit_after_check_group"],
         )
 
 
@@ -344,30 +329,23 @@ async def decline_deposit_order_reason(
         Chat.PRIVATE,
     ]:
 
-        data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
+        serial = int(update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
-        ].callback_data
+        ].callback_data.split("_")[-1])
 
-        await DB.change_order_state(
-            order_type="deposit",
-            serial=data["serial"],
-            state="declined",
+        d_order = DB.get_one_order(
+            order_type='deposit',
+            serial=serial
         )
-        await DB.add_order_reason(
-            order_type="deposit",
-            serial=data["serial"],
-            reason=update.message.text,
-        )
-
         text = (
-            f"للأسف، تم إلغاء عملية الإيداع <b>{data['amount']}$</b> التي قمت بها.\n\n"
+            f"للأسف، تم إلغاء عملية الإيداع <b>{d_order['amount']}$</b> التي قمت بها.\n\n"
             "السبب:\n"
-            "<b>{update.message.text}</b>\n\n"
-            "الرقم التسلسلي للطلب: <code>{data['serial']}</code>\n\n"
+            f"<b>{update.message.text}</b>\n\n"
+            f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
         )
         try:
             await context.bot.send_message(
-                chat_id=data["user_id"],
+                chat_id=d_order["user_id"],
                 text=text,
             )
         except:
@@ -382,18 +360,13 @@ async def decline_deposit_order_reason(
             caption=caption,
         )
 
-        await DB.add_message_ids(
-            serial=data["serial"],
-            archive_message_ids=str(message.id),
-            order_type="deposit",
-        )
-
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تم رفض الطلب❌", callback_data="تم رفض الطلب❌"
+                    text="تم رفض الطلب❌",
+                    callback_data="❌❌❌❌❌❌❌",
                 )
             ),
         )
@@ -404,12 +377,12 @@ async def decline_deposit_order_reason(
             reply_markup=build_worker_keyboard(),
         )
 
-        del context.user_data[data["serial"]]
         context.user_data["requested"] = False
-        await DB.set_working_on_it(
+        await DB.decline_order(
             order_type="deposit",
-            working_on_it=0,
-            serial=data["serial"],
+            archive_message_ids=str(message.id),
+            reason=update.message.text,
+            serial=serial,
         )
         return ConversationHandler.END
 

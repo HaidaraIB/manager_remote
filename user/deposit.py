@@ -170,8 +170,10 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             ),
         )
 
-        await DB.add_deposit_pending_check_message_id(
-            serial=serial, message_id=message.id
+        await DB.add_message_ids(
+            order_type="deposit",
+            serial=serial,
+            pending_check_message_id=message.id,
         )
         await update.message.reply_text(
             text="شكراً لك، سيتم التحقق من الصورة وإضافة المبلغ المودع خلال وقت قصير.",

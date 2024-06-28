@@ -44,7 +44,7 @@ async def user_payment_verified_buy_usdt(
         await DB.add_order_worker_id(
             serial=serial,
             worker_id=update.effective_user.id,
-            order_type="buy_usdt",
+            order_type="buyusdt",
         )
 
         await update.callback_query.answer(
@@ -75,25 +75,9 @@ async def reply_with_payment_proof_buy_usdt(
             ].callback_data.split("_")[-1]
         )
 
-        await DB.change_order_state(
-            order_type="buy_usdt",
-            serial=serial,
-            state="approved",
-        )
-
-        b_order = DB.get_one_order(order_type="buy_usdt", serial=serial)
+        b_order = DB.get_one_order(order_type="buyusdt", serial=serial)
 
         amount = b_order["amount"]
-
-        await DB.increment_worker_withdraws(
-            worder_id=update.effective_user.id,
-            method=b_order["method"],
-        )
-        await DB.update_worker_approved_withdraws(
-            worder_id=update.effective_user.id,
-            method=b_order["method"],
-            amount=amount,
-        )
 
         user_caption = (
             f"مبروك، تم تأكيد عملية شراء <b>{amount} USDT</b> بنجاح✅\n\n"
@@ -122,18 +106,14 @@ async def reply_with_payment_proof_buy_usdt(
             caption="\n".join(caption),
         )
 
-        await DB.add_message_ids(
-            serial=serial,
-            archive_message_ids=f"{messages[0].id},{messages[1].id}",
-            order_type="buy_usdt",
-        )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
+                    text="تمت الموافقة✅",
+                    callback_data="✅✅✅✅✅✅✅✅✅",
                 ),
             ),
         )
@@ -145,10 +125,13 @@ async def reply_with_payment_proof_buy_usdt(
         )
 
         context.user_data["requested"] = False
-        await DB.set_working_on_it(
-            order_type="buy_usdt",
-            working_on_it=0,
+        await DB.reply_with_payment_proof(
+            order_type="buyusdt",
+            archive_message_ids=f"{messages[0].id},{messages[1].id}",
+            amount=amount,
+            method=b_order['method'],
             serial=serial,
+            worker_id=update.effective_user.id,
         )
 
 
@@ -186,19 +169,8 @@ async def return_buy_usdt_order_reason(
             ].callback_data.split("_")[-1]
         )
 
-        await DB.change_order_state(
-            order_type="buy_usdt",
-            serial=serial,
-            state="returned",
-        )
-        await DB.add_order_reason(
-            order_type="buy_usdt",
-            serial=serial,
-            reason=update.message.text,
-        )
-
         b_order = DB.get_one_order(
-            order_type="buy_usdt",
+            order_type="buyusdt",
             serial=serial,
         )
 
@@ -237,18 +209,13 @@ async def return_buy_usdt_order_reason(
             caption=caption,
         )
 
-        await DB.add_message_ids(
-            archive_message_ids=str(message.id),
-            serial=serial,
-            order_type="buy_usdt",
-        )
-
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥"
+                    text="تمت إعادة الطلب📥",
+                    callback_data="📥📥📥📥📥📥📥📥",
                 )
             ),
         )
@@ -259,9 +226,10 @@ async def return_buy_usdt_order_reason(
             reply_markup=build_worker_keyboard(),
         )
         context.user_data["requested"] = False
-        await DB.set_working_on_it(
-            order_type="buy_usdt",
-            working_on_it=0,
+        await DB.return_order(
+            order_type='buyusdt',
+            archive_message_ids=str(message.id),
+            reason=update.message.text,
             serial=serial,
         )
         return ConversationHandler.END

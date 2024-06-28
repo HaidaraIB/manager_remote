@@ -20,11 +20,10 @@ from pyrogram.types import Message
 
 from common.common import (
     build_user_keyboard,
+    build_back_button,
 )
 
-from common.force_join import (
-    check_if_user_member_decorator
-)
+from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
@@ -55,26 +54,32 @@ state_dict_en_to_ar = {
     "sent": "بانتظار التنفيذ",
 }
 
-choose_operations_text = """يمكنك اختيار الرقم التسلسلي للعملية التي تريد الشكوى عنها من الأسفل⬇️
-            
-<b>ملاحظة: الطلبات التي تمت معالجة شكوى عنها سابقاً ليست ضمن القائمة.</b>"""
+choose_operations_text = (
+    "يمكنك اختيار الرقم التسلسلي للعملية التي تريد الشكوى عنها من الأسفل⬇️\n\n"
+    "<b>ملاحظة: الطلبات التي تمت معالجة شكوى عنها سابقاً ليست ضمن القائمة.</b>"
+)
 
 
-def stringify_order(op:dict, order_type:str):
-    payment_method_number = bank_account_name = 'لا يوجد'
-    if order_type != 'deposit':
-        payment_method_number = op['payment_method_number'] if op['payment_method_number'] else "لا يوجد"
-        bank_account_name = op['bank_account_name'] if op['bank_account_name'] else 'لا يوجد'
+def stringify_order(serial: int, order_type: str):
+    op = DB.get_one_order(order_type=order_type, serial=serial)
+    payment_method_number = bank_account_name = "لا يوجد"
+    if order_type != "deposit":
+        payment_method_number = (
+            op["payment_method_number"] if op["payment_method_number"] else "لا يوجد"
+        )
+        bank_account_name = (
+            op["bank_account_name"] if op["bank_account_name"] else "لا يوجد"
+        )
 
-    return (f"الرقم التسلسلي: <code>{op['serial']}</code>\n"
-            f"المبلغ: <b>{op['amount']}</b>\n"
-            f"وسيلة الدفع: <b>{op['method']}</b>\n"
-            f"عنوان الدفع: <code>{payment_method_number}</code>\n"
-            f"اسم صاحب الحساب البنكي: <code>{bank_account_name}</code>\n"
-            f"الحالة: <b>{state_dict_en_to_ar[op['state']]}</b>\n"
-            f"سبب إعادة/رفض: <b>{op['reason'] if op['reason'] else 'لا يوجد'}</b>\n\n")
-
-
+    return (
+        f"الرقم التسلسلي: <code>{op['serial']}</code>\n"
+        f"المبلغ: <b>{op['amount']}</b>\n"
+        f"وسيلة الدفع: <b>{op['method']}</b>\n"
+        f"عنوان الدفع: <code>{payment_method_number}</code>\n"
+        f"اسم صاحب الحساب البنكي: <code>{bank_account_name}</code>\n"
+        f"الحالة: <b>{state_dict_en_to_ar[op['state']]}</b>\n"
+        f"سبب إعادة/رفض: <b>{op['reason'] if op['reason'] else 'لا يوجد'}</b>\n\n"
+    )
 
 
 async def check_complaint_date(
@@ -106,7 +111,6 @@ async def check_complaint_date(
 
 
 async def get_photos_from_archive(message_ids: list[int]):
-
     photos: list[PhotoSize] = []
     cpyro = PyroClientSingleton()
     await cpyro.start()
@@ -212,13 +216,7 @@ async def handle_complaint_about(
     keyboard = build_operations_keyboard(
         serials=[op["serial"] for op in operations if not op["complaint_took_care_of"]]
     )
-    keyboard.append(
-        [
-            InlineKeyboardButton(
-                text="الرجوع🔙", callback_data=f"back to complaint about"
-            )
-        ]
-    )
+    keyboard.append(build_back_button(f"back to complaint about"))
     keyboard.append(back_to_user_home_page_button[0])
 
     context.user_data["operations_keyboard"] = keyboard
@@ -249,7 +247,7 @@ async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton(text="سحب💳", callback_data="withdraw complaint")],
             [
                 InlineKeyboardButton(
-                    text="شراء USDT💰", callback_data="buy_usdt complaint"
+                    text="شراء USDT💰", callback_data="buyusdt complaint"
                 )
             ],
             back_to_user_home_page_button[0],
@@ -289,12 +287,12 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+        serial = int(update.callback_query.data.replace("serial ", ""))
+        context.user_data["complaint_serial"] = serial
         op = DB.get_one_order(
-            serial=int(update.callback_query.data.replace("serial ", "")),
+            serial=serial,
             order_type=context.user_data["complaint_about"],
         )
-
-        context.user_data["op_complaint"] = dict(op)
 
         op_text = (
             f"تفاصيل العملية:\n\n"
@@ -306,59 +304,21 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         if op["state"] in ["sent", "pending"]:
+            alert_button = [
+                [
+                    InlineKeyboardButton(
+                        text="إرسال تنبيه🔔",
+                        callback_data=f"notify_{op['state']}_operation_{serial}",
+                    )
+                ],
+                build_back_button("back to choose operation"),
+                back_to_user_home_page_button[0],
+            ]
             if op["state"] == "sent":
-                alert_button_callback_data_dict = {
-                    "name": "notify sent operation",
-                    "message_id": (
-                        op["processing_message_id"]
-                        if op["working_on_it"]
-                        else op["pending_process_message_id"]
-                    ),
-                    "group_id": op["group_id"],
-                    "worker_id": op["worker_id"],
-                }
-                alert_button = [
-                    [
-                        InlineKeyboardButton(
-                            text="إرسال تنبيه🔔",
-                            callback_data=alert_button_callback_data_dict,
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="الرجوع🔙", callback_data=f"back to choose operation"
-                        )
-                    ],
-                    back_to_user_home_page_button[0],
-                ]
-                text = op_text + "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير في شأنها.</b>"
+                text = op_text + "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير بشأنها.</b>"
 
             else:
-                alert_button_callback_data_dict = {
-                    "name": "notify checking operation",
-                    "group_id": op["group_id"],
-                    "worker_id": op["checker_id"],
-                    "message_id": (
-                        op["checking_message_id"]
-                        if op["working_on_it"]
-                        else op["pending_check_message_id"]
-                    ),
-                }
-                alert_button = [
-                    [
-                        InlineKeyboardButton(
-                            text="إرسال تنبيه🔔",
-                            callback_data=alert_button_callback_data_dict,
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="الرجوع🔙", callback_data=f"back to choose operation"
-                        )
-                    ],
-                    back_to_user_home_page_button[0],
-                ]
-                text = op_text + "<b>عملية قيد التحقق، يمكنك إرسال تذكير في شأنها.</b>"
+                text = op_text + "<b>عملية قيد التحقق، يمكنك إرسال تذكير بشأنها.</b>"
 
             await update.callback_query.edit_message_text(
                 text=text,
@@ -367,12 +327,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return NOTIFY_OPERATION
 
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙",
-                    callback_data=f"back to choose operation",
-                )
-            ],
+            build_back_button("back to choose operation"),
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -385,9 +340,11 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
 
-        op = context.user_data["op_complaint"]
-        serial = op["serial"]
+        serial = int(update.callback_query.data.split("_")[-1])
 
+        op = DB.get_one_order(
+            order_type=context.user_data["complaint_about"], serial=serial
+        )
         res = await check_complaint_date(
             context=context,
             update=update,
@@ -400,30 +357,39 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        data = update.callback_query.data
         cpyro = PyroClientSingleton()
         await cpyro.start()
 
         old_message = await cpyro.get_messages(
-            chat_id=data["worker_id"] if op["working_on_it"] else data["group_id"],
-            message_ids=data["message_id"],
+            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
+            message_ids=(
+                op["pending_process_message_id"]
+                if op["pending_process_message_id"]
+                else op["pending_check_message_id"]
+            ),
         )
         message = await cpyro.copy_message(
-            chat_id=data["worker_id"] if op["working_on_it"] else data["group_id"],
-            from_chat_id=(
-                data["worker_id"] if op["working_on_it"] else data["group_id"]
+            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
+            from_chat_id=(op["worker_id"] if op["working_on_it"] else op["group_id"]),
+            message_id=(
+                op["pending_process_message_id"]
+                if op["pending_process_message_id"]
+                else op["pending_check_message_id"]
             ),
-            message_id=data["message_id"],
             reply_markup=old_message.reply_markup,
         )
 
         await cpyro.send_message(
-            chat_id=data["worker_id"] if op["working_on_it"] else data["group_id"],
+            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
             text="وصلتنا شكوى تأخير بشأن الطلب أعلاه⬆️",
         )
         await cpyro.delete_messages(
-            chat_id=data["worker_id"] if op["working_on_it"] else data["group_id"],
-            message_ids=data["message_id"],
+            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
+            message_ids=(
+                op["pending_process_message_id"]
+                if op["pending_process_message_id"]
+                else op["pending_check_message_id"]
+            ),
         )
 
         await cpyro.stop()
@@ -459,7 +425,6 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "date"
         ] = datetime.datetime.now()
 
-
         await update.callback_query.edit_message_text(
             text="شكراً لك، لقد تمت العملية بنجاح.",
             reply_markup=build_user_keyboard(),
@@ -467,26 +432,23 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return ConversationHandler.END
 
+
 async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         context.user_data["reason"] = update.message.text
+        complaint_text = (
+            f"هل أنت متأكد من أنك تريد إرسال شكوى فيما يخص الطلب:\n\n"
+            f"{stringify_order(serial=context.user_data['complaint_serial'], order_type=context.user_data['complaint_about'])}\n"
+            "سبب الشكوى:\n"
+            f"<b>{update.message.text}</b>"
+        )
 
-        complaint_text = f"""هل أنت متأكد من أنك تريد إرسال شكوى فيما يخص الطلب:
-
-{stringify_order(op=context.user_data["op_complaint"], order_type=context.user_data['complaint_about'])}
-سبب الشكوى:
-<b>{update.message.text}</b>
-"""
         keyboard = [
             [
                 InlineKeyboardButton(text="نعم👍", callback_data="yes complaint"),
                 InlineKeyboardButton(text="لا👎", callback_data="no complaint"),
             ],
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data=f"back to complaint reason"
-                )
-            ],
+            build_back_button("back to complaint reason"),
             back_to_user_home_page_button[0],
         ]
 
@@ -500,80 +462,51 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         if update.callback_query.data.startswith("yes"):
+            serial = context.user_data["complaint_serial"]
+            order_type = context.user_data["complaint_about"]
+            op = DB.get_one_order(order_type=order_type, serial=serial)
 
-            op = context.user_data["op_complaint"]
+            archive_message_ids: str = op["archive_message_ids"]
 
-            complaint_text = f"""شكوى جديدة:
-
-{stringify_order(op=context.user_data["op_complaint"], order_type=context.user_data['complaint_about'])}
-سبب الشكوى:
-<b>{context.user_data['reason']}</b>"""
-
-            archive_message_ids:str = op["archive_message_ids"]
-
-            photos = await get_photos_from_archive(
-                message_ids=[
-                    m_id
-                    for m_id in map(int, archive_message_ids.split(','))
-                ]
+            complaint_text = (
+                f"شكوى جديدة:\n\n"
+                f"{stringify_order(serial=serial, order_type=order_type)}\n"
+                "سبب الشكوى:\n"
+                f"<b>{context.user_data['reason']}</b>"
             )
-            shared_data = {
-                "op": op,
-                "operation": context.user_data["complaint_about"],
-                "text": complaint_text,
-                "media": photos,
-            }
+            photos = await get_photos_from_archive(
+                message_ids=[m_id for m_id in map(int, archive_message_ids.split(","))]
+            )
 
-            send_to_worker_callback_data_dict = {
-                **shared_data,
-                "name": "send to worker user complaint",
-            }
-
-            respond_to_user_callback_data_dict = {
-                **shared_data,
-                "name": "respond to user complaint",
-            }
-
-            mod_amount_callback_data_dict = {
-                **shared_data,
-                "name": "mod amount user complaint",
-            }
-
-            close_complaint_callback_data_dict = {
-                **shared_data,
-                "name": "close complaint",
-            }
-            if op['worker_id']:
+            if op["worker_id"]:
                 context.bot_data["suspended_workers"].add(op["worker_id"])
 
             complaint_keyboard = [
                 [
                     InlineKeyboardButton(
                         text="الرد على المستخدم",
-                        callback_data=respond_to_user_callback_data_dict,
+                        callback_data=f"respond_to_user_complaint_{archive_message_ids}_{order_type}_{serial}",
                     ),
                     InlineKeyboardButton(
                         text="إرسال إلى الموظف المسؤول",
-                        callback_data=send_to_worker_callback_data_dict,
+                        callback_data=f"send_to_worker_user_complaint_{archive_message_ids}_{order_type}_{serial}",
                     ),
                 ],
                 [
                     InlineKeyboardButton(
                         text="تعديل المبلغ",
-                        callback_data=mod_amount_callback_data_dict,
+                        callback_data=f"mod_amount_user_complaint_{archive_message_ids}_{order_type}_{serial}",
                     ),
                 ],
                 [
                     InlineKeyboardButton(
                         text="إغلاق الشكوى🔐",
-                        callback_data=close_complaint_callback_data_dict,
+                        callback_data=f"close_complaint_{archive_message_ids}_{order_type}_{serial}",
                     ),
                 ],
             ]
 
-            if (
-                not photos
-            ):  # Means there's no picture, it's a declined withdraw order.
+            if not photos:  # Means there's no picture, it's a declined withdraw order.
                 await context.bot.send_message(
                     chat_id=context.bot_data["data"]["complaints_group"],
                     text=complaint_text,
@@ -589,10 +522,9 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
 
                 await context.bot.send_message(
                     chat_id=context.bot_data["data"]["complaints_group"],
-                    text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {op['serial']}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
+                    text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {serial}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
                     reply_markup=InlineKeyboardMarkup(complaint_keyboard),
                 )
-
 
             await update.callback_query.edit_message_text(
                 text="شكراً لك، تم إرسال الشكوى خاصتك إلى قسم المراجعة بنجاح، سنعمل على إصلاح المشكلة والرد عليك في أقرب وقت ممكن.",
@@ -625,12 +557,7 @@ async def back_to_choose_operation(update: Update, context: ContextTypes.DEFAULT
 async def back_to_complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙",
-                    callback_data=f"back to choose operation",
-                )
-            ],
+            build_back_button("back to choose operation"),
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -648,7 +575,7 @@ async def back_to_complaint_about(update: Update, context: ContextTypes.DEFAULT_
             [
                 InlineKeyboardButton(
                     text="شراء USDT💰",
-                    callback_data="buy_usdt complaint",
+                    callback_data="buyusdt complaint",
                 )
             ],
             back_to_user_home_page_button[0],
@@ -666,14 +593,14 @@ complaint_handler = ConversationHandler(
         COMPLAINT_ABOUT: [
             CallbackQueryHandler(
                 complaint_about,
-                "^deposit complaint$|^buy_usdt complaint$|^withdraw complaint$",
+                "^deposit complaint$|^buyusdt complaint$|^withdraw complaint$",
             )
         ],
         CHOOSE_OPERATION: [CallbackQueryHandler(choose_operation, "^serial \d+$")],
         NOTIFY_OPERATION: [
             CallbackQueryHandler(
                 notify_operation,
-                lambda d: isinstance(d, dict) and d["name"].startswith("notify"),
+                "^notify",
             )
         ],
         COMPLAINT_REASON: [
@@ -694,6 +621,6 @@ complaint_handler = ConversationHandler(
         back_to_user_home_page_handler,
         start_command,
     ],
-    name='make_complaint_handler',
+    name="make_complaint_handler",
     persistent=True,
 )

@@ -17,14 +17,14 @@ from DB import DB
 from common.common import (
     build_worker_keyboard,
 )
-from start import start_command
+from start import start_command, worker_command
 
 REQUEST_WHAT = 0
 
 orders_dict = {
     "withdraw": "سحب",
     "deposit": "إيداع",
-    "buy_usdt": "شراء usdt",
+    "buyusdt": "شراء usdt",
 }
 
 
@@ -66,7 +66,7 @@ async def send_requested_order(
 
 async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        context.user_data['requested'] = False
+        context.user_data["requested"] = False
         if context.user_data.get("requested", False):
             await update.callback_query.answer("يمكنك معالجة طلب واحد في المرة❗️")
             return ConversationHandler.END
@@ -98,7 +98,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             elif c["check_what"] == "buy_usdt":
                 checker_keyboard.append(
                     InlineKeyboardButton(
-                        text="تحقق شراء USDT", callback_data="request check buy_usdt"
+                        text="تحقق شراء USDT", callback_data="request check buyusdt"
                     )
                 )
 
@@ -132,7 +132,6 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
-
         return REQUEST_WHAT
 
 
@@ -165,15 +164,15 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             group_id = c_order["group_id"]
 
         else:
-            w_order = await DB.get_withdraw_payment_order(method=order_type)
+            w_order = await DB.get_payment_order(order_type='withdraw', method=order_type)
             if not w_order:
-                bu_order = await DB.get_buy_usdt_payment_order(method=order_type)
+                bu_order = await DB.get_payment_order(order_type='buyusdt', method=order_type)
                 if not bu_order:
                     await update.callback_query.answer(
                         f"ليس هناك طلبات دفع {order_type} حالياً."
                     )
                     return
-                operation = "buy_usdt"
+                operation = "buyusdt"
                 message_id = bu_order["pending_process_message_id"]
                 group_id = bu_order["group_id"]
                 serial = bu_order["serial"]
@@ -183,8 +182,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 group_id = w_order["group_id"]
                 serial = w_order["serial"]
 
-        await update.callback_query.delete_message()
-
+        await update.callback_query.edit_message_text(text="الرجاء الانتظار...")
         await send_requested_order(
             serial=serial,
             message_id=message_id,
@@ -193,6 +191,8 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order_type=order_type,
             operation=operation,
         )
+        await update.callback_query.delete_message()
+
         context.user_data["requested"] = True
         return ConversationHandler.END
 
@@ -213,6 +213,6 @@ request_order_handler = ConversationHandler(
     },
     fallbacks=[
         CallbackQueryHandler(cancel_request_order, "^cancel request order$"),
-        start_command,
+        worker_command,
     ],
 )

@@ -88,7 +88,7 @@ def main():
         Application.builder()
         .token(os.getenv("BOT_TOKEN"))
         .post_init(inits)
-        .arbitrary_callback_data(True)
+        # .arbitrary_callback_data(True)
         .persistence(persistence=my_persistence)
         .defaults(defaults)
         .concurrent_updates(True)

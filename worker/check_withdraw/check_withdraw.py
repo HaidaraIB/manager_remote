@@ -61,7 +61,8 @@ async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=f"send_withdraw_order_{serial}"
+                    text="إرسال الطلب⬅️",
+                    callback_data=f"send_withdraw_order_{serial}",
                 ),
                 InlineKeyboardButton(
                     text="رفض طلب السحب❌",
@@ -83,10 +84,10 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
         method = w_order["method"]
-        chat_id = f"{method}_group"
+        target_group = f"{method}_group"
 
         message = await context.bot.send_message(
-            chat_id=context.bot_data["data"][chat_id],
+            chat_id=context.bot_data["data"][target_group],
             text=stringify_order(
                 w_order["amount"],
                 serial=serial,
@@ -95,27 +96,17 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="قبول الطلب✅", callback_data=f"verify_withdraw_order_{serial}"
+                    text="قبول الطلب✅",
+                    callback_data=f"verify_withdraw_order_{serial}",
                 )
             ),
-        )
-
-        await DB.change_order_state(
-            order_type="withdraw",
-            serial=serial,
-            state="sent",
-        )
-        await DB.add_message_ids(
-            serial=serial,
-            order_type="withdraw",
-            pending_process_message_id=message.id,
         )
 
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="تم إرسال الطلب✅",
-                    callback_data="تم إرسال الطلب✅",
+                    callback_data="✅✅✅✅✅✅✅✅✅",
                 )
             )
         )
@@ -127,10 +118,11 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
 
         context.user_data["requested"] = False
-        await DB.set_working_on_it(
+        await DB.send_order(
             order_type="withdraw",
-            working_on_it=0,
+            pending_process_message_id=message.id,
             serial=serial,
+            group_id=context.bot_data["data"][target_group],
         )
 
 
@@ -172,17 +164,6 @@ async def decline_withdraw_order_reason(
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
         text_list = update.message.reply_to_message.text.split("\n")
-        await DB.change_order_state(
-            order_type="withdraw",
-            serial=serial,
-            state="declined",
-        )
-        await DB.add_order_reason(
-            order_type="withdraw",
-            serial=serial,
-            reason=update.message.text,
-        )
-
         amount = w_order["amount"]
         user_id = w_order["user_id"]
 
@@ -211,18 +192,13 @@ async def decline_withdraw_order_reason(
             text=text,
         )
 
-        await DB.add_message_ids(
-            order_type="withdraw",
-            archive_message_ids=str(message.id),
-            serial=serial,
-        )
-
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تم رفض الطلب❌", callback_data="تم رفض الطلب❌"
+                    text="تم رفض الطلب❌",
+                    callback_data="❌❌❌❌❌❌❌",
                 )
             ),
         )
@@ -234,9 +210,10 @@ async def decline_withdraw_order_reason(
         )
 
         context.user_data["requested"] = False
-        await DB.set_working_on_it(
+        await DB.decline_order(
             order_type="withdraw",
-            working_on_it=0,
+            archive_message_ids=str(message.id),
+            reason=update.message.text,
             serial=serial,
         )
         return ConversationHandler.END
@@ -254,7 +231,8 @@ async def back_from_decline_withdraw_order(
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=f"send_withdraw_order_{serial}"
+                    text="إرسال الطلب⬅️",
+                    callback_data=f"send_withdraw_order_{serial}",
                 ),
                 InlineKeyboardButton(
                     text="رفض طلب السحب❌",

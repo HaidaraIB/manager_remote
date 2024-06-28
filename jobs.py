@@ -2,10 +2,6 @@ from telegram.ext import (
     ContextTypes,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
-
 from telegram.error import (
     RetryAfter,
 )
@@ -14,45 +10,62 @@ from DB import DB
 import asyncio
 
 
+def stringify_manager_reward_report(worker, updated_worker, amount):
+    manager_text = (
+        f"تم تحديث رصيد المكافآت عن مجموع مبالغ الطلبات الناجحة للموظف:\n\n"
+        f"id: <code>{worker['id']}</code>\n"
+        f"name: <b>{worker['name']}</b>\n"
+        f"username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد</b>'}\n\n"
+        f"مجموع المكافآت السابق: <b>{worker['weekly_rewards_balance']}</b>\n"
+        f"قيمة المكافأة: <b>{amount}</b>\n"
+        f"مجموع المكافآت الحالي: <b>{updated_worker['weekly_rewards_balance']}</b>\n"
+        f"عدد الطلبات حتى الآن: <b>{updated_worker['approved_deposits_num']}</b>\n"
+        f"مجموع المبالغ حتى الآن: <b>{updated_worker['approved_deposits']}</b>\n"
+        f"مجموع المبالغ هذا الأسبوع: <b>{worker['approved_deposits_week']}</b>"
+    )
+    return manager_text
+
+
+def stringify_worker_reward_report(worker, updated_worker, amount):
+    worker_text = (
+        "تم تحديث رصيد مكافآتك عن مجموع قيم الطلبات التي تمت الموافقة عليها\n"
+        f"مجموع مكافآتك السابق: <b>{worker['weekly_rewards_balance']}</b>\n"
+        f"قيمة المكافأة: <b>{amount}</b>\n"
+        f"مجموع مكافآتك الحالي: <b>{updated_worker['weekly_rewards_balance']}</b>\n"
+        f"عدد الطلبات حتى الآن: <b>{updated_worker['approved_deposits_num']}</b>\n"
+        f"مجموع المبالغ حتى الآن: <b>{updated_worker['approved_deposits']}</b>\n"
+        f"مجموع المبالغ هذا الأسبوع: <b>{worker['approved_deposits_week']}</b>\n"
+    )
+    return worker_text
+
+
 async def weekly_reward_worker(context: ContextTypes.DEFAULT_TYPE):
     workers = DB.get_workers()
     for worker in workers:
 
-        if worker['approved_deposits_week'] == 0:
+        if worker["approved_deposits_week"] == 0:
             continue
 
-        amount = worker['approved_deposits_week'] * context.bot_data["data"]["workers_reward_percentage"] / 100
-        await DB.weekly_reward_worker(worker_id=worker['id'], amount=amount)
-        updated_worker = DB.get_worker(worker_id=worker['id'])
+        amount = (
+            worker["approved_deposits_week"]
+            * context.bot_data["data"]["workers_reward_percentage"]
+            / 100
+        )
+        await DB.weekly_reward_worker(worker_id=worker["id"], amount=amount)
+        updated_worker = DB.get_worker(worker_id=worker["id"])
 
-        worker_text = f"""تم تحديث مكافآتك الأسبوعية عن مجموع مبالغ الإيداع التي تمت الموافقة عليها
-مجموع مكافآتك الأسبوعية السابق: <b>{worker['weekly_rewards_balance']}</b>
-قيمة المكافأة: <b>{amount}</b>
-مجموع مكافآتك الأسبوعية الحالي: <b>{updated_worker['weekly_rewards_balance']}</b>
-عدد الإيداعات حتى الآن: <b>{updated_worker['approved_deposits_num']}</b>
-مجموع مبالغ الإيداعات حتى الآن: <b>{updated_worker['approved_deposits']}</b>
-مجموع مبالغ الإيداعات هذا الأسبوع: <b>{worker['approved_deposits_week']}</b>
-"""
+        worker_text = stringify_worker_reward_report(worker, updated_worker, amount)
+
         try:
             await context.bot.send_message(
-                chat_id=worker['id'], text=worker_text,
+                chat_id=worker["id"],
+                text=worker_text,
             )
         except:
             pass
 
-        manager_text = f"""تم تحديث المكافآت الأسبوعية عن مجموع مبالغ الإيداع الناجحة للموظف:
+        manager_text = stringify_manager_reward_report(worker, updated_worker, amount)
 
-id: <code>{worker['id']}</code>
-name: <b>{worker['name']}</b>
-username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد</b>'}
-
-مجموع المكافآت الأسبوعية السابق: <b>{worker['weekly_rewards_balance']}</b>
-قيمة المكافأة: <b>{amount}</b>
-مجموع المكافآت الأسبوعية الحالي: <b>{updated_worker['weekly_rewards_balance']}</b>
-عدد الإيداعات حتى الآن: <b>{updated_worker['approved_deposits_num']}</b>
-مجموع مبالغ الإيداعات حتى الآن: <b>{updated_worker['approved_deposits']}</b>
-مجموع مبالغ الإيداعات هذا الأسبوع: <b>{worker['approved_deposits_week']}</b>
-"""
         try:
             await context.bot.send_message(
                 chat_id=context.bot_data["data"]["worker_gifts_group"],
@@ -66,50 +79,34 @@ username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد
             )
 
 
-
 async def daily_reward_worker(context: ContextTypes.DEFAULT_TYPE):
     workers = DB.get_all_workers(payments=True)
     for worker in workers:
 
-        if worker['approved_withdraws_day'] == 0:
+        if worker["approved_withdraws_day"] == 0:
             continue
 
         amount = (
-            worker['approved_withdraws_day']
+            worker["approved_withdraws_day"]
             * context.bot_data["data"]["workers_reward_withdraw_percentage"]
             / 100
         )
-        await DB.daily_reward_worker(worker_id=worker['id'], amount=amount, method=worker['method'])
-        updated_worker = DB.get_worker(worker_id=worker['id'], method=worker['method'])
+        await DB.daily_reward_worker(
+            worker_id=worker["id"], amount=amount, method=worker["method"]
+        )
+        updated_worker = DB.get_worker(worker_id=worker["id"], method=worker["method"])
 
-        worker_text = f"""تم تحديث مكافآتك اليومية عن مجموع مبالغ الإيداع التي تمت الموافقة عليها
-مجموع مكافآتك اليومية السابق: <b>{worker['daily_rewards_balance']}</b>
-قيمة المكافأة: <b>{amount}</b>
-مجموع مكافآتك اليومية الحالي: <b>{updated_worker['daily_rewards_balance']}</b>
-عدد السحوبات حتى الآن: <b>{updated_worker['approved_withdraws_num']}</b>
-مجموع مبالغ السحوبات حتى الآن: <b>{updated_worker['approved_withdraws']}</b>
-مجموع مبالغ السحوبات هذا الأسبوع: <b>{worker['approved_withdraws_day']}</b>
-"""
+        worker_text = stringify_worker_reward_report(worker, updated_worker, amount)
         try:
             await context.bot.send_message(
-                chat_id=worker['id'], text=worker_text,
+                chat_id=worker["id"],
+                text=worker_text,
             )
         except:
             pass
 
-        manager_text = f"""تم تحديث المكافآت اليومية عن مجموع مبالغ الإيداع الناجحة للموظف:
+        manager_text = stringify_manager_reward_report(worker, updated_worker, amount)
 
-id: <code>{worker['id']}</code>
-name: <b>{worker['name']}</b>
-username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد</b>'}
-
-مجموع مكافآتك اليومية السابق: <b>{worker['daily_rewards_balance']}</b>
-قيمة المكافأة: <b>{amount}</b>
-مجموع مكافآتك اليومية الحالي: <b>{updated_worker['daily_rewards_balance']}</b>
-عدد السحوبات حتى الآن: <b>{updated_worker['approved_withdraws_num']}</b>
-مجموع مبالغ السحوبات حتى الآن: <b>{updated_worker['approved_withdraws']}</b>
-مجموع مبالغ السحوبات هذا اليوم: <b>{worker['approved_withdraws_day']}</b>
-"""
         try:
             await context.bot.send_message(
                 chat_id=context.bot_data["data"]["worker_gifts_group"],

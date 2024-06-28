@@ -2,7 +2,6 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    Chat,
     KeyboardButtonRequestUsers,
     KeyboardButtonRequestChat,
     KeyboardButton,
@@ -12,8 +11,6 @@ from telegram import (
 
 from telegram.ext import (
     ContextTypes,
-    CallbackQueryHandler,
-    ConversationHandler,
 )
 
 
@@ -30,9 +27,7 @@ import traceback
 import json
 import logging
 from DB import DB
-
-from custom_filters.User import User
-from custom_filters.Admin import Admin
+from constants import *
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
@@ -82,7 +77,9 @@ def build_user_keyboard():
 def build_worker_keyboard():
     keyboard = [
         [
-            InlineKeyboardButton(text="معالجة طلب🈲", callback_data="worker request order"),
+            InlineKeyboardButton(
+                text="معالجة طلب🈲", callback_data="worker request order"
+            ),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -188,71 +185,34 @@ def callback_button_uuid_generator():
     return uuid.uuid4().hex
 
 
-def build_complaint_keyboard(data: dict):
-    respond_to_user_callback_data = {
-        **data,
-        "name": "respond to user complaint",
-    }
-    mod_amount_callback_data = {
-        **data,
-        "name": "mod amount user complaint",
-    }
-    close_complaint_callback_data_dict = {
-        **data,
-        "name": "close complaint",
-    }
-    if (
-        data.get("from_worker", True)
-        or data.get("name", False) == "send to worker user complaint"
-    ):
-        complaint_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرد على المستخدم",
-                    callback_data=respond_to_user_callback_data,
-                ),
-                InlineKeyboardButton(
-                    text="تعديل المبلغ",
-                    callback_data=mod_amount_callback_data,
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="إغلاق الشكوى🔐",
-                    callback_data=close_complaint_callback_data_dict,
-                ),
-            ],
-        ]
-    else:
-        send_to_worker_callback_data_dict = {
-            **data,
-            "name": "send to worker user complaint",
-        }
-
-        complaint_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="الرد على المستخدم",
-                    callback_data=respond_to_user_callback_data,
-                ),
-                InlineKeyboardButton(
-                    text="إرسال إلى الموظف المسؤول",
-                    callback_data=send_to_worker_callback_data_dict,
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="تعديل المبلغ",
-                    callback_data=mod_amount_callback_data,
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="إغلاق الشكوى🔐",
-                    callback_data=close_complaint_callback_data_dict,
-                ),
-            ],
-        ]
+def build_complaint_keyboard(data: list, from_worker: bool, send_to_worker: bool):
+    complaint_keyboard = [
+        [
+            InlineKeyboardButton(
+                text="الرد على المستخدم",
+                callback_data=f"respond_to_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="تعديل المبلغ",
+                callback_data=f"mod_amount_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="إغلاق الشكوى🔐",
+                callback_data=f"close_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+            ),
+        ],
+    ]
+    if from_worker or send_to_worker:
+        complaint_keyboard[0].append(
+            InlineKeyboardButton(
+                text="إرسال إلى الموظف المسؤول",
+                callback_data=f"send_to_worker_user_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+            )
+        )
     return InlineKeyboardMarkup(complaint_keyboard)
 
 
@@ -408,32 +368,32 @@ def build_groups_keyboard(op: str):
         ],
         [
             InlineKeyboardButton(
-                text="سحب USDT",
-                callback_data=f"{op} USDT_group",
+                text=f"سحب {USDT}",
+                callback_data=f"{op} {USDT}_group",
             )
         ],
         [
             InlineKeyboardButton(
-                text="سحب بيمو",
-                callback_data=f"{op} بيمو🇸🇦🇫🇷_group",
+                text=f"سحب {BEMO}",
+                callback_data=f"{op} {BEMO}_group",
             )
         ],
         [
             InlineKeyboardButton(
-                text="سحب بركة",
-                callback_data=f"{op} بركة🇧🇭_group",
+                text=f"سحب {BARAKAH}",
+                callback_data=f"{op} {BARAKAH}_group",
             )
         ],
         [
             InlineKeyboardButton(
-                text="سحب سيريتيل كاش",
-                callback_data=f"{op} Syriatel Cash🇸🇾_group",
+                text=f"سحب {SYRCASH}",
+                callback_data=f"{op} {SYRCASH}_group",
             )
         ],
         [
             InlineKeyboardButton(
-                text="سحب mtn كاش",
-                callback_data=f"{op} MTN Cash🇸🇾_group",
+                text=f"سحب {MTNCASH}",
+                callback_data=f"{op} {MTNCASH}_group",
             )
         ],
         [

@@ -12,15 +12,13 @@ class ResponseToUserComplaint(UpdateFilter):
                 return (
                     update.message.reply_to_message.reply_markup.inline_keyboard[0][
                         0
-                    ].callback_data["name"]
-                    == "skip close complaint"
+                    ].callback_data.startswith("skip_close_complaint")
                 )
             else:
                 return (
                     update.message.reply_to_message.reply_markup.inline_keyboard[0][
                         0
-                    ].callback_data["name"]
-                    == "back from respond to user complaint"
+                    ].callback_data.startswith("back_from_respond_to_user_complaint")
                 )
         except:
             return False

@@ -31,6 +31,8 @@ from start import start_command
 from DB import DB
 from custom_filters.Admin import Admin
 
+from constants import *
+
 (
     WORKER_ID,
     POSITION,
@@ -139,19 +141,19 @@ def build_positions_keyboard(op: str = "add"):
             ),
         ],
         [
-            InlineKeyboardButton(text="دفع USDT", callback_data=f"{op} USDT worker"),
+            InlineKeyboardButton(text=f"دفع {USDT}", callback_data=f"{op} {USDT} worker"),
             InlineKeyboardButton(
-                text="دفع بركة🇧🇭", callback_data=f"{op} بركة🇧🇭 worker"
+                text=f"دفع {BARAKAH}", callback_data=f"{op} {BARAKAH} worker"
             ),
             InlineKeyboardButton(
-                text="دفع Syriatel Cash🇸🇾",
-                callback_data=f"{op} Syriatel Cash🇸🇾 worker",
+                text=f"دفع {SYRCASH}",
+                callback_data=f"{op} {SYRCASH} worker",
             ),
             InlineKeyboardButton(
-                text="دفع MTN Cash🇸🇾", callback_data=f"{op} MTN Cash🇸🇾 worker"
+                text=f"دفع {MTNCASH}", callback_data=f"{op} {MTNCASH} worker"
             ),
             InlineKeyboardButton(
-                text="دفع بيمو🇸🇦🇫🇷", callback_data=f"{op} بيمو🇸🇦🇫🇷 worker"
+                text=f"دفع {BEMO}", callback_data=f"{op} {BEMO} worker"
             ),
         ],
         (

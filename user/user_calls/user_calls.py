@@ -23,18 +23,20 @@ from common.common import (
 
 from common.back_to_home_page import back_to_user_home_page_handler
 
+from worker.check_buy_usdt import check_buy_usdt
+from worker.check_deposit import check_deposit
+from worker.check_withdraw import check_withdraw
+
+from check_complaint import check_complaint as chc
+
+from DB import DB
+
 (
     CORRECT_RETURNED_WITHDRAW,
     CORRECT_RETURNED_DEPOSIT,
     CORRECT_RETURNED_BUY_USDT,
     CORRECT_RETURNED_COMPLAINT,
 ) = range(4)
-
-from worker.check_buy_usdt import check_buy_usdt
-from worker.check_deposit import check_deposit
-from worker.check_withdraw import check_withdraw
-
-from DB import DB
 
 
 async def reply_to_returned_complaint(
@@ -46,22 +48,19 @@ async def reply_to_returned_complaint(
             show_alert=True,
         )
 
-        data = update.callback_query.data
+        data = update.callback_query.data.split("_")
 
-        context.user_data["returned_complaint_data"] = data
-        back_button_data = {
-            **data,
-            "name": "back from reply to returned complaint",
-        }
-        back_button = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع عن الرد على الشكوى🔙", callback_data=back_button_data
-                )
-            ]
-        ]
+        context.user_data["callback_data"] = data
+
+        await chc.make_complaint_data(context, data)
+
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(back_button)
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="الرجوع عن الرد على الشكوى🔙",
+                    callback_data=f"back_from_reply_to_returned_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                )
+            )
         )
 
         return CORRECT_RETURNED_COMPLAINT
@@ -72,9 +71,14 @@ async def correct_returned_complaint(
 ):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
 
-        data = context.user_data["returned_complaint_data"]
+        data = context.user_data["complaint_data"]
 
-        text_list = data["text"].split("\n")
+        op = DB.get_one_order(
+            context.user_data["callback_data"][-2],
+            serial=int(context.user_data["callback_data"][-1]),
+        )
+
+        text_list: list = data["text"].split("\n")
 
         if update.message.text:
             text_list.insert(
@@ -88,36 +92,28 @@ async def correct_returned_complaint(
 
         data["text"] = "\n".join(text_list)
 
+        context.user_data["complaint_data"] = data
+
         chat_id = (
-            data["op"]["worker_id"]
-            if data["from_worker"]
+            op["worker_id"]
+            if context.user_data["callback_data"][-4]
             else context.bot_data["data"]["complaints_group"]
         )
 
-        reply_markup = build_complaint_keyboard(data)
+        reply_markup = build_complaint_keyboard(
+            context.user_data["callback_data"], context.user_data["callback_data"][-4], False
+        )
 
-        if not update.message.photo:
-            if data["media"]:
-                await context.bot.send_media_group(
-                    chat_id=chat_id,
-                    media=[InputMediaPhoto(media=photo) for photo in data["media"]],
-                    caption="\n".join(text_list),
-                )
-                await context.bot.send_message(
-                    chat_id=chat_id,
-                    text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {data['op']['serial']}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
-                    reply_markup=reply_markup,
-                )
-            else:
-                await context.bot.send_message(
-                    chat_id=chat_id,
-                    text="\n".join(text_list),
-                    reply_markup=reply_markup,
-                )
+        if not update.message.photo and not data["media"]:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="\n".join(text_list),
+                reply_markup=reply_markup,
+            )
+
         else:
-            photos = [update.message.photo[-1]]
-            if data["media"]:
-                photos = data["media"]
+            photos = data["media"] if data["media"] else []
+            if update.message.photo:
                 photos.append(update.message.photo[-1])
 
             await context.bot.send_media_group(
@@ -127,7 +123,7 @@ async def correct_returned_complaint(
             )
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {data['op']['serial']}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
+                text=f"<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {op['serial']}</b>\n\nقم باختيار ماذا تريد أن تفعل⬇️",
                 reply_markup=reply_markup,
             )
         await update.message.reply_text(
@@ -140,20 +136,14 @@ async def back_from_reply_to_returned_complaint(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        data = update.callback_query.data
-        user_button_callback_data = {
-            **data,
-            "name": "user reply to complaint",
-        }
-        user_button = [
-            [
-                InlineKeyboardButton(
-                    text="إرسال رد⬅️", callback_data=user_button_callback_data
-                )
-            ]
-        ]
+        data = update.callback_query.data.split("_")
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(user_button),
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="إرسال رد⬅️",
+                    callback_data=f"user_reply_to_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                )
+            ),
         )
         return ConversationHandler.END
 
@@ -343,7 +333,7 @@ reply_to_returned_complaint_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             reply_to_returned_complaint,
-            lambda d: isinstance(d, dict) and d["name"] == "user reply to complaint",
+            "^user_reply_to_complaint",
         )
     ],
     states={
@@ -359,8 +349,7 @@ reply_to_returned_complaint_handler = ConversationHandler(
     fallbacks=[
         CallbackQueryHandler(
             back_from_reply_to_returned_complaint,
-            lambda d: isinstance(d, dict)
-            and d["name"] == "back from reply to returned complaint",
+            "^back_from_reply_to_returned_complaint",
         ),
     ],
 )

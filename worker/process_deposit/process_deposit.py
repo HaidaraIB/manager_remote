@@ -74,16 +74,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             ].callback_data.split("_")[-1]
         )
 
-        await DB.change_order_state(
-            order_type="deposit", serial=serial, state="approved"
-        )
         d_order = DB.get_one_order(order_type="deposit", serial=serial)
-
-        await DB.update_balance(user_id=d_order["user_id"], amount=d_order["amount"])
-        await DB.update_worker_approved_deposits(
-            worder_id=update.effective_user.id, amount=d_order["amount"]
-        )
-        await DB.increment_worker_deposits(worder_id=update.effective_user.id)
 
         user = DB.get_user(user_id=d_order["user_id"])
 
@@ -123,18 +114,13 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             caption="\n".join(caption),
         )
 
-        await DB.add_message_ids(
-            archive_message_ids=f"{messages[0].id},{messages[1].id}",
-            serial=serial,
-            order_type="deposit",
-        )
-
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
+                    text="تمت الموافقة✅",
+                    callback_data="✅✅✅✅✅✅✅✅✅",
                 )
             ),
         )
@@ -145,10 +131,13 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             reply_markup=build_worker_keyboard(),
         )
 
-        await DB.set_working_on_it(
+        await DB.reply_with_deposit_proof(
             order_type="deposit",
-            working_on_it=0,
+            amount=d_order["amount"],
+            archive_message_ids=f"{messages[0].id},{messages[1].id}",
             serial=serial,
+            user_id=d_order["user_id"],
+            worker_id=update.effective_user.id,
         )
         context.user_data["requested"] = False
 
@@ -186,17 +175,6 @@ async def return_deposit_order_reason(
             0
         ].callback_data.split("_")[-1]
 
-        await DB.change_order_state(
-            order_type="deposit",
-            serial=serial,
-            state="returned",
-        )
-        await DB.add_order_reason(
-            order_type="deposit",
-            serial=serial,
-            reason=update.message.text,
-        )
-
         d_order = DB.get_one_order(order_type="deposit", serial=serial)
 
         caption = (
@@ -232,18 +210,12 @@ async def return_deposit_order_reason(
             caption=caption,
         )
 
-        await DB.add_message_ids(
-            archive_message_ids=str(message.id),
-            serial=serial,
-            order_type="deposit",
-        )
-
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت إعادة الطلب📥", callback_data="تمت إعادة الطلب📥"
+                    text="تمت إعادة الطلب📥", callback_data="📥📥📥📥📥📥📥📥"
                 )
             ),
         )
@@ -253,11 +225,14 @@ async def return_deposit_order_reason(
             text="تمت إعادة الطلب📥",
             reply_markup=build_worker_keyboard(),
         )
-        await DB.set_working_on_it(
+
+        await DB.return_order(
             order_type="deposit",
-            working_on_it=0,
+            archive_message_ids=str(message.id),
+            reason=update.message.text,
             serial=serial,
         )
+
         context.user_data["requested"] = False
         return ConversationHandler.END
 

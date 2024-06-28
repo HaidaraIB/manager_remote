@@ -31,6 +31,8 @@ from start import start_command
 
 from DB import DB
 
+from constants import *
+
 (
     USDT_TO_BUY_AMOUNT,
     YES_NO_BUY_USDT,
@@ -40,6 +42,19 @@ from DB import DB
     BANK_ACCOUNT_NAME_BUY_USDT,
     BUY_USDT_CHECK,
 ) = range(7)
+
+buy_usdt_methods = [
+    [
+        InlineKeyboardButton(text=f"{BEMO}", callback_data=f"{BEMO}"),
+        InlineKeyboardButton(text=f"{BARAKAH}", callback_data=f"{BARAKAH}"),
+    ],
+    [
+        InlineKeyboardButton(text=f"{SYRCASH}", callback_data=f"{SYRCASH}"),
+        InlineKeyboardButton(text=f"{MTNCASH}", callback_data=f"{MTNCASH}"),
+    ],
+    build_back_button("back to yes no buy usdt"),
+    back_to_user_home_page_button[0],
+]
 
 
 @check_if_user_member_decorator
@@ -104,20 +119,6 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return ConversationHandler.END
         else:
-            buy_usdt_methods = [
-                [
-                    InlineKeyboardButton(text="بيمو🇸🇦🇫🇷", callback_data="بيمو🇸🇦🇫🇷"),
-                    InlineKeyboardButton(text="بركة🇧🇭", callback_data="بركة🇧🇭"),
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="Syriatel Cash🇸🇾", callback_data="Syriatel Cash🇸🇾"
-                    ),
-                    InlineKeyboardButton(text="MTN Cash🇸🇾", callback_data="MTN Cash🇸🇾"),
-                ],
-                build_back_button("back to yes no buy usdt"),
-                back_to_user_home_page_button[0],
-            ]
             await update.callback_query.edit_message_text(
                 text="اختر وسيلة الدفع لاستلام أموالك💳",
                 reply_markup=InlineKeyboardMarkup(buy_usdt_methods),
@@ -164,69 +165,16 @@ async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back to buy usdt method"),
             back_to_user_home_page_button[0],
         ]
-
-        if context.user_data["payment_method_buy_usdt"] in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]:
-
-            if context.user_data["payment_method_buy_usdt"] == "بيمو🇸🇦🇫🇷":
-                text = "أرسل رقم حساب بيمو👝"
-            else:
-                text = "أرسل رقم حساب بركة👝"
-
-            await update.callback_query.edit_message_text(
-                text=text, reply_markup=InlineKeyboardMarkup(back_keyboard)
-            )
+        await update.callback_query.edit_message_text(
+            text=f"أرسل رقم حساب {data}",
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
+        if context.user_data["payment_method_buy_usdt"] in [BEMO, BARAKAH]:
             return BANK_NUMBER_BUY_USDT
-
-        elif context.user_data["payment_method_buy_usdt"] == "Syriatel Cash🇸🇾":
-            text = "أرسل رقم حساب سيريتيل كاش👝"
-
-        elif context.user_data["payment_method_buy_usdt"] == "MTN Cash🇸🇾":
-            text = "أرسل رقم حساب MTN كاش👝"
-
-        await update.callback_query.edit_message_text(
-            text=text,
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
         return CASH_CODE
 
 
-async def back_to_cash_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        back_keyboard = [
-            build_back_button("back to buy usdt method"),
-            back_to_user_home_page_button[0],
-        ]
-        if context.user_data["payment_method_buy_usdt"] == "Syriatel Cash🇸🇾":
-            text = "أرسل رقم حساب سيريتيل كاش👝"
-
-        elif context.user_data["payment_method_buy_usdt"] == "MTN Cash🇸🇾":
-            text = "أرسل رقم حساب MTN كاش👝"
-
-        await update.callback_query.edit_message_text(
-            text=text,
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
-        return CASH_CODE
-
-
-async def back_to_bank_number_buy_usdt(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        back_keyboard = [
-            build_back_button("back to payment method buy usdt"),
-            back_to_user_home_page_button[0],
-        ]
-        name = (
-            "بركة"
-            if context.user_data["payment_method_buy_usdt"] == "بركة🇧🇭"
-            else "بيمو"
-        )
-        await update.callback_query.edit_message_text(
-            text=f"أرسل رقم حساب {name} 👝",
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
-        return BANK_NUMBER_BUY_USDT
+back_to_cash_code = back_to_bank_number_buy_usdt = buy_usdt_method
 
 
 async def bank_number_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -261,21 +209,6 @@ async def back_to_bank_account_name_buy_usdt(
 
 async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
-        buy_usdt_methods = [
-            [
-                InlineKeyboardButton(text="بيمو🇸🇦🇫🇷", callback_data="بيمو🇸🇦🇫🇷"),
-                InlineKeyboardButton(text="بركة🇧🇭", callback_data="بركة🇧🇭"),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="Syriatel Cash🇸🇾", callback_data="Syriatel Cash🇸🇾"
-                ),
-                InlineKeyboardButton(text="MTN Cash🇸🇾", callback_data="MTN Cash🇸🇾"),
-            ],
-            build_back_button("back to yes no buy usdt"),
-            back_to_user_home_page_button[0],
-        ]
-
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع لاستلام أموالك💳",
             reply_markup=InlineKeyboardMarkup(buy_usdt_methods),
@@ -289,8 +222,8 @@ async def cash_code_bank_account_name_buy_usdt(
     if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
 
         if context.user_data["payment_method_buy_usdt"] in (
-            "Syriatel Cash🇸🇾",
-            "MTN Cash🇸🇾",
+            SYRCASH,
+            MTNCASH,
         ):
             context.user_data["payment_method_number_buy_usdt"] = update.message.text
             context.user_data["bank_account_name_buy_usdt"] = ""
@@ -301,8 +234,7 @@ async def cash_code_bank_account_name_buy_usdt(
         back_keyboard = [
             build_back_button(
                 "back to cash code buy usdt"
-                if context.user_data["payment_method_buy_usdt"]
-                not in ["بيمو🇸🇦🇫🇷", "بركة🇧🇭"]
+                if context.user_data["payment_method_buy_usdt"] not in [BEMO, BARAKAH]
                 else "back to bank account name buy usdt"
             ),
             back_to_user_home_page_button[0],
@@ -330,7 +262,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         method_info = f"<b>Payment info</b>: <code>{context.user_data['payment_method_number_buy_usdt']}</code>"
         method_info += (
             f"\nاسم صاحب الحساب: <b>{context.user_data['bank_account_name_buy_usdt']}</b>"
-            if method in ["بركة🇧🇭", "بيمو🇸🇦🇫🇷"]
+            if method in [BARAKAH, BEMO]
             else ""
         )
 
@@ -358,8 +290,10 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             ),
         )
-        await DB.add_buy_usdt_pending_check_message_id(
-            serial=serial, message_id=message.id
+        await DB.add_message_ids(
+            order_type="buyusdt",
+            serial=serial,
+            pending_check_message_id=message.id,
         )
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
