@@ -37,7 +37,7 @@ back_to_user_home_page_button = [
 
 @check_if_user_member_decorator
 async def back_to_user_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         text = "القائمة الرئيسية🔝"
         keyboard = build_user_keyboard()
         await update.callback_query.edit_message_text(text=text, reply_markup=keyboard)

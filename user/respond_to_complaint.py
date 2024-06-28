@@ -30,7 +30,7 @@ from check_complaint.check_complaint import make_complaint_data
 async def reply_to_returned_complaint(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بما تريد إرساله، يمكنك إرسال صورة أو نص أو الاثنين معاً.",
             show_alert=True,
@@ -57,7 +57,7 @@ async def reply_to_returned_complaint(
 async def correct_returned_complaint(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         data = context.user_data["complaint_data"]
 
@@ -113,7 +113,7 @@ async def correct_returned_complaint(
 async def back_from_reply_to_returned_complaint(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         data = update.callback_query.data.split("_")
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(

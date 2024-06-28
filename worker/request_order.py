@@ -60,14 +60,18 @@ async def send_requested_order(
     operation: str,
 ):
     cpyro = PyroClientSingleton()
-    async with cpyro:
-        old_message = await cpyro.get_messages(chat_id=group_id, message_ids=message_id)
-        message = await cpyro.copy_message(
-            chat_id=worker_id,
-            from_chat_id=group_id,
-            message_id=message_id,
-            reply_markup=old_message.reply_markup,
-        )
+    try:
+        await cpyro.start()
+    except ConnectionError:
+        pass
+    old_message = await cpyro.get_messages(chat_id=group_id, message_ids=message_id)
+    message = await cpyro.copy_message(
+        chat_id=worker_id,
+        from_chat_id=group_id,
+        message_id=message_id,
+        reply_markup=old_message.reply_markup,
+    )
+    await cpyro.stop()
     if order_type.startswith("check"):
         await DB.add_message_ids(
             serial=serial,

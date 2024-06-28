@@ -58,8 +58,8 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
         final_text = (
             data["text"]
             + "\n\n"
-            + update.effective_message.reply_to_message.text_html
-            + "🏁🏁 النسخة النهائية 🏁🏁"
+            + update.effective_message.text_html
+            + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
         )
         if data["media"]:
             await context.bot.send_media_group(
@@ -146,7 +146,7 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
-            message_id=update.message.reply_to_message.id,
+            message_id=update.effective_message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="تم إغلاق الشكوى✅",

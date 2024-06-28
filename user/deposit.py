@@ -41,7 +41,7 @@ from DB import DB
 
 @check_if_user_member_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         user = DB.get_user(user_id=update.effective_user.id)
         if not user:
             new_user = update.effective_user
@@ -61,7 +61,7 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["deposit_amount"] = int(update.message.text)
         back_buttons = [
             build_back_button("back to deposit amount"),
@@ -77,7 +77,7 @@ back_to_deposit_amount = make_deposit
 
 
 async def account_number_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["account_number_deposit"] = update.message.text
         deposit_methods = build_methods_keyboard()
         deposit_methods.append(build_back_button("back to account number deposit"))
@@ -92,7 +92,7 @@ async def account_number_deposit(update: Update, context: ContextTypes.DEFAULT_T
 async def back_to_account_number_deposit(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_buttons = [
             build_back_button("back to deposti amount"),
             back_to_user_home_page_button[0],
@@ -104,7 +104,7 @@ async def back_to_account_number_deposit(
 
 
 async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         data = update.callback_query.data
         method = DB.get_payment_method(name=data)
         if method[1] == 0:
@@ -131,7 +131,7 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_to_deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         deposit_methods = build_methods_keyboard()
         deposit_methods.append(build_back_button("back to account number deposit"))
         deposit_methods.append(back_to_user_home_page_button[0])
@@ -143,7 +143,7 @@ async def back_to_deposit_method(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         approval_screenshot = update.message.photo[-1]
 
         serial = await DB.add_deposit_order(

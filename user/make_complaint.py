@@ -15,7 +15,6 @@ from telegram.ext import (
     filters,
 )
 
-
 from pyrogram.types import Message
 
 from common.common import (
@@ -32,7 +31,6 @@ from common.back_to_home_page import (
 
 from start import start_command
 
-from custom_filters.User import User
 from PyroClientSingleton import PyroClientSingleton
 from DB import DB
 import datetime
@@ -118,7 +116,12 @@ async def check_complaint_date(
 async def get_photos_from_archive(message_ids: list[int]):
     photos: list[PhotoSize] = []
     cpyro = PyroClientSingleton()
-    await cpyro.start()
+
+    try:
+        await cpyro.start()
+    except ConnectionError:
+        pass
+
     ms: list[Message] = await cpyro.get_messages(
         chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
         message_ids=message_ids,
@@ -235,7 +238,7 @@ async def handle_complaint_about(
 
 @check_if_user_member_decorator
 async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         if not context.bot_data["data"]["user_calls"]["make_complaint"]:
             await update.callback_query.answer("قسم الشكاوي متوقف حالياً❗️")
             return ConversationHandler.END
@@ -265,7 +268,7 @@ async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         about = update.callback_query.data.replace(" complaint", "")
         context.user_data["complaint_about"] = about
@@ -291,7 +294,7 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         serial = int(update.callback_query.data.replace("serial ", ""))
         context.user_data["complaint_serial"] = serial
         op = DB.get_one_order(
@@ -343,7 +346,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         serial = int(update.callback_query.data.split("_")[-1])
 
@@ -364,7 +367,10 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         cpyro = PyroClientSingleton()
-        await cpyro.start()
+        try:
+            await cpyro.start()
+        except ConnectionError:
+            pass
 
         old_message = await cpyro.get_messages(
             chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
@@ -440,7 +446,7 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["reason"] = update.message.text
         complaint_text = (
             f"هل أنت متأكد من أنك تريد إرسال شكوى فيما يخص الطلب:\n\n"
@@ -466,7 +472,7 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         if update.callback_query.data.startswith("yes"):
             serial = context.user_data["complaint_serial"]
             order_type = context.user_data["complaint_about"]
@@ -534,7 +540,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def back_to_choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         await update.callback_query.edit_message_text(
             text=choose_operations_text,
@@ -544,7 +550,7 @@ async def back_to_choose_operation(update: Update, context: ContextTypes.DEFAULT
 
 
 async def back_to_complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         keyboard = [
             build_back_button("back to choose operation"),
             back_to_user_home_page_button[0],
@@ -557,7 +563,7 @@ async def back_to_complaint_reason(update: Update, context: ContextTypes.DEFAULT
 
 
 async def back_to_complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         complaints_keyboard = [
             [InlineKeyboardButton(text="إيداع📥", callback_data="deposit complaint")],
             [InlineKeyboardButton(text="سحب💳", callback_data="withdraw complaint")],

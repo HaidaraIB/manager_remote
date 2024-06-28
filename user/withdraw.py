@@ -58,7 +58,7 @@ withdraw_type_keyboard = [
 
 @check_if_user_member_decorator
 async def withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         user = DB.get_user(user_id=update.effective_user.id)
         if not user:
@@ -78,7 +78,7 @@ async def withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def withdraw_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["withdraw_type"] = update.callback_query.data.split(" ")[-1]
         back_buttons = [
             build_back_button("back to withdraw section"),
@@ -92,7 +92,7 @@ async def withdraw_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_to_withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         await update.callback_query.edit_message_text(
             text="اختر ما الذي تريد سحبه❔",
@@ -102,7 +102,7 @@ async def back_to_withdraw_section(update: Update, context: ContextTypes.DEFAULT
 
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         amount = float(update.message.text)
         context.user_data["withdrawal_amount"] = amount
 
@@ -138,7 +138,7 @@ back_to_withdraw_type = withdraw_type
 
 
 async def payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         data = update.callback_query.data
         if not data.startswith("back"):
@@ -169,7 +169,7 @@ async def payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_to_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_buttons = [
             build_back_button("back to withdraw type"),
             back_to_user_home_page_button[0],
@@ -182,7 +182,7 @@ async def back_to_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def bank_number_withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back to bank number withdraw"),
             back_to_user_home_page_button[0],
@@ -197,7 +197,7 @@ async def bank_number_withdraw(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def back_to_payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         payment_methods = build_methods_keyboard()
         payment_methods.append(build_back_button("back to withdraw type"))
         payment_methods.append(back_to_user_home_page_button[0])
@@ -210,7 +210,7 @@ async def back_to_payment_method(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def wallet_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         if context.user_data["payment_method"] not in (
             BARAKAH,
             BEMO
@@ -237,7 +237,7 @@ async def wallet_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def back_to_bank_number_withdraw(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back to payment method"),
             back_to_user_home_page_button[0],
@@ -254,7 +254,7 @@ bank_account_name = wallet_code
 
 
 async def back_to_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back to bank number withdraw"),
             back_to_user_home_page_button[0],
@@ -270,7 +270,7 @@ back_to_payment_info = payment_method
 
 
 async def account_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["account_number"] = update.message.text
 
         back_keyboard = [
@@ -285,7 +285,7 @@ async def account_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_to_account_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back to payment info"),
             back_to_user_home_page_button[0],
@@ -297,7 +297,7 @@ async def back_to_account_number(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["password"] = update.message.text
         back_keyboard = [
             build_back_button("back to password"),
@@ -311,7 +311,7 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_to_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back to account number"),
             back_to_user_home_page_button[0],
@@ -324,7 +324,7 @@ async def back_to_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         amount = context.user_data["withdrawal_amount"]
 

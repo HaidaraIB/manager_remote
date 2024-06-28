@@ -47,7 +47,7 @@ from constants import *
 
 @check_if_user_member_decorator
 async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         if not context.bot_data["data"]["user_calls"]["buy_usdt"]:
             await update.callback_query.answer("شراء USDT متوقف حالياً❗️")
             return ConversationHandler.END
@@ -71,7 +71,7 @@ async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["usdt_to_buy_amount"] = int(update.message.text)
         keyboard = [
             [
@@ -98,7 +98,7 @@ back_to_usdt_to_buy_amount = buy_usdt
 
 
 async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         if update.callback_query.data.startswith("no"):
             await update.callback_query.answer("حسناً، تم الإلغاء")
             await update.callback_query.edit_message_text(
@@ -118,7 +118,7 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_to_yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         keyboard = [
             [
                 InlineKeyboardButton(text="موافق👍", callback_data="yes buy usdt"),
@@ -140,7 +140,7 @@ async def back_to_yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         data = update.callback_query.data
         if not data.startswith("back"):
@@ -169,7 +169,7 @@ back_to_cash_code = back_to_bank_number_buy_usdt = buy_usdt_method
 
 
 async def bank_number_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back to bank number buy usdt"),
             back_to_user_home_page_button[0],
@@ -186,7 +186,7 @@ async def bank_number_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYP
 async def back_to_bank_account_name_buy_usdt(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back to bank number buy usdt"),
             back_to_user_home_page_button[0],
@@ -199,7 +199,7 @@ async def back_to_bank_account_name_buy_usdt(
 
 
 async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
         buy_usdt_methods = build_methods_keyboard(buy_usdt=True)
         buy_usdt_methods.append(build_back_button("back to yes no buy usdt"))
         buy_usdt_methods.append(back_to_user_home_page_button[0])
@@ -213,7 +213,7 @@ async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_
 async def cash_code_bank_account_name_buy_usdt(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         if context.user_data["payment_method_buy_usdt"] not in (
             BARAKAH,
@@ -248,7 +248,7 @@ async def cash_code_bank_account_name_buy_usdt(
 
 
 async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and User().filter(update):
+    if update.effective_chat.type == Chat.PRIVATE:
 
         method = context.user_data["payment_method_buy_usdt"]
         method_info = ""

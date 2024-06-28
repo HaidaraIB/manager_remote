@@ -124,9 +124,7 @@ def main():
     app.add_handler(user_payment_verified_buy_usdt_handler)
 
     # RETURN
-    app.add_handler(handle_returned_buy_usdt_handler)
-    app.add_handler(handle_returned_withdraw_handler)
-    app.add_handler(handle_returned_deposit_handler)
+    app.add_handler(handle_returned_order_handler)
     app.add_handler(reply_to_returned_complaint_handler)
 
     # ADMIN SETTINGS

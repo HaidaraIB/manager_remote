@@ -26,9 +26,9 @@ NEW_DEPOSIT_AMOUNT, REF_NUMBER, DECLINE_REASON = range(3)
 
 def stringify_order(
     amount: float,
+    serial: int,
     method: str,
     account_number: int,
-    serial: int,
 ):
     return (
         "إيداع جديد:\n"
