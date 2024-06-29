@@ -34,7 +34,7 @@ check_withdraw.stringify_order
 
 async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await update.callback_query.answer(text="قم بإرسال المطلوب في السبب.")
+        await update.callback_query.answer("قم بإرفاق المطلوب في السبب.", show_alert=True)
         await update.callback_query.edit_message_reply_markup()
         context.user_data["returned_data"] = update.callback_query.data
         if update.effective_message.photo:

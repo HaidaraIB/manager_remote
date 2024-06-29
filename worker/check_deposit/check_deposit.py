@@ -86,7 +86,6 @@ async def check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data[serial] = {
             "add_ref_number": None,
             "edit_amount": None,
-            "effective_keyboard": approve_deposit_keyboard,
         }
 
         await DB.add_checker_id(
@@ -147,23 +146,19 @@ async def new_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         context.user_data[serial]["edit_amount"] = new_amount
 
-        approve_deposit_keyboard = build_approve_deposit_keyboard(
-            order=DB.get_one_order(order_type="deposit", serial=serial),
-        )
-        context.user_data[serial]["effective_keyboard"] = approve_deposit_keyboard
-
         await update.message.reply_text(text="تم تحرير المبلغ بنجاح✅")
 
-        await context.bot.delete_message(
+        await update.effective_message.delete()
+
+        await context.bot.edit_message_caption(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
-        )
-
-        await context.bot.send_photo(
-            chat_id=update.effective_chat.id,
-            photo=update.message.reply_to_message.photo[-1],
             caption="\n".join(user_info),
-            reply_markup=InlineKeyboardMarkup(approve_deposit_keyboard),
+            reply_markup=InlineKeyboardMarkup(
+                build_approve_deposit_keyboard(
+                    order=DB.get_one_order(order_type="deposit", serial=serial),
+                )
+            ),
         )
         return ConversationHandler.END
 
@@ -200,17 +195,16 @@ async def get_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 0
             ].callback_data.split("_")[-1]
         )
+        ref_number = update.message.text
 
-        await DB.add_deposit_order_ref(serial=serial, ref_number=update.message.text)
+        await DB.add_deposit_order_ref(serial=serial, ref_number=ref_number)
+
+        d_order = DB.get_one_order(order_type="deposit", serial=serial)
+
+        old_ref_number = DB.get_ref_number(number=ref_number, method=d_order["method"])
 
         caption = update.message.reply_to_message.caption_html
         user_info = caption.split("\n")
-
-        ref_number = update.message.text
-        method = user_info[2].split(": ")[1]
-
-        old_ref_number = DB.get_ref_number(number=ref_number, method=method)
-
         if old_ref_number:
 
             await update.message.reply_text(
@@ -218,7 +212,7 @@ async def get_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         else:
-            await DB.add_ref_number(number=ref_number, method=method)
+            await DB.add_ref_number(number=ref_number, method=d_order["method"])
 
             if "الرقم المرجعي" in caption:
                 user_info[4] = f"الرقم المرجعي: <b>{ref_number}</b>"
@@ -229,17 +223,13 @@ async def get_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await update.message.reply_text(text="تمت إضافة الرقم المرجعي بنجاح✅")
 
-        await context.bot.delete_message(
-            chat_id=update.effective_chat.id,
-            message_id=update.message.reply_to_message.id,
-        )
+        await update.effective_message.delete()
 
-        await context.bot.send_photo(
-            chat_id=update.effective_chat.id,
-            photo=update.message.reply_to_message.photo[-1],
+        await context.bot.edit_message_caption(
+            message_id=update.message.reply_to_message.id,
             caption="\n".join(user_info),
             reply_markup=InlineKeyboardMarkup(
-                context.user_data[serial]["effective_keyboard"]
+                build_approve_deposit_keyboard(order=d_order)
             ),
         )
         return ConversationHandler.END
@@ -263,7 +253,7 @@ async def send_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
-            photo=update.callback_query.message.photo[-1],
+            photo=update.effective_message.photo[-1],
             caption=stringify_order(
                 amount=d_order["amount"],
                 account_number=d_order["acc_number"],
@@ -391,32 +381,18 @@ async def cancel_deposit_check(update: Update, context: ContextTypes.DEFAULT_TYP
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
-
         serial = int(update.callback_query.data.split("_")[-1])
-
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(
-                context.user_data[serial]["effective_keyboard"]
+                build_approve_deposit_keyboard(
+                    DB.get_one_order(order_type="deposit", serial=serial)
+                )
             )
         )
         return ConversationHandler.END
 
 
-async def back_from_decline_deposit_order(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-
-        serial = int(update.callback_query.data.split("_")[-1])
-
-        await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(
-                context.user_data[serial]["effective_keyboard"]
-            )
-        )
-        return ConversationHandler.END
+back_from_decline_deposit_order = cancel_deposit_check
 
 
 check_deposit_handler = CallbackQueryHandler(

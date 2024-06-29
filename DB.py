@@ -224,9 +224,7 @@ class DB:
 
     @staticmethod
     @connect_and_close
-    def get_complaint(
-        order_serial: int, order_type: str, cr: sqlite3.Cursor = None
-    ):
+    def get_complaint(order_serial: int, order_type: str, cr: sqlite3.Cursor = None):
         cr.execute(
             "SELECT * FROM complaints WHERE order_serial = ? AND order_type = ? ORDER BY id",
             (

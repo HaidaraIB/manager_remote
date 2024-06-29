@@ -30,7 +30,8 @@ async def handle_respond_to_user_complaint(
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         data = update.callback_query.data.split("_")
         await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بما تريد إرساله إلى المستخدم."
+            text="قم بالرد على هذه الرسالة بما تريد إرساله إلى المستخدم.",
+            show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
