@@ -196,7 +196,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 context.bot_data["suspended_workers"].add(op["worker_id"])
 
             data = [order_type, serial]
-            complaint_keyboard = build_complaint_keyboard(data, False)
+            complaint_keyboard = build_complaint_keyboard(data, True)
 
             if not photos:  # Means there's no picture, it's a declined withdraw order.
                 await context.bot.send_message(
