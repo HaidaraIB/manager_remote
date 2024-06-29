@@ -4,3 +4,4 @@ test.py
 data/*
 data_test/*
 *.session
+*.session-journal

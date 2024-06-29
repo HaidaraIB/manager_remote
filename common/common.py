@@ -70,6 +70,7 @@ def build_user_keyboard():
         [InlineKeyboardButton(text="إنشاء حساب موثق™️", callback_data="create account")],
         [InlineKeyboardButton(text="شراء USDT💰", callback_data="buy usdt")],
         [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="make complaint")],
+        [InlineKeyboardButton(text="وكيل موصى به", url="t.me/Melbet_bo")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
