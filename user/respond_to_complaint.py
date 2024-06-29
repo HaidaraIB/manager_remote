@@ -69,7 +69,7 @@ async def correct_returned_complaint(
         context.user_data["complaint_data"] = data
 
         chat_id = (
-            op["worker_id"]
+            (op["worker_id"] if op["worker_id"] else op["checker_id"])
             if int(context.user_data["callback_data"][-3])
             else context.bot_data["data"]["complaints_group"]
         )
