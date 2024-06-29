@@ -53,12 +53,13 @@ async def inits(app: Application):
 
 
 async def set_commands(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    st_cmd = ("start", "start command")
     if Worker().filter(update):
-        commands=[("worker", "worker command")]
+        commands=[("worker", "worker command"), st_cmd]
     elif Admin().filter(update):
-        commands=[("admin", "admin command")]
+        commands=[("admin", "admin command"), st_cmd]
     else:
-        commands=[("start", "start command")]
+        commands=[st_cmd]
     await context.bot.set_my_commands(
         commands=commands,
         scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
