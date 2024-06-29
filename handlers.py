@@ -154,6 +154,7 @@ def main():
     app.add_handler(close_complaint_handler)
 
     app.add_handler(reply_to_create_account_order_handler)
+    app.add_handler(add_existing_account_handler)
     app.add_handler(create_account_handler)
     app.add_handler(decline_create_account_handler)
 

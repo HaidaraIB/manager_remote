@@ -87,6 +87,7 @@ def build_user_keyboard():
         [InlineKeyboardButton(text="سحب💳", callback_data="withdraw")],
         [InlineKeyboardButton(text="إيداع📥", callback_data="deposit")],
         [InlineKeyboardButton(text="إنشاء حساب موثق™️", callback_data="create account")],
+        [InlineKeyboardButton(text="إضافة حساب سابق➕", callback_data="add existing account")],
         [InlineKeyboardButton(text="شراء USDT💰", callback_data="buy usdt")],
         [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="make complaint")],
         [InlineKeyboardButton(text="وكيل موصى به", url="t.me/Melbet_bo")],

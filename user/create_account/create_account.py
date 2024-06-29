@@ -23,8 +23,8 @@ from DB import DB
 
 from custom_filters.Account import Account
 
-FULL_NAME, NATIONAL_NUMBER = range(2)
-DECLINE_REASON = 18
+(FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
+
 
 
 @check_if_user_member_decorator
