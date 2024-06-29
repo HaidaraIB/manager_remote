@@ -518,8 +518,8 @@ class DB:
         return cr.fetchone()
 
     @staticmethod
-    @lock_and_release
-    async def get_deposit_after_check_order(cr: sqlite3.Cursor = None):
+    @connect_and_close
+    def get_deposit_after_check_order(cr: sqlite3.Cursor = None):
         cr.execute(
             """
                 SELECT * FROM deposit_orders
@@ -530,8 +530,8 @@ class DB:
         return cr.fetchone()
 
     @staticmethod
-    @lock_and_release
-    async def get_check_order(check_what: str, cr: sqlite3.Cursor = None):
+    @connect_and_close
+    def get_check_order(check_what: str, cr: sqlite3.Cursor = None):
         cr.execute(
             f"""
                 SELECT * FROM {check_what}_orders
@@ -542,8 +542,8 @@ class DB:
         return cr.fetchone()
 
     @staticmethod
-    @lock_and_release
-    async def get_payment_order(
+    @connect_and_close
+    def get_payment_order(
         order_type: str, method: str, cr: sqlite3.Cursor = None
     ):
         cr.execute(

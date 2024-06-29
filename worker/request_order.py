@@ -160,7 +160,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
         operation = ""
         message_id, group_id, serial = 0, 0, 0
         if order_type == "deposit after check":
-            dac_order = await DB.get_deposit_after_check_order()
+            dac_order = DB.get_deposit_after_check_order()
             if not dac_order:
                 await update.callback_query.answer("ليس هناك طلبات تنفيذ إيداع حالياً.")
                 return
@@ -171,7 +171,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif order_type.startswith("check"):
             check_what = order_type.split(" ")[1]
-            c_order = await DB.get_check_order(check_what=check_what)
+            c_order = DB.get_check_order(check_what=check_what)
             if not c_order:
                 await update.callback_query.answer(
                     f"ليس هناك طلبات تحقق {orders_dict[check_what]} حالياً."
@@ -183,11 +183,11 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             group_id = c_order["group_id"]
 
         else:
-            w_order = await DB.get_payment_order(
+            w_order = DB.get_payment_order(
                 order_type="withdraw", method=order_type
             )
             if not w_order:
-                bu_order = await DB.get_payment_order(
+                bu_order = DB.get_payment_order(
                     order_type="buyusdt", method=order_type
                 )
                 if not bu_order:
