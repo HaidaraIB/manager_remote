@@ -71,7 +71,6 @@ async def send_requested_order(
         message_id=message_id,
         reply_markup=old_message.reply_markup,
     )
-    await cpyro.stop()
     if order_type.startswith("check"):
         await DB.add_message_ids(
             serial=serial,

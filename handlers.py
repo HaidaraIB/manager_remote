@@ -14,6 +14,7 @@ from telegram.constants import (
     ParseMode,
 )
 
+from PyroClientSingleton import PyroClientSingleton
 from start import (
     start_command,
     admin_command,
@@ -80,7 +81,9 @@ def main():
     load_dotenv()
     DB.creat_tables()
     defaults = Defaults(parse_mode=ParseMode.HTML)
-    my_persistence = PicklePersistence(filepath=os.getenv("PERSISTENCE_PATH"), single_file=False)
+    my_persistence = PicklePersistence(
+        filepath=os.getenv("PERSISTENCE_PATH"), single_file=False
+    )
     app = (
         Application.builder()
         .token(os.getenv("BOT_TOKEN"))
@@ -171,7 +174,7 @@ def main():
     app.add_handler(update_usdt_to_syp_handler)
     app.add_handler(turn_user_calls_on_or_off_handler)
     app.add_handler(turn_payment_method_on_or_off_handler)
-    
+
     app.add_handler(wallets_settings_handler)
     app.add_handler(broadcast_message_handler)
 
@@ -204,4 +207,9 @@ def main():
         time=datetime.time(0, 0, 0),
     )
 
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
+    
+    try:
+        PyroClientSingleton().stop()
+    except ConnectionError:
+        pass

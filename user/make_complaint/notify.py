@@ -109,7 +109,6 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-        await cpyro.stop()
 
         if op["state"] == "sent":
             if op["working_on_it"]:

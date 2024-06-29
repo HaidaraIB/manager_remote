@@ -121,7 +121,6 @@ async def get_photos_from_archive(message_ids: list[int]):
             )
         )
 
-    await cpyro.stop()
 
     return photos
 
