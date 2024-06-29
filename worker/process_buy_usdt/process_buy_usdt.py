@@ -33,11 +33,11 @@ async def user_payment_verified_buy_usdt(
         Chat.PRIVATE,
     ]:
 
-        if update.effective_user.id in context.bot_data["suspended_workers"]:
-            await update.callback_query.answer(
-                "تم إيقافك عن العمل إلى حين معالجة الشكاوى الصادرة باسمك."
-            )
-            return
+        # if update.effective_user.id in context.bot_data["suspended_workers"]:
+        #     await update.callback_query.answer(
+        #         "تم إيقافك عن العمل إلى حين معالجة الشكاوى الصادرة باسمك."
+        #     )
+        #     return
 
         serial = int(update.callback_query.data.split("_")[-1])
 

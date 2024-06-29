@@ -54,7 +54,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         if data[2] == "withdraw":
             await context.bot.send_message(
-                chat_id=context.user_data["return_to_chat_id"],
+                chat_id=int(data[-2]),
                 text=stringify_returned_order(
                     update.message.text,
                     check_withdraw.stringify_order,
@@ -67,7 +67,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         else:
             await context.bot.send_photo(
-                chat_id=context.user_data["return_to_chat_id_deposit"],
+                chat_id=int(data[-2]),
                 photo=context.user_data["effective_photo"],
                 caption=stringify_returned_order(
                     update.message.text,

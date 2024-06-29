@@ -4,7 +4,8 @@ from telegram.ext import (
 
 from DB import DB
 
-import user.make_complaint as mkc
+from user.make_complaint.make_complaint import stringify_order, get_photos_from_archive
+
 
 async def make_complaint_data(
     context: ContextTypes.DEFAULT_TYPE,
@@ -22,14 +23,15 @@ async def make_complaint_data(
         data = {
             "text": (
                 f"شكوى جديدة:\n\n"
-                f"{mkc.stringify_order(serial=int(callback_data[-1]), order_type=callback_data[-2])}\n\n"
+                f"{stringify_order(serial=int(callback_data[-1]), order_type=callback_data[-2])}\n\n"
                 "سبب الشكوى:\n"
                 f"<b>{complaint['reason']}</b>\n\n"
             ),
             "media": (
-                await mkc.get_photos_from_archive(
+                await get_photos_from_archive(
                     message_ids=[
-                        m_id for m_id in map(int, order['archive_message_ids'].split(","))
+                        m_id
+                        for m_id in map(int, order["archive_message_ids"].split(","))
                     ]
                 )
             ),
