@@ -34,18 +34,18 @@ async def send_to_worker_user_complaint(
         if data["media"]:
             media_group = [InputMediaPhoto(media=photo) for photo in data["media"]]
             await context.bot.send_media_group(
-                chat_id=op["worker_id"],
+                chat_id=op["worker_id"] if op['worker_id'] else op['checker_id'],
                 media=media_group,
                 caption=data["text"],
             )
         else:
             await context.bot.send_message(
-                chat_id=op["worker_id"],
+                chat_id=op["worker_id"] if op['worker_id'] else op['checker_id'],
                 text=data["text"],
             )
 
         await context.bot.send_message(
-            chat_id=op["worker_id"],
+            chat_id=op["worker_id"] if op['worker_id'] else op['checker_id'],
             text=update.effective_message.text_html,
             reply_markup=build_complaint_keyboard(
                 data=callback_data,
