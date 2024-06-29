@@ -3,6 +3,4 @@ __pycache__
 test.py
 data/*
 data_test/*
-his_session.session
-test_session.session
-session.session
+*.session
