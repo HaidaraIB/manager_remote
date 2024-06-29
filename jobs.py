@@ -1,3 +1,7 @@
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
 from telegram.ext import (
     ContextTypes,
 )
@@ -128,3 +132,74 @@ async def daily_reward_worker(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=context.bot_data["data"]["worker_gifts_group"],
                 text=manager_text,
             )
+
+
+async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
+    serial = int(context.job.data)
+    d_order = DB.get_one_order(
+        "deposit",
+        serial=serial,
+    )
+    ref_present = DB.get_ref_number(
+        number=d_order["ref_number"],
+        method=d_order["method"],
+    )
+    if ref_present:
+        await send_order_to_process(d_order=d_order, ref_info=ref_present, context=context)
+    elif context.job.name == "first_deposit_check":
+        context.job_queue.run_once(
+            callback=check_deposit,
+            user_id=context.job.user_id,
+            # when=7200,
+            when=10,
+            data=serial,
+            name="second_deposit_check",
+            job_kwargs={
+                "id": f"second_deposit_check_{context.job.user_id}",
+                "misfire_grace_time": None,
+                "coalesce": True,
+                'replace_existing': True,
+            }
+        )
+
+
+async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
+    message = await context.bot.send_message(
+        chat_id=context.bot_data["data"]["deposit_after_check_group"],
+        text=stringify_order(
+            amount=ref_info['amount'],
+            account_number=d_order["acc_number"],
+            method=d_order["method"],
+            serial=d_order["serial"],
+        ),
+        reply_markup=InlineKeyboardMarkup.from_button(
+            InlineKeyboardButton(
+                text="قبول الطلب✅",
+                callback_data=f"verify_deposit_order_{d_order['serial']}",
+            )
+        ),
+    )
+    await DB.send_order(
+        order_type="deposit",
+        pending_process_message_id=message.id,
+        serial=d_order["serial"],
+        ref_info=ref_info,
+        group_id=context.bot_data["data"]["deposit_after_check_group"],
+    )
+
+
+def stringify_order(
+    amount: float,
+    serial: int,
+    method: str,
+    account_number: int,
+):
+    return (
+        "إيداع جديد:\n"
+        f"المبلغ: <code>{amount}</code>\n"
+        f"رقم الحساب: <code>{account_number}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ.\n\n"
+        "ملاحظة: تأكد من تطابق المبلغ في الرسالة مع الذي في لقطة الشاشة لأن ما سيضاف في حالة التأكيد هو الذي في الرسالة."
+    )

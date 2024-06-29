@@ -15,7 +15,7 @@ from telegram.ext import (
 from common.common import (
     build_user_keyboard,
     build_back_button,
-    check_if_user_present_decorator
+    check_if_user_present_decorator,
 )
 
 from common.back_to_home_page import (
@@ -46,6 +46,10 @@ async def add_existing_account(update: Update, context: ContextTypes.DEFAULT_TYP
 async def get_acc_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         account = DB.get_account(acc_num=update.message.text)
+        back_buttons = [
+            build_back_button("back_to_get_full_name"),
+            back_to_user_home_page_button[0],
+        ]
         if not account:
             await update.message.reply_text(
                 text="هذا الحساب غير منشأ عن طريق البوت!",
@@ -53,10 +57,6 @@ async def get_acc_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         context.user_data["acc_num"] = update.message.text
-        back_buttons = [
-            build_back_button("back_to_get_full_name"),
-            back_to_user_home_page_button[0],
-        ]
         await update.message.reply_text(
             text="قم بإرسال الاسم الثلاثي",
             reply_markup=InlineKeyboardMarkup(back_buttons),
@@ -88,7 +88,7 @@ async def get_full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return GET_PASSWORD
 
 
-back_to_get_full_name = get_full_name
+back_to_get_full_name = get_acc_num
 
 
 async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):

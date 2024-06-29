@@ -14,6 +14,8 @@ from telegram.constants import (
     ParseMode,
 )
 
+from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
+
 from PyroClientSingleton import PyroClientSingleton
 from start import (
     start_command,
@@ -44,7 +46,11 @@ from user.withdraw import (
     withdraw_handler,
 )
 
-from user.deposit import deposit_handler
+from user.deposit import (
+    deposit_handler,
+    store_ref_number_handler,
+    invalid_ref_format_handler,
+)
 from user.buy_usdt import buy_usdt_handler
 from user.make_complaint import complaint_handler
 from user.return_order import *
@@ -94,6 +100,13 @@ def main():
         .build()
     )
 
+    app.job_queue.scheduler.add_jobstore(
+        PTBSQLAlchemyJobStore(
+            application=app,
+            url=os.getenv("JOB_STORE_PATH"),
+        )
+    )
+
     app.add_handler(
         CallbackQueryHandler(
             callback=invalid_callback_data, pattern=InvalidCallbackData
@@ -101,14 +114,16 @@ def main():
     )
 
     # DEPOSIT
-    app.add_handler(edit_deposit_amount_handler)
-    app.add_handler(add_ref_number_handler)
-    app.add_handler(decline_deposit_order_handler)
-    app.add_handler(check_deposit_handler)
-    app.add_handler(send_order_handler)
+    # app.add_handler(edit_deposit_amount_handler)
+    # app.add_handler(add_ref_number_handler)
+    # app.add_handler(decline_deposit_order_handler)
+    # app.add_handler(check_deposit_handler)
+    # app.add_handler(send_order_handler)
     app.add_handler(reply_with_payment_proof_handler)
     app.add_handler(user_deposit_verified_handler)
     app.add_handler(return_deposit_order_handler)
+    app.add_handler(store_ref_number_handler, group=1)
+    app.add_handler(invalid_ref_format_handler, group=1)
 
     # WITHDRAW
     app.add_handler(check_payment_handler)
@@ -202,14 +217,26 @@ def main():
         callback=weekly_reward_worker,
         time=datetime.time(0, 0, 0),
         days=(0,),
+        job_kwargs={
+            "id": "weekly_reward_worker",
+            "misfire_grace_time": None,
+            "coalesce": True,
+            'replace_existing': True,
+        }
     )
     app.job_queue.run_daily(
         callback=daily_reward_worker,
         time=datetime.time(0, 0, 0),
+        job_kwargs={
+            "id": "daily_reward_worker",
+            "misfire_grace_time": None,
+            "coalesce": True,
+            'replace_existing': True,
+        }
     )
 
     app.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
-    
+
     try:
         PyroClientSingleton().stop()
     except ConnectionError:

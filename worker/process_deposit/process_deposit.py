@@ -86,25 +86,18 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             f"{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
-        try:
-            await context.bot.send_photo(
-                chat_id=d_order["user_id"],
-                photo=update.message.photo[-1],
-                caption=caption,
-            )
-        except:
-            pass
+        await context.bot.send_photo(
+            chat_id=d_order["user_id"],
+            photo=update.message.photo[-1],
+            caption=caption,
+        )
 
-        media = [
-            InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
-            InputMediaPhoto(media=update.message.photo[-1]),
-        ]
-
-        caption = update.message.reply_to_message.caption_html.split("\n")
+        caption = update.message.reply_to_message.text_html.split("\n")
         caption.insert(0, "تمت الموافقة✅")
-        messages = await context.bot.send_media_group(
+
+        message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            media=media,
+            photo=update.message.photo[-1],
             caption="\n".join(caption),
         )
 
@@ -128,7 +121,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         await DB.reply_with_deposit_proof(
             order_type="deposit",
             amount=d_order["amount"],
-            archive_message_ids=f"{messages[0].id},{messages[1].id}",
+            archive_message_ids=str(message.id),
             serial=serial,
             user_id=d_order["user_id"],
             worker_id=update.effective_user.id,
@@ -178,26 +171,24 @@ async def return_deposit_order_reason(
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
-        try:
-            await context.bot.send_photo(
-                chat_id=d_order["user_id"],
-                photo=update.message.reply_to_message.photo[-1],
-                caption=caption,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    InlineKeyboardButton(
-                        text="إرفاق المطلوب",
-                        callback_data=f"handle_return_deposit_{update.effective_chat.id}_{serial}",
-                    )
-                ),
-            )
-        except:
-            pass
+        await context.bot.send_photo(
+            chat_id=d_order["user_id"],
+            photo=update.message.reply_to_message.photo[-1],
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="إرفاق المطلوب",
+                    callback_data=f"handle_return_deposit_{update.effective_chat.id}_{serial}",
+                )
+            ),
+        )
 
         caption = update.message.reply_to_message.caption.split("\n")
         caption.insert(0, "تمت إعادة الطلب📥")
         caption = (
             "\n".join(caption) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
+
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.reply_to_message.photo[-1],
@@ -237,20 +228,17 @@ async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT
     ]:
 
         serial = int(update.callback_query.data.split("_")[-1])
-
-        return_button = [
-            [
-                InlineKeyboardButton(
-                    text="إعادة الطلب📥", callback_data=f"return_deposit_order_{serial}"
-                )
-            ]
-        ]
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(return_button)
+            reply_markup=InlineKeyboardMarkup(
+                InlineKeyboardButton(
+                    text="إعادة الطلب📥",
+                    callback_data=f"return_deposit_order_{serial}",
+                )
+            )
         )
 
 

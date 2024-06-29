@@ -109,10 +109,8 @@ class DB:
             method TEXT,
             amount REAL,
             acc_number TEXT,
-            ref_number TEXT DEFAULT '',
+            ref_number TEXT,
             reason TEXT DEFAULT '',
-            pending_check_message_id INTEGER,
-            checking_message_id INTEGER DEFAULT 0,
             pending_process_message_id INTEGER DEFAULT 0,
             processing_message_id INTEGER DEFAULT 0,
             archive_message_ids TEXT DEFAULT '',
@@ -178,7 +176,9 @@ class DB:
         );
 
         CREATE TABLE IF NOT EXISTS ref_numbers (
+            order_serial INT DEFAULT -1,
             number TEXT,
+            amount REAL,
             method TEXT,
             UNIQUE(number, method) ON CONFLICT IGNORE
         );
@@ -221,7 +221,7 @@ class DB:
     def get_account(acc_num: str, cr: sqlite3.Cursor = None):
         cr.execute("SELECT * FROM accounts WHERE acc_num = ?", (acc_num,))
         return cr.fetchone()
-    
+
     @staticmethod
     @connect_and_close
     def get_user_accounts(user_id: int, cr: sqlite3.Cursor = None):
@@ -283,8 +283,18 @@ class DB:
         pending_process_message_id: int,
         serial: int,
         group_id: int,
+        ref_info=None,
         cr: sqlite3.Cursor = None,
     ):
+        if order_type == "deposit":
+            cr.execute(
+                "UPDATE ref_numbers SET order_serial = ? WHERE number = ? AND method = ?",
+                (
+                    serial,
+                    ref_info["number"],
+                    ref_info["method"],
+                ),
+            )
         cr.execute(
             f"""
             
@@ -292,6 +302,7 @@ class DB:
                                            pending_process_message_id = ?,
                                            working_on_it = 0,
                                            group_id = ?
+                                           {',amount = {}'.format(ref_info['amount']) if ref_info else''}
             WHERE serial = ?
             """,
             (
@@ -434,9 +445,8 @@ class DB:
     @lock_and_release
     async def add_deposit_order(
         user_id: int,
-        group_id: int,
         method: str,
-        amount: float,
+        ref_number: str,
         acc_number: str,
         cr: sqlite3.Cursor = None,
     ):
@@ -444,17 +454,15 @@ class DB:
             """
                 INSERT OR IGNORE INTO deposit_orders(
                     user_id,
-                    group_id,
                     method,
-                    amount,
+                    ref_number,
                     acc_number
-                ) VALUES(?, ?, ?, ?, ?)
+                ) VALUES(?, ?, ?, ?)
             """,
             (
                 user_id,
-                group_id,
                 method,
-                amount,
+                ref_number,
                 acc_number,
             ),
         )
@@ -729,10 +737,12 @@ class DB:
 
     @staticmethod
     @lock_and_release
-    async def add_ref_number(number: str, method: str, cr: sqlite3.Cursor = None):
+    async def add_ref_number(
+        number: str, amount: float, method: str, cr: sqlite3.Cursor = None
+    ):
         cr.execute(
-            "INSERT OR IGNORE INTO ref_numbers(number, method) VALUES(?, ?)",
-            (number, method),
+            "INSERT OR IGNORE INTO ref_numbers(number, method, amount) VALUES(?, ?, ?)",
+            (number, method, amount),
         )
 
     @staticmethod
