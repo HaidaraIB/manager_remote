@@ -14,8 +14,6 @@ from telegram.ext import (
     filters,
 )
 
-from custom_filters.User import User
-
 from common.common import (
     build_complaint_keyboard,
 )

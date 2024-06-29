@@ -32,7 +32,7 @@ from DB import DB
 from constants import *
 
 
-def check_if_use_created_account_from_bot_decorator(func):
+def check_if_user_created_account_from_bot_decorator(func):
     @functools.wraps(func)
     async def wrapper(
         update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
@@ -44,6 +44,22 @@ def check_if_use_created_account_from_bot_decorator(func):
                 show_alert=True,
             )
             return ConversationHandler.END
+        return await func(update, context, *args, **kwargs)
+
+    return wrapper
+
+
+def check_if_user_present_decorator(func):
+    @functools.wraps(func)
+    async def wrapper(
+        update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
+    ):
+        user = DB.get_user(user_id=update.effective_user.id)
+        if not user:
+            new_user = update.effective_user
+            await DB.add_new_user(
+                user_id=new_user.id, username=new_user.username, name=new_user.full_name
+            )
         return await func(update, context, *args, **kwargs)
 
     return wrapper
@@ -87,7 +103,11 @@ def build_user_keyboard():
         [InlineKeyboardButton(text="سحب💳", callback_data="withdraw")],
         [InlineKeyboardButton(text="إيداع📥", callback_data="deposit")],
         [InlineKeyboardButton(text="إنشاء حساب موثق™️", callback_data="create account")],
-        [InlineKeyboardButton(text="إضافة حساب سابق➕", callback_data="add existing account")],
+        [
+            InlineKeyboardButton(
+                text="إضافة حساب سابق➕", callback_data="add existing account"
+            )
+        ],
         [InlineKeyboardButton(text="شراء USDT💰", callback_data="buy usdt")],
         [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="make complaint")],
         [InlineKeyboardButton(text="وكيل موصى به", url="t.me/Melbet_bo")],

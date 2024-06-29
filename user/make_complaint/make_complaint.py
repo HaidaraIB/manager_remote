@@ -19,6 +19,7 @@ from common.common import (
     build_user_keyboard,
     build_back_button,
     build_complaint_keyboard,
+    check_if_user_present_decorator
 )
 
 from common.force_join import check_if_user_member_decorator
@@ -44,19 +45,13 @@ from user.make_complaint.common import *
 ) = range(5)
 
 
+@check_if_user_present_decorator
 @check_if_user_member_decorator
 async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if not context.bot_data["data"]["user_calls"]["make_complaint"]:
             await update.callback_query.answer("قسم الشكاوي متوقف حالياً❗️")
             return ConversationHandler.END
-
-        user = DB.get_user(user_id=update.effective_user.id)
-        if not user:
-            new_user = update.effective_user
-            await DB.add_new_user(
-                user_id=new_user.id, username=new_user.username, name=new_user.full_name
-            )
 
         await update.callback_query.edit_message_text(
             text="شكوى فيما يخص:",

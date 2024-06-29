@@ -21,6 +21,8 @@ from common.common import (
     build_methods_keyboard,
     payment_method_pattern,
     build_back_button,
+    check_if_user_created_account_from_bot_decorator,
+    check_if_user_present_decorator,
 )
 
 from common.force_join import check_if_user_member_decorator
@@ -56,17 +58,11 @@ withdraw_type_keyboard = [
 ]
 
 
+@check_if_user_present_decorator
 @check_if_user_member_decorator
+@check_if_user_created_account_from_bot_decorator
 async def withdraw_section(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-
-        user = DB.get_user(user_id=update.effective_user.id)
-        if not user:
-            new_user = update.effective_user
-            await DB.add_new_user(
-                user_id=new_user.id, username=new_user.username, name=new_user.full_name
-            )
-
         if not context.bot_data["data"]["user_calls"]["withdraw"]:
             await update.callback_query.answer("السحوبات متوقفة حالياً❗️")
             return ConversationHandler.END

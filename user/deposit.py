@@ -17,7 +17,8 @@ from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
     payment_method_pattern,
-    check_if_use_created_account_from_bot_decorator,
+    check_if_user_created_account_from_bot_decorator,
+    check_if_user_present_decorator,
     build_back_button,
 )
 
@@ -38,17 +39,11 @@ from DB import DB
 ) = range(4)
 
 
+@check_if_user_present_decorator
 @check_if_user_member_decorator
-@check_if_use_created_account_from_bot_decorator
+@check_if_user_created_account_from_bot_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        user = DB.get_user(user_id=update.effective_user.id)
-        if not user:
-            new_user = update.effective_user
-            await DB.add_new_user(
-                user_id=new_user.id, username=new_user.username, name=new_user.full_name
-            )
-
         if not context.bot_data["data"]["user_calls"]["deposit"]:
             await update.callback_query.answer("الإيداعات متوقفة حالياً❗️")
             return ConversationHandler.END

@@ -16,8 +16,16 @@ from telegram.ext import (
 from common.common import (
     build_user_keyboard,
     build_back_button,
+    check_if_user_present_decorator,
 )
 from common.force_join import check_if_user_member_decorator
+
+from common.back_to_home_page import (
+    back_to_user_home_page_button,
+    back_to_user_home_page_handler,
+)
+
+from start import start_command
 
 from DB import DB
 
@@ -26,7 +34,7 @@ from custom_filters.Account import Account
 (FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
 
 
-
+@check_if_user_present_decorator
 @check_if_user_member_decorator
 async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
@@ -35,23 +43,9 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً❗️")
             return ConversationHandler.END
 
-        user = DB.get_user(user_id=update.effective_user.id)
-        if not user:
-            new_user = update.effective_user
-            await DB.add_new_user(
-                user_id=new_user.id, username=new_user.username, name=new_user.full_name
-            )
-
-        text = "حسناً، قم بإرسال اسمك الثلاثي الآن👤🪪"
-        cancel_button = [
-            [
-                InlineKeyboardButton(
-                    text="إلغاء❌", callback_data="cancel create account"
-                )
-            ],
-        ]
         await update.callback_query.edit_message_text(
-            text=text, reply_markup=InlineKeyboardMarkup(cancel_button)
+            text="حسناً، قم بإرسال اسمك الثلاثي الآن👤🪪",
+            reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
         )
         return FULL_NAME
 
@@ -59,8 +53,18 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["full_name"] = update.message.text
-        await update.message.reply_text(text="جيد، الآن الرقم الوطني للهوية 2️⃣")
+        back_buttons = [
+            build_back_button("back_to_full_name"),
+            back_to_user_home_page_button[0],
+        ]
+        await update.message.reply_text(
+            text="جيد، الآن الرقم الوطني للهوية 2️⃣",
+            reply_markup=InlineKeyboardMarkup(back_buttons),
+        )
         return NATIONAL_NUMBER
+
+
+back_to_full_name = create_account
 
 
 async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -88,15 +92,6 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=build_user_keyboard(),
         )
 
-        return ConversationHandler.END
-
-
-async def cancel_create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        await update.callback_query.edit_message_text(
-            text=f"تم الإلغاء👍",
-            reply_markup=build_user_keyboard(),
-        )
         return ConversationHandler.END
 
 
@@ -241,10 +236,16 @@ decline_create_account_handler = ConversationHandler(
 create_account_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(create_account, "^create account$")],
     states={
-        FULL_NAME: [MessageHandler(filters=filters.TEXT, callback=full_name)],
+        FULL_NAME: [
+            MessageHandler(filters=filters.TEXT, callback=full_name),
+        ],
         NATIONAL_NUMBER: [
             MessageHandler(filters=filters.Regex("^\d+$"), callback=national_number)
         ],
     },
-    fallbacks=[CallbackQueryHandler(cancel_create_account, "^cancel create account$")],
+    fallbacks=[
+        CallbackQueryHandler(back_to_full_name, "^back_to_full_name$"),
+        back_to_user_home_page_handler,
+        start_command,
+    ],
 )
