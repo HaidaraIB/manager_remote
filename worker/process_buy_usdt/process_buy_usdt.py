@@ -288,6 +288,4 @@ return_buy_usdt_order_handler = ConversationHandler(
             pattern="^back_from_return_buy_usdt_order",
         )
     ],
-    name="return_buy_usdt_order_handler",
-    persistent=True,
 )

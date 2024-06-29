@@ -264,6 +264,4 @@ decline_buy_usdt_order_handler = ConversationHandler(
             pattern="^back_from_decline_buy_usdt_order",
         )
     ],
-    name="decline_buy_usdt_order_handler",
-    persistent=True,
 )

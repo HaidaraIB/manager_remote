@@ -281,6 +281,4 @@ return_withdraw_order_handler = ConversationHandler(
             pattern="^back_from_return_withdraw_order",
         )
     ],
-    name="return_withdraw_order_handler",
-    persistent=True,
 )

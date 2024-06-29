@@ -287,6 +287,4 @@ return_deposit_order_handler = ConversationHandler(
             pattern="^back_from_return_deposit_order",
         )
     ],
-    name="return_deposit_order_handler",
-    persistent=True,
 )

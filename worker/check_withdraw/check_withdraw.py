@@ -277,6 +277,4 @@ decline_withdraw_order_handler = ConversationHandler(
             pattern="^back_from_decline_withdraw_order",
         )
     ],
-    name="decline_withdraw_order_handler",
-    persistent=True,
 )

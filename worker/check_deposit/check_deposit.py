@@ -451,8 +451,6 @@ edit_deposit_amount_handler = ConversationHandler(
         ]
     },
     fallbacks=[cancel_deposit_check_handler],
-    name="edit_deposit_amount_handler",
-    persistent=True,
 )
 
 add_ref_number_handler = ConversationHandler(
@@ -471,8 +469,6 @@ add_ref_number_handler = ConversationHandler(
         ]
     },
     fallbacks=[cancel_deposit_check_handler],
-    name="add_ref_number_handler",
-    persistent=True,
 )
 
 decline_deposit_order_handler = ConversationHandler(
@@ -496,6 +492,4 @@ decline_deposit_order_handler = ConversationHandler(
             pattern="^back_from_decline_deposit_order",
         )
     ],
-    name="decline_deposit_order_handler",
-    persistent=True,
 )
