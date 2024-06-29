@@ -97,8 +97,7 @@ async def correct_returned_complaint(
             + f"\n\nرد المستخدم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>",
             reply_markup=build_complaint_keyboard(
                 data=context.user_data["callback_data"],
-                from_worker=context.user_data["callback_data"][-3],
-                send_to_worker=False,
+                send_to_worker=int(context.user_data["callback_data"][-3]),
             ),
         )
         await update.message.reply_text(

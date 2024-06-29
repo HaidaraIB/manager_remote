@@ -71,7 +71,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         try:
             respond_button = InlineKeyboardButton(
                 text="إرسال رد⬅️",
-                callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{callback_data[-2]}_{callback_data[-1]}",
+                callback_data=f"user_reply_to_complaint_{0 if update.effective_chat.type == Chat.PRIVATE else 1}_{callback_data[-2]}_{callback_data[-1]}",
             )
             if not update.message.photo and not data["media"]:
                 await context.bot.send_message(
@@ -121,12 +121,7 @@ async def back_from_respond_to_user_complaint(
         await update.callback_query.edit_message_reply_markup(
             reply_markup=build_complaint_keyboard(
                 data=callback_data,
-                from_worker=(
-                    True if update.effective_chat.type == Chat.PRIVATE else False
-                ),
-                send_to_worker="_".join(callback_data).startswith(
-                    "send_to_worker_user_complaint"
-                ),
+                send_to_worker=update.effective_chat.type != Chat.PRIVATE,
             )
         )
 

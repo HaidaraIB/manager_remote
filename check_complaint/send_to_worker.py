@@ -49,7 +49,6 @@ async def send_to_worker_user_complaint(
             text=update.effective_message.text_html,
             reply_markup=build_complaint_keyboard(
                 data=callback_data,
-                from_worker=False,
                 send_to_worker=True,
             ),
         )

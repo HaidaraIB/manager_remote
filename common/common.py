@@ -187,7 +187,7 @@ def callback_button_uuid_generator():
     return uuid.uuid4().hex
 
 
-def build_complaint_keyboard(data: list, from_worker: bool, send_to_worker: bool):
+def build_complaint_keyboard(data: list, send_to_worker: bool):
     complaint_keyboard = [
         [
             InlineKeyboardButton(
@@ -208,7 +208,7 @@ def build_complaint_keyboard(data: list, from_worker: bool, send_to_worker: bool
             ),
         ],
     ]
-    if from_worker or not send_to_worker:
+    if send_to_worker:
         complaint_keyboard[0].append(
             InlineKeyboardButton(
                 text="إرسال إلى الموظف المسؤول",
