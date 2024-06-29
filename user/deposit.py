@@ -17,6 +17,7 @@ from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
     payment_method_pattern,
+    check_if_use_created_account_from_bot_decorator,
     build_back_button,
 )
 
@@ -38,6 +39,7 @@ from DB import DB
 
 
 @check_if_user_member_decorator
+@check_if_use_created_account_from_bot_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         user = DB.get_user(user_id=update.effective_user.id)
@@ -49,14 +51,6 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not context.bot_data["data"]["user_calls"]["deposit"]:
             await update.callback_query.answer("الإيداعات متوقفة حالياً❗️")
-            return ConversationHandler.END
-
-        accounts = DB.get_user_accounts(user_id=update.effective_user.id)
-        if not accounts:
-            await update.callback_query.answer(
-                "قم بإنشاء حساب عن طريق البوت أولاً ❗️",
-                show_alert=True,
-            )
             return ConversationHandler.END
 
         await update.callback_query.edit_message_text(
@@ -101,7 +95,7 @@ back_to_deposit_amount = make_deposit
 async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if not update.callback_query.data.startswith("back"):
-            context.user_data["account_number"] = int(update.callback_query.data)
+            context.user_data["account_deposit"] = int(update.callback_query.data)
         deposit_methods = build_methods_keyboard()
         deposit_methods.append(build_back_button("back to account number deposit"))
         deposit_methods.append(back_to_user_home_page_button[0])

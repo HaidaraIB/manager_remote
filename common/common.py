@@ -11,6 +11,7 @@ from telegram import (
 
 from telegram.ext import (
     ContextTypes,
+    ConversationHandler,
 )
 
 
@@ -24,10 +25,28 @@ from telegram.error import TimedOut, NetworkError
 import os
 import uuid
 import traceback
+import functools
 import json
 import logging
 from DB import DB
 from constants import *
+
+
+def check_if_use_created_account_from_bot_decorator(func):
+    @functools.wraps(func)
+    async def wrapper(
+        update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
+    ):
+        accounts = DB.get_user_accounts(user_id=update.effective_user.id)
+        if not accounts:
+            await update.callback_query.answer(
+                "قم بإنشاء حساب موثق عن طريق البوت أولاً ❗️",
+                show_alert=True,
+            )
+            return ConversationHandler.END
+        return await func(update, context, *args, **kwargs)
+
+    return wrapper
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):

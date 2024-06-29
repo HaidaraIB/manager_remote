@@ -93,10 +93,8 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def cancel_create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        text = f"تم الإلغاء👍\n\n" "قم بإرسال اسمك الثلاثي الآن 👤🪪"
-
         await update.callback_query.edit_message_text(
-            text=text,
+            text=f"تم الإلغاء👍",
             reply_markup=build_user_keyboard(),
         )
         return ConversationHandler.END
