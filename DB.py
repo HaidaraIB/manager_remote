@@ -190,6 +190,14 @@ class DB:
             reason TEXT
         );
 
+        CREATE TABLE IF NOT EXISTS accounts (
+            acc_num TEXT PRIMARY KEY,
+            user_id INTEGER,
+            password TEXT,
+            full_name TEXT,
+            creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        );
+
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
 
         -- init payment methods
@@ -207,6 +215,31 @@ class DB:
         db.commit()
         cr.close()
         db.close()
+
+    @staticmethod
+    @connect_and_close
+    def get_account(acc_num: str, cr: sqlite3.Cursor = None):
+        cr.execute("SELECT * FROM accounts WHERE acc_num = ?", (acc_num,))
+        return cr.fetchone()
+
+    @staticmethod
+    @lock_and_release
+    async def add_account(
+        acc_num: str,
+        user_id: int,
+        password: str,
+        full_name: str,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            "INSERT INTO accounts(acc_num, user_id, password, full_name) VALUES(?, ?, ?, ?)",
+            (
+                acc_num,
+                user_id,
+                password,
+                full_name,
+            ),
+        )
 
     @staticmethod
     @lock_and_release
@@ -543,9 +576,7 @@ class DB:
 
     @staticmethod
     @connect_and_close
-    def get_payment_order(
-        order_type: str, method: str, cr: sqlite3.Cursor = None
-    ):
+    def get_payment_order(order_type: str, method: str, cr: sqlite3.Cursor = None):
         cr.execute(
             f"""
                 SELECT * FROM {order_type}_orders

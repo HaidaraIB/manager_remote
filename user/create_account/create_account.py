@@ -67,7 +67,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
         text = (
-            f"الاسم الثلاثي: {context.user_data["full_name"]}\n"
+            f"الاسم الثلاثي: {context.user_data['full_name']}\n"
             f"الرقم الوطني: {update.message.text}\n\n"
             f"<code>{update.effective_user.id}</code>\nقم بالرد على هذه الرسالة بصورة الحساب."
         )
@@ -119,30 +119,36 @@ async def reply_to_create_account_order(
             return
 
         user_id = int(update.effective_message.reply_to_message.text.split("\n")[3])
+        
+        account = update.message.text.split("\n")
+        await DB.add_account(
+            full_name=account[0],
+            acc_num=int(account[1]),
+            password=account[2],
+            user_id=user_id,
+        )
+
+        text = "تمت الموافقة على طلبك لإنشاء حساب✅\n\n" "معلومات الحساب:\n\n"
         try:
-            text = "تمت الموافقة على طلبك لإنشاء حساب✅"
 
-            try:
-                await context.bot.send_photo(
-                    chat_id=user_id,
-                    caption=text,
-                    photo=update.effective_message.photo[-1],
-                )
-            except:
-                pass
-
-            await context.bot.edit_message_reply_markup(
-                chat_id=update.effective_chat.id,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    InlineKeyboardButton(
-                        text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
-                    )
-                ),
-                message_id=update.effective_message.reply_to_message.id,
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=text + update.effective_message.text,
             )
         except Exception as e:
             print(e)
             await update.message.reply_text(text="لقد قام هذا المستخدم بحظر البوت")
+            return
+
+        await context.bot.edit_message_reply_markup(
+            chat_id=update.effective_chat.id,
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
+                )
+            ),
+            message_id=update.effective_message.reply_to_message.id,
+        )
 
 
 async def decline_create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -188,25 +194,23 @@ async def back_from_decline_create_account(
 ):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
         user_id = int(update.callback_query.data.split(" ")[-1])
-        decline_create_account_button = [
-            [
-                InlineKeyboardButton(
-                    text="رفض⛔️", callback_data=f"decline create account {user_id}"
-                )
-            ],
-        ]
         await update.callback_query.answer(
-            text=f"<code>{user_id}</code>\nقم بالرد على هذه الرسالة بصورة الحساب.",
+            text=f"قم بالرد على هذه الرسالة بصورة الحساب.",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(decline_create_account_button),
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="رفض⛔️",
+                    callback_data=f"decline create account {user_id}",
+                )
+            ),
         )
         return ConversationHandler.END
 
 
 reply_to_create_account_order_handler = MessageHandler(
-    filters=filters.REPLY & Account() & filters.PHOTO,
+    filters=filters.REPLY & Account() & filters.Regex(".+\n\d+\n.+"),
     callback=reply_to_create_account_order,
 )
 
