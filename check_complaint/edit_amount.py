@@ -104,8 +104,7 @@ async def edit_order_amount_user_complaint(
             text="\n".join(reply_to_text),
             reply_markup=build_complaint_keyboard(
                 data=callback_data,
-                from_worker=len(update.effective_message.reply_markup.inline_keyboard)
-                == 3,
+                from_worker=update.effective_chat.type == Chat.PRIVATE,
                 send_to_worker=False,
             ),
         )
