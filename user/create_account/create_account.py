@@ -119,21 +119,33 @@ async def reply_to_create_account_order(
             return
 
         user_id = int(update.effective_message.reply_to_message.text.split("\n")[3])
-        
+
         account = update.message.text.split("\n")
-        await DB.add_account(
+        res = await DB.add_account(
             full_name=account[0],
             acc_num=int(account[1]),
             password=account[2],
             user_id=user_id,
         )
 
-        text = "تمت الموافقة على طلبك لإنشاء حساب✅\n\n" "معلومات الحساب:\n\n"
+        if res:
+            await update.effective_message.reply_text(
+                text="هذا الحساب مسجل لدينا مسبقاً"
+            )
+            return
+
+        text = (
+            "تمت الموافقة على طلبك لإنشاء حساب✅\n\n"
+            "معلومات الحساب:\n\n"
+            f"الاسم الثلاثي: <b>{account[0]}</b>\n"
+            f"رقم الحساب: <code>{account[1]}</code>\n"
+            f"كلمة المرور: <code>{account[2]}</code>"
+        )
         try:
 
             await context.bot.send_message(
                 chat_id=user_id,
-                text=text + update.effective_message.text,
+                text=text,
             )
         except Exception as e:
             print(e)
@@ -210,7 +222,7 @@ async def back_from_decline_create_account(
 
 
 reply_to_create_account_order_handler = MessageHandler(
-    filters=filters.REPLY & Account() & filters.Regex(".+\n\d+\n.+"),
+    filters=filters.REPLY & Account() & filters.Regex(".+\s+\d+\s+.+"),
     callback=reply_to_create_account_order,
 )
 

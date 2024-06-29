@@ -195,7 +195,7 @@ class DB:
             user_id INTEGER,
             password TEXT,
             full_name TEXT,
-            creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
@@ -221,6 +221,12 @@ class DB:
     def get_account(acc_num: str, cr: sqlite3.Cursor = None):
         cr.execute("SELECT * FROM accounts WHERE acc_num = ?", (acc_num,))
         return cr.fetchone()
+    
+    @staticmethod
+    @connect_and_close
+    def get_user_accounts(user_id: int, cr: sqlite3.Cursor = None):
+        cr.execute("SELECT * FROM accounts WHERE user_id = ?", (user_id,))
+        return cr.fetchall()
 
     @staticmethod
     @lock_and_release
@@ -231,15 +237,18 @@ class DB:
         full_name: str,
         cr: sqlite3.Cursor = None,
     ):
-        cr.execute(
-            "INSERT INTO accounts(acc_num, user_id, password, full_name) VALUES(?, ?, ?, ?)",
-            (
-                acc_num,
-                user_id,
-                password,
-                full_name,
-            ),
-        )
+        try:
+            cr.execute(
+                "INSERT INTO accounts(acc_num, user_id, password, full_name) VALUES(?, ?, ?, ?)",
+                (
+                    acc_num,
+                    user_id,
+                    password,
+                    full_name,
+                ),
+            )
+        except sqlite3.IntegrityError:
+            return True
 
     @staticmethod
     @lock_and_release
