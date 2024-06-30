@@ -65,7 +65,6 @@ from admin.groups_settings import *
 from admin.workers_settings import *
 
 from worker.request_order import request_order_handler
-from worker.check_deposit import *
 from worker.process_deposit import *
 from worker.check_withdraw import *
 from worker.process_withdraw import *

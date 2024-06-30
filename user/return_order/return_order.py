@@ -20,16 +20,12 @@ from common.common import (
 from common.back_to_home_page import back_to_user_home_page_handler
 
 from worker.check_buy_usdt import check_buy_usdt
-from worker.check_deposit import check_deposit
+import jobs as check_deposit
 from worker.check_withdraw import check_withdraw
 
 from DB import DB
 
 (SEND_ATTACHMENTS,) = range(1)
-
-check_buy_usdt.stringify_order
-check_deposit.stringify_order
-check_withdraw.stringify_order
 
 
 async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
