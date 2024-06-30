@@ -144,7 +144,6 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             data=serial,
             name="first_deposit_check",
             job_kwargs={
-                "id": f"first_deposit_check{update.effective_user.id}",
                 "misfire_grace_time": None,
                 "coalesce": True,
             },

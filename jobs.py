@@ -161,7 +161,6 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             data=serial,
             name="second_deposit_check",
             job_kwargs={
-                "id": f"second_deposit_check_{context.job.user_id}",
                 "misfire_grace_time": None,
                 "coalesce": True,
             },
@@ -172,9 +171,8 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             user_id=context.job.user_id,
             when=7200,
             data=serial,
-            name="second_deposit_check",
+            name="third_deposit_check",
             job_kwargs={
-                "id": f"second_deposit_check_{context.job.user_id}",
                 "misfire_grace_time": None,
                 "coalesce": True,
             },

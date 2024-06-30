@@ -28,14 +28,14 @@ async def choose_exchange_rate_to_update(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         exchange_rates_keyboard = [
-            [InlineKeyboardButton(text="USDT", callback_data="USDT usdt_to_syp")],
+            [InlineKeyboardButton(text="USDT", callback_data="USDT/usdt_to_syp")],
             [
                 InlineKeyboardButton(
                     text="Perfect Money",
-                    callback_data="Perfect Money perfect_money_to_syp",
+                    callback_data="Perfect Money/perfect_money_to_syp",
                 )
             ],
-            [InlineKeyboardButton(text="Payeer", callback_data="Payeer payeer_to_syp")],
+            [InlineKeyboardButton(text="Payeer", callback_data="Payeer/payeer_to_syp")],
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -47,17 +47,19 @@ async def choose_exchange_rate_to_update(
 
 async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        data = update.callback_query.data.split(" ")
+        data = update.callback_query.data.split("/")
         context.user_data["exchange_rates_data"] = data
         try:
             context.bot_data["data"][data[1]]
         except KeyError:
             context.bot_data["data"][data[1]] = 14200
+        back_buttons = [
+            build_back_button("back_to_choose_exchange_rate_to_update"),
+            back_to_admin_home_page_button[0],
+        ]
         await update.callback_query.edit_message_text(
             text=f"أرسل سعر {data[0]} مقابل الليرة السورية الجديد، السعر الحالي: <b>{context.bot_data['data'][data[1]]} SYP</b>",
-            reply_markup=InlineKeyboardMarkup(
-                build_back_button("back_to_choose_exchange_rate_to_update")
-            ),
+            reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return NEW_RATE
 
@@ -82,7 +84,7 @@ update_exchange_rates_handler = ConversationHandler(
     ],
     states={
         CHOOSE_EXCHANGE_RATE_TO_UPDATE: [
-            MessageHandler(filters=filters.Regex("^.+to_syp$"), callback=get_new_rate)
+            CallbackQueryHandler(get_new_rate, lambda x: x.endswith("to_syp"))
         ],
         NEW_RATE: [
             MessageHandler(
