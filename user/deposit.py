@@ -62,17 +62,10 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             accounts_keyboard,
             back_to_user_home_page_button[0],
         ]
-        if update.message:
-            context.user_data["deposit_amount"] = int(update.message.text)
-            await update.message.reply_text(
-                text="اختر حساباً من حساباتك المسجلة لدينا",
-                reply_markup=InlineKeyboardMarkup(keybaord),
-            )
-        else:
-            await update.callback_query.edit_message_text(
-                text="اختر حساباً من حساباتك المسجلة لدينا",
-                reply_markup=InlineKeyboardMarkup(keybaord),
-            )
+        await update.callback_query.edit_message_text(
+            text="اختر حساباً من حساباتك المسجلة لدينا",
+            reply_markup=InlineKeyboardMarkup(keybaord),
+        )
         return ACCOUNT_DEPOSIT
 
 
@@ -181,6 +174,14 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+def create_invalid_foramt_string():
+    methods = DB.get_payment_methods()
+    res = "تنسيق خاطئ الرجاء نسخ أحد القوالب التالية لتفادي الخطأ:\n\n"
+    for method in methods:
+        res += "<code>رقم العملية: \n" f"{method['name']}\n" "المبلغ: </code>\n\n"
+    res += "مثال:\n" "(1)\n" "USDT\n" "(100)"
+
+
 async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         if (
@@ -188,41 +189,7 @@ async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE)
             == context.bot_data["data"]["deposit_orders_group"]
         ):
             return
-        try:
-            await update.message.reply_text(
-                text=(
-                    "تنسيق خاطئ الرجاء الالتزام بالقالب التالي:\n\n"
-                    "(رقم العملية)\n"
-                    "(وسيلة الدفع)\n"
-                    "(المبلغ)\n\n"
-                    "قم بنسخ القالب من بين القوالب التالية لتفادي الخطأ.\n\n"
-                    "<code>(رقم العملية)\n"
-                    "USDT\n"
-                    "(المبلغ)</code>\n\n"
-                    "<code>(رقم العملية)\n"
-                    "<code>PERFECT MONEY</code>\n"
-                    "(المبلغ)</code>\n\n"
-                    "<code>(رقم العملية)\n"
-                    "<code>PAYEER</code>\n"
-                    "(المبلغ)</code>\n\n"
-                    "<code>(رقم العملية)\n"
-                    "<code>MTN Cash🇸🇾</code>\n"
-                    "(المبلغ)</code>\n\n"
-                    "<code>(رقم العملية)\n"
-                    "<code>Syriatel Cash🇸🇾</code>\n"
-                    "(المبلغ)</code>\n\n"
-                    "<code>(رقم العملية)\n"
-                    "<code>بركة🇧🇭</code>\n"
-                    "(المبلغ)</code>\n\n"
-                    "<code>(رقم العملية)\n"
-                    "<code>بيمو🇸🇦🇫🇷</code>\n"
-                    "(المبلغ)</code>\n\n"
-                ),
-            )
-        except:
-            import traceback
-
-            traceback.print_exc()
+        await update.message.reply_text(text=create_invalid_foramt_string())
 
 
 store_ref_number_handler = MessageHandler(filters=Ref(), callback=store_ref_number)
