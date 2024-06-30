@@ -32,6 +32,19 @@ from DB import DB
 from constants import *
 
 
+def apply_ex_rate(method:str, amount:float, context:ContextTypes.DEFAULT_TYPE):
+    ex_rate = 0
+    if method == PAYEER:
+        ex_rate = context.bot_data["data"]["payeer_to_syp"]
+        amount = amount * 0.97 * ex_rate
+    elif method == PERFECT_MONEY:
+        ex_rate = context.bot_data["data"]["perfect_money_to_syp"]
+        amount = amount * 0.97 * ex_rate
+    elif method == USDT:
+        ex_rate = context.bot_data["data"]["usdt_to_syp"]
+        amount = amount * ex_rate
+    return amount, ex_rate
+
 def check_if_user_created_account_from_bot_decorator(func):
     @functools.wraps(func)
     async def wrapper(

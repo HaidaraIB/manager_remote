@@ -108,6 +108,7 @@ class DB:
             state TEXT DEFAULT 'pending',
             method TEXT,
             amount REAL,
+            ex_rate REAL,
             acc_number TEXT,
             ref_number TEXT,
             reason TEXT DEFAULT '',
@@ -128,6 +129,7 @@ class DB:
             state TEXT DEFAULT 'pending',
             method TEXT,
             amount REAL,
+            ex_rate REAL,
             bank_account_name TEXT,
             payment_method_number TEXT,
             reason TEXT DEFAULT '',
@@ -150,6 +152,7 @@ class DB:
             state TEXT DEFAULT 'pending',
             method TEXT,
             amount REAL,
+            ex_rate REAL,
             withdraw_code TEXT,
             bank_account_name TEXT,
             payment_method_number TEXT,
@@ -282,12 +285,16 @@ class DB:
         pending_process_message_id: int,
         serial: int,
         group_id: int,
+        ex_rate: float,
         ref_info=None,
         cr: sqlite3.Cursor = None,
     ):
-        if order_type == "deposit":
+        if ref_info:
             cr.execute(
-                "UPDATE ref_numbers SET order_serial = ? WHERE number = ? AND method = ?",
+                """
+                UPDATE ref_numbers SET order_serial = ?
+                WHERE number = ? AND method = ?
+                """,
                 (
                     serial,
                     ref_info["number"],
@@ -300,13 +307,15 @@ class DB:
             UPDATE {order_type}_orders SET state = 'sent',
                                            pending_process_message_id = ?,
                                            working_on_it = 0,
-                                           group_id = ?
+                                           group_id = ?,
+                                           ex_rate = ?
                                            {',amount = {}'.format(ref_info['amount']) if ref_info else''}
             WHERE serial = ?
             """,
             (
                 pending_process_message_id,
                 group_id,
+                ex_rate,
                 serial,
             ),
         )

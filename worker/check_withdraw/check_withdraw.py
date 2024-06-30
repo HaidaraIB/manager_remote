@@ -14,12 +14,13 @@ from telegram.ext import (
 )
 
 from custom_filters import Withdraw, Declined
-
+from constants import *
 from DB import DB
 import os
 
 from common.common import (
     build_worker_keyboard,
+    apply_ex_rate
 )
 
 (
@@ -115,10 +116,13 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             serial=serial,
         )
 
+
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
         method = w_order["method"]
         target_group = f"{method}_group"
+
+        amount, ex_rate = apply_ex_rate(method, amount, context)
 
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"][target_group],
@@ -159,6 +163,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             pending_process_message_id=message.id,
             serial=serial,
             group_id=context.bot_data["data"][target_group],
+            ex_rate=ex_rate
         )
 
 

@@ -121,6 +121,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             pending_process_message_id=message.id,
             serial=serial,
             group_id=context.bot_data["data"][target_group],
+            ex_rate=context.bot_data["data"]["usdt_to_syp"],
         )
         context.user_data["requested"] = False
 

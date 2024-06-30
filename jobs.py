@@ -14,6 +14,10 @@ from DB import DB
 import asyncio
 import os
 
+from constants import *
+
+from common.common import apply_ex_rate
+
 day_week_en_to_ar_dict = {"day": "اليوم", "week": "الأسبوع"}
 
 
@@ -202,10 +206,12 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
+    amount, ex_rate = apply_ex_rate(d_order["method"], ref_info["amount"], context)
+
     message = await context.bot.send_message(
         chat_id=context.bot_data["data"]["deposit_after_check_group"],
         text=stringify_order(
-            amount=ref_info["amount"],
+            amount=amount,
             account_number=d_order["acc_number"],
             method=d_order["method"],
             serial=d_order["serial"],
@@ -223,6 +229,7 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
         serial=d_order["serial"],
         ref_info=ref_info,
         group_id=context.bot_data["data"]["deposit_after_check_group"],
+        ex_rate=ex_rate,
     )
 
 
