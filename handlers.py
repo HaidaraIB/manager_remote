@@ -71,6 +71,7 @@ from worker.check_withdraw import *
 from worker.process_withdraw import *
 from worker.check_buy_usdt import *
 from worker.process_buy_usdt import *
+from worker.check_deposit import *
 
 from check_complaint import *
 

@@ -158,45 +158,6 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
         return ConversationHandler.END
 
 
-async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
-        if (
-            not update.effective_chat.id
-            == context.bot_data["data"]["deposit_orders_group"]
-        ):
-            return
-        ref_number_info = update.message.text.split("\n")
-        await DB.add_ref_number(
-            number=ref_number_info[0],
-            method=ref_number_info[1],
-            amount=float(ref_number_info[2]),
-        )
-
-
-def create_invalid_foramt_string():
-    methods = DB.get_payment_methods()
-    res = "تنسيق خاطئ الرجاء نسخ أحد القوالب التالية لتفادي الخطأ:\n\n"
-    for method in methods:
-        res += "<code>رقم العملية: \n" f"{method['name']}\n" "المبلغ: </code>\n\n"
-    res += "مثال:\n" "رقم العملية: 1\n" "USDT\n" "المبلغ: 100"
-
-    return res
-
-
-async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
-        if (
-            not update.effective_chat.id
-            == context.bot_data["data"]["deposit_orders_group"]
-        ):
-            return
-        await update.message.reply_text(text=create_invalid_foramt_string())
-
-
-store_ref_number_handler = MessageHandler(filters=Ref(), callback=store_ref_number)
-invalid_ref_format_handler = MessageHandler(filters=~Ref(), callback=invalid_ref_format)
-
-
 deposit_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(make_deposit, "^deposit$")],
     states={

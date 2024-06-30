@@ -15,7 +15,7 @@ class Ref(UpdateFilter):
             ref_info = update.message.text.split("\n")
             return (
                 bool(re.search(r"^رقم العملية: \d+$", ref_info[0]))
-                and ref_info[1] in payment_method_pattern
+                and payment_method_pattern(ref_info[1])
                 and bool(re.search(r"^المبلغ: \d+$", ref_info[2]))
             )
         except:

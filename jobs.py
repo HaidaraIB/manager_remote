@@ -206,7 +206,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
-    amount, ex_rate = apply_ex_rate(d_order["method"], ref_info["amount"], context)
+    amount, ex_rate = apply_ex_rate(d_order["method"], ref_info["amount"], 'deposit', context)
 
     message = await context.bot.send_message(
         chat_id=context.bot_data["data"]["deposit_after_check_group"],

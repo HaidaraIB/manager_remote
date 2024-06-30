@@ -122,7 +122,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         method = w_order["method"]
         target_group = f"{method}_group"
 
-        amount, ex_rate = apply_ex_rate(method, amount, context)
+        amount, ex_rate = apply_ex_rate(method, amount, 'withdraw', context)
 
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"][target_group],
