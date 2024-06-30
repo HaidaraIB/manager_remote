@@ -178,7 +178,9 @@ def create_invalid_foramt_string():
     res = "تنسيق خاطئ الرجاء نسخ أحد القوالب التالية لتفادي الخطأ:\n\n"
     for method in methods:
         res += "<code>رقم العملية: \n" f"{method['name']}\n" "المبلغ: </code>\n\n"
-    res += "مثال:\n" "(1)\n" "USDT\n" "(100)"
+    res += "مثال:\n" "رقم العملية: 1\n" "USDT\n" "المبلغ: 100"
+
+    return res
 
 
 async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE):
