@@ -443,6 +443,16 @@ class DB:
 
     @staticmethod
     @lock_and_release
+    async def set_deposit_not_arrived(
+        serial: int, archive_message_ids: str, cr: sqlite3.Cursor = None
+    ):
+        cr.execute(
+            "UPDATE deposit_orders SET state = 'delined', reason = 'الطلب لم يصل', archive_message_ids = ? WHERE serial = ?",
+            (archive_message_ids, serial),
+        )
+
+    @staticmethod
+    @lock_and_release
     async def add_deposit_order(
         user_id: int,
         method: str,

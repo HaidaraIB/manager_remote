@@ -45,17 +45,27 @@ async def add_existing_account(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def get_acc_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        account = DB.get_account(acc_num=update.message.text)
+
         back_buttons = [
             build_back_button("back_to_get_full_name"),
             back_to_user_home_page_button[0],
         ]
+
+        if update.callback_query:
+            await update.callback_query.edit_message_text(
+                text="قم بإرسال الاسم الثلاثي",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+            return GET_FULL_NAME
+
+        account = DB.get_account(acc_num=update.message.text)
         if not account:
             await update.message.reply_text(
                 text="هذا الحساب غير منشأ عن طريق البوت!",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
             return
+
         context.user_data["acc_num"] = update.message.text
         await update.message.reply_text(
             text="قم بإرسال الاسم الثلاثي",

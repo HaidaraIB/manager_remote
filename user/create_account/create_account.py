@@ -200,7 +200,7 @@ async def back_from_decline_create_account(
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
         user_id = int(update.callback_query.data.split(" ")[-1])
         await update.callback_query.answer(
-            text=f"قم بالرد على هذه الرسالة بصورة الحساب.",
+            text=f"قم بالرد على هذه الرسالة بمعلومات الحساب.",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(

@@ -49,7 +49,7 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not context.bot_data["data"]["user_calls"]["deposit"]:
             await update.callback_query.answer("الإيداعات متوقفة حالياً❗️")
             return ConversationHandler.END
-        
+
         accounts = DB.get_user_accounts(user_id=update.effective_user.id)
         accounts_keyboard = [
             InlineKeyboardButton(
@@ -74,7 +74,6 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(keybaord),
             )
         return ACCOUNT_DEPOSIT
-
 
 
 async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -132,7 +131,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             number=ref_num,
             method=context.user_data["deposit_method"],
         )
-        if ref_present and ref_present['order_serial'] != -1:
+        if ref_present and ref_present["order_serial"] != -1:
             await update.message.reply_text(
                 text="رقم عملية مكرر!",
             )
@@ -155,8 +154,8 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             job_kwargs={
                 "id": f"first_deposit_check{update.effective_user.id}",
                 "misfire_grace_time": None,
-                "coalesce": True
-            }
+                "coalesce": True,
+            },
         )
 
         await update.message.reply_text(
@@ -193,19 +192,32 @@ async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await update.message.reply_text(
                 text=(
                     "تنسيق خاطئ الرجاء الالتزام بالقالب التالي:\n\n"
-                    "<رقم العملية>\n"
-                    "<وسيلة الدفع>\n"
-                    "<المبلغ>\n\n"
-                    "قم بنسخ وسيلة الدفع من بين الوسائل التالية لتفادي الخطأ.\n\n"
+                    "(رقم العملية)\n"
+                    "(وسيلة الدفع)\n"
+                    "(المبلغ)\n\n"
+                    "قم بنسخ القالب من بين القوالب التالية لتفادي الخطأ.\n\n"
+                    "<code>(رقم العملية)\n"
                     "USDT\n"
-                    "بيمو🇸🇦🇫🇷\n"
-                    "بركة🇧🇭\n"
-                    "Syriatel Cash🇸🇾\n"
-                    "MTN Cash🇸🇾\n"
-                    "PAYEER\n"
-                    "PERFECT MONEY\n"
+                    "(المبلغ)</code>\n\n"
+                    "<code>(رقم العملية)\n"
+                    "<code>PERFECT MONEY</code>\n"
+                    "(المبلغ)</code>\n\n"
+                    "<code>(رقم العملية)\n"
+                    "<code>PAYEER</code>\n"
+                    "(المبلغ)</code>\n\n"
+                    "<code>(رقم العملية)\n"
+                    "<code>MTN Cash🇸🇾</code>\n"
+                    "(المبلغ)</code>\n\n"
+                    "<code>(رقم العملية)\n"
+                    "<code>Syriatel Cash🇸🇾</code>\n"
+                    "(المبلغ)</code>\n\n"
+                    "<code>(رقم العملية)\n"
+                    "<code>بركة🇧🇭</code>\n"
+                    "(المبلغ)</code>\n\n"
+                    "<code>(رقم العملية)\n"
+                    "<code>بيمو🇸🇦🇫🇷</code>\n"
+                    "(المبلغ)</code>\n\n"
                 ),
-                parse_mode=None,
             )
         except:
             import traceback
@@ -223,7 +235,9 @@ deposit_handler = ConversationHandler(
         ACCOUNT_DEPOSIT: [CallbackQueryHandler(account_deposit, "^\d+$")],
         DEPOSIT_METHOD: [CallbackQueryHandler(deposit_method, payment_method_pattern)],
         SEND_TO_CHECK_DEPOSIT: [
-            MessageHandler(filters=filters.Regex("^\d+$"), callback=send_to_check_deposit)
+            MessageHandler(
+                filters=filters.Regex("^\d+$"), callback=send_to_check_deposit
+            )
         ],
     },
     fallbacks=[

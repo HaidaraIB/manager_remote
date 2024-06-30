@@ -12,6 +12,7 @@ from telegram.error import (
 
 from DB import DB
 import asyncio
+import os
 
 day_week_en_to_ar_dict = {"day": "اليوم", "week": "الأسبوع"}
 
@@ -145,7 +146,9 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         method=d_order["method"],
     )
     if ref_present:
-        await send_order_to_process(d_order=d_order, ref_info=ref_present, context=context)
+        await send_order_to_process(
+            d_order=d_order, ref_info=ref_present, context=context
+        )
     elif context.job.name == "first_deposit_check":
         context.job_queue.run_once(
             callback=check_deposit,
@@ -158,16 +161,40 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 "id": f"second_deposit_check_{context.job.user_id}",
                 "misfire_grace_time": None,
                 "coalesce": True,
-                'replace_existing': True,
-            }
+                "replace_existing": True,
+            },
         )
+    else:
+        await context.bot.send_message(
+            chat_id=context.job.user_id,
+            text=(
+                f"طلب الإيداع ذي الرقم التسلسلي <code>{serial}</code> لم يصل!\n"
+                "عليك التحقق وإعادة الطلب مرة أخرى، سيتم التحقق بشكل دوري."
+            ),
+        )
+        text = stringify_order(
+            amount="لا يوجد",
+            account_number=d_order["acc_number"],
+            method=d_order["method"],
+            serial=d_order["serial"],
+        )
+
+        text_list = text.split("\n")
+        text_list.insert(0, "تم رفض الطلب❌")
+        text = "\n".join(text_list) + f"\n\nالسبب:\n<b>الطلب لم يصل</b>"
+
+        message = await context.bot.send_message(
+            chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
+            caption=text,
+        )
+        await DB.set_deposit_not_arrived(serial=serial, archive_message_ids=message.id)
 
 
 async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
     message = await context.bot.send_message(
         chat_id=context.bot_data["data"]["deposit_after_check_group"],
         text=stringify_order(
-            amount=ref_info['amount'],
+            amount=ref_info["amount"],
             account_number=d_order["acc_number"],
             method=d_order["method"],
             serial=d_order["serial"],
