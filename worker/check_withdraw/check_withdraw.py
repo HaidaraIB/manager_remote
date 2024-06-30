@@ -295,7 +295,7 @@ get_withdraw_order_amount_handler = CallbackQueryHandler(
     pattern="^send_withdraw_order",
 )
 send_withdraw_order_handler = MessageHandler(
-    filters=filters.Regex("^\d+.?\d*$"),
+    filters=filters.REPLY & filters.Regex("^\d+.?\d*$") & Withdraw(),
     callback=send_withdraw_order,
 )
 decline_withdraw_order_handler = CallbackQueryHandler(
