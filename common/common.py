@@ -152,8 +152,8 @@ def build_admin_keyboard():
                 callback_data="wallets settings",
             ),
             InlineKeyboardButton(
-                text="سعر صرف USDT🇸🇾➡️💲",
-                callback_data="update usdt to syp",
+                text="تغيير أسعار صرف",
+                callback_data="update exchange rates",
             ),
         ],
         [

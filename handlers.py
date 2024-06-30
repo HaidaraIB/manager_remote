@@ -63,6 +63,7 @@ from admin.rewards_settings import *
 from admin.broadcast import *
 from admin.groups_settings import *
 from admin.workers_settings import *
+from admin.exchange_rates import *
 
 from worker.request_order import request_order_handler
 from worker.process_deposit import *
@@ -197,7 +198,7 @@ def main():
     app.add_handler(change_group_handler)
 
     # ADMIN CALLS
-    app.add_handler(update_usdt_to_syp_handler)
+    app.add_handler(update_exchange_rates_handler)
     app.add_handler(turn_user_calls_on_or_off_handler)
     app.add_handler(turn_payment_method_on_or_off_handler)
 
