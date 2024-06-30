@@ -47,8 +47,6 @@ from user.withdraw import (
 
 from user.deposit import (
     deposit_handler,
-    store_ref_number_handler,
-    invalid_ref_format_handler,
 )
 from user.buy_usdt import buy_usdt_handler
 from user.make_complaint import complaint_handler
