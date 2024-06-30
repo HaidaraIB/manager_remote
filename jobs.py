@@ -153,6 +153,20 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         context.job_queue.run_once(
             callback=check_deposit,
             user_id=context.job.user_id,
+            # when=600,
+            when=10,
+            data=serial,
+            name="second_deposit_check",
+            job_kwargs={
+                "id": f"second_deposit_check_{context.job.user_id}",
+                "misfire_grace_time": None,
+                "coalesce": True,
+            },
+        )
+    elif context.job.name == "second_deposit_check":
+        context.job_queue.run_once(
+            callback=check_deposit,
+            user_id=context.job.user_id,
             # when=7200,
             when=10,
             data=serial,
@@ -161,7 +175,6 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 "id": f"second_deposit_check_{context.job.user_id}",
                 "misfire_grace_time": None,
                 "coalesce": True,
-                "replace_existing": True,
             },
         )
     else:

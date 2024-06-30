@@ -131,9 +131,6 @@ def build_positions_keyboard(op: str = "add"):
         ],
         [
             InlineKeyboardButton(
-                text="تحقق إيداع", callback_data=f"{op} deposit checker"
-            ),
-            InlineKeyboardButton(
                 text="تحقق سحب", callback_data=f"{op} withdraw checker"
             ),
             InlineKeyboardButton(
