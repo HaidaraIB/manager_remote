@@ -1,8 +1,4 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    Chat,
-)
+from telegram import Update, InlineKeyboardButton, Chat, error
 
 from telegram.ext import (
     ContextTypes,
@@ -14,7 +10,6 @@ from common.force_join import check_if_user_member_decorator
 
 from common.common import build_user_keyboard, build_admin_keyboard
 
-from custom_filters.User import User
 from custom_filters.Admin import Admin
 
 back_to_admin_home_page_button = [
@@ -35,20 +30,37 @@ back_to_user_home_page_button = [
     ],
 ]
 
+
 @check_if_user_member_decorator
 async def back_to_user_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        text = "القائمة الرئيسية🔝"
-        keyboard = build_user_keyboard()
-        await update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
+        try:
+            await update.callback_query.edit_message_text(
+                text="القائمة الرئيسية🔝", reply_markup=build_user_keyboard()
+            )
+        except error.BadRequest:
+            await update.effective_message.delete()
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="القائمة الرئيسية🔝",
+                reply_markup=build_user_keyboard(),
+            )
         return ConversationHandler.END
 
 
 async def back_to_admin_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        await update.callback_query.edit_message_text(
-            text="القائمة الرئيسية🔝", reply_markup=build_admin_keyboard()
-        )
+        try:
+            await update.callback_query.edit_message_text(
+                text="القائمة الرئيسية🔝", reply_markup=build_admin_keyboard()
+            )
+        except error.BadRequest:
+            await update.effective_message.delete()
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="القائمة الرئيسية🔝",
+                reply_markup=build_admin_keyboard(),
+            )
         return ConversationHandler.END
 
 

@@ -73,7 +73,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             f"الاسم الثلاثي: {context.user_data['full_name']}\n"
             f"الرقم الوطني: {update.message.text}\n\n"
-            f"<code>{update.effective_user.id}</code>\nقم بالرد على هذه الرسالة بصورة الحساب."
+            f"<code>{update.effective_user.id}</code>\nقم بالرد على هذه الرسالة بمعلومات الحساب."
         )
         await context.bot.send_message(
             chat_id=context.bot_data["data"]["accounts_orders_group"],

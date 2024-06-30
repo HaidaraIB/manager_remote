@@ -22,7 +22,10 @@ from common.common import (
     build_worker_keyboard,
 )
 
-DECLINE_REASON = 0
+(
+    DECLINE_REASON,
+    AMOUNT,
+) = range(2)
 
 
 def stringify_order(
@@ -75,12 +78,43 @@ async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def get_withdraw_order_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [
+        Chat.PRIVATE,
+    ]:
+        serial = int(update.callback_query.data.split("_")[-1])
+
+        await update.callback_query.answer(
+            text="قم بالرد على هذه الرسالة بمبلغ السحب",
+            show_alert=True,
+        )
+        await update.callback_query.edit_message_reply_markup(
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="الرجوع عن المبلغ 🔙",
+                    callback_data=f"back_from_get_withdraw_order_amount_{serial}",
+                )
+            )
+        )
+        return AMOUNT
+
+
 async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
+        serial = int(
+            update.message.reply_to_message.reply_markup.inline_keyboard[0][
+                0
+            ].callback_data.split("_")[-1]
+        )
+        amount = float(update.message.text)
+        await DB.edit_order_amount(
+            order_type="withdraw",
+            new_amount=amount,
+            serial=serial,
+        )
 
-        serial = int(update.callback_query.data.split("_")[-1])
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
         method = w_order["method"]
@@ -89,7 +123,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"][target_group],
             text=stringify_order(
-                w_order["amount"],
+                amount=amount,
                 serial=serial,
                 method=method,
                 payment_method_number=w_order["payment_method_number"],
@@ -102,13 +136,15 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             ),
         )
 
-        await update.callback_query.edit_message_reply_markup(
+        await context.bot.edit_message_reply_markup(
+            chat_id=update.effective_chat.id,
+            message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="تم إرسال الطلب✅",
                     callback_data="✅✅✅✅✅✅✅✅✅",
                 )
-            )
+            ),
         )
 
         await context.bot.send_message(
@@ -219,9 +255,7 @@ async def decline_withdraw_order_reason(
         return ConversationHandler.END
 
 
-async def back_from_decline_withdraw_order(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
+async def back_to_withdraw_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
@@ -251,30 +285,24 @@ check_payment_handler = CallbackQueryHandler(
     pattern="^check_withdraw_order",
 )
 
-send_withdraw_order_handler = CallbackQueryHandler(
-    callback=send_withdraw_order,
-    pattern="^send_withdraw_order",
+back_to_withdraw_check_handler = CallbackQueryHandler(
+    callback=back_to_withdraw_check,
+    pattern="(^back_from_decline_withdraw_order)|(^back_from_get_withdraw_order_amount)",
 )
 
-decline_withdraw_order_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(
-            callback=decline_withdraw_order,
-            pattern="^decline_withdraw_order",
-        )
-    ],
-    states={
-        DECLINE_REASON: [
-            MessageHandler(
-                filters=filters.REPLY & filters.TEXT & Withdraw() & Declined(),
-                callback=decline_withdraw_order_reason,
-            )
-        ]
-    },
-    fallbacks=[
-        CallbackQueryHandler(
-            callback=back_from_decline_withdraw_order,
-            pattern="^back_from_decline_withdraw_order",
-        )
-    ],
+get_withdraw_order_amount_handler = CallbackQueryHandler(
+    callback=get_withdraw_order_amount,
+    pattern="^send_withdraw_order",
+)
+send_withdraw_order_handler = MessageHandler(
+    filters=filters.Regex("^\d+.?\d*$"),
+    callback=send_withdraw_order,
+)
+decline_withdraw_order_handler = CallbackQueryHandler(
+    callback=decline_withdraw_order,
+    pattern="^decline_withdraw_order",
+)
+decline_withdraw_order_reason_handler = MessageHandler(
+    filters=filters.REPLY & filters.TEXT & Withdraw() & Declined(),
+    callback=decline_withdraw_order_reason,
 )

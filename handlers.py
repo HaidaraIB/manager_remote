@@ -42,7 +42,6 @@ from common.back_to_home_page import (
 )
 
 from user.withdraw import (
-    withdraw_section_handler,
     withdraw_handler,
 )
 
@@ -129,6 +128,9 @@ def main():
     app.add_handler(check_payment_handler)
     app.add_handler(send_withdraw_order_handler)
     app.add_handler(decline_withdraw_order_handler)
+    app.add_handler(back_to_withdraw_check_handler)
+    app.add_handler(decline_withdraw_order_reason_handler)
+    app.add_handler(get_withdraw_order_amount_handler)
     app.add_handler(return_withdraw_order_handler)
     app.add_handler(reply_with_payment_proof_withdraw_handler)
     app.add_handler(user_payment_verified_handler)
@@ -173,7 +175,6 @@ def main():
     app.add_handler(create_account_handler)
     app.add_handler(decline_create_account_handler)
 
-    app.add_handler(withdraw_section_handler)
     app.add_handler(withdraw_handler)
 
     app.add_handler(buy_usdt_handler)
@@ -221,8 +222,8 @@ def main():
             "id": "weekly_reward_worker",
             "misfire_grace_time": None,
             "coalesce": True,
-            'replace_existing': True,
-        }
+            "replace_existing": True,
+        },
     )
     app.job_queue.run_daily(
         callback=daily_reward_worker,
@@ -231,9 +232,12 @@ def main():
             "id": "daily_reward_worker",
             "misfire_grace_time": None,
             "coalesce": True,
-            'replace_existing': True,
-        }
+            "replace_existing": True,
+        },
     )
+    from telegram.ext import MessageHandler, filters
+
+    app.add_handler(MessageHandler(filters=filters.VIDEO, callback=get_video_info))
 
     app.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
 
@@ -241,3 +245,16 @@ def main():
         PyroClientSingleton().stop()
     except ConnectionError:
         pass
+
+
+from telegram.ext import ContextTypes
+from telegram import Video
+
+
+async def get_video_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    v = update.message.video
+    vid = Video(v.file_id, v.file_unique_id, v.width, v.height, v.duration)
+    await update.message.reply_video(
+        video=vid,
+    )
+    print(v.file_id, v.file_unique_id, v.width, v.height, v.duration)

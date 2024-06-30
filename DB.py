@@ -150,11 +150,10 @@ class DB:
             state TEXT DEFAULT 'pending',
             method TEXT,
             amount REAL,
+            withdraw_code TEXT,
             bank_account_name TEXT,
             payment_method_number TEXT,
             acc_number TEXT,
-            password TEXT,
-            last_name TEXT,
             reason TEXT DEFAULT '',
             pending_check_message_id INTEGER,
             checking_message_id INTEGER DEFAULT 0, -- message in checker pm
@@ -462,7 +461,7 @@ class DB:
     ):
         cr.execute(
             """
-                INSERT OR IGNORE INTO deposit_orders(
+                INSERT INTO deposit_orders(
                     user_id,
                     method,
                     ref_number,
@@ -493,7 +492,7 @@ class DB:
     ):
         cr.execute(
             """
-                INSERT OR IGNORE INTO buyusdt_orders(
+                INSERT INTO buyusdt_orders(
                     user_id,
                     group_id,
                     method,
@@ -521,38 +520,32 @@ class DB:
         user_id: int,
         group_id: int,
         method: str,
-        amount: float,
+        withdraw_code: str,
         bank_account_name: str,
         payment_method_number: int,
         acc_number: str,
-        password: str,
-        last_name: str,
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(
             """
-                INSERT OR IGNORE INTO withdraw_orders(
+                INSERT INTO withdraw_orders(
                     user_id,
                     group_id,
                     method,
-                    amount,
+                    withdraw_code,
                     bank_account_name,
                     payment_method_number,
-                    acc_number,
-                    password,
-                    last_name
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    acc_number
+                ) VALUES(?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 user_id,
                 group_id,
                 method,
-                amount,
+                withdraw_code,
                 bank_account_name,
                 payment_method_number,
                 acc_number,
-                password,
-                last_name,
             ),
         )
         cr.execute("SELECT last_insert_rowid()")
@@ -751,7 +744,7 @@ class DB:
         number: str, amount: float, method: str, cr: sqlite3.Cursor = None
     ):
         cr.execute(
-            "INSERT OR IGNORE INTO ref_numbers(number, method, amount) VALUES(?, ?, ?)",
+            "INSERT INTO ref_numbers(number, method, amount) VALUES(?, ?, ?)",
             (number, method, amount),
         )
 
@@ -853,7 +846,7 @@ class DB:
         if check_what:
             cr.execute(
                 """
-                    INSERT OR IGNORE INTO checkers(id, name, username, check_what) 
+                    INSERT INTO checkers(id, name, username, check_what) 
                     VALUES(?, ?, ?, ?)
                 """,
                 (
@@ -866,7 +859,7 @@ class DB:
         elif method:
             cr.execute(
                 """
-                    INSERT OR IGNORE INTO payment_agents(id, name, username, method) 
+                    INSERT INTO payment_agents(id, name, username, method) 
                     VALUES(?, ?, ?, ?)
                 """,
                 (
@@ -879,7 +872,7 @@ class DB:
         else:
             cr.execute(
                 """
-                    INSERT OR IGNORE INTO deposit_agents(id, name, username) 
+                    INSERT INTO deposit_agents(id, name, username) 
                     VALUES(?, ?, ?)
                 """,
                 (
