@@ -254,25 +254,15 @@ reply_with_payment_proof_handler = MessageHandler(
 )
 
 
-return_deposit_order_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(
-            callback=return_deposit_order,
-            pattern="^return_deposit_order",
-        )
-    ],
-    states={
-        RETURN_REASON: [
-            MessageHandler(
-                filters=filters.REPLY & filters.TEXT & Deposit() & Returned(),
-                callback=return_deposit_order_reason,
-            )
-        ]
-    },
-    fallbacks=[
-        CallbackQueryHandler(
-            callback=back_from_return_deposit_order,
-            pattern="^back_from_return_deposit_order",
-        )
-    ],
+return_deposit_order_handler = CallbackQueryHandler(
+    callback=return_deposit_order,
+    pattern="^return_deposit_order",
+)
+return_deposit_order_reason_handler = MessageHandler(
+    filters=filters.REPLY & filters.TEXT & Deposit() & Returned(),
+    callback=return_deposit_order_reason,
+)
+back_from_return_deposit_order_handler = CallbackQueryHandler(
+    callback=back_from_return_deposit_order,
+    pattern="^back_from_return_deposit_order",
 )

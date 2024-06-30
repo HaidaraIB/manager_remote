@@ -243,25 +243,15 @@ send_buy_usdt_order_handler = CallbackQueryHandler(
     pattern="^send_buy_usdt_order",
 )
 
-decline_buy_usdt_order_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(
-            callback=decline_buy_usdt_order,
-            pattern="^decline_buy_usdt_order",
-        )
-    ],
-    states={
-        DECLINE_REASON: [
-            MessageHandler(
-                filters=filters.REPLY & filters.TEXT & BuyUSDT() & Declined(),
-                callback=decline_buy_usdt_order_reason,
-            )
-        ]
-    },
-    fallbacks=[
-        CallbackQueryHandler(
-            callback=back_from_decline_buy_usdt_order,
-            pattern="^back_from_decline_buy_usdt_order",
-        )
-    ],
+decline_buy_usdt_order_handler = CallbackQueryHandler(
+    callback=decline_buy_usdt_order,
+    pattern="^decline_buy_usdt_order",
+)
+decline_buy_usdt_order_reason_handler = MessageHandler(
+    filters=filters.REPLY & filters.TEXT & BuyUSDT() & Declined(),
+    callback=decline_buy_usdt_order_reason,
+)
+back_from_decline_buy_usdt_order_handler = CallbackQueryHandler(
+    callback=back_from_decline_buy_usdt_order,
+    pattern="^back_from_decline_buy_usdt_order",
 )

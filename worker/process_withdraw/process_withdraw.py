@@ -260,25 +260,15 @@ reply_with_payment_proof_withdraw_handler = MessageHandler(
     callback=reply_with_payment_proof_withdraw,
 )
 
-return_withdraw_order_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(
-            callback=return_withdraw_order,
-            pattern="^return_withdraw_order",
-        )
-    ],
-    states={
-        RETURN_REASON: [
-            MessageHandler(
-                filters=filters.REPLY & filters.TEXT & Withdraw() & Returned(),
-                callback=return_withdraw_order_reason,
-            )
-        ]
-    },
-    fallbacks=[
-        CallbackQueryHandler(
-            callback=back_from_return_withdraw_order,
-            pattern="^back_from_return_withdraw_order",
-        )
-    ],
+return_withdraw_order_handler = CallbackQueryHandler(
+    callback=return_withdraw_order,
+    pattern="^return_withdraw_order",
+)
+return_withdraw_order_reason_handler = MessageHandler(
+    filters=filters.REPLY & filters.TEXT & Withdraw() & Returned(),
+    callback=return_withdraw_order_reason,
+)
+back_from_return_withdraw_order_handler = CallbackQueryHandler(
+    callback=back_from_return_withdraw_order,
+    pattern="^back_from_return_withdraw_order",
 )

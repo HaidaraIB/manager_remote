@@ -112,13 +112,13 @@ def main():
     )
 
     # DEPOSIT
-    # app.add_handler(edit_deposit_amount_handler)
-    # app.add_handler(add_ref_number_handler)
-    # app.add_handler(decline_deposit_order_handler)
-    # app.add_handler(check_deposit_handler)
-    # app.add_handler(send_order_handler)
     app.add_handler(reply_with_payment_proof_handler)
     app.add_handler(user_deposit_verified_handler)
+
+    app.add_handler(return_deposit_order_handler)
+    app.add_handler(return_deposit_order_reason_handler)
+    app.add_handler(back_from_return_deposit_order_handler)
+
     app.add_handler(return_deposit_order_handler)
     app.add_handler(store_ref_number_handler, group=1)
     app.add_handler(invalid_ref_format_handler, group=1)
@@ -130,17 +130,27 @@ def main():
     app.add_handler(back_to_withdraw_check_handler)
     app.add_handler(decline_withdraw_order_reason_handler)
     app.add_handler(get_withdraw_order_amount_handler)
-    app.add_handler(return_withdraw_order_handler)
-    app.add_handler(reply_with_payment_proof_withdraw_handler)
+
     app.add_handler(user_payment_verified_handler)
+    app.add_handler(reply_with_payment_proof_withdraw_handler)
+
+    app.add_handler(return_withdraw_order_handler)
+    app.add_handler(return_withdraw_order_reason_handler)
+    app.add_handler(back_from_return_withdraw_order_handler)
 
     # BUY_USDT
     app.add_handler(check_buy_usdt_handler)
     app.add_handler(send_buy_usdt_order_handler)
     app.add_handler(decline_buy_usdt_order_handler)
-    app.add_handler(return_buy_usdt_order_handler)
+    app.add_handler(decline_buy_usdt_order_reason_handler)
+    app.add_handler(back_from_decline_buy_usdt_order_handler)
+
     app.add_handler(reply_with_payment_proof_buy_usdt_handler)
     app.add_handler(user_payment_verified_buy_usdt_handler)
+
+    app.add_handler(return_buy_usdt_order_handler)
+    app.add_handler(return_buy_usdt_order_reason_handler)
+    app.add_handler(back_from_return_buy_usdt_order_handler)
 
     # RETURN
     app.add_handler(handle_returned_order_handler)
