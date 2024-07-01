@@ -7,3 +7,4 @@ data_test/*
 *.session-journal
 .vscode
 old_data/*
+errors.txt
