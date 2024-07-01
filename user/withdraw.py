@@ -36,6 +36,7 @@ from start import start_command
 from DB import DB
 import pathlib
 from constants import *
+import os
 
 (
     WITHDRAW_ACCOUNT,
@@ -167,7 +168,7 @@ async def get_withdraw_code_bank_account_name(
         try:
             await update.message.reply_video(
                 video=Video(
-                    file_id="BAACAgQAAyEFAASBvGE-AAP6ZoGY62wfWB2OrYVfQYJ3FuRQ3JEAArQUAALpGAlQ6NUa45WNVM41BA",
+                    file_id=os.getenv("VIDEO_ID"),
                     file_unique_id="AgADtBQAAukYCVA",
                     width=576,
                     height=1280,
