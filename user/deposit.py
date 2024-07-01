@@ -140,7 +140,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
         context.job_queue.run_once(
             callback=check_deposit,
             user_id=update.effective_user.id,
-            when=120,
+            when=60,
             data=serial,
             name="first_deposit_check",
             job_kwargs={

@@ -140,6 +140,12 @@ async def daily_reward_worker(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
+    check_deposit_jobs_dict = {
+        "1_deposit_check": 240,
+        "2_deposit_check": 240,
+        "3_deposit_check": 840,
+        "4_deposit_check": 5040
+    }
     serial = int(context.job.data)
     d_order = DB.get_one_order(
         "deposit",
@@ -153,25 +159,14 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         await send_order_to_process(
             d_order=d_order, ref_info=ref_present, context=context
         )
-    elif context.job.name == "first_deposit_check":
+    elif context.job.name in check_deposit_jobs_dict:
+        next_job_num = int(context.job.name.split("_")[0]) + 1
         context.job_queue.run_once(
             callback=check_deposit,
             user_id=context.job.user_id,
-            when=600,
+            when=check_deposit_jobs_dict[context.job.name],
             data=serial,
-            name="second_deposit_check",
-            job_kwargs={
-                "misfire_grace_time": None,
-                "coalesce": True,
-            },
-        )
-    elif context.job.name == "second_deposit_check":
-        context.job_queue.run_once(
-            callback=check_deposit,
-            user_id=context.job.user_id,
-            when=7200,
-            data=serial,
-            name="third_deposit_check",
+            name=f"{next_job_num}_deposit_check",
             job_kwargs={
                 "misfire_grace_time": None,
                 "coalesce": True,
