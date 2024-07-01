@@ -78,7 +78,7 @@ async def reply_with_payment_proof_withdraw(
 
         caption = (
             f"مبروك، تم تأكيد عملية سحب "
-            f"<b>{f'مكافأة {amount}' if update.message.reply_to_message.text.startswith("تفاصيل طلب سحب مكافأة") else f'{amount}'}$</b> "
+            f"<b>{amount}'</b> "
             "بنجاح✅\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
@@ -163,16 +163,11 @@ async def return_withdraw_order_reason(
         )
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
-        amount = w_order["amount"]
+        withdraw_code = w_order["withdraw_code"]
         user_id = w_order["user_id"]
 
-        if update.message.reply_to_message.text.split("\n")[0].startswith(
-            "تفاصيل طلب سحب مكافأة"
-        ):
-            await DB.update_gifts_balance(user_id=user_id, amount=amount)
-
         text = (
-            f"تم إعادة طلب سحب مبلغ: <b>{amount}$</b>❗️\n\n"
+            f"تمت إعادة طلب السحب صاحب الكود: <b>{withdraw_code}$</b>❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
