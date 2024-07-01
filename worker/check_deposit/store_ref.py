@@ -23,6 +23,9 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             method=ref_number_info[1],
             amount=float(ref_number_info[2].split(": ")[1]),
         )
+        await update.message.reply_text(
+            text="تم ✅"
+        )
 
 
 def create_invalid_foramt_string():
