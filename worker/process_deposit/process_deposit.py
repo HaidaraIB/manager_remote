@@ -164,17 +164,16 @@ async def return_deposit_order_reason(
 
         d_order = DB.get_one_order(order_type="deposit", serial=serial)
 
-        caption = (
+        text = (
             f"تم إعادة طلب إيداع مبلغ: <b>{d_order['amount']}$</b>❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
-        await context.bot.send_photo(
+        await context.bot.send_message(
             chat_id=d_order["user_id"],
-            photo=update.message.reply_to_message.photo[-1],
-            caption=caption,
+            text=text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرفاق المطلوب",
@@ -183,16 +182,15 @@ async def return_deposit_order_reason(
             ),
         )
 
-        caption = update.message.reply_to_message.caption.split("\n")
-        caption.insert(0, "تمت إعادة الطلب📥")
-        caption = (
-            "\n".join(caption) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+        text = update.message.reply_to_message.text_html.split("\n")
+        text.insert(0, "تمت إعادة الطلب📥")
+        text = (
+            "\n".join(text) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
 
-        message = await context.bot.send_photo(
+        message = await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            photo=update.message.reply_to_message.photo[-1],
-            caption=caption,
+            text=text,
         )
 
         await context.bot.edit_message_reply_markup(

@@ -30,7 +30,9 @@ from DB import DB
 
 async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await update.callback_query.answer("قم بإرفاق المطلوب في السبب.", show_alert=True)
+        await update.callback_query.answer(
+            "قم بإرفاق المطلوب في السبب.", show_alert=True
+        )
         await update.callback_query.edit_message_reply_markup()
         context.user_data["returned_data"] = update.callback_query.data
         if update.effective_message.photo:
@@ -48,29 +50,15 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 callback_data=f"verify_{data[2]}_order_{order['serial']}",
             )
         )
-        if data[2] == "withdraw":
+        if data[2] in ["withdraw", "deposit"]:
             await context.bot.send_message(
                 chat_id=int(data[-2]),
                 text=stringify_returned_order(
                     update.message.text,
-                    check_withdraw.stringify_order,
-                    order["amount"],
-                    order["serial"],
-                    order["method"],
-                    order["payment_method_number"],
-                ),
-                reply_markup=reply_markup,
-            )
-        else:
-            await context.bot.send_photo(
-                chat_id=int(data[-2]),
-                photo=context.user_data["effective_photo"],
-                caption=stringify_returned_order(
-                    update.message.text,
                     (
                         check_deposit.stringify_order
                         if data[2] == "deposit"
-                        else check_buy_usdt.stringify_order
+                        else check_withdraw.stringify_order
                     ),
                     order["amount"],
                     order["serial"],
@@ -80,6 +68,20 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if data[2] == "deposit"
                         else order["payment_method_number"]
                     ),
+                ),
+                reply_markup=reply_markup,
+            )
+        else:
+            await context.bot.send_photo(
+                chat_id=int(data[-2]),
+                photo=context.user_data["effective_photo"],
+                caption=stringify_returned_order(
+                    update.message.text,
+                    check_buy_usdt.stringify_order,
+                    order["amount"],
+                    order["serial"],
+                    order["method"],
+                    order["payment_method_number"],
                 ),
                 reply_markup=reply_markup,
             )
