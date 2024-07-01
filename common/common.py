@@ -38,14 +38,21 @@ def apply_ex_rate(
     order_type: str,
     context: ContextTypes.DEFAULT_TYPE,
 ):
+    buy_or_sell_dict = {"deposit": "buy_rate", "withdraw": "sell_rate"}
     ex_rate = 0
     if method in [PAYEER, PERFECT_MONEY, USDT]:
         if method == PAYEER:
-            ex_rate = context.bot_data["data"]["payeer_to_syp"]
+            ex_rate = context.bot_data["data"][
+                f"payeer_to_syp_{buy_or_sell_dict[order_type]}"
+            ]
         elif method == PERFECT_MONEY:
-            ex_rate = context.bot_data["data"]["perfect_money_to_syp"]
+            ex_rate = context.bot_data["data"][
+                f"perfect_money_to_syp_{buy_or_sell_dict[order_type]}"
+            ]
         elif method == USDT:
-            ex_rate = context.bot_data["data"]["usdt_to_syp"]
+            ex_rate = context.bot_data["data"][
+                f"usdt_to_syp_{buy_or_sell_dict[order_type]}"
+            ]
 
         if order_type == "deposit":
             amount = amount * 0.97 * ex_rate

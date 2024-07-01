@@ -20,7 +20,8 @@ from custom_filters.Admin import Admin
 (
     CHOOSE_EXCHANGE_RATE_TO_UPDATE,
     NEW_RATE,
-) = range(2)
+    BUY_OR_SELL
+) = range(3)
 
 
 async def choose_exchange_rate_to_update(
@@ -50,15 +51,22 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = update.callback_query.data.split("/")
         context.user_data["exchange_rates_data"] = data
         try:
-            context.bot_data["data"][data[1]]
+            context.bot_data['data'][f'{data[1]}_sell_rate']
+            context.bot_data['data'][f'{data[1]}_buy_rate']
         except KeyError:
-            context.bot_data["data"][data[1]] = 14200
+            context.bot_data['data'][f'{data[1]}_sell_rate'] = 14500
+            context.bot_data['data'][f'{data[1]}_buy_rate'] = 14200
         back_buttons = [
             build_back_button("back_to_choose_exchange_rate_to_update"),
             back_to_admin_home_page_button[0],
         ]
+        text = (
+            f"أرسل سعر {data[0]} مقابل الليرة السورية الجديد، السعر الحالي:\n\n"
+            f"بيع: <b>{context.bot_data['data'][f'{data[1]}_buy_rate']} SYP</b>\n"
+            f"شراء: <b>{context.bot_data['data'][f'{data[1]}_sell_rate']} SYP</b>"
+        )
         await update.callback_query.edit_message_text(
-            text=f"أرسل سعر {data[0]} مقابل الليرة السورية الجديد، السعر الحالي: <b>{context.bot_data['data'][data[1]]} SYP</b>",
+            text=text,
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return NEW_RATE
@@ -67,11 +75,38 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 back_to_choose_exchange_rate_to_update = choose_exchange_rate_to_update
 
 
+async def buy_or_sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        buy_or_sell_keyboard = [
+            [
+                InlineKeyboardButton(text="بيع", callback_data="buy_rate"),
+                InlineKeyboardButton(text="شراء", callback_data="sell_rate"),
+            ],
+            build_back_button("back_to_get_new_rate"),
+            back_to_admin_home_page_button[0]
+        ]
+        if update.message:
+            context.user_data['new_rate'] = float(update.message.text)
+            await update.message.reply_text(
+                text=f"هذا السعر:",
+                reply_markup=InlineKeyboardMarkup(buy_or_sell_keyboard),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text=f"هذا السعر:",
+                reply_markup=InlineKeyboardMarkup(buy_or_sell_keyboard),
+            )
+
+        return BUY_OR_SELL
+
+back_to_get_new_rate = buy_or_sell
+
 async def verify_update_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = context.user_data["exchange_rates_data"]
-        context.bot_data["data"][data[0]] = float(update.message.text)
-        await update.message.reply_text(
+        rate = f"{data[1]}_{update.callback_query.data}"
+        context.bot_data["data"][rate] = context.user_data['new_rate']
+        await update.callback_query.edit_message_text(
             text=f"تم تعديل سعر {data[1]} مقابل الليرة السورية بنجاح✅",
             reply_markup=build_admin_keyboard(),
         )
@@ -88,14 +123,23 @@ update_exchange_rates_handler = ConversationHandler(
         ],
         NEW_RATE: [
             MessageHandler(
-                filters=filters.Regex("^\d+\.?\d*$"), callback=verify_update_rate
+                filters=filters.Regex("^\d+\.?\d*$"), callback=buy_or_sell
             )
         ],
+        BUY_OR_SELL: [
+            CallbackQueryHandler(
+                verify_update_rate, "^((buy)|(sell))_rate$"
+            )
+        ]
     },
     fallbacks=[
         CallbackQueryHandler(
             back_to_choose_exchange_rate_to_update,
             "^back_to_choose_exchange_rate_to_update$",
+        ),
+        CallbackQueryHandler(
+            back_to_get_new_rate,
+            "^back_to_get_new_rate$",
         ),
         back_to_admin_home_page_handler,
         start_command,
