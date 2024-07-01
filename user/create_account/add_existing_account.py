@@ -103,11 +103,9 @@ back_to_get_full_name = get_acc_num
 
 async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await DB.add_account(
-            full_name=context.user_data["full_name"],
+        await DB.connect_account_to_user(
             user_id=update.effective_user.id,
             acc_num=context.user_data["acc_num"],
-            password=update.message.text,
         )
         await update.message.reply_text(
             text="تمت إضافة الحساب بنجاح ✅", reply_markup=build_user_keyboard()

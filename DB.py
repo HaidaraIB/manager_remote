@@ -220,6 +220,15 @@ class DB:
 
     @staticmethod
     @connect_and_close
+    def connect_account_to_user(user_id: int, acc_num: str, cr: sqlite3.Cursor = None):
+        cr.execute(
+            "UPDATE accounts SET user_id = ? WHERE acc_num = ?",
+            (user_id, acc_num),
+        )
+        return cr.fetchone()
+
+    @staticmethod
+    @connect_and_close
     def get_account(acc_num: str, cr: sqlite3.Cursor = None):
         cr.execute("SELECT * FROM accounts WHERE acc_num = ?", (acc_num,))
         return cr.fetchone()
