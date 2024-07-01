@@ -13,7 +13,7 @@ from telegram.ext import (
     filters,
 )
 
-from custom_filters import Withdraw, Declined
+from custom_filters import Withdraw, Declined, Sent
 from constants import *
 from DB import DB
 import os
@@ -204,15 +204,11 @@ async def decline_withdraw_order_reason(
 
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
-        text_list = update.message.reply_to_message.text.split("\n")
-        amount = w_order["amount"]
+        w_code = w_order["withdraw_code"]
         user_id = w_order["user_id"]
 
-        if text_list[0].startswith("تفاصيل طلب سحب مكافأة"):
-            await DB.update_gifts_balance(user_id=user_id, amount=amount)
-
         text = (
-            f"تم رفض عملية سحب مبلغ <b>{amount}$</b>❗️\n\n"
+            f"تم رفض عملية السحب ذات الكود <b>{w_code}$</b>❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
@@ -300,7 +296,7 @@ get_withdraw_order_amount_handler = CallbackQueryHandler(
     pattern="^send_withdraw_order",
 )
 send_withdraw_order_handler = MessageHandler(
-    filters=filters.REPLY & filters.Regex("^\d+.?\d*$") & Withdraw(),
+    filters=filters.REPLY & filters.Regex("^\d+.?\d*$") & Withdraw() & Sent(),
     callback=send_withdraw_order,
 )
 decline_withdraw_order_handler = CallbackQueryHandler(
