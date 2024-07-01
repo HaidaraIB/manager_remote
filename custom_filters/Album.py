@@ -10,4 +10,7 @@ from telegram.ext.filters import (
 class Album(BaseFilter):
 
     def filter(self, update: Update):
-        return update.message.photo and update.message.media_group_id
+        try:
+            return update.message.photo and update.message.media_group_id
+        except:
+            return False
