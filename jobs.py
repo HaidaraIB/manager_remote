@@ -173,10 +173,13 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             },
         )
     else:
+        reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
         await context.bot.send_message(
             chat_id=context.job.user_id,
             text=(
-                f"طلب الإيداع ذي الرقم التسلسلي <code>{serial}</code> لم يصل!\n"
+                f"{reason}\n\n"
+                f"الرقم التسلسلي للطلب: {serial}\n"
+                f"نوع الطلب: إيداع\n\n"
                 "عليك التحقق وإعادة الطلب مرة أخرى، سيتم التحقق بشكل دوري."
             ),
         )
@@ -185,17 +188,17 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             account_number=d_order["acc_number"],
             method=d_order["method"],
             serial=d_order["serial"],
+            ref_num=d_order['ref_number'],
         )
-
         text_list = text.split("\n")
         text_list.insert(0, "تم رفض الطلب❌")
-        text = "\n".join(text_list) + f"\n\nالسبب:\n<b>الطلب لم يصل</b>"
+        text = "\n".join(text_list) + f"\n\nالسبب:\n<b>{reason}</b>"
 
         message = await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
-        await DB.set_deposit_not_arrived(serial=serial, archive_message_ids=message.id)
+        await DB.set_deposit_not_arrived(reason=reason, serial=serial, archive_message_ids=message.id)
 
 
 async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
@@ -208,6 +211,7 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
             account_number=d_order["acc_number"],
             method=d_order["method"],
             serial=d_order["serial"],
+            ref_num=ref_info['number']
         ),
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
@@ -231,9 +235,12 @@ def stringify_order(
     serial: int,
     method: str,
     account_number: int,
+    ref_num:str,
+    *args
 ):
     return (
         "إيداع جديد:\n"
+        f"رقم العملية: {ref_num}\n"
         f"المبلغ: <code>{amount}</code>\n"
         f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"

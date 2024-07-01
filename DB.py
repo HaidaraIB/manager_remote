@@ -461,11 +461,11 @@ class DB:
     @staticmethod
     @lock_and_release
     async def set_deposit_not_arrived(
-        serial: int, archive_message_ids: str, cr: sqlite3.Cursor = None
+        serial: int, archive_message_ids: str, reason: str, cr: sqlite3.Cursor = None
     ):
         cr.execute(
-            "UPDATE deposit_orders SET state = 'delined', reason = 'الطلب لم يصل', archive_message_ids = ? WHERE serial = ?",
-            (archive_message_ids, serial),
+            "UPDATE deposit_orders SET state = 'delined', reason = ?, archive_message_ids = ? WHERE serial = ?",
+            (reason, archive_message_ids, serial),
         )
 
     @staticmethod
@@ -531,6 +531,14 @@ class DB:
         cr.execute("SELECT last_insert_rowid()")
 
         return cr.fetchone()[0]
+
+    @staticmethod
+    @connect_and_close
+    def check_withdraw_code(withdraw_code: str, cr: sqlite3.Cursor = None):
+        cr.execute(
+            "SELECT * FROM withdraw_orders WHERE withdraw_code = ?", (withdraw_code,)
+        )
+        return cr.fetchone()
 
     @staticmethod
     @lock_and_release

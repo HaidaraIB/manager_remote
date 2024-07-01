@@ -30,6 +30,7 @@ def stringify_order(
     serial: int,
     method: str,
     payment_method_number: str,
+    *args,
 ):
     return (
         "طلب شراء USDT جديد:\n\n"

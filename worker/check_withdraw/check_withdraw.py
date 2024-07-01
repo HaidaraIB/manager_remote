@@ -34,6 +34,7 @@ def stringify_order(
     serial: int,
     method: str,
     payment_method_number: str,
+    *args
 ):
     return (
         "تفاصيل طلب سحب :\n\n"

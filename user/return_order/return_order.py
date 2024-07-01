@@ -68,6 +68,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if data[2] == "deposit"
                         else order["payment_method_number"]
                     ),
+                    order["ref_number"] if data[2] == "deposit" else None,
                 ),
                 reply_markup=reply_markup,
             )

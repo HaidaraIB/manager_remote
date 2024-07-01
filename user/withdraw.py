@@ -4,7 +4,7 @@ from telegram import (
     InlineKeyboardMarkup,
     Chat,
     Video,
-    error
+    error,
 )
 
 
@@ -125,7 +125,9 @@ async def choose_payment_info(update: Update, context: ContextTypes.DEFAULT_TYPE
         return PAYMENT_INFO
 
 
-async def back_to_choose_payment_info(update:Update, context:ContextTypes.DEFAULT_TYPE):
+async def back_to_choose_payment_info(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+):
     if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
             build_back_button("back_to_choose_payment_method"),
@@ -134,7 +136,7 @@ async def back_to_choose_payment_info(update:Update, context:ContextTypes.DEFAUL
         if context.user_data["payment_method"] == USDT:
             text = "أرسل كود محفظتك👝\n\n<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
         else:
-            text = f"أرسل رقم حساب {context.user_data["payment_method"]}"
+            text = f"أرسل رقم حساب {context.user_data['payment_method']}"
 
         await update.effective_message.delete()
         await context.bot.send_message(
@@ -144,7 +146,6 @@ async def back_to_choose_payment_info(update:Update, context:ContextTypes.DEFAUL
         )
 
         return PAYMENT_INFO
-        
 
 
 async def get_withdraw_code_bank_account_name(
@@ -204,10 +205,30 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back_to_bank_account_name"),
             back_to_user_home_page_button[0],
         ]
-        await update.message.reply_text(
-            text="أرسل كود السحب",
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
+        try:
+            await update.message.reply_video(
+                video=Video(
+                    file_id=os.getenv("VIDEO_ID"),
+                    file_unique_id="AgADtBQAAukYCVA",
+                    width=576,
+                    height=1280,
+                    duration=35,
+                ),
+                filename="how_to_get_withdraw_code",
+                caption=(
+                    "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
+                ),
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
+        except error.BadRequest:
+            await update.message.reply_video(
+                video=pathlib.Path("assets/how_to_get_withdraw_code.mp4"),
+                filename="how_to_get_withdraw_code",
+                caption=(
+                    "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
+                ),
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
         return WITHDRAW_CODE
 
 
@@ -215,6 +236,25 @@ async def send_withdraw_order_to_check(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type == Chat.PRIVATE:
+
+        withdraw_code = update.message.text
+
+        code_present = DB.check_withdraw_code(withdraw_code=withdraw_code)
+
+        if code_present:
+            back_keyboard = [
+                (
+                    build_back_button("back_to_bank_account_name")
+                    if context.user_data["bank_account_name"]
+                    else build_back_button("back_to_choose_payment_info")
+                ),
+                back_to_user_home_page_button[0],
+            ]
+            await update.message.reply_text(
+                text="لقد تم إرسال هذا الكود إلى البوت من قبل ❗️",
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
+            return
 
         method = context.user_data["payment_method"]
 
