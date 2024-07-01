@@ -198,7 +198,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
 
         message = await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            caption=text,
+            text=text,
         )
         await DB.set_deposit_not_arrived(serial=serial, archive_message_ids=message.id)
 

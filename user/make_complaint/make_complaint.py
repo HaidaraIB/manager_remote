@@ -19,7 +19,7 @@ from common.common import (
     build_user_keyboard,
     build_back_button,
     build_complaint_keyboard,
-    check_if_user_present_decorator
+    check_if_user_present_decorator,
 )
 
 from common.force_join import check_if_user_member_decorator
@@ -107,6 +107,16 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"الحالة: <b>{state_dict_en_to_ar[op['state']]}</b>\n"
             f"سبب إعادة/رفض: <b>{op['reason'] if op['reason'] else 'لا يوجد'}</b>\n\n"
         )
+
+        if (
+            context.user_data["complaint_about"] == "deposit"
+            and op["state"] == "pending"
+        ):
+            await update.callback_query.answer(
+                text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",
+                show_alert=True,
+            )
+            return
 
         if op["state"] in ["sent", "pending"]:
             alert_button = [
