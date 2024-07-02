@@ -10,6 +10,8 @@ from telegram.ext import (
 
 from custom_filters import Ref
 from DB import DB
+
+
 async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         if (
@@ -23,9 +25,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             method=ref_number_info[1],
             amount=float(ref_number_info[2].split(": ")[1]),
         )
-        await update.message.reply_text(
-            text="تم ✅"
-        )
+        await update.message.reply_text(text="تم ✅")
 
 
 def create_invalid_foramt_string():
@@ -43,6 +43,7 @@ async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if (
             not update.effective_chat.id
             == context.bot_data["data"]["deposit_orders_group"]
+            or not update.message
         ):
             return
         await update.message.reply_text(text=create_invalid_foramt_string())

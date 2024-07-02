@@ -47,7 +47,7 @@ async def get_acc_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
         back_buttons = [
-            build_back_button("back_to_get_full_name"),
+            build_back_button("back_to_get_acc_num"),
             back_to_user_home_page_button[0],
         ]
 
@@ -80,16 +80,16 @@ back_to_get_acc_num = add_existing_account
 async def get_full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         back_buttons = [
-            build_back_button("back_to_get_acc_num"),
+            build_back_button("back_to_get_full_name"),
             back_to_user_home_page_button[0],
         ]
         if update.message:
+            context.user_data["full_name"] = update.message.text
             await update.message.reply_text(
                 text="قم بإرسال كلمة المرور",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
         else:
-            context.user_data["full_name"] = update.message.text
             await update.callback_query.edit_message_text(
                 text="قم بإرسال كلمة المرور",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
