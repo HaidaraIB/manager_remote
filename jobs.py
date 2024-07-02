@@ -38,11 +38,12 @@ def stringify_manager_reward_report(worker, updated_worker, amount, reward_type,
 
 
 def stringify_worker_reward_report(worker, updated_worker, amount, reward_type, role):
+    daily_weekly = "weekly" if reward_type == 'week' else 'daily'
     worker_text = (
         "تم تحديث رصيد مكافآتك عن مجموع قيم الطلبات التي تمت الموافقة عليها\n"
-        f"مجموع مكافآتك السابق: <b>{worker[f'{reward_type}ly_rewards_balance']}</b>\n"
+        f"مجموع مكافآتك السابق: <b>{worker[f'{daily_weekly}_rewards_balance']}</b>\n"
         f"قيمة المكافأة: <b>{amount}</b>\n"
-        f"مجموع مكافآتك الحالي: <b>{updated_worker[f'{reward_type}ly_rewards_balance']}</b>\n"
+        f"مجموع مكافآتك الحالي: <b>{updated_worker[f'{daily_weekly}_rewards_balance']}</b>\n"
         f"عدد الطلبات حتى الآن: <b>{updated_worker[f'approved_{role}_num']}</b>\n"
         f"مجموع المبالغ حتى الآن: <b>{updated_worker[f'approved_{role}']}</b>\n"
         f"مجموع المبالغ هذا {day_week_en_to_ar_dict[reward_type]}: <b>{worker[f'approved_{role}_{reward_type}']}</b>\n"

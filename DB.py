@@ -219,8 +219,8 @@ class DB:
         db.close()
 
     @staticmethod
-    @connect_and_close
-    def connect_account_to_user(user_id: int, acc_num: str, cr: sqlite3.Cursor = None):
+    @lock_and_release
+    async def connect_account_to_user(user_id: int, acc_num: str, cr: sqlite3.Cursor = None):
         cr.execute(
             "UPDATE accounts SET user_id = ? WHERE acc_num = ?",
             (user_id, acc_num),
@@ -464,7 +464,7 @@ class DB:
         serial: int, archive_message_ids: str, reason: str, cr: sqlite3.Cursor = None
     ):
         cr.execute(
-            "UPDATE deposit_orders SET state = 'delined', reason = ?, archive_message_ids = ? WHERE serial = ?",
+            "UPDATE deposit_orders SET state = 'declined', reason = ?, archive_message_ids = ? WHERE serial = ?",
             (reason, archive_message_ids, serial),
         )
 
