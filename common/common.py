@@ -38,7 +38,10 @@ def apply_ex_rate(
     order_type: str,
     context: ContextTypes.DEFAULT_TYPE,
 ):
-    buy_or_sell_dict = {"deposit": "buy_rate", "withdraw": "sell_rate"}
+    buy_or_sell_dict = {
+        "deposit": "buy_rate",
+        "withdraw": "sell_rate",
+    }
     ex_rate = 0
     if method in [PAYEER, PERFECT_MONEY, USDT]:
         if method == PAYEER:

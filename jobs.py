@@ -18,103 +18,80 @@ from constants import *
 
 from common.common import apply_ex_rate
 
-day_week_en_to_ar_dict = {"day": "اليوم", "week": "الأسبوع"}
+
+worker_type_dict = {
+    "daily": {
+        "approved_work": "approved_withdraws_day",
+        "percentage": "workers_reward_withdraw_percentage",
+        "role": "withdraws",
+        "day_week": "اليوم",
+    },
+    "weekly": {
+        "approved_work": "approved_deposits_week",
+        "percentage": "workers_reward_percentage",
+        "role": "deposits",
+        "day_week": "الأسبوع",
+    },
+}
 
 
-def stringify_manager_reward_report(worker, updated_worker, amount, reward_type, role):
-    daily_weekly = "weekly" if reward_type == 'week' else 'daily'
+def stringify_manager_reward_report(worker, updated_worker, amount, reward_type):
+    role = worker_type_dict[reward_type]["role"]
     manager_text = (
         f"تم تحديث رصيد المكافآت عن مجموع مبالغ الطلبات الناجحة للموظف:\n\n"
         f"id: <code>{worker['id']}</code>\n"
         f"name: <b>{worker['name']}</b>\n"
         f"username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد</b>'}\n\n"
-        f"مجموع المكافآت السابق: <b>{worker[f'{daily_weekly}_rewards_balance']}</b>\n"
+        f"مجموع المكافآت السابق: <b>{worker[f'{reward_type}_rewards_balance']}</b>\n"
         f"قيمة المكافأة: <b>{amount}</b>\n"
-        f"مجموع المكافآت الحالي: <b>{updated_worker[f'{daily_weekly}_rewards_balance']}</b>\n"
+        f"مجموع المكافآت الحالي: <b>{updated_worker[f'{reward_type}_rewards_balance']}</b>\n"
         f"عدد الطلبات حتى الآن: <b>{updated_worker[f'approved_{role}_num']}</b>\n"
         f"مجموع المبالغ حتى الآن: <b>{updated_worker[f'approved_{role}']}</b>\n"
-        f"مجموع المبالغ هذا {day_week_en_to_ar_dict[reward_type]}: <b>{worker[f'approved_{role}_{reward_type}']}</b>"
+        f"مجموع المبالغ هذا {worker_type_dict[reward_type]['day_week']}: <b>{worker[f'approved_{role}_{reward_type}']}</b>"
     )
     return manager_text
 
 
-def stringify_worker_reward_report(worker, updated_worker, amount, reward_type, role):
-    daily_weekly = "weekly" if reward_type == 'week' else 'daily'
+def stringify_worker_reward_report(worker, updated_worker, amount, reward_type):
+    role = worker_type_dict[reward_type]["role"]
     worker_text = (
         "تم تحديث رصيد مكافآتك عن مجموع قيم الطلبات التي تمت الموافقة عليها\n"
-        f"مجموع مكافآتك السابق: <b>{worker[f'{daily_weekly}_rewards_balance']}</b>\n"
+        f"مجموع مكافآتك السابق: <b>{worker[f'{reward_type}_rewards_balance']}</b>\n"
         f"قيمة المكافأة: <b>{amount}</b>\n"
-        f"مجموع مكافآتك الحالي: <b>{updated_worker[f'{daily_weekly}_rewards_balance']}</b>\n"
+        f"مجموع مكافآتك الحالي: <b>{updated_worker[f'{reward_type}_rewards_balance']}</b>\n"
         f"عدد الطلبات حتى الآن: <b>{updated_worker[f'approved_{role}_num']}</b>\n"
         f"مجموع المبالغ حتى الآن: <b>{updated_worker[f'approved_{role}']}</b>\n"
-        f"مجموع المبالغ هذا {day_week_en_to_ar_dict[reward_type]}: <b>{worker[f'approved_{role}_{reward_type}']}</b>\n"
+        f"مجموع المبالغ هذا {worker_type_dict[reward_type]['day_week']}: <b>{worker[f'approved_{role}_{reward_type}']}</b>\n"
     )
     return worker_text
 
 
-async def weekly_reward_worker(context: ContextTypes.DEFAULT_TYPE):
-    workers = DB.get_workers()
+async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
+    worker_type = context.job.name.split("_")[0]
+    workers = DB.get_all_workers(payments=worker_type == "daily")
     for worker in workers:
-
-        if worker["approved_deposits_week"] == 0:
+        if worker[worker_type_dict[worker_type]["approved_work"]] == 0:
             continue
 
         amount = (
-            worker["approved_deposits_week"]
-            * context.bot_data["data"]["workers_reward_percentage"]
+            worker[worker_type_dict[worker_type]["approved_work"]]
+            * context.bot_data["data"][worker_type_dict[worker_type]["percentage"]]
             / 100
         )
-        await DB.weekly_reward_worker(worker_id=worker["id"], amount=amount)
-        updated_worker = DB.get_worker(worker_id=worker["id"])
+        if worker_type == "daily":
+            await DB.daily_reward_worker(
+                worker_id=worker["id"], amount=amount, method=worker["method"]
+            )
+        else:
+            await DB.weekly_reward_worker(worker_id=worker["id"], amount=amount)
+
+        updated_worker = DB.get_worker(
+            worker_id=worker["id"],
+            method=worker["method"] if worker_type == "daily" else None,
+        )
 
         worker_text = stringify_worker_reward_report(
-            worker, updated_worker, amount, "week", "deposits"
-        )
-
-        try:
-            await context.bot.send_message(
-                chat_id=worker["id"],
-                text=worker_text,
-            )
-        except:
-            pass
-
-        manager_text = stringify_manager_reward_report(
-            worker, updated_worker, amount, "week", "deposits"
-        )
-
-        try:
-            await context.bot.send_message(
-                chat_id=context.bot_data["data"]["worker_gifts_group"],
-                text=manager_text,
-            )
-        except RetryAfter as r:
-            await asyncio.sleep(r.retry_after)
-            await context.bot.send_message(
-                chat_id=context.bot_data["data"]["worker_gifts_group"],
-                text=manager_text,
-            )
-
-
-async def daily_reward_worker(context: ContextTypes.DEFAULT_TYPE):
-    workers = DB.get_all_workers(payments=True)
-    for worker in workers:
-
-        if worker["approved_withdraws_day"] == 0:
-            continue
-
-        amount = (
-            worker["approved_withdraws_day"]
-            * context.bot_data["data"]["workers_reward_withdraw_percentage"]
-            / 100
-        )
-        await DB.daily_reward_worker(
-            worker_id=worker["id"], amount=amount, method=worker["method"]
-        )
-        updated_worker = DB.get_worker(worker_id=worker["id"], method=worker["method"])
-
-        worker_text = stringify_worker_reward_report(
-            worker, updated_worker, amount, "day", "withdraws"
+            worker, updated_worker, amount, worker_type
         )
         try:
             await context.bot.send_message(
@@ -125,7 +102,7 @@ async def daily_reward_worker(context: ContextTypes.DEFAULT_TYPE):
             pass
 
         manager_text = stringify_manager_reward_report(
-            worker, updated_worker, amount, "day", "withdraws"
+            worker, updated_worker, amount, worker_type
         )
 
         try:
@@ -146,7 +123,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         "1_deposit_check": 240,
         "2_deposit_check": 240,
         "3_deposit_check": 840,
-        "4_deposit_check": 5040
+        "4_deposit_check": 5040,
     }
     serial = int(context.job.data)
     d_order = DB.get_one_order(
@@ -159,7 +136,9 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
     )
     if ref_present:
         await send_order_to_process(
-            d_order=d_order, ref_info=ref_present, context=context
+            d_order=d_order,
+            ref_info=ref_present,
+            context=context,
         )
     elif context.job.name in check_deposit_jobs_dict:
         next_job_num = int(context.job.name.split("_")[0]) + 1
@@ -190,7 +169,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             account_number=d_order["acc_number"],
             method=d_order["method"],
             serial=d_order["serial"],
-            ref_num=d_order['ref_number'],
+            ref_num=d_order["ref_number"],
         )
         text_list = text.split("\n")
         text_list.insert(0, "تم رفض الطلب❌")
@@ -200,11 +179,18 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
-        await DB.set_deposit_not_arrived(reason=reason, serial=serial, archive_message_ids=message.id)
+        await DB.set_deposit_not_arrived(
+            reason=reason, serial=serial, archive_message_ids=message.id
+        )
 
 
 async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
-    amount, ex_rate = apply_ex_rate(d_order["method"], ref_info["amount"], 'deposit', context)
+    amount, ex_rate = apply_ex_rate(
+        d_order["method"],
+        ref_info["amount"],
+        "deposit",
+        context,
+    )
 
     message = await context.bot.send_message(
         chat_id=context.bot_data["data"]["deposit_after_check_group"],
@@ -213,7 +199,7 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
             account_number=d_order["acc_number"],
             method=d_order["method"],
             serial=d_order["serial"],
-            ref_num=ref_info['number']
+            ref_num=ref_info["number"],
         ),
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
@@ -233,12 +219,7 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
 
 
 def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    account_number: int,
-    ref_num:str,
-    *args
+    amount: float, serial: int, method: str, account_number: int, ref_num: str, *args
 ):
     return (
         "إيداع جديد:\n"

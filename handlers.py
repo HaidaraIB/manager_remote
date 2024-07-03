@@ -26,8 +26,7 @@ from start import (
 )
 
 from jobs import (
-    weekly_reward_worker,
-    daily_reward_worker,
+    reward_worker,
 )
 
 from common.common import (
@@ -224,7 +223,7 @@ def main():
     app.add_error_handler(error_handler)
 
     app.job_queue.run_daily(
-        callback=weekly_reward_worker,
+        callback=reward_worker,
         time=datetime.time(0, 0, 0),
         days=(0,),
         job_kwargs={
@@ -235,7 +234,7 @@ def main():
         },
     )
     app.job_queue.run_daily(
-        callback=daily_reward_worker,
+        callback=reward_worker,
         time=datetime.time(0, 0, 0),
         job_kwargs={
             "id": "daily_reward_worker",
