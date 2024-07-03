@@ -13,6 +13,8 @@ from telegram.ext import (
     filters,
 )
 
+from worker.check_deposit.check_deposit import check_deposit
+
 from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
@@ -21,8 +23,6 @@ from common.common import (
     check_if_user_present_decorator,
     build_back_button,
 )
-
-
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
@@ -30,9 +30,7 @@ from common.back_to_home_page import (
 )
 
 from start import start_command
-from jobs import check_deposit
 from DB import DB
-from custom_filters import Ref
 
 (
     ACCOUNT_DEPOSIT,
