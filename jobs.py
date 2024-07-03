@@ -22,14 +22,15 @@ day_week_en_to_ar_dict = {"day": "اليوم", "week": "الأسبوع"}
 
 
 def stringify_manager_reward_report(worker, updated_worker, amount, reward_type, role):
+    daily_weekly = "weekly" if reward_type == 'week' else 'daily'
     manager_text = (
         f"تم تحديث رصيد المكافآت عن مجموع مبالغ الطلبات الناجحة للموظف:\n\n"
         f"id: <code>{worker['id']}</code>\n"
         f"name: <b>{worker['name']}</b>\n"
         f"username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد</b>'}\n\n"
-        f"مجموع المكافآت السابق: <b>{worker[f'{reward_type}ly_rewards_balance']}</b>\n"
+        f"مجموع المكافآت السابق: <b>{worker[f'{daily_weekly}_rewards_balance']}</b>\n"
         f"قيمة المكافأة: <b>{amount}</b>\n"
-        f"مجموع المكافآت الحالي: <b>{updated_worker[f'{reward_type}ly_rewards_balance']}</b>\n"
+        f"مجموع المكافآت الحالي: <b>{updated_worker[f'{daily_weekly}_rewards_balance']}</b>\n"
         f"عدد الطلبات حتى الآن: <b>{updated_worker[f'approved_{role}_num']}</b>\n"
         f"مجموع المبالغ حتى الآن: <b>{updated_worker[f'approved_{role}']}</b>\n"
         f"مجموع المبالغ هذا {day_week_en_to_ar_dict[reward_type]}: <b>{worker[f'approved_{role}_{reward_type}']}</b>"

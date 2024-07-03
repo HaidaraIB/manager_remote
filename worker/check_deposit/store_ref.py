@@ -20,6 +20,15 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ):
             return
         ref_number_info = update.message.text.split("\n")
+        ref_present = DB.get_ref_number(
+            number=ref_number_info[0].split(": ")[1],
+            method=ref_number_info[1],
+        )
+        if ref_present:
+            await update.message.reply_text(
+                text="رقم عملية مكرر!",
+            )
+            return
         await DB.add_ref_number(
             number=ref_number_info[0].split(": ")[1],
             method=ref_number_info[1],
