@@ -222,10 +222,10 @@ def main():
 
     app.add_error_handler(error_handler)
 
-    app.job_queue.run_daily(
+    app.job_queue.run_once(
         callback=reward_worker,
-        time=datetime.time(0, 0, 0),
-        days=(0,),
+        when=3,
+        name="weekly_reward_worker",
         job_kwargs={
             "id": "weekly_reward_worker",
             "misfire_grace_time": None,
@@ -233,9 +233,10 @@ def main():
             "replace_existing": True,
         },
     )
-    app.job_queue.run_daily(
+    app.job_queue.run_once(
         callback=reward_worker,
-        time=datetime.time(0, 0, 0),
+        when=3,
+        name="daily_reward_worker",
         job_kwargs={
             "id": "daily_reward_worker",
             "misfire_grace_time": None,
@@ -243,6 +244,29 @@ def main():
             "replace_existing": True,
         },
     )
+    # app.job_queue.run_daily(
+    #     callback=reward_worker,
+    #     time=datetime.time(0, 0, 0),
+    #     days=(0,),
+        # name="weekly_reward_worker",
+    #     job_kwargs={
+    #         "id": "weekly_reward_worker",
+    #         "misfire_grace_time": None,
+    #         "coalesce": True,
+    #         "replace_existing": True,
+    #     },
+    # )
+    # app.job_queue.run_daily(
+    #     callback=reward_worker,
+    #     time=datetime.time(0, 0, 0),
+        # name="daily_reward_worker",
+    #     job_kwargs={
+    #         "id": "daily_reward_worker",
+    #         "misfire_grace_time": None,
+    #         "coalesce": True,
+    #         "replace_existing": True,
+    #     },
+    # )
     from telegram.ext import MessageHandler, filters
 
     app.add_handler(MessageHandler(filters=filters.VIDEO, callback=get_video_info))
