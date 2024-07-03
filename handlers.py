@@ -222,9 +222,10 @@ def main():
 
     app.add_error_handler(error_handler)
 
-    app.job_queue.run_once(
+    app.job_queue.run_daily(
         callback=reward_worker,
-        when=3,
+        time=datetime.time(0, 0, 0),
+        days=(0,),
         name="weekly_reward_worker",
         job_kwargs={
             "id": "weekly_reward_worker",
@@ -233,9 +234,9 @@ def main():
             "replace_existing": True,
         },
     )
-    app.job_queue.run_once(
+    app.job_queue.run_daily(
         callback=reward_worker,
-        when=3,
+        time=datetime.time(0, 0, 0),
         name="daily_reward_worker",
         job_kwargs={
             "id": "daily_reward_worker",
@@ -244,32 +245,6 @@ def main():
             "replace_existing": True,
         },
     )
-    # app.job_queue.run_daily(
-    #     callback=reward_worker,
-    #     time=datetime.time(0, 0, 0),
-    #     days=(0,),
-        # name="weekly_reward_worker",
-    #     job_kwargs={
-    #         "id": "weekly_reward_worker",
-    #         "misfire_grace_time": None,
-    #         "coalesce": True,
-    #         "replace_existing": True,
-    #     },
-    # )
-    # app.job_queue.run_daily(
-    #     callback=reward_worker,
-    #     time=datetime.time(0, 0, 0),
-        # name="daily_reward_worker",
-    #     job_kwargs={
-    #         "id": "daily_reward_worker",
-    #         "misfire_grace_time": None,
-    #         "coalesce": True,
-    #         "replace_existing": True,
-    #     },
-    # )
-    from telegram.ext import MessageHandler, filters
-
-    app.add_handler(MessageHandler(filters=filters.VIDEO, callback=get_video_info))
 
     app.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
 
@@ -277,16 +252,3 @@ def main():
         PyroClientSingleton().stop()
     except ConnectionError:
         pass
-
-
-from telegram.ext import ContextTypes
-from telegram import Video
-
-
-async def get_video_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    v = update.message.video
-    vid = Video(v.file_id, v.file_unique_id, v.width, v.height, v.duration)
-    await update.message.reply_video(
-        video=vid,
-    )
-    print(v.file_id, v.file_unique_id, v.width, v.height, v.duration)
