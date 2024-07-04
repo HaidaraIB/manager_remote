@@ -20,7 +20,7 @@ from common.common import (
 from common.back_to_home_page import back_to_user_home_page_handler
 
 from worker.check_buy_usdt import check_buy_usdt
-import jobs as check_deposit
+from worker.check_deposit import check_deposit
 from worker.check_withdraw import check_withdraw
 
 from DB import DB

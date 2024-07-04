@@ -760,8 +760,11 @@ class DB:
 
     @staticmethod
     @connect_and_close
-    def get_one_order(order_type: str, serial: int, cr: sqlite3.Cursor = None):
-        cr.execute(f"SELECT * FROM {order_type}_orders WHERE serial = ?", (serial,))
+    def get_one_order(order_type: str, serial: int = None, ref_num:str = None, cr: sqlite3.Cursor = None):
+        if serial:
+            cr.execute(f"SELECT * FROM {order_type}_orders WHERE serial = ?", (serial,))
+        elif ref_num:
+            cr.execute(f"SELECT * FROM deposit_orders WHERE ref_number = ?", (ref_num,))
         return cr.fetchone()
 
     @staticmethod

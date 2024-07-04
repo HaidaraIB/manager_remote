@@ -95,6 +95,32 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
 
+def create_invalid_foramt_string():
+    res = (
+        "تنسيق خاطئ الرجاء الالتزام بالقالب التالي:\n\n"
+        "الاسم الثلاثي\n"
+        "رقم الحساب\n"
+        "كلمة المرور\n\n"
+        "مثال:\n"
+        "علي أحمد\n"
+        "12345\n"
+        "abcd123"
+        ""
+    )
+    return res
+
+
+async def invalid_account_format(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
+        if (
+            not update.effective_chat.id
+            == context.bot_data["data"]["accounts_orders_group"]
+            or not update.message
+        ):
+            return
+        await update.message.reply_text(text=create_invalid_foramt_string())
+
+
 async def reply_to_create_account_order(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
@@ -214,23 +240,26 @@ async def back_from_decline_create_account(
         return ConversationHandler.END
 
 
+invalid_account_format_handler = MessageHandler(
+    filters=filters.REPLY & Account() & ~filters.Regex(r".+\n\d+\n.+"),
+    callback=invalid_account_format,
+)
 reply_to_create_account_order_handler = MessageHandler(
-    filters=filters.REPLY & Account() & filters.Regex(".+\s+\d+\s+.+"),
+    filters=filters.REPLY & Account() & filters.Regex(r".+\n\d+\n.+"),
     callback=reply_to_create_account_order,
 )
 
-decline_create_account_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(decline_create_account, "^decline create account \d+$")
-    ],
-    states={
-        DECLINE_REASON: [MessageHandler(filters=filters.REPLY, callback=decline_reason)]
-    },
-    fallbacks=[
-        CallbackQueryHandler(
-            back_from_decline_create_account, "^back from decline create account \d+$"
-        )
-    ],
+decline_create_account_handler = CallbackQueryHandler(
+    decline_create_account,
+    "^decline create account \d+$",
+)
+decline_account_reason_handler = MessageHandler(
+    filters=filters.REPLY,
+    callback=decline_reason,
+)
+back_from_decline_create_account_handler = CallbackQueryHandler(
+    back_from_decline_create_account,
+    "^back from decline create account \d+$",
 )
 
 create_account_handler = ConversationHandler(
