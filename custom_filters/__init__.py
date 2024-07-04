@@ -1,3 +1,4 @@
+from custom_filters.Admin import Admin
 from custom_filters.Account import Account
 from custom_filters.Deposit import Deposit
 from custom_filters.Withdraw import Withdraw
@@ -11,3 +12,4 @@ from custom_filters.ResponseToUserComplaint import ResponseToUserComplaint
 from custom_filters.ModAmountUserComplaint import ModAmountUserComplaint
 from custom_filters.Worker import Worker
 from custom_filters.Sent import Sent
+from custom_filters.DepositAgent import DepositAgent

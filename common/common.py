@@ -147,7 +147,7 @@ def build_user_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-def build_worker_keyboard():
+def build_worker_keyboard(deposit_agent: bool = False):
     keyboard = [
         [
             InlineKeyboardButton(
@@ -155,6 +155,15 @@ def build_worker_keyboard():
             ),
         ],
     ]
+    if deposit_agent:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="إعدادات وسائل الدفع⚙️💳",
+                    callback_data="wallets settings",
+                )
+            ]
+        )
     return InlineKeyboardMarkup(keyboard)
 
 

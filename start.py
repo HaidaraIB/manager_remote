@@ -26,12 +26,9 @@ from common.common import (
     check_hidden_keyboard,
 )
 
-from common.force_join import (
-    check_if_user_member
-)
+from common.force_join import check_if_user_member
 
-from custom_filters.Admin import Admin
-from custom_filters.Worker import Worker
+from custom_filters import Admin, Worker, DepositAgent
 
 
 async def inits(app: Application):
@@ -52,18 +49,18 @@ async def inits(app: Application):
         app.bot_data["suspended_workers"] = set()
 
 
-async def set_commands(update:Update, context:ContextTypes.DEFAULT_TYPE):
+async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     st_cmd = ("start", "start command")
     if Worker().filter(update):
-        commands=[("worker", "worker command"), st_cmd]
+        commands = [("worker", "worker command"), st_cmd]
     elif Admin().filter(update):
-        commands=[("admin", "admin command"), st_cmd]
+        commands = [("admin", "admin command"), st_cmd]
     else:
-        commands=[st_cmd]
+        commands = [st_cmd]
     await context.bot.set_my_commands(
-        commands=commands,
-        scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
+        commands=commands, scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
     )
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
@@ -84,19 +81,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = "أهلاً بك..."
         keyboard = build_user_keyboard()
 
-        await update.message.reply_text(
-            text=text, reply_markup=keyboard
-        )
+        await update.message.reply_text(text=text, reply_markup=keyboard)
         return ConversationHandler.END
 
 
 async def worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Worker().filter(update):
         text = "أهلاً بك..."
-        keyboard = build_worker_keyboard()
-        await update.message.reply_text(
-            text=text, reply_markup=keyboard
-        )
+        keyboard = build_worker_keyboard(deposit_agent=DepositAgent().filter(update))
+        await update.message.reply_text(text=text, reply_markup=keyboard)
         return ConversationHandler.END
 
 
@@ -108,9 +101,7 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         text = "تعمل الآن كآدمن🕹"
         keyboard = build_admin_keyboard()
-        await update.message.reply_text(
-            text=text, reply_markup=keyboard
-        )
+        await update.message.reply_text(text=text, reply_markup=keyboard)
         return ConversationHandler.END
 
 
@@ -126,9 +117,7 @@ async def check_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = "أهلاً بك..."
     keyboard = build_user_keyboard()
-    await update.callback_query.edit_message_text(
-        text=text, reply_markup=keyboard
-    )
+    await update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
 
 
 worker_command = CommandHandler(command="worker", callback=worker)
