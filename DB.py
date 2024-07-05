@@ -233,7 +233,7 @@ class DB:
         order_type: str, user_id: int, cr: sqlite3.Cursor = None
     ):
         cr.execute(
-            f"SELECT * FROM {order_type}_orders WHERE state = 'pending' AND user_id = ?",
+            f"SELECT * FROM {order_type}_orders WHERE (state = 'pending' OR state = 'sent') AND user_id = ?",
             (user_id,),
         )
         return cr.fetchone()
