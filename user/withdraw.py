@@ -21,9 +21,9 @@ from common.common import (
     build_methods_keyboard,
     payment_method_pattern,
     build_back_button,
-    check_if_user_created_account_from_bot_decorator,
-    check_if_user_present_decorator,
 )
+
+from common.decorators import check_if_user_created_account_from_bot_decorator, check_if_user_present_decorator
 
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
@@ -52,8 +52,16 @@ import os
 @check_if_user_created_account_from_bot_decorator
 async def choose_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+
         if not context.bot_data["data"]["user_calls"]["withdraw"]:
             await update.callback_query.answer("السحوبات متوقفة حالياً❗️")
+            return ConversationHandler.END
+        
+        elif DB.check_user_pending_orders(
+            order_type="withdraw",
+            user_id=update.effective_user.id,
+        ):
+            await update.callback_query.answer("لديك طلب سحب قيد التنفيذ بالفعل ❗️")
             return ConversationHandler.END
 
         accounts = DB.get_user_accounts(user_id=update.effective_user.id)

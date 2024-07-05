@@ -16,8 +16,10 @@ from telegram.ext import (
 from common.common import (
     build_user_keyboard,
     build_back_button,
-    check_if_user_present_decorator,
 )
+from common.decorators import check_if_user_present_decorator
+
+
 from common.force_join import check_if_user_member_decorator
 
 from common.back_to_home_page import (
@@ -40,7 +42,14 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
         if not context.bot_data["data"]["user_calls"]["create_account"]:
-            await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً❗️")
+            await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً ❗️")
+            return ConversationHandler.END
+        
+        elif DB.check_user_pending_orders(
+            order_type="create_account",
+            user_id=update.effective_user.id,
+        ):
+            await update.callback_query.answer("لديك طلب إنشاء حساب قيد التنفيذ بالفعل ❗️")
             return ConversationHandler.END
 
         await update.callback_query.edit_message_text(
@@ -86,9 +95,14 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-        text = "شكراً لك، سيتم مراجعة الصور المرسلة والرد عليك بأقرب وقت."
+        await DB.add_create_account_order(
+            user_id=update.effective_user.id,
+            full_name=context.user_data["full_name"],
+            nat_num=int(update.message.text),
+        )
+
         await update.message.reply_text(
-            text=text,
+            text="شكراً لك، سيتم مراجعة الصور المرسلة والرد عليك بأقرب وقت.",
             reply_markup=build_user_keyboard(),
         )
 

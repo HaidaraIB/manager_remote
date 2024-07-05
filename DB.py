@@ -168,6 +168,14 @@ class DB:
             order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS create_account_orders (
+            serial INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            full_name TEXT,
+            national_number INTEGER,
+            state TEXT DEFAULT 'pending'
+        );
+
         CREATE TABLE IF NOT EXISTS payment_methods (
             name TEXT PRIMARY KEY,
             on_off INTEGER DEFAULT 1
@@ -217,6 +225,34 @@ class DB:
         db.commit()
         cr.close()
         db.close()
+
+    @staticmethod
+    @connect_and_close
+    def check_user_pending_orders(
+        order_type: str, user_id: int, cr: sqlite3.Cursor = None
+    ):
+        cr.execute(
+            f"SELECT * FROM {order_type}_orders WHERE state = 'pending' AND user_id = ?",
+            (user_id,),
+        )
+        return cr.fetchone()
+
+    @staticmethod
+    @lock_and_release
+    async def add_create_account_order(
+        user_id: int,
+        full_name: str,
+        nat_num: int,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            "INSERT INTO create_account_orders(user_id, full_name, national_number) VALUES(?, ?, ?)",
+            (
+                user_id,
+                full_name,
+                nat_num,
+            ),
+        )
 
     @staticmethod
     @lock_and_release
@@ -468,7 +504,9 @@ class DB:
         serial: int, archive_message_ids: str, reason: str, cr: sqlite3.Cursor = None
     ):
         cr.execute(
-            "UPDATE deposit_orders SET state = 'declined', reason = ?, archive_message_ids = ? WHERE serial = ?",
+            """UPDATE deposit_orders SET state = 'declined',
+                                         reason = ?, archive_message_ids = ?
+                                         WHERE serial = ?""",
             (reason, archive_message_ids, serial),
         )
 
@@ -709,7 +747,10 @@ class DB:
     @staticmethod
     @lock_and_release
     async def change_order_state(
-        order_type: str, state: str, serial: int, cr: sqlite3.Cursor = None
+        order_type: str,
+        state: str,
+        serial: int,
+        cr: sqlite3.Cursor = None,
     ):
         cr.execute(
             f"UPDATE {order_type}_orders SET state = ? WHERE serial = ?",

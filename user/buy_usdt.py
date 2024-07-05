@@ -20,8 +20,10 @@ from common.common import (
     payment_method_pattern,
     build_back_button,
     build_methods_keyboard,
-    check_if_user_present_decorator,
 )
+
+from common.decorators import check_if_user_present_decorator
+
 
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
@@ -50,8 +52,16 @@ from constants import *
 @check_if_user_member_decorator
 async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+
         if not context.bot_data["data"]["user_calls"]["buy_usdt"]:
             await update.callback_query.answer("شراء USDT متوقف حالياً❗️")
+            return ConversationHandler.END
+        
+        elif DB.check_user_pending_orders(
+            order_type="buyusdt",
+            user_id=update.effective_user.id,
+        ):
+            await update.callback_query.answer("لديك طلب شراء USDT قيد التنفيذ بالفعل ❗️")
             return ConversationHandler.END
 
         text = (

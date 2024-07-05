@@ -15,8 +15,8 @@ from telegram.ext import (
 from common.common import (
     build_user_keyboard,
     build_back_button,
-    check_if_user_present_decorator,
 )
+from common.decorators import check_if_user_present_decorator
 
 from common.back_to_home_page import (
     back_to_user_home_page_button,

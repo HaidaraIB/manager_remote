@@ -11,7 +11,6 @@ from telegram import (
 
 from telegram.ext import (
     ContextTypes,
-    ConversationHandler,
 )
 
 
@@ -25,7 +24,6 @@ import asyncio
 import os
 import uuid
 import traceback
-import functools
 import json
 import logging
 from DB import DB
@@ -62,39 +60,6 @@ def apply_ex_rate(
         else:
             amount = amount * 0.97 / ex_rate
     return amount, ex_rate
-
-
-def check_if_user_created_account_from_bot_decorator(func):
-    @functools.wraps(func)
-    async def wrapper(
-        update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
-    ):
-        accounts = DB.get_user_accounts(user_id=update.effective_user.id)
-        if not accounts:
-            await update.callback_query.answer(
-                "قم بإنشاء حساب موثق عن طريق البوت أولاً ❗️",
-                show_alert=True,
-            )
-            return ConversationHandler.END
-        return await func(update, context, *args, **kwargs)
-
-    return wrapper
-
-
-def check_if_user_present_decorator(func):
-    @functools.wraps(func)
-    async def wrapper(
-        update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
-    ):
-        user = DB.get_user(user_id=update.effective_user.id)
-        if not user:
-            new_user = update.effective_user
-            await DB.add_new_user(
-                user_id=new_user.id, username=new_user.username, name=new_user.full_name
-            )
-        return await func(update, context, *args, **kwargs)
-
-    return wrapper
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):

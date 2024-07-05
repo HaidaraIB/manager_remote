@@ -19,10 +19,10 @@ from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
     payment_method_pattern,
-    check_if_user_created_account_from_bot_decorator,
-    check_if_user_present_decorator,
     build_back_button,
 )
+
+from common.decorators import check_if_user_created_account_from_bot_decorator, check_if_user_present_decorator
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
@@ -44,8 +44,16 @@ from DB import DB
 @check_if_user_created_account_from_bot_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+
         if not context.bot_data["data"]["user_calls"]["deposit"]:
             await update.callback_query.answer("الإيداعات متوقفة حالياً❗️")
+            return ConversationHandler.END
+        
+        elif DB.check_user_pending_orders(
+            order_type="deposit",
+            user_id=update.effective_user.id,
+        ):
+            await update.callback_query.answer("لديك طلب إيداع قيد التنفيذ بالفعل ❗️")
             return ConversationHandler.END
 
         accounts = DB.get_user_accounts(user_id=update.effective_user.id)

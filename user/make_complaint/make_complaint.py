@@ -19,8 +19,8 @@ from common.common import (
     build_user_keyboard,
     build_back_button,
     build_complaint_keyboard,
-    check_if_user_present_decorator,
 )
+from common.decorators import check_if_user_present_decorator
 
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
