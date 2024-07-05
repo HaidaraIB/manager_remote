@@ -44,12 +44,14 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not context.bot_data["data"]["user_calls"]["create_account"]:
             await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً ❗️")
             return ConversationHandler.END
-        
+
         elif DB.check_user_pending_orders(
             order_type="create_account",
             user_id=update.effective_user.id,
         ):
-            await update.callback_query.answer("لديك طلب إنشاء حساب قيد التنفيذ بالفعل ❗️")
+            await update.callback_query.answer(
+                "لديك طلب إنشاء حساب قيد التنفيذ بالفعل ❗️"
+            )
             return ConversationHandler.END
 
         await update.callback_query.edit_message_text(
@@ -79,10 +81,17 @@ back_to_full_name = create_account
 async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
+        serial = await DB.add_create_account_order(
+            user_id=update.effective_user.id,
+            full_name=context.user_data["full_name"],
+            nat_num=int(update.message.text),
+        )
+
         text = (
             f"الاسم الثلاثي: {context.user_data['full_name']}\n"
             f"الرقم الوطني: {update.message.text}\n\n"
-            f"<code>{update.effective_user.id}</code>\nقم بالرد على هذه الرسالة بمعلومات الحساب."
+            f"<code>{update.effective_user.id}</code>\n"
+            "قم بالرد على هذه الرسالة بمعلومات الحساب."
         )
         await context.bot.send_message(
             chat_id=context.bot_data["data"]["accounts_orders_group"],
@@ -90,15 +99,9 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرفض❌",
-                    callback_data=f"decline create account {update.effective_user.id}",
+                    callback_data=f"decline_create_account_{update.effective_user.id}_{serial}",
                 )
             ),
-        )
-
-        await DB.add_create_account_order(
-            user_id=update.effective_user.id,
-            full_name=context.user_data["full_name"],
-            nat_num=int(update.message.text),
         )
 
         await update.message.reply_text(
@@ -150,8 +153,11 @@ async def reply_to_create_account_order(
                 text="تم إنجاز هذا الطلب بالفعل👍"
             )
             return
-
-        user_id = int(update.effective_message.reply_to_message.text.split("\n")[3])
+        data = update.effective_message.reply_to_message.reply_markup.inline_keyboard[
+            0
+        ][0].callback_data.split("_")
+        user_id = int(data[-2])
+        serial = int(data[-1])
 
         account = update.message.text.split("\n")
         res = await DB.add_account(
@@ -159,6 +165,7 @@ async def reply_to_create_account_order(
             acc_num=int(account[1]),
             password=account[2],
             user_id=user_id,
+            serial=serial,
         )
 
         if res:
@@ -190,23 +197,29 @@ async def reply_to_create_account_order(
             message_id=update.effective_message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅", callback_data="تمت الموافقة✅"
+                    text="تمت الموافقة✅",
+                    callback_data="تمت الموافقة✅",
                 )
             ),
+        )
+        await DB.change_order_state(
+            order_type="create_account",
+            serial=serial,
+            state="approved",
         )
 
 
 async def decline_create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
-        user_id = int(update.callback_query.data.split(" ")[-1])
-        context.user_data["create_account_user_id"] = user_id
+        user_id = int(update.callback_query.data.split(" ")[-2])
+        serial = int(update.callback_query.data.split(" ")[-1])
         await update.callback_query.answer(
             text=f"قم بالرد على هذه الرسالة بسبب الرفض",
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_row(
-                build_back_button(f"back from decline create account {user_id}")
+                build_back_button(f"back_from_decline_create_account_{user_id}_{serial}")
             ),
         )
         return DECLINE_REASON
@@ -214,11 +227,16 @@ async def decline_create_account(update: Update, context: ContextTypes.DEFAULT_T
 
 async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
-        text = "تم رفض طلبك لإنشاء حساب، السبب:\n\n"
+        data = update.effective_message.reply_to_message.reply_markup.inline_keyboard[
+            0
+        ][0].callback_data.split("_")
+        user_id = int(data[-2])
+        serial = int(data[-1])
         try:
             await context.bot.send_message(
-                chat_id=context.user_data["create_account_user_id"],
-                text=text + update.effective_message.text_html,
+                chat_id=user_id,
+                text="تم رفض طلبك لإنشاء حساب، السبب:\n\n"
+                + update.effective_message.text_html,
             )
         except:
             pass
@@ -227,8 +245,17 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=update.effective_chat.id,
             message_id=update.effective_message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(text="تم الرفض", callback_data="تم الرفض")
+                InlineKeyboardButton(
+                    text="تم الرفض ❌",
+                    callback_data="تم الرفض ❌",
+                )
             ),
+        )
+
+        await DB.change_order_state(
+            order_type="create_account",
+            state="declined",
+            serial=serial,
         )
 
         return ConversationHandler.END
@@ -238,7 +265,8 @@ async def back_from_decline_create_account(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
-        user_id = int(update.callback_query.data.split(" ")[-1])
+        user_id = int(update.callback_query.data.split(" ")[-2])
+        serial = int(update.callback_query.data.split(" ")[-1])
         await update.callback_query.answer(
             text=f"قم بالرد على هذه الرسالة بمعلومات الحساب.",
             show_alert=True,
@@ -247,7 +275,7 @@ async def back_from_decline_create_account(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="رفض⛔️",
-                    callback_data=f"decline create account {user_id}",
+                    callback_data=f"decline_create_account_{user_id}_{serial}",
                 )
             ),
         )
@@ -265,7 +293,7 @@ reply_to_create_account_order_handler = MessageHandler(
 
 decline_create_account_handler = CallbackQueryHandler(
     decline_create_account,
-    "^decline create account \d+$",
+    "^decline_create_account_\d+_\d+$",
 )
 decline_account_reason_handler = MessageHandler(
     filters=filters.REPLY,
@@ -273,7 +301,7 @@ decline_account_reason_handler = MessageHandler(
 )
 back_from_decline_create_account_handler = CallbackQueryHandler(
     back_from_decline_create_account,
-    "^back from decline create account \d+$",
+    "^back_from_decline_create_account_\d+_\d+$",
 )
 
 create_account_handler = ConversationHandler(

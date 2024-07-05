@@ -187,7 +187,7 @@ class DB:
         );
 
         CREATE TABLE IF NOT EXISTS ref_numbers (
-            order_serial INT DEFAULT -1,
+            order_serial INTEGER DEFAULT -1,
             number TEXT,
             amount REAL,
             method TEXT,
@@ -206,6 +206,7 @@ class DB:
             user_id INTEGER,
             password TEXT,
             full_name TEXT,
+            serial INTEGER,
             creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -254,6 +255,8 @@ class DB:
                 nat_num,
             ),
         )
+        cr.execute("SELECT last_insert_rowid()")
+        return cr.fetchone()[0]
 
     @staticmethod
     @lock_and_release
@@ -285,16 +288,18 @@ class DB:
         user_id: int,
         password: str,
         full_name: str,
+        serial: int,
         cr: sqlite3.Cursor = None,
     ):
         try:
             cr.execute(
-                "INSERT INTO accounts(acc_num, user_id, password, full_name) VALUES(?, ?, ?, ?)",
+                "INSERT INTO accounts(acc_num, user_id, password, full_name, serial) VALUES(?, ?, ?, ?, ?)",
                 (
                     acc_num,
                     user_id,
                     password,
                     full_name,
+                    serial,
                 ),
             )
         except sqlite3.IntegrityError:
