@@ -17,10 +17,12 @@ from custom_filters import Withdraw, Declined, Sent
 from constants import *
 from DB import DB
 import os
+import asyncio
 
 from common.common import (
     build_worker_keyboard,
-    apply_ex_rate
+    apply_ex_rate,
+    notify_workers,
 )
 
 (
@@ -30,11 +32,7 @@ from common.common import (
 
 
 def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    payment_method_number: str,
-    *args
+    amount: float, serial: int, method: str, payment_method_number: str, *args
 ):
     return (
         "تفاصيل طلب سحب :\n\n"
@@ -117,22 +115,23 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             serial=serial,
         )
 
-
         w_order = DB.get_one_order(order_type="withdraw", serial=serial)
 
         method = w_order["method"]
         target_group = f"{method}_group"
 
-        amount, ex_rate = apply_ex_rate(method, amount, 'withdraw', context)
+        amount, ex_rate = apply_ex_rate(method, amount, "withdraw", context)
+
+        order_text = stringify_order(
+            amount=amount,
+            serial=serial,
+            method=method,
+            payment_method_number=w_order["payment_method_number"],
+        )
 
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"][target_group],
-            text=stringify_order(
-                amount=amount,
-                serial=serial,
-                method=method,
-                payment_method_number=w_order["payment_method_number"],
-            ),
+            text=order_text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب✅",
@@ -164,7 +163,15 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             pending_process_message_id=message.id,
             serial=serial,
             group_id=context.bot_data["data"][target_group],
-            ex_rate=ex_rate
+            ex_rate=ex_rate,
+        )
+        workers = DB.get_workers(method=method)
+        asyncio.create_task(
+            notify_workers(
+                context=context,
+                workers=workers,
+                order_type="طلب سحب",
+            )
         )
 
 

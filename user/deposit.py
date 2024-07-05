@@ -28,7 +28,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-
+from worker.check_deposit.check_deposit import stringify_order
 from start import start_command
 from DB import DB
 
@@ -149,6 +149,17 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
                 "misfire_grace_time": None,
                 "coalesce": True,
             },
+        )
+
+        await context.bot.send_message(
+            chat_id=context.bot_data["data"]["deposit_orders_group"],
+            text=stringify_order(
+                amount="لا يوجد بعد",
+                account_number=context.user_data["account_deposit"],
+                method=context.user_data["deposit_method"],
+                serial=serial,
+                ref_num=ref_num,
+            ),
         )
 
         await update.message.reply_text(

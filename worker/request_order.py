@@ -18,7 +18,7 @@ from common.common import (
     build_worker_keyboard,
 )
 from start import start_command, worker_command
-
+from custom_filters import DepositAgent
 from constants import *
 
 REQUEST_WHAT = 0
@@ -218,7 +218,7 @@ async def cancel_request_order(update: Update, context: ContextTypes.DEFAULT_TYP
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(
             text="تم الإلغاء👍",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
         )
         return ConversationHandler.END
 

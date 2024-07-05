@@ -17,7 +17,7 @@ from telegram.ext import (
 import os
 from DB import DB
 
-from custom_filters import BuyUSDT, Returned
+from custom_filters import BuyUSDT, Returned, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
@@ -121,7 +121,7 @@ async def reply_with_payment_proof_buy_usdt(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت الموافقة✅",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
         )
 
         context.user_data["requested"] = False
@@ -223,7 +223,7 @@ async def return_buy_usdt_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت إعادة الطلب📥",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
         )
         context.user_data["requested"] = False
         await DB.return_order(

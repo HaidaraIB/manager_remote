@@ -7,9 +7,13 @@ from telegram.ext import (
     ContextTypes,
 )
 
+from common.common import (
+    apply_ex_rate,
+    notify_workers,
+)
 from DB import DB
 import os
-from common.common import apply_ex_rate
+import asyncio
 
 
 async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
@@ -58,23 +62,26 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 "عليك التحقق وإعادة الطلب مرة أخرى، سيتم التحقق بشكل دوري."
             ),
         )
-        text = stringify_order(
-            amount="لا يوجد",
-            account_number=d_order["acc_number"],
-            method=d_order["method"],
-            serial=d_order["serial"],
-            ref_num=d_order["ref_number"],
+        text = (
+            "تم رفض الطلب❌\n"
+            + stringify_order(
+                amount="لا يوجد",
+                account_number=d_order["acc_number"],
+                method=d_order["method"],
+                serial=d_order["serial"],
+                ref_num=d_order["ref_number"],
+            )
+            + f"\n\nالسبب:\n<b>{reason}</b>"
         )
-        text_list = text.split("\n")
-        text_list.insert(0, "تم رفض الطلب❌")
-        text = "\n".join(text_list) + f"\n\nالسبب:\n<b>{reason}</b>"
 
         message = await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
         await DB.set_deposit_not_arrived(
-            reason=reason, serial=serial, archive_message_ids=message.id
+            reason=reason,
+            serial=serial,
+            archive_message_ids=message.id,
         )
 
 
@@ -86,15 +93,17 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
         context,
     )
 
+    order_text = stringify_order(
+        amount=amount,
+        account_number=d_order["acc_number"],
+        method=d_order["method"],
+        serial=d_order["serial"],
+        ref_num=ref_info["number"],
+    )
+
     message = await context.bot.send_message(
         chat_id=context.bot_data["data"]["deposit_after_check_group"],
-        text=stringify_order(
-            amount=amount,
-            account_number=d_order["acc_number"],
-            method=d_order["method"],
-            serial=d_order["serial"],
-            ref_num=ref_info["number"],
-        ),
+        text=order_text,
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
                 text="قبول الطلب✅",
@@ -102,6 +111,7 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
             )
         ),
     )
+
     await DB.send_order(
         order_type="deposit",
         pending_process_message_id=message.id,
@@ -110,14 +120,27 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
         group_id=context.bot_data["data"]["deposit_after_check_group"],
         ex_rate=ex_rate,
     )
+    workers = DB.get_workers()
+    asyncio.create_task(
+        notify_workers(
+            context=context,
+            workers=workers,
+            order_type="إيداع",
+        )
+    )
 
 
 def stringify_order(
-    amount: float, serial: int, method: str, account_number: int, ref_num: str, *args
+    amount: float,
+    serial: int,
+    method: str,
+    account_number: int,
+    ref_num: str,
+    *args,
 ):
     return (
         "إيداع جديد:\n"
-        f"رقم العملية: {ref_num}\n"
+        f"رقم العملية: <code>{ref_num}</code>\n"
         f"المبلغ: <code>{amount}</code>\n"
         f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"

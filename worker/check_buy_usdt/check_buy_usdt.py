@@ -16,7 +16,7 @@ from telegram.ext import (
 import os
 from DB import DB
 
-from custom_filters import BuyUSDT, Declined
+from custom_filters import BuyUSDT, Declined, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
@@ -114,7 +114,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.send_message(
             chat_id=update.effective_user.id,
             text="تم إرسال الطلب✅",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
         )
 
         await DB.send_order(
@@ -200,7 +200,7 @@ async def decline_buy_usdt_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تم رفض الطلب❌",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
         )
         context.user_data["requested"] = False
         await DB.decline_order(

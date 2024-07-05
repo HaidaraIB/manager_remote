@@ -16,12 +16,12 @@ from telegram.ext import (
 
 
 from telegram.constants import (
-    ChatMemberStatus,
     ChatType,
 )
 
 from telegram.error import TimedOut, NetworkError
 
+import asyncio
 import os
 import uuid
 import traceback
@@ -109,6 +109,19 @@ def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
         reply_markup = ReplyKeyboardRemove()
     return reply_markup
 
+
+
+async def notify_workers(
+    context: ContextTypes.DEFAULT_TYPE,
+    workers,
+    order_type: str,
+):
+    for worker in workers:
+        await context.bot.send_message(
+            chat_id=worker["id"],
+            text=f"تم استلام {order_type} جديد 🚨",
+        )
+        await asyncio.sleep(1)
 
 def disable_httpx():
     if int(os.getenv("OWNER_ID")) != 755501092:
@@ -378,20 +391,8 @@ def build_groups_keyboard(op: str):
     return [
         [
             InlineKeyboardButton(
-                text="طلبات انشاء الحسابات",
-                callback_data=f"{op} accounts_orders_group",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="معالجة الإيداع قبل التحقق",
-                callback_data=f"{op} deposit_orders_group",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="معالجة الإيداع بعد التحقق",
-                callback_data=f"{op} deposit_after_check_group",
+                text="غروب الشكاوي",
+                callback_data=f"{op} complaints_group",
             )
         ],
         [
@@ -402,13 +403,35 @@ def build_groups_keyboard(op: str):
         ],
         [
             InlineKeyboardButton(
-                text="طلبات شراء USDT",
+                text="إنشاء الحسابات",
+                callback_data=f"{op} accounts_orders_group",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="غروب أرقام العمليات",
+                callback_data=f"{op} ref_numbers_group",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="تنفيذ إيداع",
+                callback_data=f"{op} deposit_after_check_group",
+            ),
+            InlineKeyboardButton(
+                text="تحقق إيداع",
+                callback_data=f"{op} deposit_orders_group",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="شراء USDT",
                 callback_data=f"{op} buy_usdt_orders_group",
             )
         ],
         [
             InlineKeyboardButton(
-                text="معالجة السحب قبل التحقق",
+                text="تحقق سحب",
                 callback_data=f"{op} withdraw_orders_group",
             )
         ],
@@ -422,42 +445,30 @@ def build_groups_keyboard(op: str):
             InlineKeyboardButton(
                 text=f"سحب {BEMO}",
                 callback_data=f"{op} {BEMO}_group",
-            )
-        ],
-        [
+            ),
             InlineKeyboardButton(
                 text=f"سحب {BARAKAH}",
                 callback_data=f"{op} {BARAKAH}_group",
-            )
+            ),
         ],
         [
             InlineKeyboardButton(
                 text=f"سحب {SYRCASH}",
                 callback_data=f"{op} {SYRCASH}_group",
-            )
-        ],
-        [
+            ),
             InlineKeyboardButton(
                 text=f"سحب {MTNCASH}",
                 callback_data=f"{op} {MTNCASH}_group",
-            )
+            ),
         ],
         [
             InlineKeyboardButton(
                 text=f"سحب {PAYEER}",
                 callback_data=f"{op} {PAYEER}_group",
-            )
-        ],
-        [
+            ),
             InlineKeyboardButton(
                 text=f"سحب {PERFECT_MONEY}",
                 callback_data=f"{op} {PERFECT_MONEY}_group",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="شكاوي العملاء",
-                callback_data=f"{op} complaints_group",
-            )
+            ),
         ],
     ]

@@ -16,7 +16,7 @@ from telegram.ext import (
 from DB import DB
 import os
 
-from custom_filters import Deposit, Returned
+from custom_filters import Deposit, Returned, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
@@ -115,7 +115,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت الموافقة✅",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
         )
 
         await DB.reply_with_deposit_proof(
@@ -206,7 +206,7 @@ async def return_deposit_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت إعادة الطلب📥",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
         )
 
         await DB.return_order(

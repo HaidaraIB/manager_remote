@@ -16,7 +16,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         if (
             not update.effective_chat.id
-            == context.bot_data["data"]["deposit_orders_group"]
+            == context.bot_data["data"]["ref_numbers_group"]
         ):
             return
         ref_number_info = update.message.text.split("\n")
@@ -51,7 +51,7 @@ async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         if (
             not update.effective_chat.id
-            == context.bot_data["data"]["deposit_orders_group"]
+            == context.bot_data["data"]["ref_numbers_group"]
             or not update.message
         ):
             return
