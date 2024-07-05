@@ -1024,7 +1024,6 @@ class DB:
         user_id: int, username: str, name: str, cr: sqlite3.Cursor = None
     ):
         username = username if username else " "
-        name = name if name else " "
         cr.execute(
             "INSERT INTO users(id, username, name) VALUES(?, ?, ?)",
             (user_id, username, name),

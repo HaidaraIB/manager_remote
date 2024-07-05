@@ -30,7 +30,7 @@ from start import admin_command
 
 from DB import DB
 from custom_filters.Admin import Admin
-
+from admin.workers_settings.common import build_positions_keyboard, build_workers_keyboard
 from constants import *
 
 (
@@ -42,142 +42,6 @@ from constants import *
     CHOOSE_WORKER_TO_SHOW,
 ) = range(6)
 
-
-def build_workers_keyboard(
-    workers: list, show: bool = False
-) -> list[list[InlineKeyboardButton]]:
-    if len(workers) == 1:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=workers[0]["name"],
-                    callback_data=(
-                        "s" + str(workers[0]["id"]) if show else str(workers[0]["id"])
-                    ),
-                )
-            ]
-        ]
-    elif len(workers) % 2 == 0:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=workers[i]["name"],
-                    callback_data=(
-                        "s" + str(workers[i]["id"]) if show else str(workers[i]["id"])
-                    ),
-                ),
-                InlineKeyboardButton(
-                    text=workers[i + 1]["name"],
-                    callback_data=(
-                        "s" + str(workers[i + 1]["id"])
-                        if show
-                        else str(workers[i + 1]["id"])
-                    ),
-                ),
-            ]
-            for i in range(0, len(workers), 2)
-        ]
-    else:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=workers[i]["name"],
-                    callback_data=(
-                        "s" + str(workers[i]["id"]) if show else str(workers[i]["id"])
-                    ),
-                ),
-                InlineKeyboardButton(
-                    text=workers[i + 1]["name"],
-                    callback_data=(
-                        "s" + str(workers[i + 1]["id"])
-                        if show
-                        else str(workers[i + 1]["id"])
-                    ),
-                ),
-            ]
-            for i in range(0, len(workers) - 1, 2)
-        ]
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text=workers[-1]["name"],
-                    callback_data=(
-                        "s" + str(workers[-1]["id"]) if show else str(workers[-1]["id"])
-                    ),
-                )
-            ],
-        )
-    keyboard.append(
-        [
-            InlineKeyboardButton(
-                text="الرجوع🔙",
-                callback_data=(
-                    "back to pos to show" if show else "back to pos to remove from"
-                ),
-            )
-        ]
-    )
-    keyboard.append(back_to_admin_home_page_button[0])
-    return keyboard
-
-
-def build_positions_keyboard(op: str = "add"):
-    add_worker_keyboard = [
-        [
-            InlineKeyboardButton(
-                text="تنفيذ إيداع",
-                callback_data=f"{op} deposit after check worker",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="تحقق سحب", callback_data=f"{op} withdraw checker"
-            ),
-            InlineKeyboardButton(
-                text="تحقق شراء USDT", callback_data=f"{op} buy_usdt checker"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"دفع {USDT}", callback_data=f"{op} {USDT} worker"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"دفع {BARAKAH}", callback_data=f"{op} {BARAKAH} worker"
-            ),
-            InlineKeyboardButton(
-                text=f"دفع {BEMO}", callback_data=f"{op} {BEMO} worker"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"دفع {SYRCASH}",
-                callback_data=f"{op} {SYRCASH} worker",
-            ),
-            InlineKeyboardButton(
-                text=f"دفع {MTNCASH}", callback_data=f"{op} {MTNCASH} worker"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"دفع {PAYEER}", callback_data=f"{op} {PAYEER} worker"
-            ),
-            InlineKeyboardButton(
-                text=f"دفع {PERFECT_MONEY}",
-                callback_data=f"{op} {PERFECT_MONEY} worker",
-            ),
-        ],
-        (
-            [InlineKeyboardButton(text="الرجوع🔙", callback_data="back to worker id")]
-            if op == "add"
-            else []
-        ),
-        back_to_admin_home_page_button[0] if op != "add" else [],
-    ]
-    return InlineKeyboardMarkup(add_worker_keyboard)
-
-
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         worker_settings_keyboard = [
@@ -188,6 +52,11 @@ async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [
                 InlineKeyboardButton(
                     text="عرض الموظفين🔍", callback_data="show worker"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="رصيد 💰", callback_data="worker_balance"
                 ),
             ],
             back_to_admin_home_page_button[0],
@@ -310,7 +179,7 @@ async def position_to_remove_from(update: Update, context: ContextTypes.DEFAULT_
             await update.callback_query.answer(ans_text)
             return
 
-        keyboard = build_workers_keyboard(workers)
+        keyboard = build_workers_keyboard(workers, 'r')
 
         await update.callback_query.edit_message_text(
             text="اختر الموظف الذي تريد إزالته.",
@@ -346,7 +215,7 @@ async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_
 
             return POSITION_TO_REMOVE_FROM
 
-        keyboard = build_workers_keyboard(workers)
+        keyboard = build_workers_keyboard(workers, 'r')
 
         await update.callback_query.edit_message_text(
             text="اختر الموظف الذي تريد إزالته.",
@@ -384,7 +253,7 @@ async def position_to_show(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer(ans_text)
             return
 
-        keyboard = build_workers_keyboard(workers, show=True)
+        keyboard = build_workers_keyboard(workers, 's')
 
         await update.callback_query.edit_message_text(
             text="اختر الموظف الذي تريد عرضه.",
@@ -396,14 +265,17 @@ async def position_to_show(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         w_id = int(update.callback_query.data[1:])
+        t_worker = await context.bot.get_chat(chat_id=w_id)
         pos = context.user_data["pos_to_show"]
+        shared_text = (
+            f"آيدي الموظف: <code>{t_worker.id}</code>\n"
+            f"اسمه: <b>{t_worker.full_name}</b>\n"
+            f"اسم المستخدم: {'@' + t_worker.username if t_worker.username else 'لا يوجد'}\n"
+        )
         if pos == "deposit after check":
             worker = DB.get_worker(worker_id=w_id)
             workers = DB.get_workers()
             text = (
-                f"آيدي الموظف: <code>{worker['id']}</code>\n"
-                f"اسمه: <b>{worker['name']}</b>\n"
-                f"اسم المستخدم: {'@' + worker['username'] if worker['username'] else 'لا يوجد'}\n"
                 f"الإيداعات حتى الآن: {worker['approved_deposits']}\n"
                 f"عددها: {worker['approved_deposits_num']}\n"
                 f"الإيداعات هذا الاسبوع: {worker['approved_deposits_week']}\n"
@@ -413,28 +285,20 @@ async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TY
         elif pos in ["deposit", "withdraw", "buy_usdt"]:
             worker = DB.get_worker(worker_id=w_id, check_what=pos)
             workers = DB.get_workers(check_what=pos)
-            text = (
-                f"آيدي الموظف: <code>{worker['id']}</code>\n"
-                f"اسمه: <b>{worker['name']}</b>\n"
-                f"اسم المستخدم: {'@' + worker['username'] if worker['username'] else 'لا يوجد'}\n"
-                f"نوع التحقق: {worker['check_what']}\n"
-            )
+            text = f"نوع التحقق: {worker['check_what']}\n"
 
         else:
             worker = DB.get_worker(worker_id=w_id, method=pos)
             workers = DB.get_workers(method=pos)
             text = (
-                f"آيدي الموظف: <code>{worker['id']}</code>\n"
-                f"اسمه: <b>{worker['name']}</b>\n"
-                f"اسم المستخدم: {'@' + worker['username'] if worker['username'] else 'لا يوجد'}\n"
                 f"السحوبات حتى الآن: {worker['approved_withdraws']}\n"
                 f"عددها: {worker['approved_withdraws_num']}\n"
                 f"السحوبات هذا الاسبوع: {worker['approved_withdraws_day']}\n"
                 f"رصيد المكافآت: {worker['daily_rewards_balance']}\n"
             )
 
-        text += "يمكنك عرض موظف آخر."
-        keyboard = build_workers_keyboard(workers, show=True)
+        text = shared_text + text + "يمكنك عرض موظف آخر."
+        keyboard = build_workers_keyboard(workers, 's')
         await update.callback_query.edit_message_text(
             text=text,
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -482,14 +346,14 @@ remove_worker_handler = ConversationHandler(
             )
         ],
         CHOOSE_WORKER_TO_REMOVE: [
-            CallbackQueryHandler(choose_worker_to_remove, "^\d+$")
+            CallbackQueryHandler(choose_worker_to_remove, "^r\d+$")
         ],
     },
     fallbacks=[
         back_to_admin_home_page_handler,
         admin_command,
         CallbackQueryHandler(
-            back_to_pos_to_remove_from, "^back to pos to remove from$"
+            back_to_pos_to_remove_from, "^back to r$"
         ),
     ],
 )
@@ -508,6 +372,6 @@ show_worker_handler = ConversationHandler(
     fallbacks=[
         back_to_admin_home_page_handler,
         admin_command,
-        CallbackQueryHandler(back_to_pos_to_show, "^back to pos to show$"),
+        CallbackQueryHandler(back_to_pos_to_show, "^back to s$"),
     ],
 )

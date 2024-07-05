@@ -36,7 +36,7 @@ async def inits(app: Application):
         app.bot_data["data"] = {
             "deposit_gift_percentage": 1,
             "workers_reward_percentage": 1,
-            "workers_reward_percentage_withdraw": 2,
+            "workers_reward_withdraw_percentage": 1,
             "user_calls": {
                 "withdraw": True,
                 "deposit": True,
