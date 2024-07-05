@@ -80,10 +80,10 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
 
         caption = (
             f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{d_order['amount']}$</b> إلى رصيدك\n"
-            f"{f"بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>" if gifts_amount else ''}\n\n"
+            f"{f'بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>' if gifts_amount else ''}\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
             f"Congrats🎉, the deposit you made <b>{d_order['amount']}$</b> was added to your balance\n"
-            f"{f"plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits." if gifts_amount else ''}\n\n"
+            f"{f'plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits.' if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
         await context.bot.send_photo(
@@ -92,8 +92,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             caption=caption,
         )
 
-        caption = update.message.reply_to_message.text_html.split("\n")
-        caption.insert(0, "تمت الموافقة✅")
+        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
 
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
@@ -115,7 +114,9 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت الموافقة✅",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
 
         await DB.reply_with_deposit_proof(
@@ -182,10 +183,10 @@ async def return_deposit_order_reason(
             ),
         )
 
-        text = update.message.reply_to_message.text_html.split("\n")
-        text.insert(0, "تمت إعادة الطلب📥")
         text = (
-            "\n".join(text) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+            "تمت إعادة الطلب📥\n"
+            + update.message.reply_to_message.text_html
+            + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
 
         message = await context.bot.send_message(
@@ -206,7 +207,9 @@ async def return_deposit_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت إعادة الطلب📥",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
 
         await DB.return_order(

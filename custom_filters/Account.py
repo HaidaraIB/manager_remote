@@ -9,10 +9,8 @@ class Account(UpdateFilter):
     def filter(self, update: Update):
         try:
             return (
-                update.effective_message.reply_to_message.text
-                and update.effective_message.reply_to_message.text.split("\n")[
-                    3
-                ].isnumeric()
+                update.message.reply_to_message.text
+                and update.message.reply_to_message.text.split("\n")[3].isnumeric()
             )
         except:
             return False

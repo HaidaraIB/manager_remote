@@ -229,9 +229,12 @@ async def decline_withdraw_order_reason(
         except:
             pass
 
-        text = update.message.reply_to_message.text_html.split("\n")
-        text.insert(0, "تم رفض الطلب❌")
-        text = "\n".join(text) + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
+        text = (
+            "تم رفض الطلب❌\n"
+            + update.message.reply_to_message.text_html
+            + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
+        )
+        
         message = await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,

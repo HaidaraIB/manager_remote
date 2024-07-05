@@ -92,8 +92,8 @@ async def reply_with_payment_proof_withdraw(
         except:
             pass
 
-        text = update.message.reply_to_message.text_html.split("\n")
-        text.insert(0, "تمت الموافقة✅")
+        text = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
+
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.photo[-1],
@@ -114,13 +114,15 @@ async def reply_with_payment_proof_withdraw(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت الموافقة✅",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
         await DB.reply_with_payment_proof(
-            order_type='withdraw',
+            order_type="withdraw",
             amount=amount,
             archive_message_ids=str(message.id),
-            method=w_order['method'],
+            method=w_order["method"],
             serial=serial,
             worker_id=update.effective_user.id,
         )
@@ -187,9 +189,12 @@ async def return_withdraw_order_reason(
         except:
             pass
 
-        text = update.message.reply_to_message.text_html.split("\n")
-        text.insert(0, "تمت إعادة الطلب📥")
-        text = "\n".join(text) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+        text = (
+            "تمت إعادة الطلب📥\n"
+            + update.message.reply_to_message.text_html
+            + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+        )
+
         message = await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
@@ -209,10 +214,12 @@ async def return_withdraw_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت إعادة الطلب📥",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
         await DB.return_order(
-            order_type='withdraw',
+            order_type="withdraw",
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,

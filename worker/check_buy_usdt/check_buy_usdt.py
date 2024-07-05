@@ -114,7 +114,9 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.send_message(
             chat_id=update.effective_user.id,
             text="تم إرسال الطلب✅",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
 
         await DB.send_order(
@@ -177,9 +179,12 @@ async def decline_buy_usdt_order_reason(
         except:
             pass
 
-        caption = update.message.reply_to_message.caption_html.split("\n")
-        caption.insert(0, "تم رفض الطلب❌")
-        caption = "\n".join(caption) + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
+        caption = (
+            "تم رفض الطلب❌\n"
+            + update.message.reply_to_message.caption_html
+            + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
+        )
+        
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.reply_to_message.photo[-1],
@@ -200,7 +205,9 @@ async def decline_buy_usdt_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تم رفض الطلب❌",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
         context.user_data["requested"] = False
         await DB.decline_order(

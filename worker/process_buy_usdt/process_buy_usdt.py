@@ -98,14 +98,13 @@ async def reply_with_payment_proof_buy_usdt(
             InputMediaPhoto(media=update.message.photo[-1]),
         ]
 
-        caption = update.message.reply_to_message.caption_html.split("\n")
-        caption.insert(0, "تمت الموافقة✅")
+        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
+        
         messages = await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             media=media,
             caption="\n".join(caption),
         )
-
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
@@ -121,7 +120,9 @@ async def reply_with_payment_proof_buy_usdt(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت الموافقة✅",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
 
         context.user_data["requested"] = False
@@ -129,7 +130,7 @@ async def reply_with_payment_proof_buy_usdt(
             order_type="buyusdt",
             archive_message_ids=f"{messages[0].id},{messages[1].id}",
             amount=amount,
-            method=b_order['method'],
+            method=b_order["method"],
             serial=serial,
             worker_id=update.effective_user.id,
         )
@@ -198,11 +199,12 @@ async def return_buy_usdt_order_reason(
         except:
             pass
 
-        caption = update.message.reply_to_message.caption_html.split("\n")
-        caption.insert(0, "تمت إعادة الطلب📥")
         caption = (
-            "\n".join(caption) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+            "تمت إعادة الطلب📥\n"
+            + update.message.reply_to_message.caption_html
+            + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
+
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.reply_to_message.photo[-1],
@@ -223,11 +225,13 @@ async def return_buy_usdt_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تمت إعادة الطلب📥",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
         )
         context.user_data["requested"] = False
         await DB.return_order(
-            order_type='buyusdt',
+            order_type="buyusdt",
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
