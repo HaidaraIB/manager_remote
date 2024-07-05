@@ -166,31 +166,15 @@ async def get_withdraw_code_bank_account_name(
 
         context.user_data["payment_method_number"] = update.message.text
         context.user_data["bank_account_name"] = ""
-        try:
-            await update.message.reply_video(
-                video=Video(
-                    file_id=os.getenv("VIDEO_ID"),
-                    file_unique_id="AgADtBQAAukYCVA",
-                    width=576,
-                    height=1280,
-                    duration=35,
-                ),
-                filename="how_to_get_withdraw_code",
-                caption=(
-                    "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
-                ),
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
-        except error.BadRequest:
-            await update.message.reply_video(
-                video=pathlib.Path("assets/how_to_get_withdraw_code.mp4"),
-                filename="how_to_get_withdraw_code",
-                caption=(
-                    "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
-                ),
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
 
+        await update.message.reply_video(
+            video=os.getenv("VIDEO_ID"),
+            filename="how_to_get_withdraw_code",
+            caption=(
+                "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
+            ),
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
         return WITHDRAW_CODE
 
 
@@ -205,30 +189,14 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back_to_bank_account_name"),
             back_to_user_home_page_button[0],
         ]
-        try:
-            await update.message.reply_video(
-                video=Video(
-                    file_id=os.getenv("VIDEO_ID"),
-                    file_unique_id="AgADtBQAAukYCVA",
-                    width=576,
-                    height=1280,
-                    duration=35,
-                ),
-                filename="how_to_get_withdraw_code",
-                caption=(
-                    "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
-                ),
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
-        except error.BadRequest:
-            await update.message.reply_video(
-                video=pathlib.Path("assets/how_to_get_withdraw_code.mp4"),
-                filename="how_to_get_withdraw_code",
-                caption=(
-                    "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
-                ),
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
+        await update.message.reply_video(
+            video=os.getenv("VIDEO_ID"),
+            filename="how_to_get_withdraw_code",
+            caption=(
+                "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
+            ),
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
         return WITHDRAW_CODE
 
 
@@ -258,11 +226,13 @@ async def send_withdraw_order_to_check(
 
         method = context.user_data["payment_method"]
 
-        method_info = f"<b>Payment info</b>: <code>{context.user_data['payment_method_number']}</code>"
-        method_info += (
-            f"\nاسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"
-            if method in [BARAKAH, BARAKAH]
-            else ""
+        method_info = (
+            f"<b>Payment info</b>: <code>{context.user_data['payment_method_number']}</code>"
+            + (
+                f"\nاسم صاحب الحساب: <b>{context.user_data['bank_account_name']}</b>"
+                if method in [BARAKAH, BARAKAH]
+                else ""
+            )
         )
 
         serial = await DB.add_withdraw_order(
@@ -332,11 +302,24 @@ def stringify_order(
 
 
 withdraw_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(choose_withdraw_account, "^withdraw$")],
+    entry_points=[
+        CallbackQueryHandler(
+            choose_withdraw_account,
+            "^withdraw$",
+        ),
+    ],
     states={
-        WITHDRAW_ACCOUNT: [CallbackQueryHandler(choose_payment_method, "^\d+$")],
+        WITHDRAW_ACCOUNT: [
+            CallbackQueryHandler(
+                choose_payment_method,
+                "^\d+$",
+            ),
+        ],
         PAYMENT_METHOD: [
-            CallbackQueryHandler(choose_payment_info, payment_method_pattern)
+            CallbackQueryHandler(
+                choose_payment_info,
+                payment_method_pattern,
+            )
         ],
         PAYMENT_INFO: [
             MessageHandler(
@@ -359,13 +342,16 @@ withdraw_handler = ConversationHandler(
     },
     fallbacks=[
         CallbackQueryHandler(
-            back_to_choose_withdraw_account, "^back_to_choose_withdraw_account$"
+            back_to_choose_withdraw_account,
+            "^back_to_choose_withdraw_account$",
         ),
         CallbackQueryHandler(
-            back_to_choose_payment_method, "^back_to_choose_payment_method$"
+            back_to_choose_payment_method,
+            "^back_to_choose_payment_method$",
         ),
         CallbackQueryHandler(
-            back_to_choose_payment_info, "^back_to_choose_payment_info$"
+            back_to_choose_payment_info,
+            "^back_to_choose_payment_info$",
         ),
         CallbackQueryHandler(
             back_to_bank_account_name,

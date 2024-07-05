@@ -38,27 +38,25 @@ def stringify_manager_reward_report(worker, updated_worker, amount, reward_type)
         f"id: <code>{worker['id']}</code>\n"
         f"name: <b>{worker['name']}</b>\n"
         f"username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد</b>'}\n\n"
-        f"الوظيفة: {f'سحب {updated_worker['method']}' if role == 'withdraws' else "تنفيذ إيداع"}\n"
+        f"الوظيفة: {f'سحب {updated_worker['method']}' if role == 'withdraws' else 'تنفيذ إيداع'}\n"
+    )
+    return manager_text + stringify_reward_report(
+        worker=worker,
+        updated_worker=updated_worker,
+        amount=amount,
+        reward_type=reward_type,
+    )
+
+
+def stringify_reward_report(worker, updated_worker, amount, reward_type):
+    role = worker_type_dict[reward_type]["role"]
+    worker_text = (
         f"مجموع المكافآت السابق: <b>{worker[f'{reward_type}_rewards_balance']}</b>\n"
         f"قيمة المكافأة: <b>{amount}</b>\n"
         f"مجموع المكافآت الحالي: <b>{updated_worker[f'{reward_type}_rewards_balance']}</b>\n"
         f"عدد الطلبات حتى الآن: <b>{updated_worker[f'approved_{role}_num']}</b>\n"
         f"مجموع المبالغ حتى الآن: <b>{updated_worker[f'approved_{role}']}</b>\n"
         f"مجموع المبالغ هذا {worker_type_dict[reward_type]['day_week']['ar']}: <b>{worker[f'approved_{role}_{worker_type_dict[reward_type]['day_week']['en']}']}</b>"
-    )
-    return manager_text
-
-
-def stringify_worker_reward_report(worker, updated_worker, amount, reward_type):
-    role = worker_type_dict[reward_type]["role"]
-    worker_text = (
-        "تم تحديث رصيد مكافآتك عن مجموع قيم الطلبات التي تمت الموافقة عليها\n"
-        f"مجموع مكافآتك السابق: <b>{worker[f'{reward_type}_rewards_balance']}</b>\n"
-        f"قيمة المكافأة: <b>{amount}</b>\n"
-        f"مجموع مكافآتك الحالي: <b>{updated_worker[f'{reward_type}_rewards_balance']}</b>\n"
-        f"عدد الطلبات حتى الآن: <b>{updated_worker[f'approved_{role}_num']}</b>\n"
-        f"مجموع المبالغ حتى الآن: <b>{updated_worker[f'approved_{role}']}</b>\n"
-        f"مجموع المبالغ هذا {worker_type_dict[reward_type]['day_week']['ar']}: <b>{worker[f'approved_{role}_{worker_type_dict[reward_type]['day_week']['en']}']}</b>\n"
     )
     return worker_text
 
@@ -77,18 +75,24 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
         )
         if worker_type == "daily":
             await DB.daily_reward_worker(
-                worker_id=worker["id"], amount=amount, method=worker["method"]
+                worker_id=worker["id"],
+                amount=amount,
+                method=worker["method"],
             )
         else:
-            await DB.weekly_reward_worker(worker_id=worker["id"], amount=amount)
+            await DB.weekly_reward_worker(
+                worker_id=worker["id"],
+                amount=amount,
+            )
 
         updated_worker = DB.get_worker(
             worker_id=worker["id"],
             method=worker["method"] if worker_type == "daily" else None,
         )
 
-        worker_text = stringify_worker_reward_report(
-            worker, updated_worker, amount, worker_type
+        worker_text = (
+            "تم تحديث رصيد مكافآتك عن مجموع قيم الطلبات التي تمت الموافقة عليها\n"
+            + stringify_reward_report(worker, updated_worker, amount, worker_type)
         )
         try:
             await context.bot.send_message(

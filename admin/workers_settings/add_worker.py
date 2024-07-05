@@ -168,6 +168,6 @@ add_worker_cp_handler = ConversationHandler(
     fallbacks=[
         back_to_admin_home_page_handler,
         admin_command,
-        CallbackQueryHandler(back_to_worker_id, "^back to worker id$"),
+        CallbackQueryHandler(back_to_worker_id, "^back_to_worker_id$"),
     ],
 )

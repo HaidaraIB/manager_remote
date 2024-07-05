@@ -300,23 +300,6 @@ def build_complaint_keyboard(data: list, send_to_worker: bool):
     return InlineKeyboardMarkup(complaint_keyboard)
 
 
-async def add_worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.chat_member.new_chat_member.status == ChatMemberStatus.MEMBER:
-        await DB.add_worker(
-            worker_id=update.chat_member.from_user.id,
-            name=update.chat_member.from_user.full_name,
-            username=(
-                update.chat_member.from_user.username
-                if update.chat_member.from_user.username
-                else ""
-            ),
-        )
-        print("Worker added successfully")
-    elif update.chat_member.new_chat_member.status == ChatMemberStatus.LEFT:
-        await DB.remove_worker(worker_id=update.chat_member.from_user.id)
-        print("Worker removed successfully")
-
-
 async def invalid_callback_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == ChatType.PRIVATE:
         await update.callback_query.answer("انتهت صلاحية هذا الزر")

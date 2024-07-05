@@ -17,36 +17,11 @@ from constants import *
 
 from custom_filters.Admin import Admin
 
-POSITION_TO_REMOVE_FROM = POSITION_TO_SHOW = POSITION_FOR_WORKER_BALANCE = 0
+(
+    CHOOSE_POSITION,
+    CHOOSE_WORKER,
+) = range(2)
 
-
-def create_worker_info_text(t_worker:User, worker:dict, pos:str):
-    text = (
-        f"آيدي الموظف: <code>{t_worker.id}</code>\n"
-        f"اسمه: <b>{t_worker.full_name}</b>\n"
-        f"اسم المستخدم: {'@' + t_worker.username if t_worker.username else 'لا يوجد'}\n"
-    )
-    if pos == "deposit after check":
-        text += (
-            f"الإيداعات حتى الآن: {worker['approved_deposits']}\n"
-            f"عددها: {worker['approved_deposits_num']}\n"
-            f"الإيداعات هذا الاسبوع: {worker['approved_deposits_week']}\n"
-            f"رصيد المكافآت: {worker['weekly_rewards_balance']}\n"
-        )
-
-    elif pos in ["deposit", "withdraw", "buy_usdt"]:
-        text += f"نوع التحقق: {worker['check_what']}\n"
-
-    else:
-        text += (
-            f"الوظيفة: {worker['method']}\n"
-            f"السحوبات حتى الآن: {worker['approved_withdraws']}\n"
-            f"عددها: {worker['approved_withdraws_num']}\n"
-            f"الرصيد المتبقي: {worker['pre_balance']}\n"
-            f"السحوبات هذا الاسبوع: {worker['approved_withdraws_day']}\n"
-            f"رصيد المكافآت: {worker['daily_rewards_balance']}\n"
-        )
-    return text
 
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
@@ -76,20 +51,16 @@ back_to_worker_settings = worker_settings
 
 async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        ret_dict = {
-            "show": POSITION_TO_SHOW,
-            "remove": POSITION_TO_REMOVE_FROM,
-            "balance": POSITION_FOR_WORKER_BALANCE,
-        }
         if update.callback_query.data.startswith("back"):
-            op = update.callback_query.data.split(" ")[-1]
+            op = update.callback_query.data.split("_")[-1]
         else:
             op = update.callback_query.data.split(" ")[0]
+        context.user_data["worker_settings_option"] = op
         await update.callback_query.edit_message_text(
             text="اختر الوظيفة:",
             reply_markup=build_positions_keyboard(op=op),
         )
-        return ret_dict[op]
+        return CHOOSE_POSITION
 
 
 back_to_choose_position = choose_position
@@ -99,7 +70,11 @@ back_to_worker_settings_handler = CallbackQueryHandler(
     "^back_to_worker_settings$",
 )
 
-worker_settings_handler = CallbackQueryHandler(worker_settings, "^worker settings$")
+worker_settings_handler = CallbackQueryHandler(
+    worker_settings,
+    "^worker settings$",
+)
+
 
 def build_positions_keyboard(op: str):
     if op == "balance":
@@ -124,7 +99,7 @@ def build_positions_keyboard(op: str):
         ],
         *build_payment_positions_keyboard(op),
         (
-            build_back_button("back to worker id")
+            build_back_button("back_to_worker_id")
             if op == "add"
             else build_back_button("back_to_worker_settings")
         ),
@@ -168,8 +143,6 @@ def build_payment_positions_keyboard(op: str):
         ],
     ]
     return keyaboard
-
-
 
 
 def build_workers_keyboard(
@@ -225,9 +198,38 @@ def build_workers_keyboard(
         [
             InlineKeyboardButton(
                 text="الرجوع🔙",
-                callback_data=(f"back to {t}"),
+                callback_data=(f"back_to_{t}"),
             )
         ]
     )
     keyboard.append(back_to_admin_home_page_button[0])
     return keyboard
+
+
+def create_worker_info_text(t_worker: User, worker: dict, pos: str):
+    text = (
+        f"آيدي الموظف: <code>{t_worker.id}</code>\n"
+        f"اسمه: <b>{t_worker.full_name}</b>\n"
+        f"اسم المستخدم: {'@' + t_worker.username if t_worker.username else 'لا يوجد'}\n"
+    )
+    if pos == "deposit after check":
+        text += (
+            f"الإيداعات حتى الآن: {worker['approved_deposits']}\n"
+            f"عددها: {worker['approved_deposits_num']}\n"
+            f"الإيداعات هذا الاسبوع: {worker['approved_deposits_week']}\n"
+            f"رصيد المكافآت: {worker['weekly_rewards_balance']}\n"
+        )
+
+    elif pos in ["deposit", "withdraw", "buy_usdt"]:
+        text += f"نوع التحقق: {worker['check_what']}\n"
+
+    else:
+        text += (
+            f"الوظيفة: {worker['method']}\n"
+            f"السحوبات حتى الآن: {worker['approved_withdraws']}\n"
+            f"عددها: {worker['approved_withdraws_num']}\n"
+            f"الدفعات المسبقة: {worker['pre_balance']}\n"
+            f"السحوبات هذا الاسبوع: {worker['approved_withdraws_day']}\n"
+            f"رصيد المكافآت: {worker['daily_rewards_balance']}\n"
+        )
+    return text

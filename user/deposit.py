@@ -72,7 +72,7 @@ async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.callback_query.data.startswith("back"):
             context.user_data["account_deposit"] = int(update.callback_query.data)
         deposit_methods = build_methods_keyboard()
-        deposit_methods.append(build_back_button("back to account number deposit"))
+        deposit_methods.append(build_back_button("back_to_account_number_deposit"))
         deposit_methods.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳",
@@ -93,7 +93,7 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         context.user_data["deposit_method"] = data
         back_buttons = [
-            build_back_button("back to deposit method"),
+            build_back_button("back_to_deposit_method"),
             back_to_user_home_page_button[0],
         ]
         text = (
@@ -173,9 +173,9 @@ deposit_handler = ConversationHandler(
     fallbacks=[
         start_command,
         back_to_user_home_page_handler,
-        CallbackQueryHandler(back_to_deposit_method, "^back to deposit method$"),
+        CallbackQueryHandler(back_to_deposit_method, "^back_to_deposit_method$"),
         CallbackQueryHandler(
-            back_to_account_deposit, "^back to account number deposit$"
+            back_to_account_deposit, "^back_to_account_number_deposit$"
         ),
     ],
     name="deposit_handler",

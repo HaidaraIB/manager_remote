@@ -73,7 +73,7 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 InlineKeyboardButton(text="موافق👍", callback_data="yes buy usdt"),
                 InlineKeyboardButton(text="غير موافق👎", callback_data="no buy usdt"),
             ],
-            build_back_button("back to usdt to buy amount"),
+            build_back_button("back_to_usdt_to_buy_amount"),
             back_to_user_home_page_button[0],
         ]
         text = (
@@ -103,7 +103,7 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return ConversationHandler.END
         else:
             buy_usdt_methods = build_methods_keyboard(buy_usdt=True)
-            buy_usdt_methods.append(build_back_button("back to yes no buy usdt"))
+            buy_usdt_methods.append(build_back_button("back_to_yes_no_buy_usdt"))
             buy_usdt_methods.append(back_to_user_home_page_button[0])
             await update.callback_query.edit_message_text(
                 text="اختر وسيلة الدفع لاستلام أموالك💳",
@@ -119,7 +119,7 @@ async def back_to_yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_
                 InlineKeyboardButton(text="موافق👍", callback_data="yes buy usdt"),
                 InlineKeyboardButton(text="غير موافق👎", callback_data="no buy usdt"),
             ],
-            build_back_button("back to buy usdt amount"),
+            build_back_button("back_to_buy_usdt_amount"),
             back_to_user_home_page_button[0],
         ]
         text = (
@@ -148,7 +148,7 @@ async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["payment_method_buy_usdt"] = data
 
         back_keyboard = [
-            build_back_button("back to buy usdt method"),
+            build_back_button("back_to_buy_usdt_method"),
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -166,7 +166,7 @@ back_to_cash_code = back_to_bank_number_buy_usdt = buy_usdt_method
 async def bank_number_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
-            build_back_button("back to bank number buy usdt"),
+            build_back_button("back_to_bank_number_buy_usdt"),
             back_to_user_home_page_button[0],
         ]
         context.user_data["payment_method_number_buy_usdt"] = update.message.text
@@ -183,7 +183,7 @@ async def back_to_bank_account_name_buy_usdt(
 ):
     if update.effective_chat.type == Chat.PRIVATE:
         back_keyboard = [
-            build_back_button("back to bank number buy usdt"),
+            build_back_button("back_to_bank_number_buy_usdt"),
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -196,7 +196,7 @@ async def back_to_bank_account_name_buy_usdt(
 async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         buy_usdt_methods = build_methods_keyboard(buy_usdt=True)
-        buy_usdt_methods.append(build_back_button("back to yes no buy usdt"))
+        buy_usdt_methods.append(build_back_button("back_to_yes_no_buy_usdt"))
         buy_usdt_methods.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع لاستلام أموالك💳",
@@ -222,9 +222,9 @@ async def cash_code_bank_account_name_buy_usdt(
 
         back_keyboard = [
             build_back_button(
-                "back to cash code buy usdt"
+                "back_to_cash_code_buy_usdt"
                 if context.user_data["payment_method_buy_usdt"] not in [BEMO, BARAKAH]
-                else "back to bank account name buy usdt"
+                else "back_to_bank_account_name_buy_usdt"
             ),
             back_to_user_home_page_button[0],
         ]
@@ -338,17 +338,17 @@ buy_usdt_handler = ConversationHandler(
         ],
     },
     fallbacks=[
-        CallbackQueryHandler(back_to_buy_usdt_method, "^back to buy usdt method$"),
-        CallbackQueryHandler(back_to_yes_no_buy_usdt, "^back to yes no buy usdt$"),
+        CallbackQueryHandler(back_to_buy_usdt_method, "^back_to_buy_usdt_method$"),
+        CallbackQueryHandler(back_to_yes_no_buy_usdt, "^back_to_yes_no_buy_usdt$"),
         CallbackQueryHandler(
-            back_to_bank_number_buy_usdt, "^back to bank number buy usdt$"
+            back_to_bank_number_buy_usdt, "^back_to_bank_number_buy_usdt$"
         ),
         CallbackQueryHandler(
-            back_to_bank_account_name_buy_usdt, "^back to bank account name buy usdt$"
+            back_to_bank_account_name_buy_usdt, "^back_to_bank_account_name_buy_usdt$"
         ),
-        CallbackQueryHandler(back_to_cash_code, "^back to cash code buy usdt$"),
+        CallbackQueryHandler(back_to_cash_code, "^back_to_cash_code_buy_usdt$"),
         CallbackQueryHandler(
-            back_to_usdt_to_buy_amount, "^back to usdt to buy amount$"
+            back_to_usdt_to_buy_amount, "^back_to_usdt_to_buy_amount$"
         ),
         back_to_user_home_page_handler,
         start_command,

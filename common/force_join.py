@@ -7,9 +7,8 @@ from telegram import (
 from telegram.ext import (
     ContextTypes,
     CallbackQueryHandler,
-    ConversationHandler
+    ConversationHandler,
 )
-
 
 from telegram.constants import (
     ChatMemberStatus,
@@ -21,6 +20,7 @@ from common.common import build_user_keyboard
 
 import functools
 
+
 def check_if_user_member_decorator(func):
     @functools.wraps(func)
     async def wrapper(update, context, *args, **kwargs):
@@ -28,12 +28,14 @@ def check_if_user_member_decorator(func):
         if not is_user_member:
             return ConversationHandler.END
         return await func(update, context, *args, **kwargs)
+
     return wrapper
 
 
 async def check_if_user_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_member = await context.bot.get_chat_member(
-        chat_id=int(os.getenv("CHANNEL_ID")), user_id=update.effective_user.id
+        chat_id=int(os.getenv("CHANNEL_ID")),
+        user_id=update.effective_user.id,
     )
     if chat_member.status == ChatMemberStatus.LEFT:
         text = f"""لبدء استخدام البوت  يجب عليك الانضمام الى قناة البوت أولاً.
@@ -59,7 +61,8 @@ async def check_if_user_member(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def check_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_memeber = await context.bot.get_chat_member(
-        chat_id=int(os.getenv("CHANNEL_ID")), user_id=update.effective_user.id
+        chat_id=int(os.getenv("CHANNEL_ID")),
+        user_id=update.effective_user.id,
     )
     if chat_memeber.status == ChatMemberStatus.LEFT:
         await update.callback_query.answer(
@@ -67,11 +70,11 @@ async def check_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    text = "أهلاً بك..."
     await update.callback_query.edit_message_text(
-        text=text,
+        text="أهلاً بك...",
         reply_markup=build_user_keyboard(),
     )
+
 
 check_joined_handler = CallbackQueryHandler(
     callback=check_joined, pattern="^check joined$"

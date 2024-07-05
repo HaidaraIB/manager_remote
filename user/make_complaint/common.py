@@ -61,7 +61,7 @@ async def handle_complaint_about(
     keyboard = build_operations_keyboard(
         serials=[op["serial"] for op in operations if not op["complaint_took_care_of"]]
     )
-    keyboard.append(build_back_button(f"back to complaint about"))
+    keyboard.append(build_back_button(f"back_to_complaint_about"))
     keyboard.append(back_to_user_home_page_button[0])
 
     context.user_data["operations_keyboard"] = keyboard

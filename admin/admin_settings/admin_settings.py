@@ -63,7 +63,7 @@ async def add_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         back_button = [
             [
                 InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to admin settings"
+                    text="الرجوع🔙", callback_data="back_to_admin_settings"
                 )
             ]
         ]
@@ -93,7 +93,7 @@ async def remove_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         admin_ids_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to admin settings"
+                    text="الرجوع🔙", callback_data="back_to_admin_settings"
                 )
             ]
         )
@@ -123,7 +123,7 @@ async def choose_admin_id_to_remove(update: Update, context: ContextTypes.DEFAUL
         admin_ids_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="الرجوع🔙", callback_data="back to admin settings"
+                    text="الرجوع🔙", callback_data="back_to_admin_settings"
                 )
             ]
         )
@@ -186,7 +186,7 @@ add_admin_handler = ConversationHandler(
     },
     fallbacks=[
         CallbackQueryHandler(
-            callback=back_to_admin_settings, pattern="^back to admin settings$"
+            callback=back_to_admin_settings, pattern="^back_to_admin_settings$"
         ),
         start_command,
         back_to_admin_home_page_handler,
@@ -204,7 +204,7 @@ remove_admin_handler = ConversationHandler(
     },
     fallbacks=[
         CallbackQueryHandler(
-            callback=back_to_admin_settings, pattern="^back to admin settings$"
+            callback=back_to_admin_settings, pattern="^back_to_admin_settings$"
         ),
         start_command,
         back_to_admin_home_page_handler,

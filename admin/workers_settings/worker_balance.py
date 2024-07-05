@@ -27,7 +27,8 @@ from start import admin_command
 from DB import DB
 from custom_filters.Admin import Admin
 from admin.workers_settings.common import (
-    POSITION_FOR_WORKER_BALANCE,
+    CHOOSE_POSITION,
+    CHOOSE_WORKER,
     build_workers_keyboard,
     choose_position,
     create_worker_info_text,
@@ -37,14 +38,14 @@ from admin.workers_settings.common import (
 from constants import *
 
 (
-    WORKER_FOR_WORKER_BALANCE,
     CHOOSE_WORKER_BALANCE,
     GET_PRE_BALANCE_AMOUNT,
-) = range(1, 4)
+) = range(2, 4)
 
 
 async def position_for_worker_balance(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         if not update.callback_query.data.startswith("back"):
@@ -65,7 +66,7 @@ async def position_for_worker_balance(
                 )
             ),
         )
-        return WORKER_FOR_WORKER_BALANCE
+        return CHOOSE_WORKER
 
 
 async def worker_for_worker_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -141,13 +142,13 @@ worker_balance_handler = ConversationHandler(
         CallbackQueryHandler(choose_position, "^balance worker$"),
     ],
     states={
-        POSITION_FOR_WORKER_BALANCE: [
+        CHOOSE_POSITION: [
             CallbackQueryHandler(
                 position_for_worker_balance,
                 "^balance.+worker$",
             )
         ],
-        WORKER_FOR_WORKER_BALANCE: [
+        CHOOSE_WORKER: [
             CallbackQueryHandler(
                 worker_for_worker_balance,
                 "^balance \d+$",
@@ -173,7 +174,7 @@ worker_balance_handler = ConversationHandler(
         ),
         CallbackQueryHandler(
             back_to_choose_position,
-            "^back to balance$",
+            "^back_to_balance$",
         ),
         CallbackQueryHandler(
             back_to_choose_worker_balance,

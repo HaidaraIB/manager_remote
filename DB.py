@@ -387,7 +387,9 @@ class DB:
             """
             UPDATE payment_agents SET approved_withdraws = approved_withdraws + ?,
                                       approved_withdraws_day = approved_withdraws_day + ?,
-                                      approved_withdraws_num = approved_withdraws_num + 1
+                                      approved_withdraws_num = approved_withdraws_num + 1,
+                                      pre_balance = pre_balance - ?
+                                      -- pre_balance = CASE WHEN pre_balance > 0 THEN pre_balance - ? ELSE 0 END
 
             WHERE id = ? AND method = ?
             """,
@@ -988,12 +990,14 @@ class DB:
         worder_id: int, method: str, amount: float, cr: sqlite3.Cursor = None
     ):
         cr.execute(
-            """
+            f"""
             UPDATE payment_agents SET approved_withdraws = approved_withdraws + ?,
-                                      approved_withdraws_day = approved_withdraws_day + ?
+                                      approved_withdraws_day = approved_withdraws_day + ?,
+                                      pre_balance = pre_balance - ?
+                                      -- pre_balance = CASE WHEN pre_balance > 0 THEN pre_balance - ? ELSE 0 END
             WHERE id = ? AND method = ?
             """,
-            (amount, amount, worder_id, method),
+            (amount, amount, amount, worder_id, method),
         )
 
     @staticmethod

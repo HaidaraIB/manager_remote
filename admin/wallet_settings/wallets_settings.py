@@ -54,7 +54,7 @@ async def choose_method_to_update(update: Update, context: ContextTypes.DEFAULT_
             [
                 InlineKeyboardButton(
                     text="الرجوع🔙",
-                    callback_data="back to wallets settings",
+                    callback_data="back_to_wallets_settings",
                 )
             ],
             back_to_admin_home_page_button[0],
@@ -124,7 +124,7 @@ wallets_settings_handler = ConversationHandler(
     fallbacks=[
         CallbackQueryHandler(
             back_to_wallets_settings,
-            "^back to wallets settings$",
+            "^back_to_wallets_settings$",
         ),
         start_command,
         back_to_admin_home_page_handler,
