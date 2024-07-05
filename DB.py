@@ -173,7 +173,8 @@ class DB:
             user_id INTEGER,
             full_name TEXT,
             national_number INTEGER,
-            state TEXT DEFAULT 'pending'
+            state TEXT DEFAULT 'pending',
+            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS payment_methods (
