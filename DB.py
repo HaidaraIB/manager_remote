@@ -220,7 +220,9 @@ class DB:
 
     @staticmethod
     @lock_and_release
-    async def connect_account_to_user(user_id: int, acc_num: str, cr: sqlite3.Cursor = None):
+    async def connect_account_to_user(
+        user_id: int, acc_num: str, cr: sqlite3.Cursor = None
+    ):
         cr.execute(
             "UPDATE accounts SET user_id = ? WHERE acc_num = ?",
             (user_id, acc_num),
@@ -760,7 +762,12 @@ class DB:
 
     @staticmethod
     @connect_and_close
-    def get_one_order(order_type: str, serial: int = None, ref_num:str = None, cr: sqlite3.Cursor = None):
+    def get_one_order(
+        order_type: str,
+        serial: int = None,
+        ref_num: str = None,
+        cr: sqlite3.Cursor = None,
+    ):
         if serial:
             cr.execute(f"SELECT * FROM {order_type}_orders WHERE serial = ?", (serial,))
         elif ref_num:
@@ -816,6 +823,23 @@ class DB:
         else:
             cr.execute("SELECT * FROM deposit_agents WHERE id = ?", (worker_id,))
         return cr.fetchone()
+
+    @staticmethod
+    @lock_and_release
+    async def add_pre_balance(
+        amount: float,
+        worker_id: int,
+        method: str,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            "UPDATE payment_agents SET pre_balance = ? WHERE id = ? AND method = ?",
+            (
+                amount,
+                worker_id,
+                method,
+            ),
+        )
 
     @staticmethod
     @lock_and_release
