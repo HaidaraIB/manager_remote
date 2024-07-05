@@ -241,11 +241,11 @@ async def back_from_decline_create_account(
 
 
 invalid_account_format_handler = MessageHandler(
-    filters=filters.REPLY & Account() & ~filters.Regex(r".+\n\d+\n.+"),
+    filters=filters.REPLY & ~Account(),
     callback=invalid_account_format,
 )
 reply_to_create_account_order_handler = MessageHandler(
-    filters=filters.REPLY & Account() & filters.Regex(r".+\n\d+\n.+"),
+    filters=filters.REPLY & Account(),
     callback=reply_to_create_account_order,
 )
 
