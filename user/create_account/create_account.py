@@ -31,7 +31,7 @@ from start import start_command
 
 from DB import DB
 
-from custom_filters.Account import Account
+from custom_filters import Account, Declined
 
 (FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
 
@@ -296,7 +296,7 @@ decline_create_account_handler = CallbackQueryHandler(
     "^decline_create_account_\d+_\d+$",
 )
 decline_account_reason_handler = MessageHandler(
-    filters=filters.REPLY,
+    filters=filters.REPLY & Declined(),
     callback=decline_reason,
 )
 back_from_decline_create_account_handler = CallbackQueryHandler(
