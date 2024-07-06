@@ -13,6 +13,8 @@ from telegram.ext import (
     filters,
 )
 
+import asyncio
+
 from worker.check_deposit.check_deposit import check_deposit
 
 from common.common import (
@@ -20,9 +22,13 @@ from common.common import (
     build_methods_keyboard,
     payment_method_pattern,
     build_back_button,
+    notify_workers,
 )
 
-from common.decorators import check_if_user_created_account_from_bot_decorator, check_if_user_present_decorator
+from common.decorators import (
+    check_if_user_created_account_from_bot_decorator,
+    check_if_user_present_decorator,
+)
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
@@ -48,7 +54,7 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not context.bot_data["data"]["user_calls"]["deposit"]:
             await update.callback_query.answer("الإيداعات متوقفة حالياً❗️")
             return ConversationHandler.END
-        
+
         elif DB.check_user_pending_orders(
             order_type="deposit",
             user_id=update.effective_user.id,
@@ -168,6 +174,15 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
                 serial=serial,
                 ref_num=ref_num,
             ),
+        )
+
+        workers = DB.get_workers()
+        asyncio.create_task(
+            notify_workers(
+                context=context,
+                workers=workers,
+                text=f"انتباه يوجد طلب قيد التحقق رقم عملية <code>{ref_num}</code>",
+            )
         )
 
         await update.message.reply_text(

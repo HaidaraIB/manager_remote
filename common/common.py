@@ -79,12 +79,12 @@ def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
 async def notify_workers(
     context: ContextTypes.DEFAULT_TYPE,
     workers,
-    order_type: str,
+    text: str,
 ):
     for worker in workers:
         await context.bot.send_message(
             chat_id=worker["id"],
-            text=f"تم استلام {order_type} جديد 🚨",
+            text=text,
         )
         await asyncio.sleep(1)
 

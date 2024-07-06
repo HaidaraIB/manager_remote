@@ -21,6 +21,7 @@ from common.common import (
     build_methods_keyboard,
     payment_method_pattern,
     build_back_button,
+    notify_workers
 )
 
 from common.decorators import check_if_user_created_account_from_bot_decorator, check_if_user_present_decorator
@@ -34,9 +35,9 @@ from common.back_to_home_page import (
 from start import start_command
 
 from DB import DB
-import pathlib
 from constants import *
 import os
+import asyncio
 
 (
     WITHDRAW_ACCOUNT,
@@ -277,6 +278,24 @@ async def send_withdraw_order_to_check(
             order_type="withdraw",
             serial=serial,
             pending_check_message_id=message.id,
+        )
+
+        workers = DB.get_workers(check_what="withdraw")
+        asyncio.create_task(
+            notify_workers(
+                context=context,
+                workers=workers,
+                text="انتباه يوجد طلب تحقق سحب جديد 🚨"
+            )
+        )
+
+        workers = DB.get_workers(method=method)
+        asyncio.create_task(
+            notify_workers(
+                context=context,
+                workers=workers,
+                text="انتباه يوجد طلب سحب قيد التحقق 🚨"
+            )
         )
 
         await update.message.reply_text(
