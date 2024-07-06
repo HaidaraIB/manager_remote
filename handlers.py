@@ -179,12 +179,12 @@ def main():
     app.add_handler(close_complaint_handler)
 
     app.add_handler(reply_to_create_account_order_handler)
-    app.add_handler(invalid_account_format_handler)
     app.add_handler(add_existing_account_handler)
     app.add_handler(create_account_handler)
     app.add_handler(decline_create_account_handler)
     app.add_handler(decline_account_reason_handler)
     app.add_handler(back_from_decline_create_account_handler)
+    app.add_handler(invalid_account_format_handler)
 
     app.add_handler(withdraw_handler)
 
