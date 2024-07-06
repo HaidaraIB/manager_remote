@@ -92,12 +92,12 @@ async def reply_with_payment_proof_withdraw(
         except:
             pass
 
-        text = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
+        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
 
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.photo[-1],
-            caption="\n".join(text),
+            caption=caption,
         )
 
         await context.bot.edit_message_reply_markup(

@@ -211,8 +211,8 @@ async def reply_to_create_account_order(
 
 async def decline_create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
-        user_id = int(update.callback_query.data.split(" ")[-2])
-        serial = int(update.callback_query.data.split(" ")[-1])
+        user_id = int(update.callback_query.data.split("_")[-2])
+        serial = int(update.callback_query.data.split("_")[-1])
         await update.callback_query.answer(
             text=f"قم بالرد على هذه الرسالة بسبب الرفض",
             show_alert=True,
@@ -265,8 +265,8 @@ async def back_from_decline_create_account(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
-        user_id = int(update.callback_query.data.split(" ")[-2])
-        serial = int(update.callback_query.data.split(" ")[-1])
+        user_id = int(update.callback_query.data.split("_")[-2])
+        serial = int(update.callback_query.data.split("_")[-1])
         await update.callback_query.answer(
             text=f"قم بالرد على هذه الرسالة بمعلومات الحساب.",
             show_alert=True,

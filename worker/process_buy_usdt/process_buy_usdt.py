@@ -103,7 +103,7 @@ async def reply_with_payment_proof_buy_usdt(
         messages = await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             media=media,
-            caption="\n".join(caption),
+            caption=caption,
         )
 
         await context.bot.edit_message_reply_markup(

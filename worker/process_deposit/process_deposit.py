@@ -97,7 +97,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.photo[-1],
-            caption="\n".join(caption),
+            caption=caption,
         )
 
         await context.bot.edit_message_reply_markup(
