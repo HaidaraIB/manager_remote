@@ -125,7 +125,7 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
         notify_workers(
             context=context,
             workers=workers,
-            order_type=f"انتباه تم استلام إيداع جديد رقم العملية <code>{ref_info["number"]}</code> 🚨",
+            text=f"انتباه تم استلام إيداع جديد رقم العملية <code>{ref_info["number"]}</code> 🚨",
         )
     )
 
