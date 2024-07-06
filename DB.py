@@ -435,7 +435,7 @@ class DB:
 
             WHERE id = ? AND method = ?
             """,
-            (amount, amount, worker_id, method),
+            (amount, amount, amount, worker_id, method),
         )
 
     @staticmethod
