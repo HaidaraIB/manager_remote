@@ -78,10 +78,11 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
-        await DB.set_deposit_not_arrived(
+        await DB.decline_order(
+            order_type='deposit',
+            archive_message_ids=message.id,
             reason=reason,
             serial=serial,
-            archive_message_ids=message.id,
         )
 
 

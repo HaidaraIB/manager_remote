@@ -118,7 +118,11 @@ class DB:
             archive_message_ids TEXT DEFAULT '',
             complaint_took_care_of INTEGER DEFAULT 0,
             working_on_it INTEGER DEFAULT 0,
-            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            send_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            return_date TIMESTAMP,
+            approve_date TIMESTAMP,
+            decline_date TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS buyusdt_orders (
@@ -141,7 +145,11 @@ class DB:
             archive_message_ids TEXT DEFAULT '',
             complaint_took_care_of INTEGER DEFAULT 0,
             working_on_it INTEGER DEFAULT 0,
-            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            return_date TIMESTAMP,
+            send_date TIMESTAMP,
+            approve_date TIMESTAMP,
+            decline_date TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS withdraw_orders (
@@ -166,7 +174,11 @@ class DB:
             archive_message_ids TEXT DEFAULT '',
             complaint_took_care_of INTEGER DEFAULT 0,
             working_on_it INTEGER DEFAULT 0,
-            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            return_date TIMESTAMP,
+            send_date TIMESTAMP,
+            approve_date TIMESTAMP,
+            decline_date TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS create_account_orders (
@@ -362,7 +374,8 @@ class DB:
                                            pending_process_message_id = ?,
                                            working_on_it = 0,
                                            group_id = ?,
-                                           ex_rate = ?
+                                           ex_rate = ?,
+                                           send_date = ?
                                            {',amount = {}'.format(ref_info['amount']) if ref_info else''}
             WHERE serial = ?
             """,
@@ -370,6 +383,7 @@ class DB:
                 pending_process_message_id,
                 group_id,
                 ex_rate,
+                datetime.datetime.now(),
                 serial,
             ),
         )
@@ -389,13 +403,15 @@ class DB:
             UPDATE {order_type}_orders SET state = 'declined',
                                            working_on_it = 0,
                                            reason = ?,
-                                           archive_message_ids = ?
+                                           archive_message_ids = ?,
+                                           decline_date = ?
             WHERE serial = ?
 
             """,
             (
                 reason,
                 archive_message_ids,
+                datetime.datetime.now(),
                 serial,
             ),
         )
@@ -416,12 +432,14 @@ class DB:
 
             UPDATE {order_type}_orders SET state = 'approved',
                                            working_on_it = 0,
-                                           archive_message_ids = ?
+                                           archive_message_ids = ?,
+                                           approve_date = ?
             WHERE serial = ?
 
             """,
             (
                 archive_message_ids,
+                datetime.datetime.now(),
                 serial,
             ),
         )
@@ -467,10 +485,12 @@ class DB:
 
     @staticmethod
     @lock_and_release
-    async def add_return_date(order_type: str, serial: int, cr: sqlite3.Cursor = None):
+    async def add_date(
+        order_type: str, serial: int, date_type: str, cr: sqlite3.Cursor = None
+    ):
         cr.execute(
-            f"UPDATE {order_type}_orders SET return_date = ? WHERE serial = ?",
-            (datetime.datetime.now(),),
+            f"UPDATE {order_type}_orders SET {date_type}_date = ? WHERE serial = ?",
+            (datetime.datetime.now(), serial),
         )
 
     @staticmethod
@@ -489,12 +509,14 @@ class DB:
 
             UPDATE {order_type}_orders SET state = 'approved',
                                            working_on_it = 0,
-                                           archive_message_ids = ?
+                                           archive_message_ids = ?,
+                                           approve_date = ?
             WHERE serial = ?
 
             """,
             (
                 archive_message_ids,
+                datetime.datetime.now(),
                 serial,
             ),
         )
@@ -511,18 +533,6 @@ class DB:
         cr.execute(
             "UPDATE users SET deposit_balance = deposit_balance + ? WHERE id = ?",
             (amount, user_id),
-        )
-
-    @staticmethod
-    @lock_and_release
-    async def set_deposit_not_arrived(
-        serial: int, archive_message_ids: str, reason: str, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            """UPDATE deposit_orders SET state = 'declined',
-                                         reason = ?, archive_message_ids = ?
-                                         WHERE serial = ?""",
-            (reason, archive_message_ids, serial),
         )
 
     @staticmethod

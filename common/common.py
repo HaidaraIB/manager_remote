@@ -30,6 +30,21 @@ from DB import DB
 from constants import *
 
 
+def pretty_time_delta(seconds):
+    seconds = int(seconds)
+    days, seconds = divmod(seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    if days > 0:
+        return '%d days %d hours %d minutes %d seconde' % (days, hours, minutes, seconds)
+    elif hours > 0:
+        return '%d hours %d minutes %d seconds' % (hours, minutes, seconds)
+    elif minutes > 0:
+        return '%d minutes %d seconds' % (minutes, seconds)
+    else:
+        return '%d seconds' % (seconds,)
+    
+
 def apply_ex_rate(
     method: str,
     amount: float,

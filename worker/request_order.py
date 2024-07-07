@@ -173,13 +173,9 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             group_id = c_order["group_id"]
 
         else:
-            w_order = DB.get_payment_order(
-                order_type="withdraw", method=order_type
-            )
+            w_order = DB.get_payment_order(order_type="withdraw", method=order_type)
             if not w_order:
-                bu_order = DB.get_payment_order(
-                    order_type="buyusdt", method=order_type
-                )
+                bu_order = DB.get_payment_order(order_type="buyusdt", method=order_type)
                 if not bu_order:
                     await update.callback_query.answer(
                         f"ليس هناك طلبات دفع {order_type} حالياً."
@@ -214,7 +210,9 @@ async def cancel_request_order(update: Update, context: ContextTypes.DEFAULT_TYP
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(
             text="تم الإلغاء👍",
-            reply_markup=build_worker_keyboard(deposit_agent=DepositAgent().filter(update)),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update),
+            ),
         )
         return ConversationHandler.END
 

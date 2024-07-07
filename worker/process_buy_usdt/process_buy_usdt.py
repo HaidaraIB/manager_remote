@@ -21,6 +21,7 @@ from custom_filters import BuyUSDT, Returned, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
+    pretty_time_delta,
 )
 
 
@@ -124,14 +125,14 @@ async def reply_with_payment_proof_buy_usdt(
             ),
         )
 
-        prev_date = b_order["order_date"] if b_order["state"] != "returned" else b_order["return_date"]
+        prev_date = b_order["send_date"] if b_order["state"] != "returned" else b_order["return_date"]
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
         minutes, seconds = divmod(latency.total_seconds(), 60)
-        if minutes > 10:
+        if minutes > 1:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
                 photo=update.message.photo[-1],
-                caption=f"طلب متأخر بمقدار {latency}\n\n" + caption,
+                caption=f"طلب متأخر بمقدار\n<code>{pretty_time_delta(latency.total_seconds())}</code>\n\n" + caption,
             )
 
 
@@ -236,14 +237,16 @@ async def return_buy_usdt_order_reason(
             ),
         )
 
-        prev_date = b_order["order_date"] if b_order["state"] != "returned" else b_order["return_date"]
+        prev_date = b_order["send_date"] if b_order["state"] != "returned" else b_order["return_date"]
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
         minutes, seconds = divmod(latency.total_seconds(), 60)
-        if minutes > 10:
+        if minutes > 1:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
                 photo=update.message.photo[-1],
-                caption=f"طلب متأخر بمقدار {latency}\n\n" + caption,
+                caption=f"طلب متأخر بمقدار\n"
+                + f"<code>{pretty_time_delta(latency.total_seconds())}</code>\n"
+                f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
         await DB.return_order(

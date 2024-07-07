@@ -13,7 +13,7 @@ from telegram.ext import (
     filters,
 )
 
-from custom_filters import Withdraw, Declined, Sent
+from custom_filters import Withdraw, Declined, Sent, DepositAgent
 from constants import *
 from DB import DB
 import os
@@ -154,7 +154,9 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.send_message(
             chat_id=update.effective_user.id,
             text="تم إرسال الطلب✅",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update),
+            ),
         )
 
         context.user_data["requested"] = False
@@ -234,7 +236,7 @@ async def decline_withdraw_order_reason(
             + update.message.reply_to_message.text_html
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
-        
+
         message = await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
@@ -254,7 +256,9 @@ async def decline_withdraw_order_reason(
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="تم رفض الطلب❌",
-            reply_markup=build_worker_keyboard(),
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update),
+            ),
         )
 
         context.user_data["requested"] = False
