@@ -67,7 +67,8 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not res:
             await update.callback_query.answer(
-                "يمكنك إرسال تنبيه واحد عن كل طلب في اليوم❗️"
+                text="يمكنك إرسال تنبيه واحد عن كل طلب في اليوم❗️",
+                show_alert=True,
             )
             return
 
@@ -77,8 +78,14 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except ConnectionError:
             pass
 
+        chat_id = (
+            op["group_id"]
+            if not op["working_on_it"]
+            else (op["worker_id"] if op["state"] == "sent" else op["checker_id"])
+        )
+
         old_message = await cpyro.get_messages(
-            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
+            chat_id=chat_id,
             message_ids=(
                 op["pending_process_message_id"]
                 if op["pending_process_message_id"]
@@ -86,29 +93,20 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
         message = await cpyro.copy_message(
-            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
-            from_chat_id=(op["worker_id"] if op["working_on_it"] else op["group_id"]),
-            message_id=(
-                op["pending_process_message_id"]
-                if op["pending_process_message_id"]
-                else op["pending_check_message_id"]
-            ),
+            chat_id=chat_id,
+            from_chat_id=chat_id,
+            message_id=old_message.id,
             reply_markup=old_message.reply_markup,
         )
 
         await cpyro.send_message(
-            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
+            chat_id=chat_id,
             text="وصلتنا شكوى تأخير بشأن الطلب أعلاه⬆️",
         )
         await cpyro.delete_messages(
-            chat_id=op["worker_id"] if op["working_on_it"] else op["group_id"],
-            message_ids=(
-                op["pending_process_message_id"]
-                if op["pending_process_message_id"]
-                else op["pending_check_message_id"]
-            ),
+            chat_id=chat_id,
+            message_ids=old_message.id,
         )
-
 
         if op["state"] == "sent":
             if op["working_on_it"]:
