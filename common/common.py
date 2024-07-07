@@ -358,7 +358,11 @@ def build_groups_keyboard(op: str):
             InlineKeyboardButton(
                 text="غروب الشكاوي",
                 callback_data=f"{op} complaints_group",
-            )
+            ),
+            InlineKeyboardButton(
+                text="غروب التأخير",
+                callback_data=f"{op} latency_group",
+            ),
         ],
         [
             InlineKeyboardButton(

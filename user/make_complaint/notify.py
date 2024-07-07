@@ -73,10 +73,6 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         cpyro = PyroClientSingleton()
-        try:
-            await cpyro.start()
-        except ConnectionError:
-            pass
 
         chat_id = (
             op["group_id"]

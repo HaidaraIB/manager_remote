@@ -2,6 +2,7 @@ import sqlite3
 import os
 import re
 import traceback
+import datetime
 from asyncio import Lock
 from constants import *
 
@@ -462,6 +463,14 @@ class DB:
                 reason,
                 serial,
             ),
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def add_return_date(order_type: str, serial: int, cr: sqlite3.Cursor = None):
+        cr.execute(
+            f"UPDATE {order_type}_orders SET return_date = ? WHERE serial = ?",
+            (datetime.datetime.now(),),
         )
 
     @staticmethod

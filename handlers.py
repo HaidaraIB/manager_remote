@@ -250,6 +250,11 @@ def main():
         },
     )
 
+    try:
+        PyroClientSingleton().start()
+    except ConnectionError:
+        pass
+
     app.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
 
     try:

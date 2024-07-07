@@ -99,11 +99,6 @@ async def get_photos_from_archive(message_ids: list[int]):
     photos: list[PhotoSize] = []
     cpyro = PyroClientSingleton()
 
-    try:
-        await cpyro.start()
-    except ConnectionError:
-        pass
-
     ms: list[Message] = await cpyro.get_messages(
         chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
         message_ids=message_ids,

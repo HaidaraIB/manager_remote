@@ -15,14 +15,13 @@ from telegram.ext import (
 
 from DB import DB
 import os
-
+import datetime
 from custom_filters import Withdraw, Returned, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
 )
 
-RETURN_REASON = 0
 
 
 async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -118,6 +117,17 @@ async def reply_with_payment_proof_withdraw(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
+
+        prev_date = w_order["order_date"] if w_order["state"] != "returned" else w_order["return_date"]
+        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        minutes, seconds = divmod(latency.total_seconds(), 60)
+        if minutes > 10:
+            await context.bot.send_photo(
+                chat_id=context.bot_data["data"]["latency_group"],
+                photo=update.message.photo[-1],
+                caption=f"طلب متأخر بمقدار {latency}\n\n" + caption,
+            )
+
         await DB.reply_with_payment_proof(
             order_type="withdraw",
             amount=amount,
@@ -148,7 +158,6 @@ async def return_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TY
                 )
             )
         )
-        return RETURN_REASON
 
 
 async def return_withdraw_order_reason(
@@ -175,19 +184,16 @@ async def return_withdraw_order_reason(
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
-        try:
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=text,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    InlineKeyboardButton(
-                        text="إرفاق المطلوب",
-                        callback_data=f"handle_return_withdraw_{update.effective_chat.id}_{serial}",
-                    )
-                ),
-            )
-        except:
-            pass
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=text,
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="إرفاق المطلوب",
+                    callback_data=f"handle_return_withdraw_{update.effective_chat.id}_{serial}",
+                )
+            ),
+        )
 
         text = (
             "تمت إعادة الطلب📥\n"
@@ -218,6 +224,17 @@ async def return_withdraw_order_reason(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
+
+        prev_date = w_order["order_date"] if w_order["state"] != "returned" else w_order["return_date"]
+        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        minutes, seconds = divmod(latency.total_seconds(), 60)
+        if minutes > 10:
+            await context.bot.send_photo(
+                chat_id=context.bot_data["data"]["latency_group"],
+                photo=update.message.photo[-1],
+                caption=f"طلب متأخر بمقدار {latency}\n\n" + text,
+            )
+
         await DB.return_order(
             order_type="withdraw",
             archive_message_ids=str(message.id),

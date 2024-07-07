@@ -3,7 +3,6 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    InputMediaPhoto,
 )
 from telegram.ext import (
     ContextTypes,
@@ -22,7 +21,7 @@ from common.common import (
     build_worker_keyboard,
 )
 
-RETURN_REASON = 0
+import datetime
 
 
 async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -118,6 +117,15 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
+        prev_date = d_order["order_date"] if d_order["state"] != "returned" else d_order["return_date"]
+        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        minutes, seconds = divmod(latency.total_seconds(), 60)
+        if minutes > 10:
+            await context.bot.send_photo(
+                chat_id=context.bot_data["data"]["latency_group"],
+                photo=update.message.photo[-1],
+                caption=f"طلب متأخر بمقدار {latency}\n\n" + caption,
+            )
 
         await DB.reply_with_deposit_proof(
             order_type="deposit",
@@ -148,8 +156,6 @@ async def return_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYP
                 )
             )
         )
-
-        return RETURN_REASON
 
 
 async def return_deposit_order_reason(
@@ -211,6 +217,14 @@ async def return_deposit_order_reason(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
+        prev_date = d_order["order_date"] if d_order["state"] != "returned" else d_order["return_date"]
+        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        minutes, seconds = divmod(latency.total_seconds(), 60)
+        if minutes > 10:
+            await context.bot.send_message(
+                chat_id=context.bot_data["data"]["latency_group"],
+                text=f"طلب متأخر بمقدار {latency}\n\n" + text,
+            )
 
         await DB.return_order(
             order_type="deposit",

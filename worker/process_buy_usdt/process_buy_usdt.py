@@ -16,14 +16,13 @@ from telegram.ext import (
 
 import os
 from DB import DB
-
+import datetime
 from custom_filters import BuyUSDT, Returned, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
 )
 
-RETURN_REASON = 0
 
 
 async def user_payment_verified_buy_usdt(
@@ -125,7 +124,17 @@ async def reply_with_payment_proof_buy_usdt(
             ),
         )
 
-        context.user_data["requested"] = False
+        prev_date = b_order["order_date"] if b_order["state"] != "returned" else b_order["return_date"]
+        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        minutes, seconds = divmod(latency.total_seconds(), 60)
+        if minutes > 10:
+            await context.bot.send_photo(
+                chat_id=context.bot_data["data"]["latency_group"],
+                photo=update.message.photo[-1],
+                caption=f"طلب متأخر بمقدار {latency}\n\n" + caption,
+            )
+
+
         await DB.reply_with_payment_proof(
             order_type="buyusdt",
             archive_message_ids=f"{messages[0].id},{messages[1].id}",
@@ -134,6 +143,7 @@ async def reply_with_payment_proof_buy_usdt(
             serial=serial,
             worker_id=update.effective_user.id,
         )
+        context.user_data["requested"] = False
 
 
 async def return_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -154,7 +164,6 @@ async def return_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
                 )
             )
         )
-        return RETURN_REASON
 
 
 async def return_buy_usdt_order_reason(
@@ -184,20 +193,17 @@ async def return_buy_usdt_order_reason(
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
-        try:
-            await context.bot.send_photo(
-                chat_id=b_order["user_id"],
-                photo=update.message.reply_to_message.photo[-1],
-                caption=text,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    InlineKeyboardButton(
-                        text="إرفاق المطلوب",
-                        callback_data=f"handle_return_buyusdt_{update.effective_chat.id}_{serial}",
-                    )
-                ),
-            )
-        except:
-            pass
+        await context.bot.send_photo(
+            chat_id=b_order["user_id"],
+            photo=update.message.reply_to_message.photo[-1],
+            caption=text,
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="إرفاق المطلوب",
+                    callback_data=f"handle_return_buyusdt_{update.effective_chat.id}_{serial}",
+                )
+            ),
+        )
 
         caption = (
             "تمت إعادة الطلب📥\n"
@@ -229,13 +235,25 @@ async def return_buy_usdt_order_reason(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
-        context.user_data["requested"] = False
+
+        prev_date = b_order["order_date"] if b_order["state"] != "returned" else b_order["return_date"]
+        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        minutes, seconds = divmod(latency.total_seconds(), 60)
+        if minutes > 10:
+            await context.bot.send_photo(
+                chat_id=context.bot_data["data"]["latency_group"],
+                photo=update.message.photo[-1],
+                caption=f"طلب متأخر بمقدار {latency}\n\n" + caption,
+            )
+
         await DB.return_order(
             order_type="buyusdt",
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )
+
+        context.user_data["requested"] = False
         return ConversationHandler.END
 
 

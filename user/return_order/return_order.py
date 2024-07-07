@@ -86,7 +86,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ),
                 reply_markup=reply_markup,
             )
-
+        await DB.add_return_date(order_type=data[2], serial=int(data[-1]))
         await update.message.reply_text(
             text="شكراً لك، تمت إعادة طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
             reply_markup=build_user_keyboard(),
