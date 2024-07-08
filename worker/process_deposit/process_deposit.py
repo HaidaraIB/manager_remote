@@ -121,11 +121,13 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         prev_date = d_order["send_date"] if d_order["state"] != "returned" else d_order["return_date"]
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
         minutes, seconds = divmod(latency.total_seconds(), 60)
-        if minutes > 1:
+        if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
                 photo=update.message.photo[-1],
-                caption=f"طلب متأخر بمقدار\n<code>{pretty_time_delta(latency.total_seconds())}</code>\n\n" + caption,
+                caption=f"طلب متأخر بمقدار\n"
+                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
+                f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
         await DB.reply_with_deposit_proof(
@@ -221,11 +223,11 @@ async def return_deposit_order_reason(
         prev_date = d_order["send_date"] if d_order["state"] != "returned" else d_order["return_date"]
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
         minutes, seconds = divmod(latency.total_seconds(), 60)
-        if minutes > 1:
+        if minutes > 10:
             await context.bot.send_message(
                 chat_id=context.bot_data["data"]["latency_group"],
                 text=f"طلب متأخر بمقدار\n"
-                + f"<code>{pretty_time_delta(latency.total_seconds())}</code>\n"
+                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + text,
             )
 

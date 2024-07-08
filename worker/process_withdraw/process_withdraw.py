@@ -122,12 +122,12 @@ async def reply_with_payment_proof_withdraw(
         )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
         minutes, seconds = divmod(latency.total_seconds(), 60)
-        if minutes > 0:
+        if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
                 photo=update.message.photo[-1],
                 caption=f"طلب متأخر بمقدار\n"
-                + f"<code>{pretty_time_delta(latency.total_seconds())}</code>\n"
+                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
@@ -235,12 +235,13 @@ async def return_withdraw_order_reason(
         )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
         minutes, seconds = divmod(latency.total_seconds(), 60)
-        if minutes > 1:
+        if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
                 photo=update.message.photo[-1],
-                caption=f"طلب متأخر بمقدار\n<code>{pretty_time_delta(latency.total_seconds())}</code>\n\n"
-                + text,
+                caption=f"طلب متأخر بمقدار\n"
+                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
+                f"الموظف المسؤول {update.effective_user.name}\n\n" + text,
             )
 
         await DB.return_order(
