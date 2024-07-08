@@ -119,7 +119,7 @@ class DB:
             complaint_took_care_of INTEGER DEFAULT 0,
             working_on_it INTEGER DEFAULT 0,
             order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            send_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            send_date TIMESTAMP,
             return_date TIMESTAMP,
             approve_date TIMESTAMP,
             decline_date TIMESTAMP
