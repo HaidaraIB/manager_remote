@@ -42,13 +42,17 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             method=method,
             amount=amount,
         )
+        ref = DB.get_ref_number(
+            number=number,
+            method=method,
+        )
         await update.message.reply_text(text="تم ✅")
 
         d_order = DB.get_one_order("deposit", ref_num=number)
         if d_order and d_order["state"] == "pending":
             await send_order_to_process(
                 d_order=d_order,
-                ref_info=ref_present,
+                ref_info=ref,
                 context=context,
             )
 

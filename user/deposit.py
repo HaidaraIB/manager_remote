@@ -181,7 +181,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             notify_workers(
                 context=context,
                 workers=workers,
-                text=f"انتباه يوجد طلب قيد التحقق رقم عملية <code>{ref_num}</code>",
+                text=f"انتباه يوجد طلب قيد التحقق رقم عملية <code>{ref_num}</code> 🚨",
             )
         )
 
