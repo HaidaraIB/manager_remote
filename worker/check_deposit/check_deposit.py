@@ -15,21 +15,26 @@ from DB import DB
 import os
 import asyncio
 
+check_deposit_lock = asyncio.Lock()
 
 async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
-    check_deposit_jobs_dict = {
-        "1_deposit_check": 240,
-        "2_deposit_check": 300,
-        "3_deposit_check": 600,
-        "4_deposit_check": 600,
-    }
+    await check_deposit_lock.acquire() # We're using the lock because we're checking deposit on storing ref too, so there's a possible conflict.
+
     serial = int(context.job.data)
     d_order = DB.get_one_order(
         "deposit",
         serial=serial,
     )
     if d_order and d_order["state"] != "pending":
+        check_deposit_lock.release()
         return
+    
+    check_deposit_jobs_dict = {
+        "1_deposit_check": 240,
+        "2_deposit_check": 300,
+        "3_deposit_check": 600,
+        "4_deposit_check": 600,
+    }
     ref_present = DB.get_ref_number(
         number=d_order["ref_number"],
         method=d_order["method"],
@@ -86,6 +91,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             reason=reason,
             serial=serial,
         )
+    check_deposit_lock.release()
 
 
 async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
@@ -95,7 +101,6 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
         "deposit",
         context,
     )
-
     order_text = stringify_order(
         amount=amount,
         account_number=d_order["acc_number"],

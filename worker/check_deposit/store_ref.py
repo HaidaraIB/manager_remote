@@ -11,7 +11,7 @@ from telegram.ext import (
 from custom_filters import Ref
 from DB import DB
 
-from worker.check_deposit.check_deposit import send_order_to_process
+from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
 
 
 async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -49,12 +49,15 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text="تم ✅")
 
         d_order = DB.get_one_order("deposit", ref_num=number)
+
+        await check_deposit_lock.acquire()
         if d_order and d_order["state"] == "pending":
             await send_order_to_process(
                 d_order=d_order,
                 ref_info=ref,
                 context=context,
             )
+        check_deposit_lock.release()
 
 
 def create_invalid_foramt_string():
