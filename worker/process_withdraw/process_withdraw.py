@@ -34,12 +34,6 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
 
         serial = int(update.callback_query.data.split("_")[-1])
 
-        await DB.add_order_worker_id(
-            serial=serial,
-            worker_id=update.effective_user.id,
-            order_type="withdraw",
-        )
-
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
             show_alert=True,
@@ -121,7 +115,7 @@ async def reply_with_payment_proof_withdraw(
             else w_order["return_date"]
         )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
-        minutes, seconds = divmod(latency.total_seconds(), 60)
+        minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
@@ -234,7 +228,7 @@ async def return_withdraw_order_reason(
             else w_order["return_date"]
         )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
-        minutes, seconds = divmod(latency.total_seconds(), 60)
+        minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],

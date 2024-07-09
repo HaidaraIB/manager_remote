@@ -17,10 +17,7 @@ import os
 
 from custom_filters import Deposit, Returned, DepositAgent
 
-from common.common import (
-    build_worker_keyboard,
-    pretty_time_delta
-)
+from common.common import build_worker_keyboard, pretty_time_delta
 
 import datetime
 
@@ -37,12 +34,6 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
         #     return
 
         serial = int(update.callback_query.data.split("_")[-1])
-
-        await DB.add_order_worker_id(
-            serial=serial,
-            worker_id=update.effective_user.id,
-            order_type="deposit",
-        )
 
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
@@ -118,9 +109,13 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
-        prev_date = d_order["send_date"] if d_order["state"] != "returned" else d_order["return_date"]
+        prev_date = (
+            d_order["send_date"]
+            if d_order["state"] != "returned"
+            else d_order["return_date"]
+        )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
-        minutes, seconds = divmod(latency.total_seconds(), 60)
+        minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
@@ -220,9 +215,13 @@ async def return_deposit_order_reason(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
-        prev_date = d_order["send_date"] if d_order["state"] != "returned" else d_order["return_date"]
+        prev_date = (
+            d_order["send_date"]
+            if d_order["state"] != "returned"
+            else d_order["return_date"]
+        )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
-        minutes, seconds = divmod(latency.total_seconds(), 60)
+        minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_message(
                 chat_id=context.bot_data["data"]["latency_group"],

@@ -25,7 +25,6 @@ from common.common import (
 )
 
 
-
 async def user_payment_verified_buy_usdt(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
@@ -40,12 +39,6 @@ async def user_payment_verified_buy_usdt(
         #     return
 
         serial = int(update.callback_query.data.split("_")[-1])
-
-        await DB.add_order_worker_id(
-            serial=serial,
-            worker_id=update.effective_user.id,
-            order_type="buyusdt",
-        )
 
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
@@ -99,7 +92,7 @@ async def reply_with_payment_proof_buy_usdt(
         ]
 
         caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
-        
+
         messages = await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             media=media,
@@ -125,16 +118,20 @@ async def reply_with_payment_proof_buy_usdt(
             ),
         )
 
-        prev_date = b_order["send_date"] if b_order["state"] != "returned" else b_order["return_date"]
+        prev_date = (
+            b_order["send_date"]
+            if b_order["state"] != "returned"
+            else b_order["return_date"]
+        )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
-        minutes, seconds = divmod(latency.total_seconds(), 60)
+        minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
                 photo=update.message.photo[-1],
-                caption=f"طلب متأخر بمقدار\n<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n\n" + caption,
+                caption=f"طلب متأخر بمقدار\n<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n\n"
+                + caption,
             )
-
 
         await DB.reply_with_payment_proof(
             order_type="buyusdt",
@@ -237,9 +234,13 @@ async def return_buy_usdt_order_reason(
             ),
         )
 
-        prev_date = b_order["send_date"] if b_order["state"] != "returned" else b_order["return_date"]
+        prev_date = (
+            b_order["send_date"]
+            if b_order["state"] != "returned"
+            else b_order["return_date"]
+        )
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
-        minutes, seconds = divmod(latency.total_seconds(), 60)
+        minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
