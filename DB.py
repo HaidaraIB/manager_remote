@@ -761,16 +761,6 @@ class DB:
 
     @staticmethod
     @lock_and_release
-    async def add_deposit_order_ref(
-        ref_number: int, serial: int, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            "UPDATE deposit_orders SET ref_number = ? WHERE serial = ?",
-            (ref_number, serial),
-        )
-
-    @staticmethod
-    @lock_and_release
     async def change_order_state(
         order_type: str,
         state: str,

@@ -19,15 +19,17 @@ import asyncio
 async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
     check_deposit_jobs_dict = {
         "1_deposit_check": 240,
-        "2_deposit_check": 240,
-        "3_deposit_check": 840,
-        "4_deposit_check": 5040,
+        "2_deposit_check": 300,
+        "3_deposit_check": 600,
+        "4_deposit_check": 600,
     }
     serial = int(context.job.data)
     d_order = DB.get_one_order(
         "deposit",
         serial=serial,
     )
+    if d_order and d_order["state"] != "pending":
+        return
     ref_present = DB.get_ref_number(
         number=d_order["ref_number"],
         method=d_order["method"],
@@ -146,6 +148,5 @@ def stringify_order(
         f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
-        "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ.\n\n"
-        "ملاحظة: تأكد من تطابق المبلغ في الرسالة مع الذي في لقطة الشاشة لأن ما سيضاف في حالة التأكيد هو الذي في الرسالة."
+        "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )

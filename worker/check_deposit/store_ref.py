@@ -11,6 +11,8 @@ from telegram.ext import (
 from custom_filters import Ref
 from DB import DB
 
+from worker.check_deposit.check_deposit import send_order_to_process
+
 
 async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
@@ -19,10 +21,16 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             == context.bot_data["data"]["ref_numbers_group"]
         ):
             return
+
         ref_number_info = update.message.text.split("\n")
+
+        number = ref_number_info[0].split(": ")[1]
+        amount = float(ref_number_info[2].split(": ")[1])
+        method = ref_number_info[1]
+
         ref_present = DB.get_ref_number(
-            number=ref_number_info[0].split(": ")[1],
-            method=ref_number_info[1],
+            number=number,
+            method=method,
         )
         if ref_present:
             await update.message.reply_text(
@@ -30,11 +38,19 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         await DB.add_ref_number(
-            number=ref_number_info[0].split(": ")[1],
-            method=ref_number_info[1],
-            amount=float(ref_number_info[2].split(": ")[1]),
+            number=number,
+            method=method,
+            amount=amount,
         )
         await update.message.reply_text(text="تم ✅")
+
+        d_order = DB.get_one_order("deposit", ref_num=number)
+        if d_order and d_order["state"] == "pending":
+            await send_order_to_process(
+                d_order=d_order,
+                ref_info=ref_present,
+                context=context,
+            )
 
 
 def create_invalid_foramt_string():
