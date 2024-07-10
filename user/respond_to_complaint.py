@@ -102,7 +102,6 @@ async def correct_returned_complaint(
             text="تم إرسال الرد ✅",
         )
 
-        del context.user_data["complaint_data"]
 
         return ConversationHandler.END
 

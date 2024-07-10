@@ -67,8 +67,6 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         except:
             pass
 
-        context.user_data["complaint_data"] = data
-
         try:
             respond_button = InlineKeyboardButton(
                 text="إرسال رد⬅️",
@@ -111,7 +109,6 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
             ),
         )
 
-        del context.user_data["complaint_data"]
 
 
 async def back_from_respond_to_user_complaint(

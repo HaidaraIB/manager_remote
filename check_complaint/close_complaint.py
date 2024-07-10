@@ -155,7 +155,6 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             ),
         )
 
-        del context.user_data["complaint_data"]
 
         await DB.set_complaint_took_care_of(
             serial=op["serial"],
