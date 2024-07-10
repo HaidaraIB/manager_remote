@@ -100,8 +100,8 @@ async def buy_or_sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = context.user_data["exchange_rates_data"]
         if data[0] == "buyusdt":
             context.bot_data["data"][data[1]] = float(update.message.text)
-            await update.callback_query.edit_message_text(
-                text=f"تم تعديل سعر {data[1]} مقابل الليرة السورية بنجاح✅",
+            await update.message.reply_text(
+                text=f"تم تعديل السعر بنجاح ✅",
                 reply_markup=build_admin_keyboard(),
             )
             return ConversationHandler.END
@@ -129,7 +129,7 @@ async def verify_update_rate(update: Update, context: ContextTypes.DEFAULT_TYPE)
         rate = f"{data[1]}_{update.callback_query.data}"
         context.bot_data["data"][rate] = context.user_data["new_rate"]
         await update.callback_query.edit_message_text(
-            text=f"تم تعديل سعر {data[1]} مقابل الليرة السورية بنجاح✅",
+            text=f"تم تعديل السعر بنجاح ✅",
             reply_markup=build_admin_keyboard(),
         )
         return ConversationHandler.END
