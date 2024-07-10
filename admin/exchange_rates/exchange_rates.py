@@ -56,7 +56,7 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_admin_home_page_button[0],
         ]
         shared_text = (
-            f"أرسل سعر {data[0]} مقابل الليرة السورية الجديد، السعر الحالي:\n\n"
+            f"أرسل السعر الجديد، السعر الحالي:\n\n"
         )
         if data[0] == "buyusdt":
             text = shared_text + (
