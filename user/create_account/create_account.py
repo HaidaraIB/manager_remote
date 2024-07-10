@@ -105,7 +105,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await update.message.reply_text(
-            text="شكراً لك، سيتم مراجعة الصور المرسلة والرد عليك بأقرب وقت.",
+            text="شكراً لك، سيتم مراجعة المعلومات المرسلة والرد عليك بأقرب وقت.",
             reply_markup=build_user_keyboard(),
         )
 
