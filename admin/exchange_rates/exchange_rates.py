@@ -60,7 +60,7 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         if data[0] == "buyusdt":
             text = shared_text + (
-                f"شراء USDT: <b>{context.bot_data['data']['usdt_to_syp']}</b>"
+                f"Buy USDT: <b>{context.bot_data['data']['usdt_to_syp']}</b>"
             )
             await update.callback_query.edit_message_text(
                 text=text,
