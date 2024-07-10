@@ -55,7 +55,7 @@ async def add_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
-            text="أرسل id المستخدم الذي تريد إضافته كآدمن.\nيمكنك معرفة الآيدي عن طريق كيبورد معرفة الآيديات، قم بالضغط على /start وإظهاره إن كان مخفياً.",
+            text="أرسل id المستخدم الذي تريد إضافته كآدمن.\nيمكنك معرفة الآيدي عن طريق كيبورد معرفة الآيديات، قم بالضغط على /admin وإظهاره إن كان مخفياً.",
             reply_markup=InlineKeyboardMarkup.from_column(
                 [
                     *build_back_button("back_to_admin_settings"),
