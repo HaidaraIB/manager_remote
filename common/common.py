@@ -125,17 +125,17 @@ def build_back_button(data: str):
 
 def build_user_keyboard():
     keyboard = [
-        [InlineKeyboardButton(text="سحب💳", callback_data="withdraw")],
-        [InlineKeyboardButton(text="إيداع📥", callback_data="deposit")],
-        [InlineKeyboardButton(text="إنشاء حساب موثق™️", callback_data="create account")],
+        [InlineKeyboardButton(text="سحب 💳", callback_data="withdraw")],
+        [InlineKeyboardButton(text="إيداع 📥", callback_data="deposit")],
+        [InlineKeyboardButton(text="إنشاء حساب موثق ™️", callback_data="create account")],
         [
             InlineKeyboardButton(
-                text="إضافة حساب سابق➕", callback_data="add existing account"
+                text="إضافة حساب سابق ➕", callback_data="add existing account"
             )
         ],
-        [InlineKeyboardButton(text="شراء USDT💰", callback_data="buy usdt")],
-        [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="make complaint")],
-        [InlineKeyboardButton(text="وكيل موصى به", url="t.me/Melbet_bo")],
+        [InlineKeyboardButton(text="شراء USDT 💰", callback_data="buy usdt")],
+        [InlineKeyboardButton(text="إنشاء شكوى 🗳", callback_data="make complaint")],
+        [InlineKeyboardButton(text="وكيل موصى به 🈂️", url="t.me/Melbet_bo")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -144,7 +144,7 @@ def build_worker_keyboard(deposit_agent: bool = False):
     keyboard = [
         [
             InlineKeyboardButton(
-                text="معالجة طلب🈲", callback_data="worker request order"
+                text="معالجة طلب 🈲", callback_data="worker request order"
             ),
         ],
     ]
@@ -152,7 +152,7 @@ def build_worker_keyboard(deposit_agent: bool = False):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="إعدادات وسائل الدفع⚙️💳",
+                    text="💳 إعدادات وسائل الدفع ⚙️",
                     callback_data="wallets settings",
                 )
             ]
@@ -164,59 +164,59 @@ def build_admin_keyboard():
     keyboard = [
         [
             InlineKeyboardButton(
-                text="إعدادات الآدمن⚙️🎛",
+                text="🎛 إعدادات الآدمن ⚙️",
                 callback_data="admin settings",
             )
         ],
         [
             InlineKeyboardButton(
-                text="إعدادات الموظف⚙️🧑🏻‍💻",
+                text="🧑🏻‍💻 إعدادات الموظف ⚙️",
                 callback_data="worker settings",
             )
         ],
         [
             InlineKeyboardButton(
-                text="تغيير غروبات📝",
+                text="تغيير غروبات 📝",
                 callback_data="change groups",
             )
         ],
         [
             InlineKeyboardButton(
-                text="إعدادات وسائل الدفع⚙️💳",
+                text="💳 إعدادات وسائل الدفع ⚙️",
                 callback_data="wallets settings",
             ),
             InlineKeyboardButton(
-                text="تغيير أسعار صرف",
+                text="تغيير أسعار صرف 💹",
                 callback_data="update exchange rates",
             ),
         ],
         [
             InlineKeyboardButton(
-                text="تعديل نسب مكافآت👨🏻‍💻",
+                text="تعديل نسب مكافآت 👨🏻‍💻",
                 callback_data="update percentages",
             ),
         ],
         [
             InlineKeyboardButton(
-                text="تفعيل/إلغاء تفعيل وسيلة دفع🔂",
+                text="تفعيل/إلغاء تفعيل وسيلة دفع 🔂",
                 callback_data="turn payment method on or off",
             ),
         ],
         [
             InlineKeyboardButton(
-                text="تفعيل/إلغاء تفعيل أزرار مستخدم🔂",
+                text="تفعيل/إلغاء تفعيل أزرار مستخدم 🔂",
                 callback_data="turn user calls on or off",
             ),
         ],
         [
             InlineKeyboardButton(
-                text="إخفاء/إظهار كيبورد معرفة الآيديات🪄",
+                text="إخفاء/إظهار كيبورد معرفة الآيديات 🪄",
                 callback_data="hide ids keyboard",
             )
         ],
         [
             InlineKeyboardButton(
-                text="رسالة جماعية👥",
+                text="رسالة جماعية 👥",
                 callback_data="broadcast",
             )
         ],
@@ -278,7 +278,7 @@ def build_complaint_keyboard(data: list, send_to_worker: bool):
         ],
         [
             InlineKeyboardButton(
-                text="إغلاق الشكوى🔐",
+                text="إغلاق الشكوى 🔐",
                 callback_data=f"close_complaint_{data[-2]}_{data[-1]}",
             ),
         ],
@@ -346,21 +346,21 @@ def create_folders():
 request_buttons = [
     [
         KeyboardButton(
-            text="معرفة id مستخدم🆔",
+            text="معرفة id مستخدم 🆔",
             request_users=KeyboardButtonRequestUsers(request_id=0, user_is_bot=False),
         ),
         KeyboardButton(
-            text="معرفة id قناة📢",
+            text="معرفة id قناة 📢",
             request_chat=KeyboardButtonRequestChat(request_id=1, chat_is_channel=True),
         ),
     ],
     [
         KeyboardButton(
-            text="معرفة id مجموعة👥",
+            text="معرفة id مجموعة 👥",
             request_chat=KeyboardButtonRequestChat(request_id=2, chat_is_channel=False),
         ),
         KeyboardButton(
-            text="معرفة id بوت🤖",
+            text="معرفة id بوت 🤖",
             request_users=KeyboardButtonRequestUsers(request_id=3, user_is_bot=True),
         ),
     ],

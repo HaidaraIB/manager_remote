@@ -55,7 +55,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return ConversationHandler.END
 
         await update.callback_query.edit_message_text(
-            text="حسناً، قم بإرسال اسمك الثلاثي الآن👤🪪",
+            text="حسناً، قم بإرسال اسمك الثلاثي الآن 👤🪪",
             reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
         )
         return FULL_NAME
@@ -98,14 +98,14 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="الرفض❌",
+                    text="الرفض ❌",
                     callback_data=f"decline_create_account_{update.effective_user.id}_{serial}",
                 )
             ),
         )
 
         await update.message.reply_text(
-            text="شكراً لك، سيتم مراجعة الصور المرسلة والرد عليك بأقرب وقت.",
+            text="شكراً لك، سيتم مراجعة المعلومات المرسلة والرد عليك بأقرب وقت.",
             reply_markup=build_user_keyboard(),
         )
 
@@ -144,13 +144,13 @@ async def reply_to_create_account_order(
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
 
         if (
-            update.effective_message.reply_to_message.reply_markup.inline_keyboard[0][
+            "✅"
+            in update.effective_message.reply_to_message.reply_markup.inline_keyboard[
                 0
-            ].text
-            == "تمت الموافقة✅"
+            ][0].text
         ):
             await update.effective_message.reply_text(
-                text="تم إنجاز هذا الطلب بالفعل👍"
+                text="تم إنجاز هذا الطلب بالفعل 👍"
             )
             return
         data = update.effective_message.reply_to_message.reply_markup.inline_keyboard[
@@ -175,7 +175,7 @@ async def reply_to_create_account_order(
             return
 
         text = (
-            "تمت الموافقة على طلبك لإنشاء حساب✅\n\n"
+            "تمت الموافقة على طلبك لإنشاء حساب ✅\n\n"
             "معلومات الحساب:\n\n"
             f"الاسم الثلاثي: <b>{account[0]}</b>\n"
             f"رقم الحساب: <code>{account[1]}</code>\n"
@@ -197,8 +197,8 @@ async def reply_to_create_account_order(
             message_id=update.effective_message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅",
-                    callback_data="تمت الموافقة✅",
+                    text="تمت الموافقة ✅",
+                    callback_data="تمت الموافقة ✅",
                 )
             ),
         )
@@ -219,7 +219,9 @@ async def decline_create_account(update: Update, context: ContextTypes.DEFAULT_T
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_row(
-                build_back_button(f"back_from_decline_create_account_{user_id}_{serial}")
+                build_back_button(
+                    f"back_from_decline_create_account_{user_id}_{serial}"
+                )
             ),
         )
         return DECLINE_REASON
@@ -274,7 +276,7 @@ async def back_from_decline_create_account(
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="رفض⛔️",
+                    text="رفض ⛔️",
                     callback_data=f"decline_create_account_{user_id}_{serial}",
                 )
             ),

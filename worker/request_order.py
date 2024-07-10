@@ -81,8 +81,9 @@ async def send_requested_order(
         )
     await DB.set_working_on_it(
         order_type=operation,
-        working_on_it=1,
         serial=serial,
+        working_on_it=1,
+        worker_id=worker_id,
     )
 
 

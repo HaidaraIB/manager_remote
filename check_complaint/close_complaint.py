@@ -155,11 +155,10 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             ),
         )
 
-        del context.user_data["complaint_data"]
 
         await DB.set_complaint_took_care_of(
             serial=op["serial"],
-            order_type=data["about"],
+            order_type=callback_data[-2],
             took_care_of=1,
         )
         context.bot_data["suspended_workers"].discard(op["worker_id"])

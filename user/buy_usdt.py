@@ -54,7 +54,7 @@ async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
         if not context.bot_data["data"]["user_calls"]["buy_usdt"]:
-            await update.callback_query.answer("شراء USDT متوقف حالياً❗️")
+            await update.callback_query.answer("شراء USDT متوقف حالياً ❗️")
             return ConversationHandler.END
         
         elif DB.check_user_pending_orders(
@@ -80,8 +80,8 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
         context.user_data["usdt_to_buy_amount"] = int(update.message.text)
         keyboard = [
             [
-                InlineKeyboardButton(text="موافق👍", callback_data="yes buy usdt"),
-                InlineKeyboardButton(text="غير موافق👎", callback_data="no buy usdt"),
+                InlineKeyboardButton(text="موافق 👍", callback_data="yes buy usdt"),
+                InlineKeyboardButton(text="غير موافق 👎", callback_data="no buy usdt"),
             ],
             build_back_button("back_to_usdt_to_buy_amount"),
             back_to_user_home_page_button[0],
@@ -116,7 +116,7 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
             buy_usdt_methods.append(build_back_button("back_to_yes_no_buy_usdt"))
             buy_usdt_methods.append(back_to_user_home_page_button[0])
             await update.callback_query.edit_message_text(
-                text="اختر وسيلة الدفع لاستلام أموالك💳",
+                text="اختر وسيلة الدفع لاستلام أموالك 💳",
                 reply_markup=InlineKeyboardMarkup(buy_usdt_methods),
             )
             return BUY_USDT_METHOD
@@ -126,8 +126,8 @@ async def back_to_yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_
     if update.effective_chat.type == Chat.PRIVATE:
         keyboard = [
             [
-                InlineKeyboardButton(text="موافق👍", callback_data="yes buy usdt"),
-                InlineKeyboardButton(text="غير موافق👎", callback_data="no buy usdt"),
+                InlineKeyboardButton(text="موافق 👍", callback_data="yes buy usdt"),
+                InlineKeyboardButton(text="غير موافق 👎", callback_data="no buy usdt"),
             ],
             build_back_button("back_to_buy_usdt_amount"),
             back_to_user_home_page_button[0],
@@ -152,7 +152,7 @@ async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             method = DB.get_payment_method(name=data)
 
             if method[1] == 0:
-                await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
+                await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً ❗️")
                 return
 
             context.user_data["payment_method_buy_usdt"] = data
@@ -209,7 +209,7 @@ async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_
         buy_usdt_methods.append(build_back_button("back_to_yes_no_buy_usdt"))
         buy_usdt_methods.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع لاستلام أموالك💳",
+            text="اختر وسيلة الدفع لاستلام أموالك 💳",
             reply_markup=InlineKeyboardMarkup(buy_usdt_methods),
         )
         return BUY_USDT_METHOD
@@ -285,7 +285,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="التحقق☑️", callback_data=f"check_buy_usdt_order_{serial}"
+                    text="التحقق ☑️", callback_data=f"check_buy_usdt_order_{serial}"
                 )
             ),
         )
@@ -305,7 +305,7 @@ def stringify_order(amount, method, serial, method_info):
     return (
         f"طلب شراء USDT جديد:\n\n"
         f"المبلغ💵: <code>{amount}</code> USDT\n"
-        f"وسيلة الدفع💳: <b>{method}</b>\n\n"
+        f"وسيلة الدفع 💳: <b>{method}</b>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         f"{method_info}\n"
     )

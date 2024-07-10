@@ -17,11 +17,7 @@ from start import start_command
 
 from custom_filters.Admin import Admin
 
-(
-    CHOOSE_EXCHANGE_RATE_TO_UPDATE,
-    NEW_RATE,
-    BUY_OR_SELL
-) = range(3)
+(CHOOSE_EXCHANGE_RATE_TO_UPDATE, NEW_RATE, BUY_OR_SELL) = range(3)
 
 
 async def choose_exchange_rate_to_update(
@@ -29,6 +25,11 @@ async def choose_exchange_rate_to_update(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         exchange_rates_keyboard = [
+            [
+                InlineKeyboardButton(
+                    text="شراء USDT", callback_data="buyusdt/usdt_to_syp"
+                )
+            ],
             [InlineKeyboardButton(text="USDT", callback_data="USDT/usdt_to_syp")],
             [
                 InlineKeyboardButton(
@@ -50,18 +51,29 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = update.callback_query.data.split("/")
         context.user_data["exchange_rates_data"] = data
-        try:
-            context.bot_data['data'][f'{data[1]}_sell_rate']
-            context.bot_data['data'][f'{data[1]}_buy_rate']
-        except KeyError:
-            context.bot_data['data'][f'{data[1]}_sell_rate'] = 14500
-            context.bot_data['data'][f'{data[1]}_buy_rate'] = 14200
         back_buttons = [
             build_back_button("back_to_choose_exchange_rate_to_update"),
             back_to_admin_home_page_button[0],
         ]
-        text = (
-            f"أرسل سعر {data[0]} مقابل الليرة السورية الجديد، السعر الحالي:\n\n"
+        shared_text = (
+            f"أرسل السعر الجديد، السعر الحالي:\n\n"
+        )
+        if data[0] == "buyusdt":
+            text = shared_text + (
+                f"Buy USDT: <b>{context.bot_data['data']['usdt_to_syp']}</b>"
+            )
+            await update.callback_query.edit_message_text(
+                text=text,
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+            return NEW_RATE
+        try:
+            context.bot_data["data"][f"{data[1]}_sell_rate"]
+            context.bot_data["data"][f"{data[1]}_buy_rate"]
+        except KeyError:
+            context.bot_data["data"][f"{data[1]}_sell_rate"] = 14500
+            context.bot_data["data"][f"{data[1]}_buy_rate"] = 14200
+        text = shared_text + (
             f"بيع: <b>{context.bot_data['data'][f'{data[1]}_buy_rate']} SYP</b>\n"
             f"شراء: <b>{context.bot_data['data'][f'{data[1]}_sell_rate']} SYP</b>"
         )
@@ -83,10 +95,18 @@ async def buy_or_sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton(text="شراء", callback_data="sell_rate"),
             ],
             build_back_button("back_to_get_new_rate"),
-            back_to_admin_home_page_button[0]
+            back_to_admin_home_page_button[0],
         ]
-        if update.message:
-            context.user_data['new_rate'] = float(update.message.text)
+        data = context.user_data["exchange_rates_data"]
+        if data[0] == "buyusdt":
+            context.bot_data["data"][data[1]] = float(update.message.text)
+            await update.message.reply_text(
+                text=f"تم تعديل السعر بنجاح ✅",
+                reply_markup=build_admin_keyboard(),
+            )
+            return ConversationHandler.END
+        elif update.message:
+            context.user_data["new_rate"] = float(update.message.text)
             await update.message.reply_text(
                 text=f"هذا السعر:",
                 reply_markup=InlineKeyboardMarkup(buy_or_sell_keyboard),
@@ -99,15 +119,17 @@ async def buy_or_sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return BUY_OR_SELL
 
+
 back_to_get_new_rate = buy_or_sell
+
 
 async def verify_update_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = context.user_data["exchange_rates_data"]
         rate = f"{data[1]}_{update.callback_query.data}"
-        context.bot_data["data"][rate] = context.user_data['new_rate']
+        context.bot_data["data"][rate] = context.user_data["new_rate"]
         await update.callback_query.edit_message_text(
-            text=f"تم تعديل سعر {data[1]} مقابل الليرة السورية بنجاح✅",
+            text=f"تم تعديل السعر بنجاح ✅",
             reply_markup=build_admin_keyboard(),
         )
         return ConversationHandler.END
@@ -122,15 +144,11 @@ update_exchange_rates_handler = ConversationHandler(
             CallbackQueryHandler(get_new_rate, lambda x: x.endswith("to_syp"))
         ],
         NEW_RATE: [
-            MessageHandler(
-                filters=filters.Regex("^\d+\.?\d*$"), callback=buy_or_sell
-            )
+            MessageHandler(filters=filters.Regex("^\d+\.?\d*$"), callback=buy_or_sell)
         ],
         BUY_OR_SELL: [
-            CallbackQueryHandler(
-                verify_update_rate, "^((buy)|(sell))_rate$"
-            )
-        ]
+            CallbackQueryHandler(verify_update_rate, "^((buy)|(sell))_rate$")
+        ],
     },
     fallbacks=[
         CallbackQueryHandler(

@@ -782,24 +782,19 @@ class DB:
             (reason, serial),
         )
 
-    @staticmethod
-    @lock_and_release
-    async def add_order_worker_id(
-        order_type: str, worker_id: int, serial: int, cr: sqlite3.Cursor = None
-    ):
-        cr.execute(
-            f"UPDATE {order_type}_orders SET worker_id = ? WHERE serial = ?",
-            (worker_id, serial),
-        )
 
     @staticmethod
     @lock_and_release
     async def set_working_on_it(
-        order_type: str, working_on_it: int, serial: int, cr: sqlite3.Cursor = None
+        order_type: str,
+        working_on_it: int,
+        worker_id: int,
+        serial: int,
+        cr: sqlite3.Cursor = None,
     ):
         cr.execute(
-            f"UPDATE {order_type}_orders SET working_on_it = ? WHERE serial = ?",
-            (working_on_it, serial),
+            f"UPDATE {order_type}_orders SET working_on_it = ?, worker_id = ? WHERE serial = ?",
+            (working_on_it, worker_id, serial),
         )
 
     @staticmethod

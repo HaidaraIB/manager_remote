@@ -43,7 +43,7 @@ async def reply_to_returned_complaint(
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="الرجوع عن الرد على الشكوى🔙",
+                    text="الرجوع عن الرد على الشكوى 🔙",
                     callback_data=f"back_from_reply_to_returned_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
                 )
             )
@@ -99,10 +99,9 @@ async def correct_returned_complaint(
             ),
         )
         await update.message.reply_text(
-            text="تم إرسال الرد✅",
+            text="تم إرسال الرد ✅",
         )
 
-        del context.user_data["complaint_data"]
 
         return ConversationHandler.END
 

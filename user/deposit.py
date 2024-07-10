@@ -52,7 +52,7 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
         if not context.bot_data["data"]["user_calls"]["deposit"]:
-            await update.callback_query.answer("الإيداعات متوقفة حالياً❗️")
+            await update.callback_query.answer("الإيداعات متوقفة حالياً ❗️")
             return ConversationHandler.END
 
         elif DB.check_user_pending_orders(
@@ -89,7 +89,7 @@ async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         deposit_methods.append(build_back_button("back_to_account_number_deposit"))
         deposit_methods.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع💳",
+            text="اختر وسيلة الدفع 💳",
             reply_markup=InlineKeyboardMarkup(deposit_methods),
         )
         return DEPOSIT_METHOD
@@ -140,7 +140,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             order_type="deposit",
             ref_num=ref_num,
         )
-        if (ref_present and ref_present["order_serial"] != -1) or order_present:
+        if (ref_present and ref_present["order_serial"] != -1) or (order_present and order_present['state'] == "approved"):
             await update.message.reply_text(
                 text="رقم عملية مكرر!",
             )

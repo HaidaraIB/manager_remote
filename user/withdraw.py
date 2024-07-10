@@ -55,7 +55,7 @@ async def choose_withdraw_account(update: Update, context: ContextTypes.DEFAULT_
     if update.effective_chat.type == Chat.PRIVATE:
 
         if not context.bot_data["data"]["user_calls"]["withdraw"]:
-            await update.callback_query.answer("السحوبات متوقفة حالياً❗️")
+            await update.callback_query.answer("السحوبات متوقفة حالياً ❗️")
             return ConversationHandler.END
         
         elif DB.check_user_pending_orders(
@@ -96,7 +96,7 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
         payment_methods.append(back_to_user_home_page_button[0])
 
         await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع💳",
+            text="اختر وسيلة الدفع 💳",
             reply_markup=InlineKeyboardMarkup(payment_methods),
         )
         return PAYMENT_METHOD
@@ -269,7 +269,7 @@ async def send_withdraw_order_to_check(
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="التحقق☑️", callback_data=f"check_withdraw_order_{serial}"
+                    text="التحقق ☑️", callback_data=f"check_withdraw_order_{serial}"
                 )
             ),
         )
@@ -321,7 +321,7 @@ def stringify_order(
         f"رقم الحساب 🔢: <code>{acc_number}</code>\n"
         f"كلمة المرور 🈴: <code>{password}</code>\n"
         f"كود السحب: <code>{withdraw_code}</code>\n"
-        f"وسيلة الدفع💳: <b>{method}</b>\n\n"
+        f"وسيلة الدفع 💳: <b>{method}</b>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         f"{method_info}\n\n"
         f"تحقق من توفر المبلغ وقم بقبول/رفض الطلب بناء على ذلك.\n"
