@@ -140,7 +140,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             order_type="deposit",
             ref_num=ref_num,
         )
-        if (ref_present and ref_present["order_serial"] != -1) or (order_present and order_present['state'] != "approved"):
+        if (ref_present and ref_present["order_serial"] != -1) or (order_present and order_present['state'] == "approved"):
             await update.message.reply_text(
                 text="رقم عملية مكرر!",
             )
