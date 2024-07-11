@@ -21,7 +21,6 @@ from start import (
     start_command,
     admin_command,
     worker_command,
-    check_joined_handler,
     inits,
 )
 
@@ -39,6 +38,9 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_admin_home_page_handler,
 )
+from common.force_join import (
+    check_joined_handler,
+)
 
 from user.withdraw import (
     withdraw_handler,
@@ -52,6 +54,7 @@ from user.make_complaint import complaint_handler
 from user.return_order import *
 from user.create_account import *
 from user.respond_to_complaint import reply_to_returned_complaint_handler
+from user.work_with_us import *
 
 from admin.admin_calls import *
 from admin.admin_settings import *
@@ -154,6 +157,8 @@ def main():
     # RETURN
     app.add_handler(handle_returned_order_handler)
     app.add_handler(reply_to_returned_complaint_handler)
+
+    app.add_handler(work_with_us_handler)
 
     # ADMIN SETTINGS
     app.add_handler(admin_settings_handler)

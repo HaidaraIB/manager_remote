@@ -223,6 +223,21 @@ class DB:
             creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+
+        CREATE TABLE IF NOT EXISTS work_with_us_orders (
+            serial INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            full_name TEXT,
+            front_id TEXT,
+            back_id TEXT,
+            pre_balance REAL,
+            gov TEXT,
+            withdraw_name TEXT,
+            longitude TEXT,
+            latitude TEXT,
+            creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
 
         -- init payment methods
@@ -240,6 +255,47 @@ class DB:
         db.commit()
         cr.close()
         db.close()
+
+    @staticmethod
+    @lock_and_release
+    async def add_work_with_us_order(
+        user_id: int,
+        full_name: str,
+        front_id: str,
+        back_id: str,
+        pre_balance: float,
+        gov: str,
+        withdraw_name: str,
+        longitude: str,
+        latitude: str,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            """
+                INSERT INTO work_with_us_orders(
+                    user_id,
+                    full_name,
+                    front_id,
+                    back_id,
+                    pre_balance,
+                    gov,
+                    withdraw_name,
+                    longitude,
+                    latitude
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                full_name,
+                front_id,
+                back_id,
+                pre_balance,
+                gov,
+                withdraw_name,
+                longitude,
+                latitude,
+            ),
+        )
 
     @staticmethod
     @connect_and_close
@@ -781,7 +837,6 @@ class DB:
             f"UPDATE {order_type}_orders SET reason = ? WHERE serial = ?",
             (reason, serial),
         )
-
 
     @staticmethod
     @lock_and_release

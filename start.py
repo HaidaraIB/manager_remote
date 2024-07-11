@@ -2,6 +2,7 @@ from telegram import (
     Update,
     Chat,
     BotCommandScopeChat,
+    ReplyKeyboardRemove,
 )
 
 from telegram.ext import (
@@ -9,14 +10,8 @@ from telegram.ext import (
     ContextTypes,
     Application,
     ConversationHandler,
-    CallbackQueryHandler,
 )
 
-from telegram.constants import (
-    ChatMemberStatus,
-)
-
-import os
 from DB import DB
 
 from common.common import (
@@ -78,18 +73,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not member:
             return
 
-        text = "أهلاً بك..."
-        keyboard = build_user_keyboard()
-
-        await update.message.reply_text(text=text, reply_markup=keyboard)
+        await update.message.reply_text(
+            text="أهلاً بك...",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        await update.message.reply_text(
+            text="القائمة الرئيسية🔝",
+            reply_markup=build_user_keyboard(),
+        )
         return ConversationHandler.END
 
 
 async def worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Worker().filter(update):
-        text = "أهلاً بك..."
-        keyboard = build_worker_keyboard(deposit_agent=DepositAgent().filter(update))
-        await update.message.reply_text(text=text, reply_markup=keyboard)
+        await update.message.reply_text(
+            text="أهلاً بك...",
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
+        )
         return ConversationHandler.END
 
 
@@ -99,31 +101,13 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="أهلاً بك...",
             reply_markup=check_hidden_keyboard(context),
         )
-        text = "تعمل الآن كآدمن🕹"
-        keyboard = build_admin_keyboard()
-        await update.message.reply_text(text=text, reply_markup=keyboard)
-        return ConversationHandler.END
-
-
-async def check_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_memeber = await context.bot.get_chat_member(
-        chat_id=int(os.getenv("CHANNEL_ID")), user_id=update.effective_user.id
-    )
-    if chat_memeber.status == ChatMemberStatus.LEFT:
-        await update.callback_query.answer(
-            text="قم بالاشتراك بالقناة أولاً", show_alert=True
+        await update.message.reply_text(
+            text="تعمل الآن كآدمن🕹",
+            reply_markup=build_admin_keyboard(),
         )
-        return
-
-    text = "أهلاً بك..."
-    keyboard = build_user_keyboard()
-    await update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
+        return ConversationHandler.END
 
 
 worker_command = CommandHandler(command="worker", callback=worker)
 admin_command = CommandHandler(command="admin", callback=admin)
 start_command = CommandHandler(command="start", callback=start)
-
-check_joined_handler = CallbackQueryHandler(
-    callback=check_joined, pattern="^check joined$"
-)
