@@ -48,30 +48,6 @@ complaints_keyboard = [
     back_to_user_home_page_button[0],
 ]
 
-async def handle_complaint_about(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-    about: str,
-):
-    operations = DB.get_orders(order_type=about, user_id=update.effective_user.id)
-
-    if not operations:
-        return False
-
-    keyboard = build_operations_keyboard(
-        serials=[op["serial"] for op in operations if not op["complaint_took_care_of"]]
-    )
-    keyboard.append(build_back_button(f"back_to_complaint_about"))
-    keyboard.append(back_to_user_home_page_button[0])
-
-    context.user_data["operations_keyboard"] = keyboard
-
-    await update.callback_query.edit_message_text(
-        text=choose_operations_text,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-    return True
-
 
 def stringify_order(serial: int, order_type: str):
     op = DB.get_one_order(order_type=order_type, serial=serial)
@@ -183,6 +159,7 @@ def build_operations_keyboard(serials: list[int]):
                 ),
             ]
         )
-
+    keyboard.append(build_back_button(f"back_to_complaint_about"))
+    keyboard.append(back_to_user_home_page_button[0])
     return keyboard
 
