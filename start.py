@@ -43,7 +43,6 @@ async def inits(app: Application):
     if not app.bot_data.get("suspended_workers", False):
         app.bot_data["suspended_workers"] = set()
 
-
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     st_cmd = ("start", "start command")
     if Worker().filter(update):
