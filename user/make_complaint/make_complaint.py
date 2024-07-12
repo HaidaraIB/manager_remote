@@ -62,9 +62,11 @@ async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-
-        about = update.callback_query.data.replace(" complaint", "")
-        context.user_data["complaint_about"] = about
+        if not update.callback_query.data.startswith("back"):
+            about = update.callback_query.data.replace(" complaint", "")
+            context.user_data["complaint_about"] = about
+        else:
+            about = context.user_data["complaint_about"]
 
         if about == "deposit":
             ar_texts = ["إيداع", "الإيداع"]
@@ -73,17 +75,27 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             ar_texts = ["شراء USDT", "شراء USDT"]
 
-        res = await handle_complaint_about(
-            update=update,
-            context=context,
-            about=about,
-        )
+        operations = DB.get_orders(order_type=about, user_id=update.effective_user.id)
 
-        if not res:
+        if not operations:
             await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد❗️")
             return
 
+        keyboard = build_operations_keyboard(
+            serials=[
+                op["serial"] for op in operations if not op["complaint_took_care_of"]
+            ]
+        )
+
+        await update.callback_query.edit_message_text(
+            text=choose_operations_text,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+
         return CHOOSE_OPERATION
+
+
+back_to_complaint_about = make_complaint
 
 
 async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -152,6 +164,9 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return COMPLAINT_REASON
 
 
+back_to_choose_operation = complaint_about
+
+
 async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["reason"] = update.message.text
@@ -176,6 +191,9 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return COMPLAINT_CONFIRMATION
+
+
+back_to_complaint_reason = choose_operation
 
 
 async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -236,35 +254,23 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
             return ConversationHandler.END
 
         else:  # in case of no complaint selection
+            operations = DB.get_orders(
+                order_type=context.user_data["complaint_about"],
+                user_id=update.effective_user.id,
+            )
+            keyboard = build_operations_keyboard(
+                serials=[
+                    op["serial"]
+                    for op in operations
+                    if not op["complaint_took_care_of"]
+                ]
+            )
             await context.bot.send_message(
                 chat_id=update.effective_user.id,
                 text=choose_operations_text,
-                reply_markup=InlineKeyboardMarkup(
-                    context.user_data["operations_keyboard"]
-                ),
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
             return CHOOSE_OPERATION
-
-
-async def back_to_choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        await update.callback_query.edit_message_text(
-            text=choose_operations_text,
-            reply_markup=InlineKeyboardMarkup(context.user_data["operations_keyboard"]),
-        )
-        return CHOOSE_OPERATION
-
-
-back_to_complaint_reason = choose_operation
-
-
-async def back_to_complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        await update.callback_query.edit_message_text(
-            text="شكوى فيما يخص:",
-            reply_markup=InlineKeyboardMarkup(complaints_keyboard),
-        )
-        return COMPLAINT_ABOUT
 
 
 complaint_handler = ConversationHandler(

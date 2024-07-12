@@ -108,13 +108,6 @@ def disable_httpx():
         logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
-op_dict_en_to_ar = {
-    "withdraw": "سحب",
-    "deposit": "إيداع",
-    "buy_usdt": "شراء USDT",
-}
-
-
 def payment_method_pattern(callback_data: str):
     return callback_data in list(map(lambda x: x[0], DB.get_payment_methods()))
 

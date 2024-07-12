@@ -9,9 +9,6 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from common.common import (
-    op_dict_en_to_ar,
-)
 
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
@@ -30,6 +27,7 @@ from admin.workers_settings.common import (
     create_worker_info_text,
     back_to_choose_position,
     back_to_worker_settings_handler,
+    op_dict_en_to_ar
 )
 from constants import *
 

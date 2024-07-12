@@ -22,6 +22,11 @@ from custom_filters.Admin import Admin
     CHOOSE_WORKER,
 ) = range(2)
 
+op_dict_en_to_ar = {
+    "withdraw": "سحب",
+    "deposit": "إيداع",
+    "buy_usdt": "شراء USDT",
+}
 
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
