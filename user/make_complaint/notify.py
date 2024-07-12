@@ -80,13 +80,23 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else (op["worker_id"] if op["state"] == "sent" else op["checker_id"])
         )
 
+        message_id = (
+            op["pending_process_message_id"]
+            if not op["working_on_it"] and op["state"] == "sent"
+            else (
+                op["pending_check_message_id"]
+                if not op["working_on_it"]
+                else (
+                    op["processing_message_id"]
+                    if op["state"] == "sent"
+                    else op["checking_message_id"]
+                )
+            )
+        )
+
         old_message = await cpyro.get_messages(
             chat_id=chat_id,
-            message_ids=(
-                op["pending_process_message_id"]
-                if op["pending_process_message_id"]
-                else op["pending_check_message_id"]
-            ),
+            message_ids=message_id,
         )
         message = await cpyro.copy_message(
             chat_id=chat_id,
@@ -105,31 +115,19 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         if op["state"] == "sent":
-            if op["working_on_it"]:
-                await DB.add_message_ids(
-                    order_type=context.user_data["complaint_about"],
-                    serial=serial,
-                    processing_message_id=message.id,
-                )
-            else:
-                await DB.add_message_ids(
-                    order_type=context.user_data["complaint_about"],
-                    serial=serial,
-                    pending_process_message_id=message.id,
-                )
+            await DB.add_message_ids(
+                order_type=context.user_data["complaint_about"],
+                serial=serial,
+                processing_message_id=message.id if op["working_on_it"] else 0,
+                pending_process_message_id=message.id if not op["working_on_it"] else 0,
+            )
         else:
-            if op["working_on_it"]:
-                await DB.add_message_ids(
-                    order_type=context.user_data["complaint_about"],
-                    serial=serial,
-                    checking_message_id=message.id,
-                )
-            else:
-                await DB.add_message_ids(
-                    order_type=context.user_data["complaint_about"],
-                    serial=serial,
-                    pending_check_message_id=message.id,
-                )
+            await DB.add_message_ids(
+                order_type=context.user_data["complaint_about"],
+                serial=serial,
+                checking_message_id=message.id if op["working_on_it"] else 0,
+                pending_check_message_id=message.id if not op["working_on_it"] else 0,
+            )
 
         context.user_data[
             f"notified_{context.user_data['complaint_about']}_operations"
