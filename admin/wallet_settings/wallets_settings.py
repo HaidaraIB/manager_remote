@@ -21,6 +21,7 @@ from common.common import (
     build_admin_keyboard,
     build_worker_keyboard,
     payment_method_pattern,
+    build_back_button,
 )
 
 from common.back_to_home_page import (
@@ -38,6 +39,14 @@ async def wallets_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         Admin().filter(update) or DepositAgent().filter(update)
     ):
         methods = build_methods_keyboard()
+        methods.append(
+            [
+                InlineKeyboardButton(
+                    text="محفظة طلبات الوكيل",
+                    callback_data="agent",
+                )
+            ]
+        )
         methods.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳.",
@@ -51,12 +60,7 @@ async def choose_method_to_update(update: Update, context: ContextTypes.DEFAULT_
         Admin().filter(update) or DepositAgent().filter(update)
     ):
         back_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="الرجوع🔙",
-                    callback_data="back_to_wallets_settings",
-                )
-            ],
+            build_back_button("back_to_wallets_settings"),
             back_to_admin_home_page_button[0],
         ]
 

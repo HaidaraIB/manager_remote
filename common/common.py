@@ -449,4 +449,14 @@ def build_groups_keyboard(op: str):
                 callback_data=f"{op} {PERFECT_MONEY}_group",
             ),
         ],
+        [
+            InlineKeyboardButton(
+                text="طلبات الانضمام (وكيل)",
+                callback_data="agent_orders_group",
+            ),
+            InlineKeyboardButton(
+                text="طلبات الانضمام (شريك)",
+                callback_data="partner_orders_group",
+            ),
+        ],
     ]

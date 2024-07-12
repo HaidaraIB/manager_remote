@@ -3,6 +3,7 @@ import os
 import re
 import traceback
 import datetime
+from telegram import PhotoSize
 from asyncio import Lock
 from constants import *
 
@@ -227,14 +228,25 @@ class DB:
         CREATE TABLE IF NOT EXISTS work_with_us_orders (
             serial INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
-            full_name TEXT,
-            front_id TEXT,
-            back_id TEXT,
-            pre_balance REAL,
             gov TEXT,
-            withdraw_name TEXT,
-            longitude TEXT,
+            neighborhood TEXT,
             latitude TEXT,
+            longitude TEXT,
+
+            front_id TEXT,
+            front_unique_id TEXT,
+            front_width TEXT,
+            front_height TEXT,
+            front_size TEXT,
+
+            back_id TEXT,
+            back_unique_id TEXT,
+            back_width TEXT,
+            back_height TEXT,
+            back_size TEXT,
+
+            ref_number TEXT,
+            
             creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -260,42 +272,60 @@ class DB:
     @lock_and_release
     async def add_work_with_us_order(
         user_id: int,
-        full_name: str,
-        front_id: str,
-        back_id: str,
-        pre_balance: float,
         gov: str,
-        withdraw_name: str,
-        longitude: str,
+        neighborhood: str,
         latitude: str,
+        longitude: str,
+        front_id: PhotoSize,
+        back_id: PhotoSize,
+        ref_num: str,
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(
             """
                 INSERT INTO work_with_us_orders(
                     user_id,
-                    full_name,
-                    front_id,
-                    back_id,
-                    pre_balance,
                     gov,
-                    withdraw_name,
+                    neighborhood,
+                    latitude,
                     longitude,
-                    latitude
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+                    front_id,
+                    front_unique_id,
+                    front_size,
+                    front_width,
+                    front_height,
+
+                    back_id,
+                    back_unique_id,
+                    back_size,
+                    back_width,
+                    back_height,
+
+                    ref_number
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 user_id,
-                full_name,
-                front_id,
-                back_id,
-                pre_balance,
                 gov,
-                withdraw_name,
-                longitude,
+                neighborhood,
                 latitude,
+                longitude,
+                front_id.file_id,
+                front_id.file_unique_id,
+                front_id.file_size,
+                front_id.width,
+                front_id.height,
+                back_id.file_id,
+                back_id.file_unique_id,
+                back_id.file_size,
+                back_id.width,
+                back_id.height,
+                ref_num
             ),
         )
+        cr.execute("SELECT last_insert_rowid()")
+        return cr.fetchone()[0]
 
     @staticmethod
     @connect_and_close

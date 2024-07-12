@@ -4,20 +4,69 @@ from telegram import (
 
 from common.back_to_home_page import back_to_user_home_page_button
 
+syrian_govs_en_ar = {
+    "Damascus": "دمشق",
+    "Aleppo": "حلب",
+    "Rif-Dimashq": "ريف دمشق",
+    "Daraa": "درعا",
+    "Tartous": "طرطوس",
+    "Homs": "حمص",
+    "Hama": "حماة",
+    "Idlib": "إدلب",
+    "Raqqa": "الرقة",
+    "Deir-Ezor": "دير الزور",
+    "Hasakah": "الحسكة",
+    "Suwayda": "السويداء",
+    "Latakia": "اللاذقية",
+    "Kenitra": "القنيطرة",
+}
+
+
+def build_govs_keyboard():
+    govs = [
+        "دمشق Damascus",
+        "حلب Aleppo",
+        "ريف دمشق Rif-Dimashq",
+        "درعا Daraa",
+        "طرطوس Tartous",
+        "حمص Homs",
+        "حماة Hama",
+        "إدلب Idlib",
+        "الرقة Raqqa",
+        "دير الزور Deir-Ezor",
+        "الحسكة Hasakah",
+        "السويداء Suwayda",
+        "اللاذقية Latakia",
+        "القنيطرة Kenitra",
+    ]
+    return [
+        [
+            InlineKeyboardButton(
+                text=govs[i],
+                callback_data=govs[i].split(" ")[1] + "_gov",
+            ),
+            InlineKeyboardButton(
+                text=govs[i + 1],
+                callback_data=govs[i + 1].split(" ")[1] + "_gov",
+            ),
+        ]
+        for i in range(0, len(govs), 2)
+    ]
+
 
 def stringify_agent_order(
-    full_name: str,
-    pre_balance: float,
+    ref_num: float,
     gov: str,
-    withdraw_name: str,
+    neighborhood: str,
+    serial: int,
 ):
     return (
         "طلب عمل جديد\n\n"
         "النوع: <b>وكيل</b>\n"
-        f"الاسم الثلاثي: <b>{full_name}</b>\n"
-        f"مبلغ الإيداع المسبق: <code>{pre_balance}</code>\n"
         f"المحافظة: <b>{gov}</b>\n"
-        f"الاسم للظهور أثناء السحب: <b>{withdraw_name}</b>"
+        f"الحي: <b>{neighborhood}</b>\n"
+        f"رقم العملية: <code>{ref_num}</code>\n"
+        f"Serial: <code>{serial}</code>"
     )
 
 

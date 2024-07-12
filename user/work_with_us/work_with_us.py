@@ -10,7 +10,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     MessageHandler,
     filters,
-    CommandHandler
+    CommandHandler,
 )
 
 from common.back_to_home_page import (
@@ -18,34 +18,35 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
 )
 from user.work_with_us.agent import (
+    NEIGHBORHOOD,
+    LOCATION,
     FRONT_ID,
     BACK_ID,
-    PRE_BALANCE,
-    WITHDRAW_NAME,
-    GOV,
-    LOCATION,
-    get_full_name,
+    REF_NUM,
+    choose_gov,
+    get_neighborhood,
     share_location,
-    get_back_id,
     get_front_id,
-    get_gov,
-    get_pre_balance,
-    get_withdraw_name,
-    back_to_get_back_id,
+    get_back_id,
+    send_to_check_agent_order,
+    back_to_get_neighborhood,
+    back_to_share_location,
     back_to_get_front_id,
-    back_to_get_gov,
-    back_to_get_pre_balance,
-    back_to_get_withdraw_name,
+    back_to_get_back_id,
 )
 
-from user.work_with_us.common import work_with_us_keyboard, WORK_WITH_US_DICT
+from user.work_with_us.common import (
+    work_with_us_keyboard,
+    WORK_WITH_US_DICT,
+    build_govs_keyboard,
+)
 from common.common import build_back_button
 from start import start_command
 
 (
     CHOOSE_WORKING_WITH_US,
     CHOOSE_WHAT_DO_U_WANNA_BE,
-    FULL_NAME,
+    CHOOSE_GOV,
 ) = range(3)
 
 
@@ -62,6 +63,12 @@ async def choose_working_with_us(update: Update, context: ContextTypes.DEFAULT_T
     if update.effective_chat.type == Chat.PRIVATE:
         if not update.callback_query.data.startswith("back"):
             role = update.callback_query.data.split("_")[0]
+            if role == "agent" and not update.effective_user.username:
+                await update.callback_query.answer(
+                    text="ليس لديك اسم مستخدم علي تيليجرام، يجب عليك اختيار اسم مستخدم لكي تتمكن من تقديم طلب وكيل.",
+                    show_alert=True,
+                )
+                return
             context.user_data["work_with_us_role"] = role
         else:
             role = context.user_data["work_with_us_role"]
@@ -76,7 +83,9 @@ async def choose_working_with_us(update: Update, context: ContextTypes.DEFAULT_T
         )
         return CHOOSE_WHAT_DO_U_WANNA_BE
 
+
 back_to_choose_working_with_us = work_with_us
+
 
 async def choose_what_do_u_wanna_be(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
@@ -85,15 +94,19 @@ async def choose_what_do_u_wanna_be(update: Update, context: ContextTypes.DEFAUL
             back_to_user_home_page_button[0],
         ]
         if context.user_data["work_with_us_role"] == "agent":
+            govs_keyboard = build_govs_keyboard()
+            govs_keyboard.append(back_buttons[0])
+            govs_keyboard.append(back_buttons[1])
             await update.callback_query.edit_message_text(
-                text="أرسل اسمك الثلاثي",
-                reply_markup=InlineKeyboardMarkup(back_buttons),
+                text="اختر المحافظة التي ستعمل بها",
+                reply_markup=InlineKeyboardMarkup(govs_keyboard),
             )
-            return FULL_NAME
+            return CHOOSE_GOV
+
 
 back_to_choose_what_do_u_wanna_be = choose_working_with_us
 
-back_to_get_full_name = choose_what_do_u_wanna_be
+back_to_choose_gov = choose_what_do_u_wanna_be
 
 work_with_us_handler = ConversationHandler(
     entry_points=[
@@ -115,10 +128,22 @@ work_with_us_handler = ConversationHandler(
                 "^wanna_be_((agent)|(partner))$",
             )
         ],
-        FULL_NAME: [
+        CHOOSE_GOV: [
+            CallbackQueryHandler(
+                choose_gov,
+                "^.+_gov$",
+            )
+        ],
+        NEIGHBORHOOD: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_full_name,
+                callback=get_neighborhood,
+            )
+        ],
+        LOCATION: [
+            MessageHandler(
+                filters=filters.LOCATION,
+                callback=share_location,
             )
         ],
         FRONT_ID: [
@@ -133,42 +158,26 @@ work_with_us_handler = ConversationHandler(
                 callback=get_back_id,
             )
         ],
-        PRE_BALANCE: [
-            MessageHandler(
-                filters=filters.Regex("^\d+.?\d*$"),
-                callback=get_pre_balance,
-            )
-        ],
-        WITHDRAW_NAME: [
+        REF_NUM: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_withdraw_name,
-            )
-        ],
-        GOV: [
-            MessageHandler(
-                filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_gov,
-            )
-        ],
-        LOCATION: [
-            MessageHandler(
-                filters=filters.LOCATION,
-                callback=share_location,
+                callback=send_to_check_agent_order,
             )
         ],
     },
     fallbacks=[
-        CallbackQueryHandler(back_to_get_pre_balance, "^back_to_get_pre_balance$"),
-        CallbackQueryHandler(back_to_choose_what_do_u_wanna_be, "^back_to_choose_what_do_u_wanna_be$"),
-        CallbackQueryHandler(back_to_choose_working_with_us, "^back_to_choose_working_with_us$"),
+        CallbackQueryHandler(
+            back_to_choose_what_do_u_wanna_be, "^back_to_choose_what_do_u_wanna_be$"
+        ),
+        CallbackQueryHandler(
+            back_to_choose_working_with_us, "^back_to_choose_working_with_us$"
+        ),
         CallbackQueryHandler(back_to_get_back_id, "^back_to_get_back_id$"),
         CallbackQueryHandler(back_to_get_front_id, "^back_to_get_front_id$"),
-        CallbackQueryHandler(back_to_get_full_name, "^back_to_get_full_name$"),
-        CallbackQueryHandler(back_to_get_gov, "^back_to_get_gov$"),
-        CommandHandler('back', back_to_get_withdraw_name),
+        CallbackQueryHandler(back_to_choose_gov, "^back_to_choose_gov$"),
+        CallbackQueryHandler(back_to_share_location, "^back_to_share_location$"),
+        CommandHandler("back", back_to_get_neighborhood),
         start_command,
         back_to_user_home_page_handler,
     ],
-    
 )

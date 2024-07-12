@@ -1,11 +1,13 @@
 __pycache__
 .env
 test.py
-data/*
-data_test/*
+data
+data_test
 *.session
 *.session-journal
 .vscode
-old_data/*
-database/*
+old_data
+database
 errors.txt
+alembic
+alembic.ini
