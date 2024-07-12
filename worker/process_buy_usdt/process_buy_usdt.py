@@ -126,9 +126,9 @@ async def reply_with_payment_proof_buy_usdt(
         latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
-            await context.bot.send_photo(
+            await context.bot.send_media_group(
                 chat_id=context.bot_data["data"]["latency_group"],
-                photo=update.message.photo[-1],
+                media=media,
                 caption=f"طلب متأخر بمقدار\n<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n\n"
                 + caption,
             )
