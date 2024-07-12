@@ -32,21 +32,7 @@ from custom_filters import Admin, Worker, DepositAgent
 
 
 async def inits(app: Application):
-    if not app.bot_data.get("data", False):
-        app.bot_data["data"] = {
-            "deposit_gift_percentage": 1,
-            "workers_reward_percentage": 1,
-            "workers_reward_withdraw_percentage": 1,
-            "user_calls": {
-                "withdraw": True,
-                "deposit": True,
-                "buy_usdt": True,
-                "create_account": True,
-                "make_complaint": True,
-            },
-        }
-    if not app.bot_data.get("suspended_workers", False):
-        app.bot_data["suspended_workers"] = set()
+    
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -78,18 +64,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not member:
             return
 
-        text = "أهلاً بك..."
-        keyboard = build_user_keyboard()
-
-        await update.message.reply_text(text=text, reply_markup=keyboard)
+        await update.message.reply_text(
+            text="أهلاً بك...",
+            reply_markup=build_user_keyboard(),
+        )
         return ConversationHandler.END
 
 
 async def worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Worker().filter(update):
-        text = "أهلاً بك..."
-        keyboard = build_worker_keyboard(deposit_agent=DepositAgent().filter(update))
-        await update.message.reply_text(text=text, reply_markup=keyboard)
+        await update.message.reply_text(
+            text="أهلاً بك...",
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update)
+            ),
+        )
         return ConversationHandler.END
 
 
@@ -99,9 +88,10 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="أهلاً بك...",
             reply_markup=check_hidden_keyboard(context),
         )
-        text = "تعمل الآن كآدمن🕹"
-        keyboard = build_admin_keyboard()
-        await update.message.reply_text(text=text, reply_markup=keyboard)
+        await update.message.reply_text(
+            text="تعمل الآن كآدمن 🕹",
+            reply_markup=build_admin_keyboard(),
+        )
         return ConversationHandler.END
 
 
@@ -115,9 +105,10 @@ async def check_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    text = "أهلاً بك..."
-    keyboard = build_user_keyboard()
-    await update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
+    await update.callback_query.edit_message_text(
+        text="أهلاً بك...",
+        reply_markup=build_user_keyboard(),
+    )
 
 
 worker_command = CommandHandler(command="worker", callback=worker)
