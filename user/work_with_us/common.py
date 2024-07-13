@@ -21,6 +21,12 @@ syrian_govs_en_ar = {
     "Kenitra": "القنيطرة",
 }
 
+def govs_pattern(callback_data:str):
+    try:
+        return callback_data.split("_")[0] in syrian_govs_en_ar
+    except:
+        return False
+
 
 def build_govs_keyboard():
     govs = [

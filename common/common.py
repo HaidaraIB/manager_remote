@@ -36,14 +36,19 @@ def pretty_time_delta(seconds):
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
     if days > 0:
-        return '%d days %d hours %d minutes %d seconde' % (days, hours, minutes, seconds)
+        return "%d days %d hours %d minutes %d seconde" % (
+            days,
+            hours,
+            minutes,
+            seconds,
+        )
     elif hours > 0:
-        return '%d hours %d minutes %d seconds' % (hours, minutes, seconds)
+        return "%d hours %d minutes %d seconds" % (hours, minutes, seconds)
     elif minutes > 0:
-        return '%d minutes %d seconds' % (minutes, seconds)
+        return "%d minutes %d seconds" % (minutes, seconds)
     else:
-        return '%d seconds' % (seconds,)
-    
+        return "%d seconds" % (seconds,)
+
 
 def apply_ex_rate(
     method: str,
@@ -90,7 +95,6 @@ def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
     return reply_markup
 
 
-
 async def notify_workers(
     context: ContextTypes.DEFAULT_TYPE,
     workers,
@@ -103,13 +107,17 @@ async def notify_workers(
         )
         await asyncio.sleep(1)
 
+
 def disable_httpx():
     if int(os.getenv("OWNER_ID")) != 755501092:
         logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def payment_method_pattern(callback_data: str):
-    return callback_data in list(map(lambda x: x[0], DB.get_payment_methods()))
+    return (
+        callback_data in list(map(lambda x: x[0], DB.get_payment_methods()))
+        or callback_data == "طلبات الوكيل"
+    )
 
 
 def build_back_button(data: str):
@@ -120,7 +128,11 @@ def build_user_keyboard():
     keyboard = [
         [InlineKeyboardButton(text="سحب 💳", callback_data="withdraw")],
         [InlineKeyboardButton(text="إيداع 📥", callback_data="deposit")],
-        [InlineKeyboardButton(text="إنشاء حساب موثق ™️", callback_data="create account")],
+        [
+            InlineKeyboardButton(
+                text="إنشاء حساب موثق ™️", callback_data="create account"
+            )
+        ],
         [
             InlineKeyboardButton(
                 text="إضافة حساب سابق ➕", callback_data="add existing account"
@@ -129,7 +141,7 @@ def build_user_keyboard():
         [InlineKeyboardButton(text="شراء USDT 💰", callback_data="buy usdt")],
         [InlineKeyboardButton(text="إنشاء شكوى 🗳", callback_data="make complaint")],
         [InlineKeyboardButton(text="عملك معنا 💼", callback_data="work with us")],
-        [InlineKeyboardButton(text="وكيل موصى به 🈂️", url="t.me/Melbet_bo")],
+        [InlineKeyboardButton(text="وكلاء موصى بهم 🈂️", callback_data="trusted agents")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -452,11 +464,11 @@ def build_groups_keyboard(op: str):
         [
             InlineKeyboardButton(
                 text="طلبات الانضمام (وكيل)",
-                callback_data="agent_orders_group",
+                callback_data=f"{op} agent_orders_group",
             ),
             InlineKeyboardButton(
                 text="طلبات الانضمام (شريك)",
-                callback_data="partner_orders_group",
+                callback_data=f"{op} partner_orders_group",
             ),
         ],
     ]

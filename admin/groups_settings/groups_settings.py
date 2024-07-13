@@ -56,7 +56,10 @@ async def change_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.delete_message()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"الغروب الحالي: <code>{context.bot_data["data"][target_group]}</code>\n\nاختر الغروب الذي تريد تعديله بالضغط على الزر أدناه، يمكنك إلغاء العملية بالضغط على /admin.",
+            text=(
+                f"الغروب الحالي: <code>{context.bot_data['data'][target_group]}</code>\n\n"
+                "اختر الغروب الذي تريد تعديله بالضغط على الزر أدناه، يمكنك إلغاء العملية بالضغط على /admin."
+            ),
             reply_markup=ReplyKeyboardMarkup.from_button(
                 KeyboardButton(
                     text="اختيار غروب جديد 👥",
@@ -92,7 +95,12 @@ async def get_new_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
 change_groups_handler = CallbackQueryHandler(change_groups, "^change groups$")
 
 change_group_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(change_group, "^change.*_group$")],
+    entry_points=[
+        CallbackQueryHandler(
+            change_group,
+            "^change.*_group$",
+        ),
+    ],
     states={
         NEW_GROUP_ID: [
             MessageHandler(

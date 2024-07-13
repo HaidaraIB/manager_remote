@@ -55,6 +55,7 @@ from user.return_order import *
 from user.create_account import *
 from user.respond_to_complaint import reply_to_returned_complaint_handler
 from user.work_with_us import *
+from user.show_trusted_agents import *
 
 from admin.admin_calls import *
 from admin.admin_settings import *
@@ -74,6 +75,8 @@ from worker.process_buy_usdt import *
 from worker.check_deposit import *
 
 from check_complaint import *
+
+from check_work_with_us import *
 
 from dotenv import load_dotenv
 
@@ -112,6 +115,8 @@ def main():
             callback=invalid_callback_data, pattern=InvalidCallbackData
         )
     )
+
+    app.add_handler(show_trusted_agents_handler)
 
     # DEPOSIT
     app.add_handler(reply_with_payment_proof_handler)
@@ -182,6 +187,14 @@ def main():
     app.add_handler(reply_on_close_complaint_handler)
     app.add_handler(skip_close_complaint_handler)
     app.add_handler(close_complaint_handler)
+
+    # WORK_WITH_US
+        # Agent_Orders
+    app.add_handler(accept_agent_order_handler)
+    app.add_handler(get_apk_login_info_handler)
+    app.add_handler(decline_agent_order_handler)
+    app.add_handler(get_decline_agent_order_reason_handler)
+    app.add_handler(back_to_check_agent_order_handler)
 
     app.add_handler(reply_to_create_account_order_handler)
     app.add_handler(add_existing_account_handler)

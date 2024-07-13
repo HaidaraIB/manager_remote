@@ -39,6 +39,7 @@ from user.work_with_us.common import (
     work_with_us_keyboard,
     WORK_WITH_US_DICT,
     build_govs_keyboard,
+    govs_pattern,
 )
 from common.common import build_back_button
 from start import start_command
@@ -131,7 +132,7 @@ work_with_us_handler = ConversationHandler(
         CHOOSE_GOV: [
             CallbackQueryHandler(
                 choose_gov,
-                "^.+_gov$",
+                govs_pattern,
             )
         ],
         NEIGHBORHOOD: [

@@ -148,7 +148,7 @@ async def get_back_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         text = (
             f"أرسل مبلغ الإيداع المسبق إلى المحفظة\n\n"
-            f"<code>{context.bot_data['data']['agent_number']}</code>\n\n"
+            f"<code>{context.bot_data['data']['طلبات الوكيل_number']}</code>\n\n"
             f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
             "<b>ملاحظة: الحد الأدنى للمبلغ المسبق = 100 ألف ليرة</b>\n\n"
         )
@@ -171,7 +171,7 @@ back_to_get_back_id = get_front_id
 
 async def send_to_check_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        serial = await DB.add_work_with_us_order(
+        serial = await DB.add_trusted_agent_order(
             user_id=update.effective_user.id,
             gov=context.user_data["agent_gov"],
             neighborhood=context.user_data["agent_neighborhood"],

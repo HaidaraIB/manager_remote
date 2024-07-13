@@ -43,7 +43,7 @@ async def wallets_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [
                 InlineKeyboardButton(
                     text="محفظة طلبات الوكيل",
-                    callback_data="agent",
+                    callback_data="طلبات الوكيل",
                 )
             ]
         )
@@ -71,7 +71,10 @@ async def choose_method_to_update(update: Update, context: ContextTypes.DEFAULT_
         except KeyError:
             context.bot_data["data"][f"{update.callback_query.data}_number"] = 123456
 
-        text = f"أرسل رقم حساب {update.callback_query.data} الجديد🔢\n\الرقم الحالي الحالي: <code>{context.bot_data['data'][f'{update.callback_query.data}_number']}</code>"
+        text = (
+            f"أرسل رقم حساب {update.callback_query.data} الجديد 🔢\n\n"
+            f"الرقم الحالي: <code>{context.bot_data['data'][f'{update.callback_query.data}_number']}</code>"
+        )
 
         await update.callback_query.edit_message_text(
             text=text,
@@ -91,7 +94,7 @@ async def new_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.bot_data["data"][
             f"{context.user_data['wallet_settings_method']}_number"
         ] = update.message.text
-        text = f"تم تغيير رقم حساب <b>{context.user_data['wallet_settings_method']}</b> ينجاح✅"
+        text = f"تم تغيير رقم حساب <b>{context.user_data['wallet_settings_method']}</b> بنجاح ✅"
 
         await update.message.reply_text(
             text=text,

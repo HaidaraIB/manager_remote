@@ -225,13 +225,15 @@ class DB:
         );
 
 
-        CREATE TABLE IF NOT EXISTS work_with_us_orders (
+        CREATE TABLE IF NOT EXISTS trusted_agents_orders (
             serial INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             gov TEXT,
             neighborhood TEXT,
             latitude TEXT,
             longitude TEXT,
+            state TEXT DEFAULT 'pending',
+            reason TEXT,
 
             front_id TEXT,
             front_unique_id TEXT,
@@ -247,7 +249,16 @@ class DB:
 
             ref_number TEXT,
             
-            creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            approve_date TIMESTAMP,
+            decline_date TIMESTAMP
+        );
+
+        -- We're not storing username even though we rely on it because it may change anytime so we'll get_chat by id everytime.
+        CREATE TABLE IF NOT EXISTS trusted_agents(
+            user_id INTEGER,
+            gov TEXT,
+            order_serial INTEGER
         );
 
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
@@ -269,8 +280,61 @@ class DB:
         db.close()
 
     @staticmethod
+    @connect_and_close
+    def get_trusted_agents(gov: str, cr: sqlite3.Cursor = None):
+        cr.execute("SELECT * FROM trusted_agents WHERE gov = ?", (gov,))
+        return cr.fetchall()
+
+    @staticmethod
     @lock_and_release
-    async def add_work_with_us_order(
+    async def add_trusted_agent(
+        user_id: int,
+        gov: str,
+        order_serial: int,
+        cr: sqlite3.Cursor = None,
+    ):
+        cr.execute(
+            "INSERT INTO trusted_agents VALUES(?, ?, ?)",
+            (
+                user_id,
+                gov,
+                order_serial,
+            ),
+        )
+        cr.execute(
+            """
+                UPDATE trusted_agents_orders SET approve_date = ?,
+                                                 state = 'approved'
+                WHERE serial = ?
+            """,
+            (
+                datetime.datetime.now(),
+                order_serial,
+            ),
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def decline_trusted_agent_order(
+        serial: int, reason: str, cr: sqlite3.Cursor = None
+    ):
+        cr.execute(
+            """
+                UPDATE trusted_agents_orders SET decline_date = ?,
+                                                 state = 'declined',
+                                                 reason = ?
+                WHERE serial = ?
+            """,
+            (
+                datetime.datetime.now(),
+                reason,
+                serial,
+            ),
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def add_trusted_agent_order(
         user_id: int,
         gov: str,
         neighborhood: str,
@@ -283,7 +347,7 @@ class DB:
     ):
         cr.execute(
             """
-                INSERT INTO work_with_us_orders(
+                INSERT INTO trusted_agents_orders(
                     user_id,
                     gov,
                     neighborhood,
@@ -321,7 +385,7 @@ class DB:
                 back_id.file_size,
                 back_id.width,
                 back_id.height,
-                ref_num
+                ref_num,
             ),
         )
         cr.execute("SELECT last_insert_rowid()")
