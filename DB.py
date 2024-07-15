@@ -185,7 +185,7 @@ class DB:
             serial INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             full_name TEXT,
-            national_number INTEGER,
+            national_number TEXT,
             state TEXT DEFAULT 'pending',
             order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -257,7 +257,7 @@ class DB:
     async def add_create_account_order(
         user_id: int,
         full_name: str,
-        nat_num: int,
+        nat_num: str,
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(

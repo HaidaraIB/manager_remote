@@ -84,7 +84,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         serial = await DB.add_create_account_order(
             user_id=update.effective_user.id,
             full_name=context.user_data["full_name"],
-            nat_num=int(update.message.text),
+            nat_num=update.message.text,
         )
 
         text = (
