@@ -36,14 +36,19 @@ def pretty_time_delta(seconds):
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
     if days > 0:
-        return '%d days %d hours %d minutes %d seconde' % (days, hours, minutes, seconds)
+        return "%d days %d hours %d minutes %d seconde" % (
+            days,
+            hours,
+            minutes,
+            seconds,
+        )
     elif hours > 0:
-        return '%d hours %d minutes %d seconds' % (hours, minutes, seconds)
+        return "%d hours %d minutes %d seconds" % (hours, minutes, seconds)
     elif minutes > 0:
-        return '%d minutes %d seconds' % (minutes, seconds)
+        return "%d minutes %d seconds" % (minutes, seconds)
     else:
-        return '%d seconds' % (seconds,)
-    
+        return "%d seconds" % (seconds,)
+
 
 def apply_ex_rate(
     method: str,
@@ -90,7 +95,6 @@ def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
     return reply_markup
 
 
-
 async def notify_workers(
     context: ContextTypes.DEFAULT_TYPE,
     workers,
@@ -102,6 +106,7 @@ async def notify_workers(
             text=text,
         )
         await asyncio.sleep(1)
+
 
 def disable_httpx():
     if int(os.getenv("OWNER_ID")) != 755501092:
@@ -120,7 +125,11 @@ def build_user_keyboard():
     keyboard = [
         [InlineKeyboardButton(text="سحب 💳", callback_data="withdraw")],
         [InlineKeyboardButton(text="إيداع 📥", callback_data="deposit")],
-        [InlineKeyboardButton(text="إنشاء حساب موثق ™️", callback_data="create account")],
+        [
+            InlineKeyboardButton(
+                text="إنشاء حساب موثق ™️", callback_data="create account"
+            )
+        ],
         [
             InlineKeyboardButton(
                 text="إضافة حساب سابق ➕", callback_data="add existing account"
@@ -312,8 +321,7 @@ chat_data = {str(context.chat_data)}
 
     """
 
-        with open("errors.txt", "a", encoding="utf-8") as f:
-            f.write(error)
+        write_error(error)
     except TypeError:
         error = f"""update = TypeError
         
@@ -327,8 +335,12 @@ chat_data = {str(context.chat_data)}
 
     """
 
-        with open("errors.txt", "a", encoding="utf-8") as f:
-            f.write(error)
+        write_error(error)
+
+
+def write_error(error: str):
+    with open("errors.txt", "a", encoding="utf-8") as f:
+        f.write(error)
 
 
 def create_folders():

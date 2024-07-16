@@ -5,7 +5,7 @@ import traceback
 import datetime
 from asyncio import Lock
 from constants import *
-
+from common.common import write_error
 lock = Lock()
 
 
@@ -23,9 +23,7 @@ def lock_and_release(func):
             if result:
                 return result
         except sqlite3.Error as e:
-            print(e)
-            with open("errors.txt", "a", encoding="utf-8") as f:
-                f.write(f"{traceback.format_exc()}\n{'-'*100}\n\n\n")
+            write_error(f"{traceback.format_exc()}\n{'-'*100}\n\n\n")
         finally:
             cr.close()
             db.close()

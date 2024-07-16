@@ -188,8 +188,7 @@ async def reply_to_create_account_order(
                 text=text,
             )
         except Exception as e:
-            print(e)
-            await update.message.reply_text(text="لقد قام هذا المستخدم بحظر البوت")
+            await update.message.reply_text(text="لقد قام هذا المستخدم بحظر البوت، قم برفض الطلب وحسب.")
             return
 
         await context.bot.edit_message_reply_markup(
