@@ -64,10 +64,6 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 chat_id=op["user_id"],
                 text=user_text,
             )
-        except:
-            pass
-
-        try:
             respond_button = InlineKeyboardButton(
                 text="إرسال رد⬅️",
                 callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{callback_data[-2]}_{callback_data[-1]}",

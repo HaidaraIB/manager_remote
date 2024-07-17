@@ -20,7 +20,7 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button
 )
 
-from start import start_command
+from start import admin_command
 
 from custom_filters.Admin import Admin
 
@@ -103,5 +103,5 @@ update_percentage_handler = ConversationHandler(
             )
         ]
     },
-    fallbacks=[back_to_admin_home_page_handler, start_command],
+    fallbacks=[back_to_admin_home_page_handler, admin_command],
 )

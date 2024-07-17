@@ -25,7 +25,7 @@ from common.back_to_home_page import back_to_admin_home_page_button
 
 from common.back_to_home_page import back_to_admin_home_page_handler
 
-from start import start_command
+from start import admin_command
 
 from DB import DB
 from custom_filters.Admin import Admin
@@ -179,7 +179,7 @@ turn_payment_method_on_or_off_handler = ConversationHandler(
             )
         ]
     },
-    fallbacks=[back_to_admin_home_page_handler, start_command],
+    fallbacks=[back_to_admin_home_page_handler, admin_command],
 )
 
 turn_user_calls_on_or_off_handler = ConversationHandler(
@@ -194,7 +194,7 @@ turn_user_calls_on_or_off_handler = ConversationHandler(
             )
         ]
     },
-    fallbacks=[back_to_admin_home_page_handler, start_command],
+    fallbacks=[back_to_admin_home_page_handler, admin_command],
 )
 
 

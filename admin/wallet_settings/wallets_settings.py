@@ -29,7 +29,7 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
 )
 
-from start import start_command
+from start import admin_command
 
 (CHOOSE_METHOD_TO_UPDATE, NEW_CODE) = range(2)
 
@@ -133,7 +133,7 @@ wallets_settings_handler = ConversationHandler(
             back_to_wallets_settings,
             "^back_to_wallets_settings$",
         ),
-        start_command,
+        admin_command,
         back_to_admin_home_page_handler,
     ],
 )

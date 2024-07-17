@@ -6,7 +6,7 @@ import datetime
 from telegram import PhotoSize
 from asyncio import Lock
 from constants import *
-
+from common.common import write_error
 lock = Lock()
 
 
@@ -24,9 +24,7 @@ def lock_and_release(func):
             if result:
                 return result
         except sqlite3.Error as e:
-            print(e)
-            with open("errors.txt", "a", encoding="utf-8") as f:
-                f.write(f"{traceback.format_exc()}\n{'-'*100}\n\n\n")
+            write_error(f"{traceback.format_exc()}\n{'-'*100}\n\n\n")
         finally:
             cr.close()
             db.close()
@@ -186,7 +184,7 @@ class DB:
             serial INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             full_name TEXT,
-            national_number INTEGER,
+            national_number TEXT,
             state TEXT DEFAULT 'pending',
             order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -448,7 +446,7 @@ class DB:
     async def add_create_account_order(
         user_id: int,
         full_name: str,
-        nat_num: int,
+        nat_num: str,
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(
@@ -1075,7 +1073,7 @@ class DB:
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(
-            "UPDATE payment_agents SET pre_balance = ? WHERE id = ? AND method = ?",
+            "UPDATE payment_agents SET pre_balance = pre_balance + ? WHERE id = ? AND method = ?",
             (
                 amount,
                 worker_id,

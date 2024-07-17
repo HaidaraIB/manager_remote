@@ -26,7 +26,6 @@ import uuid
 import traceback
 import json
 import logging
-from DB import DB
 from constants import *
 
 
@@ -115,7 +114,7 @@ def disable_httpx():
 
 def payment_method_pattern(callback_data: str):
     return (
-        callback_data in list(map(lambda x: x[0], DB.get_payment_methods()))
+        callback_data in PAYMENT_METHODS_LIST
         or callback_data == "طلبات الوكيل"
     )
 
@@ -231,33 +230,50 @@ def build_admin_keyboard():
 
 
 def build_methods_keyboard(buy_usdt: bool = False):
-    methods = DB.get_payment_methods()
-    if len(methods) == 1:
-        payment_methods = [
-            [InlineKeyboardButton(text=methods[0][0], callback_data=methods[0][0])]
-        ]
-    elif len(methods) % 2 == 0:
+    if len(PAYMENT_METHODS_LIST) == 1:
         payment_methods = [
             [
-                InlineKeyboardButton(text=methods[i][0], callback_data=methods[i][0]),
                 InlineKeyboardButton(
-                    text=methods[i + 1][0], callback_data=methods[i + 1][0]
+                    text=PAYMENT_METHODS_LIST[0],
+                    callback_data=PAYMENT_METHODS_LIST[0],
+                )
+            ]
+        ]
+    elif len(PAYMENT_METHODS_LIST) % 2 == 0:
+        payment_methods = [
+            [
+                InlineKeyboardButton(
+                    text=PAYMENT_METHODS_LIST[i],
+                    callback_data=PAYMENT_METHODS_LIST[i],
+                ),
+                InlineKeyboardButton(
+                    text=PAYMENT_METHODS_LIST[i + 1],
+                    callback_data=PAYMENT_METHODS_LIST[i + 1],
                 ),
             ]
-            for i in range(0, len(methods), 2)
+            for i in range(0, len(PAYMENT_METHODS_LIST), 2)
         ]
     else:
         payment_methods = [
             [
-                InlineKeyboardButton(text=methods[i][0], callback_data=methods[i][0]),
                 InlineKeyboardButton(
-                    text=methods[i + 1][0], callback_data=methods[i + 1][0]
+                    text=PAYMENT_METHODS_LIST[i],
+                    callback_data=PAYMENT_METHODS_LIST[i],
+                ),
+                InlineKeyboardButton(
+                    text=PAYMENT_METHODS_LIST[i + 1],
+                    callback_data=PAYMENT_METHODS_LIST[i + 1],
                 ),
             ]
-            for i in range(0, len(methods) - 1, 2)
+            for i in range(0, len(PAYMENT_METHODS_LIST) - 1, 2)
         ]
         payment_methods.append(
-            [InlineKeyboardButton(text=methods[-1][0], callback_data=methods[-1][0])]
+            [
+                InlineKeyboardButton(
+                    text=PAYMENT_METHODS_LIST[-1],
+                    callback_data=PAYMENT_METHODS_LIST[-1],
+                )
+            ]
         )
     if buy_usdt:
         payment_methods[0].pop(0)
@@ -325,8 +341,7 @@ chat_data = {str(context.chat_data)}
 
     """
 
-        with open("errors.txt", "a", encoding="utf-8") as f:
-            f.write(error)
+        write_error(error)
     except TypeError:
         error = f"""update = TypeError
         
@@ -340,8 +355,12 @@ chat_data = {str(context.chat_data)}
 
     """
 
-        with open("errors.txt", "a", encoding="utf-8") as f:
-            f.write(error)
+        write_error(error)
+
+
+def write_error(error: str):
+    with open("errors.txt", "a", encoding="utf-8") as f:
+        f.write(error)
 
 
 def create_folders():

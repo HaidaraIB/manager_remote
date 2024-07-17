@@ -84,7 +84,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         serial = await DB.add_create_account_order(
             user_id=update.effective_user.id,
             full_name=context.user_data["full_name"],
-            nat_num=int(update.message.text),
+            nat_num=update.message.text,
         )
 
         text = (
@@ -188,8 +188,7 @@ async def reply_to_create_account_order(
                 text=text,
             )
         except Exception as e:
-            print(e)
-            await update.message.reply_text(text="لقد قام هذا المستخدم بحظر البوت")
+            await update.message.reply_text(text="لقد قام هذا المستخدم بحظر البوت، قم برفض الطلب وحسب.")
             return
 
         await context.bot.edit_message_reply_markup(
