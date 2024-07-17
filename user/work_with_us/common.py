@@ -76,8 +76,6 @@ def stringify_agent_order(
     serial: int,
 ):
     return (
-        f"طلب عمل وكيل جديد\n\n"
-        "النوع: <b>وكيل</b>\n"
         f"المحافظة: <b>{gov}</b>\n"
         f"الحي: <b>{neighborhood}</b>\n"
         f"الإيميل: <b>{email}</b>\n"
@@ -147,30 +145,41 @@ async def send_to_group(
     await context.bot.send_media_group(
         chat_id=group_id,
         media=media,
-        caption=stringify_agent_order(
-            gov=syrian_govs_en_ar[context.user_data["agent_gov"]],
-            neighborhood=context.user_data["agent_neighborhood"],
-            email=context.user_data["agent_email"],
-            phone=context.user_data["agent_phone"],
-            amount=context.user_data["agent_amount"],
-            ref_num=update.message.text,
-            serial=serial,
+        caption=(
+            f"طلب عمل وكيل جديد\n\n"
+            + "النوع: <b>وكيل</b>\n"
+            + stringify_agent_order(
+                gov=syrian_govs_en_ar[context.user_data["agent_gov"]],
+                neighborhood=context.user_data["agent_neighborhood"],
+                email=context.user_data["agent_email"],
+                phone=context.user_data["agent_phone"],
+                amount=context.user_data["agent_amount"],
+                ref_num=update.message.text,
+                serial=serial,
+            )
         ),
     )
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="قبول ✅",
+                callback_data=f"accept_agent_order_{serial}",
+            ),
+            InlineKeyboardButton(
+                text="رفض ❌",
+                callback_data=f"decline_agent_order_{serial}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="إشعار باستلام الدفع 🔔",
+                callback_data=f"notify_agent_order_{serial}",
+            ),
+        ],
+    ]
     await context.bot.send_location(
         chat_id=group_id,
         latitude=context.user_data["agent_location"][0],
         longitude=context.user_data["agent_location"][1],
-        reply_markup=InlineKeyboardMarkup.from_row(
-            [
-                InlineKeyboardButton(
-                    text="قبول ✅",
-                    callback_data=f"accept_agent_order_{serial}",
-                ),
-                InlineKeyboardButton(
-                    text="رفض ❌",
-                    callback_data=f"decline_agent_order_{serial}",
-                ),
-            ]
-        ),
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )

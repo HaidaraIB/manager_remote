@@ -12,7 +12,7 @@ from telegram.ext import (
     filters,
 )
 
-from user.work_with_us.common import syrian_govs_en_ar
+from user.work_with_us.common import syrian_govs_en_ar, stringify_agent_order
 from check_work_with_us.common import (
     create_promo_code_invalid_foramt_login_info,
     create_team_cash_invalid_foramt_login_info,
@@ -20,6 +20,43 @@ from check_work_with_us.common import (
 from custom_filters import AgentOrder, TeamCash, PromoCode
 from DB import DB
 import os
+
+
+async def notify_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
+
+        data = update.callback_query.data.split("_")
+        serial = int(data[-1])
+
+        if context.bot_data.get(f"notified_agent_order_{serial}", False):
+            await update.callback_query.answer(
+                "تم الإشعار بالفعل",
+                show_alert=True,
+            )
+            return
+
+        order = DB.get_one_order(order_type="trusted_agents", serial=serial)
+        await context.bot.send_message(
+            chat_id=order["user_id"],
+            text=(
+                "تم استلام الدفعة الخاصة بطلب الوكيل المقدم من قبلك وسيتم تنفيذ طلبك خلال 5 أيام عمل\n\n"
+                + "تفاصيل الطلب:\n\n"
+                + stringify_agent_order(
+                    gov=syrian_govs_en_ar[order["gov"]],
+                    neighborhood=order["neighborhood"],
+                    amount=order["amount"],
+                    email=order["email"],
+                    phone=order["phone"],
+                    ref_num=order["ref_number"],
+                    serial=serial,
+                )
+            ),
+        )
+        await update.callback_query.answer(
+            "تم ✅",
+            show_alert=True,
+        )
+        context.bot_data[f"notified_agent_order_{serial}"] = True
 
 
 async def accept_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -169,6 +206,9 @@ async def invalid_login_info_agent_order(
             )
 
 
+notify_agent_order_handler = CallbackQueryHandler(
+    notify_agent_order, "^notify_agent_order_\d+$"
+)
 accept_agent_order_handler = CallbackQueryHandler(
     accept_agent_order, "^accept_agent_order_\d+$"
 )

@@ -206,6 +206,7 @@ def main():
     # WORK_WITH_US
     # Agent_Orders
     app.add_handler(invalid_login_info_agent_order_handler, group=2)
+    app.add_handler(notify_agent_order_handler)
     app.add_handler(accept_agent_order_handler)
     app.add_handler(get_login_info_handler)
     app.add_handler(decline_agent_order_handler)
