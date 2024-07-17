@@ -41,7 +41,7 @@ from user.work_with_us.agent import (
     back_to_get_phone,
     back_to_get_front_id,
     back_to_get_back_id,
-    back_to_get_amount
+    back_to_get_amount,
 )
 
 from user.work_with_us.common import (
@@ -112,6 +112,11 @@ async def choose_what_do_u_wanna_be(update: Update, context: ContextTypes.DEFAUL
                 reply_markup=InlineKeyboardMarkup(govs_keyboard),
             )
             return CHOOSE_GOV
+        else:
+            await update.callback_query.answer(
+                "قريباً...",
+                show_alert=True,
+            )
 
 
 back_to_choose_what_do_u_wanna_be = choose_working_with_us
