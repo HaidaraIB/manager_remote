@@ -257,15 +257,15 @@ class DB:
 
         -- We're not storing username even though we rely on it because it may change anytime so we'll get_chat by id everytime.
         CREATE TABLE IF NOT EXISTS trusted_agents(
-            user_id INTEGER PRIMARY KEY,
+            user_id INTEGER,
             gov TEXT,
             order_serial INTEGER,
             team_cash_user_id TEXT,
             team_cash_password TEXT,
             team_cash_workplace_id TEXT,
             promo_username TEXT,
-            promo_password TEXT
-
+            promo_password TEXT,
+            UNIQUE(user_id, gov) ON CONFLICT IGNORE
         );
 
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});

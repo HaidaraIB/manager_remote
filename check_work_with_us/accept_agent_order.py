@@ -76,22 +76,25 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        if not context.chat_data.get(f"trusted_agent_orders_{serial}", False):
-            context.chat_data[f"trusted_agent_orders_{serial}"] = (
-                update.message.text_html
-            )
-
+        context.chat_data[f"trusted_agent_orders_{serial}"] = update.message.text_html
+        if not (
+            context.application.chat_data[
+                context.bot_data["data"]["agent_orders_group"]
+            ].get(f"trusted_agent_orders_{serial}", False)
+            and context.application.chat_data[
+                context.bot_data["data"]["partner_orders_group"]
+            ].get(f"trusted_agent_orders_{serial}", False)
+        ):
+            pass
         else:
-            team_cash_caption = (
-                update.message.text_html
-                if len(update.message.text_html.split("\n")) == 3
-                else context.chat_data[f"trusted_agent_orders_{serial}"]
-            )
-            promo_code_caption = (
-                update.message.text_html
-                if len(update.message.text_html.split("\n")) == 2
-                else context.chat_data[f"trusted_agent_orders_{serial}"]
-            )
+            team_cash_caption: str = context.application.chat_data[
+                context.bot_data["data"]["agent_orders_group"]
+            ][f"trusted_agent_orders_{serial}"]
+
+            promo_code_caption: str = context.application.chat_data[
+                context.bot_data["data"]["partner_orders_group"]
+            ][f"trusted_agent_orders_{serial}"]
+
             await DB.add_trusted_agent(
                 user_id=order["user_id"],
                 order_serial=serial,
@@ -151,14 +154,16 @@ async def invalid_login_info_agent_order(
         ):
             return
 
-        if update.effective_chat.id == context.bot_data["data"]["agent_orders_group"]:
+        if update.effective_chat.id == context.bot_data["data"][
+            "agent_orders_group"
+        ] and not TeamCash().filter(update):
             await update.message.reply_text(
                 text=create_team_cash_invalid_foramt_login_info()
             )
 
-        elif (
-            update.effective_chat.id == context.bot_data["data"]["partner_orders_group"]
-        ):
+        elif update.effective_chat.id == context.bot_data["data"][
+            "partner_orders_group"
+        ] and not PromoCode().filter(update):
             await update.message.reply_text(
                 text=create_promo_code_invalid_foramt_login_info()
             )
@@ -173,7 +178,7 @@ invalid_login_info_agent_order_handler = MessageHandler(
     callback=invalid_login_info_agent_order,
 )
 
-get_apk_login_info_handler = MessageHandler(
+get_login_info_handler = MessageHandler(
     filters=AgentOrder() & filters.REPLY & (TeamCash() | PromoCode()),
     callback=get_login_info,
 )

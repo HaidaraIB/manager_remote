@@ -207,10 +207,7 @@ async def get_back_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back_to_get_back_id"),
             back_to_user_home_page_button[0],
         ]
-        text = (
-            f"كم تريد الإيداع؟\n\n"
-            "<b>ملاحظة: الحد الأدنى للمبلغ المسبق = 100 ألف ليرة</b>\n\n"
-        )
+        text = f"كم تريد الإيداع؟\n\n" "<b>ملاحظة: الحد الأدنى = 100 ألف ليرة</b>\n\n"
         if not update.callback_query:
             context.user_data["agent_back_id"] = update.message.photo[-1]
             await update.message.reply_text(
@@ -230,6 +227,12 @@ back_to_get_back_id = get_front_id
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        amount = float(update.message.text)
+        if amount < 100_000:
+            await update.message.reply_text(
+                "<b>ملاحظة: الحد الأدنى = 100 ألف ليرة</b>\n\n"
+            )
+            return
         back_buttons = [
             build_back_button("back_to_get_amount"),
             back_to_user_home_page_button[0],
@@ -238,7 +241,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"أرسل مبلغ الإيداع المسبق إلى الرقم\n\n"
             f"<code>{context.bot_data['data']['طلبات الوكيل_number']}</code>\n\n"
             f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-            "<b>ملاحظة ثانية: التحويل مقبول فقط من أجهزة سيريتيل أو من خطوط الجملة الخاصة لمحلات الموبايل .. 'غير مقبول التحويل من رقم شخصي'</b>"
+            "<b>ملاحظة: التحويل مقبول فقط من أجهزة سيريتيل أو من خطوط الجملة الخاصة لمحلات الموبايل .. 'غير مقبول التحويل من رقم شخصي'</b>"
         )
         if not update.callback_query:
             context.user_data["agent_amount"] = float(update.message.text)
