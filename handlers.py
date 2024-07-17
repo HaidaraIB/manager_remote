@@ -8,6 +8,9 @@ from telegram.ext import (
     PicklePersistence,
     InvalidCallbackData,
     Defaults,
+    ContextTypes,
+    MessageHandler,
+    filters,
 )
 
 from telegram.constants import (
@@ -83,6 +86,18 @@ from dotenv import load_dotenv
 import datetime
 import os
 from DB import DB
+
+
+async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message
+    if msg.document:
+        print(msg.document.file_id)
+    elif msg.video:
+        print(msg.video.file_id)
+    elif msg.photo:
+        print(msg.photo[-1].file_id)
+    elif msg.audio:
+        print(msg.audio.file_id)
 
 
 def main():
@@ -189,7 +204,8 @@ def main():
     app.add_handler(close_complaint_handler)
 
     # WORK_WITH_US
-        # Agent_Orders
+    # Agent_Orders
+    app.add_handler(invalid_login_info_agent_order_handler, group=2)
     app.add_handler(accept_agent_order_handler)
     app.add_handler(get_apk_login_info_handler)
     app.add_handler(decline_agent_order_handler)
@@ -241,6 +257,11 @@ def main():
     app.add_handler(hide_ids_keyboard_handler)
     app.add_handler(back_to_user_home_page_handler)
     app.add_handler(back_to_admin_home_page_handler)
+
+    app.add_handler(
+        MessageHandler(filters=filters.ALL, callback=get_file_id),
+        group=3,
+    )
 
     app.add_error_handler(error_handler)
 

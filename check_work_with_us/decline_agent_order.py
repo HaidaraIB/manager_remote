@@ -16,6 +16,8 @@ from user.work_with_us.common import syrian_govs_en_ar
 
 from DB import DB
 
+from custom_filters import Declined, AgentOrder
+
 
 async def decline_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
@@ -74,6 +76,6 @@ decline_agent_order_handler = CallbackQueryHandler(
 )
 
 get_decline_agent_order_reason_handler = MessageHandler(
-    filters=filters.REPLY & filters.TEXT & ~filters.COMMAND,
+    filters=AgentOrder() & Declined() & filters.REPLY & filters.TEXT & ~filters.COMMAND,
     callback=get_decline_agent_order_reason,
 )

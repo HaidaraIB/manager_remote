@@ -1,6 +1,11 @@
 from telegram import (
     InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Update,
+    InputMediaPhoto,
 )
+
+from telegram.ext import ContextTypes
 
 from common.back_to_home_page import back_to_user_home_page_button
 
@@ -21,7 +26,8 @@ syrian_govs_en_ar = {
     "Kenitra": "القنيطرة",
 }
 
-def govs_pattern(callback_data:str):
+
+def govs_pattern(callback_data: str):
     try:
         return callback_data.split("_")[0] in syrian_govs_en_ar
     except:
@@ -61,16 +67,22 @@ def build_govs_keyboard():
 
 
 def stringify_agent_order(
-    ref_num: float,
     gov: str,
     neighborhood: str,
+    email: str,
+    phone: str,
+    amount: float,
+    ref_num: str,
     serial: int,
 ):
     return (
-        "طلب عمل جديد\n\n"
+        f"طلب عمل وكيل جديد\n\n"
         "النوع: <b>وكيل</b>\n"
         f"المحافظة: <b>{gov}</b>\n"
         f"الحي: <b>{neighborhood}</b>\n"
+        f"الإيميل: <b>{email}</b>\n"
+        f"رقم الهاتف: <b>{phone}</b>\n"
+        f"المبلغ: <code>{amount}</code>\n"
         f"رقم العملية: <code>{ref_num}</code>\n"
         f"Serial: <code>{serial}</code>"
     )
@@ -123,3 +135,42 @@ WORK_WITH_US_DICT = {
         ),
     },
 }
+
+
+async def send_to_group(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    serial: int,
+    media: list[InputMediaPhoto],
+    group_id: int,
+):
+    await context.bot.send_media_group(
+        chat_id=group_id,
+        media=media,
+        caption=stringify_agent_order(
+            gov=syrian_govs_en_ar[context.user_data["agent_gov"]],
+            neighborhood=context.user_data["agent_neighborhood"],
+            email=context.user_data["agent_email"],
+            phone=context.user_data["agent_phone"],
+            amount=context.user_data["agent_amount"],
+            ref_num=update.message.text,
+            serial=serial,
+        ),
+    )
+    await context.bot.send_location(
+        chat_id=group_id,
+        latitude=context.user_data["agent_location"][0],
+        longitude=context.user_data["agent_location"][1],
+        reply_markup=InlineKeyboardMarkup.from_row(
+            [
+                InlineKeyboardButton(
+                    text="قبول ✅",
+                    callback_data=f"accept_agent_order_{serial}",
+                ),
+                InlineKeyboardButton(
+                    text="رفض ❌",
+                    callback_data=f"decline_agent_order_{serial}",
+                ),
+            ]
+        ),
+    )

@@ -15,7 +15,11 @@ from common.back_to_home_page import (
     back_to_user_home_page_button,
     back_to_user_home_page_handler,
 )
-from user.work_with_us.common import build_govs_keyboard, syrian_govs_en_ar, govs_pattern
+from user.work_with_us.common import (
+    build_govs_keyboard,
+    syrian_govs_en_ar,
+    govs_pattern,
+)
 from start import start_command
 
 (CHOOSE_GOV,) = range(1)
@@ -25,6 +29,15 @@ async def show_trusted_agents(update: Update, context: ContextTypes.DEFAULT_TYPE
     if update.effective_chat.type == Chat.PRIVATE:
         keyboard = build_govs_keyboard()
         keyboard.append(back_to_user_home_page_button[0])
+        keyboard.insert(
+            0,
+            [
+                InlineKeyboardButton(
+                    text="وكيل مباشر 🛄",
+                    url="http://t.me/Melbet_bo",
+                ),
+            ],
+        )
         await update.callback_query.edit_message_text(
             text="اختر المحافظة", reply_markup=InlineKeyboardMarkup(keyboard)
         )

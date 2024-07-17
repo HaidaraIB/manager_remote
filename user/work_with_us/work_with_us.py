@@ -20,19 +20,28 @@ from common.back_to_home_page import (
 from user.work_with_us.agent import (
     NEIGHBORHOOD,
     LOCATION,
+    EMAIL,
+    PHONE,
     FRONT_ID,
     BACK_ID,
+    AMOUNT,
     REF_NUM,
     choose_gov,
     get_neighborhood,
     share_location,
+    get_email,
+    get_phone,
     get_front_id,
     get_back_id,
+    get_amount,
     send_to_check_agent_order,
     back_to_get_neighborhood,
     back_to_share_location,
+    back_to_get_email,
+    back_to_get_phone,
     back_to_get_front_id,
     back_to_get_back_id,
+    back_to_get_amount
 )
 
 from user.work_with_us.common import (
@@ -147,6 +156,18 @@ work_with_us_handler = ConversationHandler(
                 callback=share_location,
             )
         ],
+        EMAIL: [
+            MessageHandler(
+                filters=filters.Regex(r"^\S+@\S+\.\S+$"),
+                callback=get_email,
+            )
+        ],
+        PHONE: [
+            MessageHandler(
+                filters=filters.Regex("^\+\d+$"),
+                callback=get_phone,
+            )
+        ],
         FRONT_ID: [
             MessageHandler(
                 filters=filters.PHOTO,
@@ -157,6 +178,12 @@ work_with_us_handler = ConversationHandler(
             MessageHandler(
                 filters=filters.PHOTO,
                 callback=get_back_id,
+            )
+        ],
+        AMOUNT: [
+            MessageHandler(
+                filters=filters.Regex("^\d+$"),
+                callback=get_amount,
             )
         ],
         REF_NUM: [
@@ -173,12 +200,17 @@ work_with_us_handler = ConversationHandler(
         CallbackQueryHandler(
             back_to_choose_working_with_us, "^back_to_choose_working_with_us$"
         ),
-        CallbackQueryHandler(back_to_get_back_id, "^back_to_get_back_id$"),
-        CallbackQueryHandler(back_to_get_front_id, "^back_to_get_front_id$"),
         CallbackQueryHandler(back_to_choose_gov, "^back_to_choose_gov$"),
-        CallbackQueryHandler(back_to_share_location, "^back_to_share_location$"),
         CommandHandler("back", back_to_get_neighborhood),
+        CallbackQueryHandler(back_to_share_location, "^back_to_share_location$"),
+        CallbackQueryHandler(back_to_get_email, "^back_to_get_email$"),
+        CallbackQueryHandler(back_to_get_phone, "^back_to_get_phone$"),
+        CallbackQueryHandler(back_to_get_front_id, "^back_to_get_front_id$"),
+        CallbackQueryHandler(back_to_get_back_id, "^back_to_get_back_id$"),
+        CallbackQueryHandler(back_to_get_amount, "^back_to_get_amount$"),
         start_command,
         back_to_user_home_page_handler,
     ],
+    name="work_with_us_conversation",
+    persistent=True,
 )

@@ -13,3 +13,6 @@ from custom_filters.ModAmountUserComplaint import ModAmountUserComplaint
 from custom_filters.Worker import Worker
 from custom_filters.Sent import Sent
 from custom_filters.DepositAgent import DepositAgent
+from custom_filters.AgentOrder import AgentOrder
+from custom_filters.PromoCode import PromoCode
+from custom_filters.TeamCash import TeamCash

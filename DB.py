@@ -232,6 +232,8 @@ class DB:
             neighborhood TEXT,
             latitude TEXT,
             longitude TEXT,
+            email TEXT,
+            phone TEXT,
             state TEXT DEFAULT 'pending',
             reason TEXT,
 
@@ -247,6 +249,7 @@ class DB:
             back_height TEXT,
             back_size TEXT,
 
+            amount REAL,
             ref_number TEXT,
             
             creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -256,9 +259,15 @@ class DB:
 
         -- We're not storing username even though we rely on it because it may change anytime so we'll get_chat by id everytime.
         CREATE TABLE IF NOT EXISTS trusted_agents(
-            user_id INTEGER,
+            user_id INTEGER PRIMARY KEY,
             gov TEXT,
-            order_serial INTEGER
+            order_serial INTEGER,
+            team_cash_user_id TEXT,
+            team_cash_password TEXT,
+            team_cash_workplace_id TEXT,
+            promo_username TEXT,
+            promo_password TEXT
+
         );
 
         INSERT OR IGNORE INTO admins(id) VALUES({int(os.getenv('OWNER_ID'))});
@@ -281,9 +290,22 @@ class DB:
 
     @staticmethod
     @connect_and_close
-    def get_trusted_agents(gov: str, cr: sqlite3.Cursor = None):
-        cr.execute("SELECT * FROM trusted_agents WHERE gov = ?", (gov,))
-        return cr.fetchall()
+    def get_trusted_agents(gov: str, user_id: int = None, cr: sqlite3.Cursor = None):
+        if user_id:
+            cr.execute(
+                "SELECT * FROM trusted_agents WHERE gov = ? AND user_id = ?",
+                (
+                    gov,
+                    user_id,
+                ),
+            )
+            return cr.fetchone()
+        else:
+            cr.execute(
+                "SELECT * FROM trusted_agents WHERE gov = ?",
+                (gov,),
+            )
+            return cr.fetchall()
 
     @staticmethod
     @lock_and_release
@@ -291,14 +313,24 @@ class DB:
         user_id: int,
         gov: str,
         order_serial: int,
+        team_cash_user_id: str,
+        team_cash_password: str,
+        team_cash_workplace_id: str,
+        promo_username: str,
+        promo_password: str,
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(
-            "INSERT INTO trusted_agents VALUES(?, ?, ?)",
+            "INSERT INTO trusted_agents VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 user_id,
                 gov,
                 order_serial,
+                team_cash_user_id,
+                team_cash_password,
+                team_cash_workplace_id,
+                promo_username,
+                promo_password,
             ),
         )
         cr.execute(
@@ -340,9 +372,12 @@ class DB:
         neighborhood: str,
         latitude: str,
         longitude: str,
+        email: str,
+        phone: str,
         front_id: PhotoSize,
         back_id: PhotoSize,
         ref_num: str,
+        amount:float,
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(
@@ -353,6 +388,8 @@ class DB:
                     neighborhood,
                     latitude,
                     longitude,
+                    email,
+                    phone,
 
                     front_id,
                     front_unique_id,
@@ -366,8 +403,9 @@ class DB:
                     back_width,
                     back_height,
 
+                    amount,
                     ref_number
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 user_id,
@@ -375,6 +413,8 @@ class DB:
                 neighborhood,
                 latitude,
                 longitude,
+                email,
+                phone,
                 front_id.file_id,
                 front_id.file_unique_id,
                 front_id.file_size,
@@ -385,6 +425,7 @@ class DB:
                 back_id.file_size,
                 back_id.width,
                 back_id.height,
+                amount,
                 ref_num,
             ),
         )
@@ -430,7 +471,6 @@ class DB:
             "UPDATE accounts SET user_id = ? WHERE acc_num = ?",
             (user_id, acc_num),
         )
-        return cr.fetchone()
 
     @staticmethod
     @connect_and_close
@@ -973,7 +1013,7 @@ class DB:
         if serial:
             cr.execute(f"SELECT * FROM {order_type}_orders WHERE serial = ?", (serial,))
         elif ref_num:
-            cr.execute(f"SELECT * FROM deposit_orders WHERE ref_number = ?", (ref_num,))
+            cr.execute(f"SELECT * FROM {order_type}_orders WHERE ref_number = ?", (ref_num,))
         return cr.fetchone()
 
     @staticmethod
