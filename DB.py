@@ -884,7 +884,7 @@ class DB:
         cr: sqlite3.Cursor = None,
     ):
         cr.execute(
-            "UPDATE payment_agents SET pre_balance = ? WHERE id = ? AND method = ?",
+            "UPDATE payment_agents SET pre_balance = pre_balance + ? WHERE id = ? AND method = ?",
             (
                 amount,
                 worker_id,
