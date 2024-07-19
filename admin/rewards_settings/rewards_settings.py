@@ -16,6 +16,7 @@ from common.common import build_admin_keyboard, build_back_button
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
     back_to_admin_home_page_button,
+    back_to_admin_home_page_button,
 )
 
 from start import admin_command, start_command
@@ -55,13 +56,19 @@ async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return ConversationHandler.END
 
 
+
 reward_percentages_dict = {
+    "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية الجديدة",
+    "workers_reward_percentage": "مكافأة الموظفين الأسبوعية الجديدة",
+    "deposit_gift_percentage": "مكافأة الإيداع الجديدة",
     "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية الجديدة",
     "workers_reward_percentage": "مكافأة الموظفين الأسبوعية الجديدة",
     "deposit_gift_percentage": "مكافأة الإيداع الجديدة",
 }
 
 
+
+async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         target_percentage = update.callback_query.data.replace("update ", "")
@@ -111,12 +118,6 @@ update_percentage_handler = ConversationHandler(
             )
         ]
     },
-    fallbacks=[
-        CallbackQueryHandler(
-            back_to_update_percentages, "^back_to_update_percentages$"
-        ),
-        back_to_admin_home_page_handler,
-        admin_command,
-        start_command,
-    ],
+    fallbacks=[back_to_admin_home_page_handler, admin_command],
 )
+

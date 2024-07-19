@@ -93,15 +93,18 @@ from database import create_tables
 
 
 async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message
-    if msg.document:
-        print(msg.document.file_id)
-    elif msg.video:
-        print(msg.video.file_id)
-    elif msg.photo:
-        print(msg.photo[-1].file_id)
-    elif msg.audio:
-        print(msg.audio.file_id)
+    try:
+        msg = update.message
+        if msg.document:
+            print(msg.document.file_id)
+        elif msg.video:
+            print(msg.video.file_id)
+        elif msg.photo:
+            print(msg.photo[-1].file_id)
+        elif msg.audio:
+            print(msg.audio.file_id)
+    except:
+        pass
 
 
 def main():

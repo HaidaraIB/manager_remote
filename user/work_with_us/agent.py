@@ -48,6 +48,20 @@ async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         if update.callback_query:
+
+            gov = update.callback_query.data.split("_")[0]
+            agent = DB.get_trusted_agents(
+                gov=gov,
+                user_id=update.effective_user.id,
+            )
+
+            if agent:
+                await update.callback_query.answer(
+                    text="أنت وكيل في هذه المحافظة بالفعل ❗️",
+                    show_alert=True,
+                )
+                return
+
             context.user_data["agent_gov"] = gov
             await update.callback_query.edit_message_text(
                 text="جيد، الآن أرسل لنا اسم الحي الذي ستعمل فيه",
