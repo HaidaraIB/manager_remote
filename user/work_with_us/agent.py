@@ -50,7 +50,7 @@ async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.callback_query:
 
             gov = update.callback_query.data.split("_")[0]
-            agent = DB.get_trusted_agents(
+            agent = TrustedAgent.get_trusted_agents(
                 gov=gov,
                 user_id=update.effective_user.id,
             )
