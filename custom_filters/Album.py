@@ -1,10 +1,5 @@
-from telegram import (
-    Update,
-)
-
-from telegram.ext.filters import (
-    BaseFilter,
-)
+from telegram import Update
+from telegram.ext.filters import BaseFilter
 
 
 class Album(BaseFilter):

@@ -16,9 +16,7 @@ from telegram.ext import (
 from common.back_to_home_page import back_to_user_home_page_button
 from user.work_with_us.common import send_to_group
 from common.common import build_back_button, build_user_keyboard
-from DB import DB
-import asyncio
-
+from database import TrustedAgent, TrustedAgentsOrder
 (
     NEIGHBORHOOD,
     LOCATION,
@@ -34,7 +32,7 @@ import asyncio
 async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         gov = update.callback_query.data.split("_")[0]
-        agent = DB.get_trusted_agents(
+        agent = TrustedAgent.get_trusted_agents(
             gov=gov,
             user_id=update.effective_user.id,
         )
@@ -262,13 +260,13 @@ back_to_get_amount = get_back_id
 
 async def send_to_check_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        t_order = DB.get_one_order("trusted_agents", ref_num=update.message.text)
+        t_order = TrustedAgentsOrder.get_one_order(ref_num=update.message.text)
         if t_order:
             await update.message.reply_text(
                 text="رقم عملية مكرر!",
             )
             return
-        serial = await DB.add_trusted_agent_order(
+        serial = await TrustedAgentsOrder.add_trusted_agent_order(
             user_id=update.effective_user.id,
             gov=context.user_data["agent_gov"],
             neighborhood=context.user_data["agent_neighborhood"],

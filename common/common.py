@@ -27,6 +27,22 @@ import traceback
 import json
 import logging
 from constants import *
+from database import (
+    WithdrawOrder,
+    DepositOrder,
+    BuyUsdtdOrder,
+    DepositAgent,
+    PaymentAgent,
+    Checker,
+)
+
+parent_to_child_models_mapper: dict[
+    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder
+] = {
+    "withdraw": WithdrawOrder,
+    "deposit": DepositOrder,
+    "buyusdt": BuyUsdtdOrder,
+}
 
 
 def pretty_time_delta(seconds):
@@ -96,12 +112,12 @@ def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
 
 async def notify_workers(
     context: ContextTypes.DEFAULT_TYPE,
-    workers,
+    workers: list[DepositAgent | PaymentAgent | Checker],
     text: str,
 ):
     for worker in workers:
         await context.bot.send_message(
-            chat_id=worker["id"],
+            chat_id=worker.id,
             text=text,
         )
         await asyncio.sleep(1)
@@ -113,10 +129,7 @@ def disable_httpx():
 
 
 def payment_method_pattern(callback_data: str):
-    return (
-        callback_data in PAYMENT_METHODS_LIST
-        or callback_data == "طلبات الوكيل"
-    )
+    return callback_data in PAYMENT_METHODS_LIST or callback_data == "طلبات الوكيل"
 
 
 def build_back_button(data: str):
@@ -140,7 +153,11 @@ def build_user_keyboard():
         [InlineKeyboardButton(text="شراء USDT 💰", callback_data="buy usdt")],
         [InlineKeyboardButton(text="إنشاء شكوى 🗳", callback_data="make complaint")],
         [InlineKeyboardButton(text="عملك معنا 💼", callback_data="work with us")],
-        [InlineKeyboardButton(text="وكلاء موصى بهم 🈂️", callback_data="trusted agents")],
+        [
+            InlineKeyboardButton(
+                text="وكلاء موصى بهم 🈂️", callback_data="trusted agents"
+            )
+        ],
     ]
     return InlineKeyboardMarkup(keyboard)
 

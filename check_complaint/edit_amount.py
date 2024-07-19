@@ -11,15 +11,10 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from database import PaymentAgent, DepositAgent
+from custom_filters import Complaint, ModAmountUserComplaint
 
-from custom_filters.Complaint import Complaint
-from custom_filters.ModAmountUserComplaint import ModAmountUserComplaint
-
-from DB import DB
-import os
-from common.common import (
-    build_complaint_keyboard,
-)
+from common.common import build_complaint_keyboard, parent_to_child_models_mapper
 
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_complaint_data
@@ -54,36 +49,35 @@ async def edit_order_amount_user_complaint(
             0
         ].callback_data.split("_")
 
-        op = DB.get_one_order(
-            order_type=callback_data[-2], serial=int(callback_data[-1])
+        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+            serial=int(callback_data[-1])
         )
 
         data = await make_complaint_data(context, callback_data)
 
         new_amount = float(update.message.text)
-        old_amount = op["amount"]
+        old_amount = op.amount
 
-        await DB.edit_order_amount(
-            order_type=callback_data[-2],
-            serial=op["serial"],
+        await parent_to_child_models_mapper[callback_data[-2]].edit_order_amount(
+            serial=op.serial,
             new_amount=new_amount,
         )
 
-        if op["worker_id"]:
+        if op.worker_id:
             if callback_data[-2] in ["withdraw", "buy usdt"]:
-                await DB.update_worker_approved_withdraws(
-                    worder_id=op["worker_id"],
-                    method=op["method"],
+                await PaymentAgent.update_worker_approved_withdraws(
+                    worker_id=op.worker_id,
+                    method=op.method,
                     amount=-old_amount + new_amount,
                 )
             elif callback_data[-2] == "deposit":
-                await DB.update_worker_approved_deposits(
-                    worder_id=op["worker_id"],
+                await DepositAgent.update_worker_approved_deposits(
+                    worker_id=op.worker_id,
                     amount=-old_amount + new_amount,
                 )
 
         text_list = data["text"].split("\n")
-        text_list[4] = f"المبلغ: <b>{new_amount}</b>"
+        text_list[3] = f"المبلغ: <b>{new_amount}</b>"
         data["text"] = "\n".join(text_list)
 
         context.user_data["complaint_data"] = data

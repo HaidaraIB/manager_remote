@@ -22,10 +22,9 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
 )
 
-from start import admin_command
-
-from DB import DB
-from custom_filters.Admin import Admin
+from start import admin_command, start_command
+from database import PaymentAgent, DepositAgent, Checker
+from custom_filters import Admin
 from admin.workers_settings.common import (
     build_positions_keyboard,
 )
@@ -95,7 +94,10 @@ async def worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
             worker_to_add = await context.bot.get_chat(chat_id=user_id)
         except TelegramError:
             await update.message.reply_text(
-                text="لم يتم العثور على الحساب❗️، تأكد من أن الموظف قد بدأ محادثة مع البوت، يمكنك إلغاء العملية بالضغط على /admin.",
+                text=(
+                    "لم يتم العثور على الحساب ❗️\n\n"
+                    "تأكد من أن الموظف قد بدأ محادثة مع البوت، يمكنك إلغاء العملية بالضغط على /admin."
+                ),
             )
             return
         context.user_data["worker_to_add"] = worker_to_add
@@ -114,22 +116,22 @@ async def worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         worker_to_add: Chat = context.user_data["worker_to_add"]
-        pos = " ".join(update.callback_query.data.split(" ")[1:-1])
+        pos = update.callback_query.data.split("_")[1].replace("buyusdt", "buy_usdt")
         if pos == "deposit after check":
-            await DB.add_worker(
+            await DepositAgent.add_worker(
                 worker_id=worker_to_add.id,
                 name=worker_to_add.full_name,
                 username=worker_to_add.username,
             )
         elif pos in ["deposit", "withdraw", "buy_usdt"]:
-            await DB.add_worker(
+            await Checker.add_worker(
                 worker_id=worker_to_add.id,
                 name=worker_to_add.full_name,
                 username=worker_to_add.username,
                 check_what=pos,
             )
         else:
-            await DB.add_worker(
+            await PaymentAgent.add_worker(
                 worker_id=worker_to_add.id,
                 name=worker_to_add.full_name,
                 username=worker_to_add.username,
@@ -140,7 +142,6 @@ async def position(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="تمت إضافة الموظف بنجاح✅\n\n\nاختر وظيفة أخرى إن إردت، للإنهاء اضغط /admin.",
             reply_markup=build_positions_keyboard(op="add"),
         )
-        return
 
 
 back_to_worker_id = add_worker_cp
@@ -168,6 +169,7 @@ add_worker_cp_handler = ConversationHandler(
     fallbacks=[
         back_to_admin_home_page_handler,
         admin_command,
+        start_command,
         CallbackQueryHandler(back_to_worker_id, "^back_to_worker_id$"),
     ],
 )

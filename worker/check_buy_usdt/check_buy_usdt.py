@@ -14,8 +14,7 @@ from telegram.ext import (
 )
 
 import os
-from DB import DB
-
+from database import BuyUsdtdOrder
 from custom_filters import BuyUSDT, Declined, DepositAgent
 
 from common.common import (
@@ -53,8 +52,7 @@ async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         serial = int(update.callback_query.data.split("_")[-1])
 
-        await DB.add_checker_id(
-            order_type="buyusdt",
+        await BuyUsdtdOrder.add_checker_id(
             serial=serial,
             checker_id=update.effective_user.id,
         )
@@ -79,12 +77,12 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         Chat.PRIVATE,
     ]:
         serial = int(update.callback_query.data.split("_")[-1])
-        b_order = DB.get_one_order(order_type="buyusdt", serial=serial)
-        method = b_order["method"]
+        b_order = BuyUsdtdOrder.get_one_order(serial=serial)
+        method = b_order.method
 
         target_group = f"{method}_group"
 
-        amount = b_order["amount"]
+        amount = b_order.amount
 
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"][target_group],
@@ -93,7 +91,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
                 amount=amount * context.bot_data["data"]["usdt_to_syp"],
                 serial=serial,
                 method=method,
-                payment_method_number=b_order["payment_method_number"],
+                payment_method_number=b_order.payment_method_number,
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -119,8 +117,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             ),
         )
 
-        await DB.send_order(
-            order_type="buyusdt",
+        await BuyUsdtdOrder.send_order(
             pending_process_message_id=message.id,
             serial=serial,
             group_id=context.bot_data["data"][target_group],
@@ -164,9 +161,9 @@ async def decline_buy_usdt_order_reason(
             ].callback_data.split("_")[-1]
         )
 
-        b_order = DB.get_one_order(order_type="buyusdt", serial=serial)
+        b_order = BuyUsdtdOrder.get_one_order(serial=serial)
 
-        amount = b_order["amount"]
+        amount = b_order.amount
 
         text = (
             f"تم رفض عملية شراء <b>{amount} USDT</b>❗️\n\n"
@@ -175,7 +172,7 @@ async def decline_buy_usdt_order_reason(
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
         try:
-            await context.bot.send_message(chat_id=b_order["user_id"], text=text)
+            await context.bot.send_message(chat_id=b_order.user_id, text=text)
         except:
             pass
 
@@ -184,7 +181,7 @@ async def decline_buy_usdt_order_reason(
             + update.message.reply_to_message.caption_html
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
-        
+
         message = await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.reply_to_message.photo[-1],
@@ -209,13 +206,13 @@ async def decline_buy_usdt_order_reason(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
-        context.user_data["requested"] = False
-        await DB.decline_order(
-            order_type="buyusdt",
+        await BuyUsdtdOrder.decline_order(
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )
+
+        context.user_data["requested"] = False
         return ConversationHandler.END
 
 

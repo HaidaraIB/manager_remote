@@ -21,15 +21,15 @@ from common.common import (
     request_buttons,
 )
 
-from common.back_to_home_page import back_to_admin_home_page_button
-
-from common.back_to_home_page import back_to_admin_home_page_handler
+from common.back_to_home_page import (
+    back_to_admin_home_page_button,
+    back_to_admin_home_page_handler,
+)
 
 from start import admin_command
 
-from DB import DB
-from custom_filters.Admin import Admin
-
+from custom_filters import Admin
+from database import PaymentMethod
 
 (
     PAYMENT_METHOD_TO_TURN_ON_OR_OFF,
@@ -109,13 +109,15 @@ async def payment_method_to_turn_on_or_off(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        method = DB.get_payment_method(name=update.callback_query.data)
-        if method[1]:
-            await DB.turn_payment_method_on_or_off(name=update.callback_query.data)
+        method = PaymentMethod.get_payment_method(name=update.callback_query.data)
+        if method.on_off:
+            await PaymentMethod.turn_payment_method_on_or_off(
+                name=update.callback_query.data
+            )
             await update.callback_query.answer("تم إيقاف وسيلة الدفع✅")
         else:
-            await DB.turn_payment_method_on_or_off(
-                name=update.callback_query.data, on=True
+            await PaymentMethod.turn_payment_method_on_or_off(
+                name=update.callback_query.data, on=1
             )
             await update.callback_query.answer("تم تشغيل وسيلة الدفع✅")
 
@@ -140,7 +142,8 @@ async def turn_user_calls_on_or_off(update: Update, context: ContextTypes.DEFAUL
             }
 
         await update.callback_query.edit_message_text(
-            text="اختر الزر🔘", reply_markup=InlineKeyboardMarkup(turn_user_calls_on_or_off_keyboard)
+            text="اختر الزر🔘",
+            reply_markup=InlineKeyboardMarkup(turn_user_calls_on_or_off_keyboard),
         )
         return USER_CALL_TO_TURN_ON_OR_OFF
 
@@ -161,7 +164,8 @@ async def user_call_to_turn_on_or_off(
             await update.callback_query.answer("تم تشغيل الزر✅")
 
         await update.callback_query.edit_message_text(
-            text="اختر الزر🔘", reply_markup=InlineKeyboardMarkup(turn_user_calls_on_or_off_keyboard)
+            text="اختر الزر🔘",
+            reply_markup=InlineKeyboardMarkup(turn_user_calls_on_or_off_keyboard),
         )
         return USER_CALL_TO_TURN_ON_OR_OFF
 
@@ -196,7 +200,6 @@ turn_user_calls_on_or_off_handler = ConversationHandler(
     },
     fallbacks=[back_to_admin_home_page_handler, admin_command],
 )
-
 
 
 hide_ids_keyboard_handler = CallbackQueryHandler(

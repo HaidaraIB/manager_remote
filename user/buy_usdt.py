@@ -33,8 +33,7 @@ from common.back_to_home_page import (
 
 from start import start_command
 
-from DB import DB
-
+from database import BuyUsdtdOrder, PaymentMethod
 from constants import *
 
 (
@@ -56,12 +55,13 @@ async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not context.bot_data["data"]["user_calls"]["buy_usdt"]:
             await update.callback_query.answer("شراء USDT متوقف حالياً ❗️")
             return ConversationHandler.END
-        
-        elif DB.check_user_pending_orders(
-            order_type="buyusdt",
+
+        elif BuyUsdtdOrder.check_user_pending_orders(
             user_id=update.effective_user.id,
         ):
-            await update.callback_query.answer("لديك طلب شراء USDT قيد التنفيذ بالفعل ❗️")
+            await update.callback_query.answer(
+                "لديك طلب شراء USDT قيد التنفيذ بالفعل ❗️"
+            )
             return ConversationHandler.END
 
         text = (
@@ -77,7 +77,7 @@ async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        context.user_data["usdt_to_buy_amount"] = int(update.message.text)
+        context.user_data["usdt_to_buy_amount"] = float(update.message.text)
         keyboard = [
             [
                 InlineKeyboardButton(text="موافق 👍", callback_data="yes buy usdt"),
@@ -88,7 +88,7 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ]
         text = (
             f"الكمية المرسلة تساوي:\n\n"
-            f"<b>{context.user_data['usdt_to_buy_amount']} USDT = {int(context.user_data['usdt_to_buy_amount']) * context.bot_data['data']['usdt_to_syp']} SYP</b>\n\n"
+            f"<b>{context.user_data['usdt_to_buy_amount']} USDT = {float(context.user_data['usdt_to_buy_amount'] * context.bot_data['data']['usdt_to_syp']):,.2f} SYP</b>\n\n"
             "هل أنت موافق؟"
         )
 
@@ -134,7 +134,7 @@ async def back_to_yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_
         ]
         text = (
             f"الكمية المرسلة تساوي:\n\n"
-            f"{context.user_data['usdt_to_buy_amount']} USDT = {int(context.user_data['usdt_to_buy_amount']) * context.bot_data['data']['usdt_to_syp']} SYP\n\n"
+            f"{context.user_data['usdt_to_buy_amount']} USDT = {float(context.user_data['usdt_to_buy_amount'] * context.bot_data['data']['usdt_to_syp']):,.2f} SYP\n\n"
             "هل أنت موافق؟"
         )
 
@@ -149,9 +149,9 @@ async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         data = update.callback_query.data
         if not data.startswith("back"):
-            method = DB.get_payment_method(name=data)
+            method = PaymentMethod.get_payment_method(name=data)
 
-            if method[1] == 0:
+            if method.on_off == 0:
                 await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً ❗️")
                 return
 
@@ -265,7 +265,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else ""
         )
 
-        serial = await DB.add_buy_usdt_order(
+        serial = await BuyUsdtdOrder.add_buy_usdt_order(
             group_id=context.bot_data["data"]["buy_usdt_orders_group"],
             user_id=update.effective_user.id,
             method=method,
@@ -289,8 +289,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             ),
         )
-        await DB.add_message_ids(
-            order_type="buyusdt",
+        await BuyUsdtdOrder.add_message_ids(
             serial=serial,
             pending_check_message_id=message.id,
         )

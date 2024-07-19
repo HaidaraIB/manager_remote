@@ -14,8 +14,7 @@ from telegram.ext import (
 
 from user.work_with_us.common import syrian_govs_en_ar
 
-from DB import DB
-
+from database import TrustedAgentsOrder
 from custom_filters import Declined, AgentOrder
 
 
@@ -49,13 +48,15 @@ async def get_decline_agent_order_reason(
             return
 
         serial = int(data[-1])
-        order = DB.get_one_order(order_type="trusted_agents", serial=serial)
+        order = TrustedAgentsOrder.get_one_order(serial=serial)
 
-        await DB.decline_trusted_agent_order(serial=serial, reason=update.message.text)
+        await TrustedAgentsOrder.decline_trusted_agent_order(
+            serial=serial, reason=update.message.text
+        )
         await context.bot.send_message(
-            chat_id=order["user_id"],
+            chat_id=order.user_id,
             text=(
-                f"عذراً، تم رفض طلبك للعمل معنا كوكيل لمحافظة <b>{syrian_govs_en_ar[order['gov']]}</b>\n\n"
+                f"عذراً، تم رفض طلبك للعمل معنا كوكيل لمحافظة <b>{syrian_govs_en_ar[order.gov]}</b>\n\n"
                 "السبب:\n"
                 f"{update.message.text_html}\n\n"
                 f"الرقم التسلسلي للطلب: <code>{serial}</code>"

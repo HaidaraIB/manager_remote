@@ -12,11 +12,10 @@ from telegram.ext import (
     MessageHandler,
 )
 
-from DB import DB
 import os
 
 from custom_filters import Deposit, Returned, DepositAgent
-
+from database import DepositOrder, User
 from common.common import build_worker_keyboard, pretty_time_delta
 
 import datetime
@@ -59,26 +58,26 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             ].callback_data.split("_")[-1]
         )
 
-        d_order = DB.get_one_order(order_type="deposit", serial=serial)
+        d_order = DepositOrder.get_one_order(serial=serial)
 
-        user = DB.get_user(user_id=d_order["user_id"])
+        user = User.get_user(user_id=d_order.user_id)
 
         gifts_amount = 0
 
-        if user[3] >= 1_000_000:
+        if user.deposit_balance >= 1_000_000:
             gifts_amount = 10_000 * context.bot_data["data"]["deposit_gift_percentage"]
-            await DB.million_gift_user(user_id=d_order["user_id"], amount=gifts_amount)
+            await User.million_gift_user(user_id=d_order.user_id, amount=gifts_amount)
 
         caption = (
-            f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{d_order['amount']}$</b> إلى رصيدك\n"
-            f"{f'بالإضافة إلى <b>{gifts_amount}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1_000_000$</b>' if gifts_amount else ''}\n\n"
+            f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{float(d_order.amount):,.2f}$</b> إلى رصيدك\n"
+            f"{f'بالإضافة إلى <b>{float(gifts_amount):,.2f}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000$</b>' if gifts_amount else ''}\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
-            f"Congrats🎉, the deposit you made <b>{d_order['amount']}$</b> was added to your balance\n"
-            f"{f'plus <b>{gifts_amount}$</b> gift for reaching <b>1_000_000$</b> deposits.' if gifts_amount else ''}\n\n"
+            f"Congrats🎉, the deposit you made <b>{float(d_order.amount):,.2f}$</b> was added to your balance\n"
+            f"{f'plus <b>{float(gifts_amount):,.2f}$</b> gift for reaching <b>1,000,000$</b> deposits.' if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
         await context.bot.send_photo(
-            chat_id=d_order["user_id"],
+            chat_id=d_order.user_id,
             photo=update.message.photo[-1],
             caption=caption,
         )
@@ -110,11 +109,9 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             ),
         )
         prev_date = (
-            d_order["send_date"]
-            if d_order["state"] != "returned"
-            else d_order["return_date"]
+            d_order.send_date if d_order.state != "returned" else d_order.return_date
         )
-        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
@@ -125,12 +122,11 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
-        await DB.reply_with_deposit_proof(
-            order_type="deposit",
-            amount=d_order["amount"],
+        await DepositOrder.reply_with_deposit_proof(
+            amount=d_order.amount,
             archive_message_ids=str(message.id),
             serial=serial,
-            user_id=d_order["user_id"],
+            user_id=d_order.user_id,
             worker_id=update.effective_user.id,
         )
         context.user_data["requested"] = False
@@ -167,17 +163,17 @@ async def return_deposit_order_reason(
             0
         ].callback_data.split("_")[-1]
 
-        d_order = DB.get_one_order(order_type="deposit", serial=serial)
+        d_order = DepositOrder.get_one_order(serial=serial)
 
         text = (
-            f"تم إعادة طلب إيداع مبلغ: <b>{d_order['amount']}$</b>❗️\n\n"
+            f"تم إعادة طلب إيداع مبلغ: <b>{d_order.amount}$</b>❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
         await context.bot.send_message(
-            chat_id=d_order["user_id"],
+            chat_id=d_order.user_id,
             text=text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -216,11 +212,9 @@ async def return_deposit_order_reason(
             ),
         )
         prev_date = (
-            d_order["send_date"]
-            if d_order["state"] != "returned"
-            else d_order["return_date"]
+            d_order.send_date if d_order.state != "returned" else d_order.return_date
         )
-        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_message(
@@ -230,8 +224,7 @@ async def return_deposit_order_reason(
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + text,
             )
 
-        await DB.return_order(
-            order_type="deposit",
+        await DepositOrder.return_order(
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,

@@ -6,9 +6,8 @@ from telegram.error import (
     RetryAfter,
 )
 
-from DB import DB
 import asyncio
-
+from database import PaymentAgent, DepositAgent
 from constants import *
 
 worker_type_dict = {
@@ -20,25 +19,29 @@ worker_type_dict = {
             "ar": "اليوم",
             "en": "day",
         },
+        "model": PaymentAgent,
     },
     "weekly": {
         "approved_work": "approved_deposits_week",
         "percentage": "workers_reward_percentage",
         "role": "deposits",
         "day_week": {"ar": "الأسبوع", "en": "week"},
+        "model": DepositAgent,
     },
 }
 
 
-def stringify_manager_reward_report(worker, updated_worker, amount, reward_type):
-    role = worker_type_dict[reward_type]["role"]
-
+def stringify_manager_reward_report(
+    worker: DepositAgent | PaymentAgent,
+    updated_worker: DepositAgent | PaymentAgent,
+    amount: float,
+    reward_type: str,
+):
     manager_text = (
         f"تم تحديث رصيد المكافآت عن مجموع مبالغ الطلبات الناجحة للموظف:\n\n"
-        f"id: <code>{worker['id']}</code>\n"
-        f"name: <b>{worker['name']}</b>\n"
-        f"username: {'@' + worker['username'] if worker['username'] else '<b>لا يوجد</b>'}\n\n"
-        f"الوظيفة: {f'سحب {updated_worker['method']}' if role == 'withdraws' else 'تنفيذ إيداع'}\n"
+        f"id: <code>{worker.id}</code>\n"
+        f"name: <b>{worker.name}</b>\n"
+        f"username: {'@' + worker.username if worker.username else '<b>لا يوجد</b>'}\n\n"
     )
     return manager_text + stringify_reward_report(
         worker=worker,
@@ -48,46 +51,63 @@ def stringify_manager_reward_report(worker, updated_worker, amount, reward_type)
     )
 
 
-def stringify_reward_report(worker, updated_worker, amount, reward_type):
+def stringify_reward_report(
+    worker: DepositAgent | PaymentAgent,
+    updated_worker: DepositAgent | PaymentAgent,
+    amount: float,
+    reward_type: str,
+):
     role = worker_type_dict[reward_type]["role"]
+    balance = updated_worker.__getattribute__(f'approved_{role}')
+    partial_balance = worker.__getattribute__(f'approved_{role}_{worker_type_dict[reward_type]['day_week']['en']}')
+    prev_rewards_balance = worker.__getattribute__(f'{reward_type}_rewards_balance')
+    rewards_balance = updated_worker.__getattribute__(f'{reward_type}_rewards_balance')
+    orders_num = updated_worker.__getattribute__(f'approved_{role}_num')
+    work_type = worker_type_dict[reward_type]['day_week']['ar']
+    
     worker_text = (
-        f"مجموع المكافآت السابق: <b>{worker[f'{reward_type}_rewards_balance']}</b>\n"
-        f"قيمة المكافأة: <b>{amount}</b>\n"
-        f"مجموع المكافآت الحالي: <b>{updated_worker[f'{reward_type}_rewards_balance']}</b>\n"
-        f"عدد الطلبات حتى الآن: <b>{updated_worker[f'approved_{role}_num']}</b>\n"
-        f"مجموع المبالغ حتى الآن: <b>{updated_worker[f'approved_{role}']}</b>\n"
-        f"مجموع المبالغ هذا {worker_type_dict[reward_type]['day_week']['ar']}: <b>{worker[f'approved_{role}_{worker_type_dict[reward_type]['day_week']['en']}']}</b>"
+        f"الوظيفة: {f'سحب {updated_worker.method}' if role == 'withdraws' else 'تنفيذ إيداع'}\n"
+        f"مجموع المكافآت السابق: <b>{float(prev_rewards_balance):,.2f}</b>\n"
+        f"قيمة المكافأة: <b>{float(amount):,.2f}</b>\n"
+        f"مجموع المكافآت الحالي: <b>{float(rewards_balance):,.2f}</b>\n"
+        f"عدد الطلبات حتى الآن: <b>{orders_num}</b>\n"
+        f"مجموع المبالغ حتى الآن: <b>{float(balance):,.2f}</b>\n"
+        f"مجموع المبالغ هذا {work_type}: <b>{float(partial_balance):,.2f}</b>"
     )
     return worker_text
 
 
 async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
     worker_type = context.job.name.split("_")[0]
-    workers = DB.get_all_workers(payments=worker_type == "daily")
+    model: DepositAgent | PaymentAgent = worker_type_dict[worker_type]["model"]
+    workers: list[PaymentAgent] | list[DepositAgent] = model.get_workers()
     for worker in workers:
-        if worker[worker_type_dict[worker_type]["approved_work"]] == 0:
+        approved_work = worker.__getattribute__(
+            worker_type_dict[worker_type]["approved_work"]
+        )
+        if approved_work == 0:
             continue
 
-        amount = (
-            worker[worker_type_dict[worker_type]["approved_work"]]
+        amount = float(
+            approved_work
             * context.bot_data["data"][worker_type_dict[worker_type]["percentage"]]
             / 100
         )
         if worker_type == "daily":
-            await DB.daily_reward_worker(
-                worker_id=worker["id"],
+            await model.daily_reward_worker(
+                worker_id=worker.id,
                 amount=amount,
-                method=worker["method"],
+                method=worker.method,
             )
         else:
-            await DB.weekly_reward_worker(
-                worker_id=worker["id"],
+            await model.weekly_reward_worker(
+                worker_id=worker.id,
                 amount=amount,
             )
 
-        updated_worker = DB.get_worker(
-            worker_id=worker["id"],
-            method=worker["method"] if worker_type == "daily" else None,
+        updated_worker = model.get_workers(
+            worker_id=worker.id,
+            method=worker.method if worker_type == "daily" else None,
         )
 
         worker_text = (
@@ -96,7 +116,7 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
         )
         try:
             await context.bot.send_message(
-                chat_id=worker["id"],
+                chat_id=worker.id,
                 text=worker_text,
             )
         except:

@@ -56,7 +56,11 @@ from user.buy_usdt import buy_usdt_handler
 from user.make_complaint import complaint_handler
 from user.return_order import *
 from user.create_account import *
-from user.respond_to_complaint import reply_to_returned_complaint_handler
+from user.respond_to_complaint import (
+    reply_to_returned_complaint_handler,
+    correct_returned_complaint_handler,
+    back_from_reply_to_returned_complaint_handler,
+)
 from user.work_with_us import *
 from user.show_trusted_agents import *
 
@@ -85,7 +89,7 @@ from dotenv import load_dotenv
 
 import datetime
 import os
-from DB import DB
+from database import create_tables
 
 
 async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -103,7 +107,7 @@ async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     create_folders()
     load_dotenv()
-    DB.creat_tables()
+    create_tables()
     defaults = Defaults(parse_mode=ParseMode.HTML)
     my_persistence = PicklePersistence(
         filepath=os.getenv("PERSISTENCE_PATH"), single_file=False
@@ -177,6 +181,8 @@ def main():
     # RETURN
     app.add_handler(handle_returned_order_handler)
     app.add_handler(reply_to_returned_complaint_handler)
+    app.add_handler(correct_returned_complaint_handler)
+    app.add_handler(back_from_reply_to_returned_complaint_handler)
 
     app.add_handler(work_with_us_handler)
 
@@ -219,7 +225,7 @@ def main():
     app.add_handler(decline_create_account_handler)
     app.add_handler(decline_account_reason_handler)
     app.add_handler(back_from_decline_create_account_handler)
-    app.add_handler(invalid_account_format_handler)
+    app.add_handler(invalid_account_format_handler, group=3)
 
     app.add_handler(withdraw_handler)
 
@@ -261,7 +267,7 @@ def main():
 
     app.add_handler(
         MessageHandler(filters=filters.ALL, callback=get_file_id),
-        group=3,
+        group=4,
     )
 
     app.add_error_handler(error_handler)

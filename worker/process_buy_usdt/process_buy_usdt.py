@@ -15,8 +15,8 @@ from telegram.ext import (
 )
 
 import os
-from DB import DB
 import datetime
+from database import BuyUsdtdOrder
 from custom_filters import BuyUSDT, Returned, DepositAgent
 
 from common.common import (
@@ -49,7 +49,7 @@ async def user_payment_verified_buy_usdt(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إعادة الطلب📥",
-                    callback_data=f"return_buy_usdt_order_{serial}",
+                    callback_data=f"return_buyusdt_order_{serial}",
                 )
             )
         )
@@ -68,18 +68,18 @@ async def reply_with_payment_proof_buy_usdt(
             ].callback_data.split("_")[-1]
         )
 
-        b_order = DB.get_one_order(order_type="buyusdt", serial=serial)
+        b_order = BuyUsdtdOrder.get_one_order(serial=serial)
 
-        amount = b_order["amount"]
+        amount = b_order.amount
 
         user_caption = (
-            f"مبروك، تم تأكيد عملية شراء <b>{amount} USDT</b> بنجاح✅\n\n"
+            f"مبروك، تم تأكيد عملية شراء <b>{float(amount):,.2f} USDT</b> بنجاح✅\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
 
         try:
             await context.bot.send_photo(
-                chat_id=b_order["user_id"],
+                chat_id=b_order.user_id,
                 photo=update.message.photo[-1],
                 caption=user_caption,
             )
@@ -119,11 +119,9 @@ async def reply_with_payment_proof_buy_usdt(
         )
 
         prev_date = (
-            b_order["send_date"]
-            if b_order["state"] != "returned"
-            else b_order["return_date"]
+            b_order.send_date if b_order.state != "returned" else b_order.return_date
         )
-        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_media_group(
@@ -133,11 +131,10 @@ async def reply_with_payment_proof_buy_usdt(
                 + caption,
             )
 
-        await DB.reply_with_payment_proof(
-            order_type="buyusdt",
+        await BuyUsdtdOrder.reply_with_payment_proof(
             archive_message_ids=f"{messages[0].id},{messages[1].id}",
             amount=amount,
-            method=b_order["method"],
+            method=b_order.method,
             serial=serial,
             worker_id=update.effective_user.id,
         )
@@ -158,7 +155,7 @@ async def return_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الإعادة🔙",
-                    callback_data=f"back_from_return_buy_usdt_order_{serial}",
+                    callback_data=f"back_from_return_buyusdt_order_{serial}",
                 )
             )
         )
@@ -177,12 +174,11 @@ async def return_buy_usdt_order_reason(
             ].callback_data.split("_")[-1]
         )
 
-        b_order = DB.get_one_order(
-            order_type="buyusdt",
+        b_order = BuyUsdtdOrder.get_one_order(
             serial=serial,
         )
 
-        amount = b_order["amount"]
+        amount = b_order.amount
 
         text = (
             f"تم إعادة طلب شراء: <b>{amount} USDT</b>❗️\n\n"
@@ -192,7 +188,7 @@ async def return_buy_usdt_order_reason(
         )
 
         await context.bot.send_photo(
-            chat_id=b_order["user_id"],
+            chat_id=b_order.user_id,
             photo=update.message.reply_to_message.photo[-1],
             caption=text,
             reply_markup=InlineKeyboardMarkup.from_button(
@@ -235,11 +231,9 @@ async def return_buy_usdt_order_reason(
         )
 
         prev_date = (
-            b_order["send_date"]
-            if b_order["state"] != "returned"
-            else b_order["return_date"]
+            b_order.send_date if b_order.state != "returned" else b_order.return_date
         )
-        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
@@ -250,15 +244,13 @@ async def return_buy_usdt_order_reason(
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
-        await DB.return_order(
-            order_type="buyusdt",
+        await BuyUsdtdOrder.return_order(
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )
 
         context.user_data["requested"] = False
-        return ConversationHandler.END
 
 
 async def back_from_return_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -276,16 +268,15 @@ async def back_from_return_buy_usdt_order(update: Update, _: ContextTypes.DEFAUL
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إعادة الطلب📥",
-                    callback_data=f"return_buy_usdt_order_{serial}",
+                    callback_data=f"return_buyusdt_order_{serial}",
                 )
             )
         )
-        return ConversationHandler.END
 
 
 user_payment_verified_buy_usdt_handler = CallbackQueryHandler(
     callback=user_payment_verified_buy_usdt,
-    pattern="^verify_buy_usdt_order",
+    pattern="^verify_buyusdt_order",
 )
 
 reply_with_payment_proof_buy_usdt_handler = MessageHandler(
@@ -295,7 +286,7 @@ reply_with_payment_proof_buy_usdt_handler = MessageHandler(
 
 return_buy_usdt_order_handler = CallbackQueryHandler(
     callback=return_buy_usdt_order,
-    pattern="^return_buy_usdt_order",
+    pattern="^return_buyusdt_order",
 )
 return_buy_usdt_order_reason_handler = MessageHandler(
     filters=filters.REPLY & filters.TEXT & BuyUSDT() & Returned(),
@@ -303,5 +294,5 @@ return_buy_usdt_order_reason_handler = MessageHandler(
 )
 back_from_return_buy_usdt_order_handler = CallbackQueryHandler(
     callback=back_from_return_buy_usdt_order,
-    pattern="^back_from_return_buy_usdt_order",
+    pattern="^back_from_return_buyusdt_order",
 )

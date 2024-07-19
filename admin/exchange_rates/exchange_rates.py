@@ -9,15 +9,20 @@ from telegram.ext import (
 
 from common.common import build_admin_keyboard, build_back_button
 
-from common.back_to_home_page import back_to_admin_home_page_button
+from common.back_to_home_page import (
+    back_to_admin_home_page_button,
+    back_to_admin_home_page_handler,
+)
 
-from common.back_to_home_page import back_to_admin_home_page_handler
+from start import admin_command, start_command
 
-from start import admin_command
+from custom_filters import Admin
 
-from custom_filters.Admin import Admin
-
-(CHOOSE_EXCHANGE_RATE_TO_UPDATE, NEW_RATE, BUY_OR_SELL) = range(3)
+(
+    CHOOSE_EXCHANGE_RATE_TO_UPDATE,
+    NEW_RATE,
+    BUY_OR_SELL,
+) = range(3)
 
 
 async def choose_exchange_rate_to_update(
@@ -55,9 +60,7 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back_to_choose_exchange_rate_to_update"),
             back_to_admin_home_page_button[0],
         ]
-        shared_text = (
-            f"أرسل السعر الجديد، السعر الحالي:\n\n"
-        )
+        shared_text = f"أرسل السعر الجديد، السعر الحالي:\n\n"
         if data[0] == "buyusdt":
             text = shared_text + (
                 f"Buy USDT: <b>{context.bot_data['data']['usdt_to_syp']}</b>"
@@ -161,5 +164,6 @@ update_exchange_rates_handler = ConversationHandler(
         ),
         back_to_admin_home_page_handler,
         admin_command,
+        start_command
     ],
 )

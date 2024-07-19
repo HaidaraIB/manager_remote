@@ -14,12 +14,9 @@ from telegram.ext import (
     filters,
 )
 
-from common.common import (
-    build_complaint_keyboard,
-)
-
-from DB import DB
-
+from common.common import build_complaint_keyboard, parent_to_child_models_mapper
+from database import Complaint
+from custom_filters import UserRespondToComplaint
 from check_complaint.check_complaint import make_complaint_data
 
 (CORRECT_RETURNED_COMPLAINT,) = range(1)
@@ -57,18 +54,20 @@ async def correct_returned_complaint(
 ):
     if update.effective_chat.type == Chat.PRIVATE:
 
-        data = context.user_data["complaint_data"]
+        callback_data = context.user_data["callback_data"]
+        complaint = Complaint.get_complaint(
+            order_serial=int(callback_data[-1]),
+            order_type=callback_data[-2],
+        )
+        data = context.user_data[f"complaint_data_{complaint.id}"]
 
-        op = DB.get_one_order(
-            context.user_data["callback_data"][-2],
-            serial=int(context.user_data["callback_data"][-1]),
+        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+            serial=int(callback_data[-1]),
         )
 
-        context.user_data["complaint_data"] = data
-
         chat_id = (
-            (op["worker_id"] if op["worker_id"] else op["checker_id"])
-            if int(context.user_data["callback_data"][-3])
+            (op.worker_id if op.worker_id else op.checker_id)
+            if int(callback_data[-3])
             else context.bot_data["data"]["complaints_group"]
         )
 
@@ -94,14 +93,17 @@ async def correct_returned_complaint(
             text=update.effective_message.reply_to_message.text_html
             + f"\n\nرد المستخدم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>",
             reply_markup=build_complaint_keyboard(
-                data=context.user_data["callback_data"],
-                send_to_worker=(not int(context.user_data["callback_data"][-3])),
+                data=callback_data,
+                send_to_worker=(not int(callback_data[-3])),
             ),
+        )
+        await context.bot.edit_message_reply_markup(
+            chat_id=update.effective_user.id,
+            message_id=update.message.reply_to_message.id,
         )
         await update.message.reply_text(
             text="تم إرسال الرد ✅",
         )
-
 
         return ConversationHandler.END
 
@@ -122,27 +124,17 @@ async def back_from_reply_to_returned_complaint(
         return ConversationHandler.END
 
 
-reply_to_returned_complaint_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(
-            reply_to_returned_complaint,
-            "^user_reply_to_complaint",
-        )
-    ],
-    states={
-        CORRECT_RETURNED_COMPLAINT: [
-            MessageHandler(
-                filters=filters.REPLY
-                & ~filters.COMMAND
-                & (filters.CAPTION | filters.PHOTO | filters.TEXT),
-                callback=correct_returned_complaint,
-            )
-        ]
-    },
-    fallbacks=[
-        CallbackQueryHandler(
-            back_from_reply_to_returned_complaint,
-            "^back_from_reply_to_returned_complaint",
-        ),
-    ],
+reply_to_returned_complaint_handler = CallbackQueryHandler(
+    reply_to_returned_complaint,
+    "^user_reply_to_complaint",
+)
+correct_returned_complaint_handler = MessageHandler(
+    filters=filters.REPLY
+    & UserRespondToComplaint()
+    & (filters.CAPTION | filters.PHOTO | (filters.TEXT & ~filters.COMMAND)),
+    callback=correct_returned_complaint,
+)
+back_from_reply_to_returned_complaint_handler = CallbackQueryHandler(
+    back_from_reply_to_returned_complaint,
+    "^back_from_reply_to_returned_complaint",
 )

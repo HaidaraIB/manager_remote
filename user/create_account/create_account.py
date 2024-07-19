@@ -18,20 +18,15 @@ from common.common import (
     build_back_button,
 )
 from common.decorators import check_if_user_present_decorator
-
-
 from common.force_join import check_if_user_member_decorator
-
 from common.back_to_home_page import (
     back_to_user_home_page_button,
     back_to_user_home_page_handler,
 )
+from custom_filters import Account, Declined
 
 from start import start_command
-
-from DB import DB
-
-from custom_filters import Account, Declined
+import database
 
 (FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
 
@@ -45,8 +40,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً ❗️")
             return ConversationHandler.END
 
-        elif DB.check_user_pending_orders(
-            order_type="create_account",
+        elif database.CreateAccountOrder.check_user_pending_orders(
             user_id=update.effective_user.id,
         ):
             await update.callback_query.answer(
@@ -81,7 +75,7 @@ back_to_full_name = create_account
 async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
-        serial = await DB.add_create_account_order(
+        serial = await database.CreateAccountOrder.add_create_account_order(
             user_id=update.effective_user.id,
             full_name=context.user_data["full_name"],
             nat_num=update.message.text,
@@ -160,7 +154,7 @@ async def reply_to_create_account_order(
         serial = int(data[-1])
 
         account = update.message.text.split("\n")
-        res = await DB.add_account(
+        res = await database.Account.add_account(
             full_name=account[0],
             acc_num=int(account[1]),
             password=account[2],
@@ -188,7 +182,9 @@ async def reply_to_create_account_order(
                 text=text,
             )
         except Exception as e:
-            await update.message.reply_text(text="لقد قام هذا المستخدم بحظر البوت، قم برفض الطلب وحسب.")
+            await update.message.reply_text(
+                text="لقد قام هذا المستخدم بحظر البوت، قم برفض الطلب وحسب."
+            )
             return
 
         await context.bot.edit_message_reply_markup(
@@ -201,8 +197,7 @@ async def reply_to_create_account_order(
                 )
             ),
         )
-        await DB.change_order_state(
-            order_type="create_account",
+        await database.CreateAccountOrder.change_order_state(
             serial=serial,
             state="approved",
         )
@@ -253,8 +248,7 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-        await DB.change_order_state(
-            order_type="create_account",
+        await database.CreateAccountOrder.change_order_state(
             state="declined",
             serial=serial,
         )

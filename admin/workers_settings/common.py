@@ -9,6 +9,7 @@ from telegram import (
 from telegram.ext import (
     ContextTypes,
     CallbackQueryHandler,
+    ConversationHandler
 )
 from common.common import build_back_button
 from common.back_to_home_page import back_to_admin_home_page_button
@@ -16,6 +17,8 @@ from common.back_to_home_page import back_to_admin_home_page_button
 from constants import *
 
 from custom_filters.Admin import Admin
+
+from database import DepositAgent, PaymentAgent, Checker
 
 (
     CHOOSE_POSITION,
@@ -27,6 +30,7 @@ op_dict_en_to_ar = {
     "deposit": "إيداع",
     "buy_usdt": "شراء USDT",
 }
+
 
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
@@ -49,6 +53,7 @@ async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="هل تريد:",
             reply_markup=InlineKeyboardMarkup(worker_settings_keyboard),
         )
+        return ConversationHandler.END
 
 
 back_to_worker_settings = worker_settings
@@ -60,7 +65,7 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
             op = update.callback_query.data.split("_")[-1]
         else:
             op = update.callback_query.data.split(" ")[0]
-        context.user_data["worker_settings_option"] = op
+            context.user_data["worker_settings_option"] = op
         await update.callback_query.edit_message_text(
             text="اختر الوظيفة:",
             reply_markup=build_positions_keyboard(op=op),
@@ -151,15 +156,15 @@ def build_payment_positions_keyboard(op: str):
 
 
 def build_workers_keyboard(
-    workers: list,
+    workers: list[DepositAgent | PaymentAgent | Checker],
     t: str,
 ) -> list[list[InlineKeyboardButton]]:
     if len(workers) == 1:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    text=workers[0]["name"],
-                    callback_data=(f"{t} " + str(workers[0]["id"])),
+                    text=workers[0].name,
+                    callback_data=(f"{t} " + str(workers[0].id)),
                 )
             ]
         ]
@@ -167,12 +172,12 @@ def build_workers_keyboard(
         keyboard = [
             [
                 InlineKeyboardButton(
-                    text=workers[i]["name"],
-                    callback_data=(f"{t} " + str(workers[i]["id"])),
+                    text=workers[i].name,
+                    callback_data=(f"{t} " + str(workers[i].id)),
                 ),
                 InlineKeyboardButton(
-                    text=workers[i + 1]["name"],
-                    callback_data=(f"{t} " + str(workers[i + 1]["id"])),
+                    text=workers[i + 1].name,
+                    callback_data=(f"{t} " + str(workers[i + 1].id)),
                 ),
             ]
             for i in range(0, len(workers), 2)
@@ -181,12 +186,12 @@ def build_workers_keyboard(
         keyboard = [
             [
                 InlineKeyboardButton(
-                    text=workers[i]["name"],
-                    callback_data=(f"{t} " + str(workers[i]["id"])),
+                    text=workers[i].name,
+                    callback_data=(f"{t} " + str(workers[i].id)),
                 ),
                 InlineKeyboardButton(
-                    text=workers[i + 1]["name"],
-                    callback_data=(f"{t} " + str(workers[i + 1]["id"])),
+                    text=workers[i + 1].name,
+                    callback_data=(f"{t} " + str(workers[i + 1].id)),
                 ),
             ]
             for i in range(0, len(workers) - 1, 2)
@@ -194,8 +199,8 @@ def build_workers_keyboard(
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=workers[-1]["name"],
-                    callback_data=(f"{t} " + str(workers[-1]["id"])),
+                    text=workers[-1].name,
+                    callback_data=(f"{t} " + str(workers[-1].id)),
                 )
             ],
         )
@@ -211,7 +216,11 @@ def build_workers_keyboard(
     return keyboard
 
 
-def create_worker_info_text(t_worker: User, worker: dict, pos: str):
+def create_worker_info_text(
+    t_worker: User,
+    worker: DepositAgent | PaymentAgent | Checker,
+    pos: str,
+):
     text = (
         f"آيدي الموظف: <code>{t_worker.id}</code>\n"
         f"اسمه: <b>{t_worker.full_name}</b>\n"
@@ -219,22 +228,22 @@ def create_worker_info_text(t_worker: User, worker: dict, pos: str):
     )
     if pos == "deposit after check":
         text += (
-            f"الإيداعات حتى الآن: {worker['approved_deposits']}\n"
-            f"عددها: {worker['approved_deposits_num']}\n"
-            f"الإيداعات هذا الاسبوع: {worker['approved_deposits_week']}\n"
-            f"رصيد المكافآت: {worker['weekly_rewards_balance']}\n"
+            f"الإيداعات حتى الآن: {float(worker.approved_deposits):,.2f}\n"
+            f"عددها: {worker.approved_deposits_num}\n"
+            f"الإيداعات هذا الاسبوع: {float(worker.approved_deposits_week):,.2f}\n"
+            f"رصيد المكافآت: {float(worker.weekly_rewards_balance):,.2f}\n"
         )
 
     elif pos in ["deposit", "withdraw", "buy_usdt"]:
-        text += f"نوع التحقق: {worker['check_what']}\n"
+        text += f"نوع التحقق: {worker.check_what}\n"
 
     else:
         text += (
-            f"الوظيفة: {worker['method']}\n"
-            f"السحوبات حتى الآن: {worker['approved_withdraws']}\n"
-            f"عددها: {worker['approved_withdraws_num']}\n"
-            f"الدفعات المسبقة: {worker['pre_balance']}\n"
-            f"السحوبات هذا الاسبوع: {worker['approved_withdraws_day']}\n"
-            f"رصيد المكافآت: {worker['daily_rewards_balance']}\n"
+            f"الوظيفة: {"سحب " + worker.method}\n"
+            f"السحوبات حتى الآن: {float(worker.approved_withdraws):,.2f}\n"
+            f"عددها: {worker.approved_withdraws_num}\n"
+            f"الدفعات المسبقة:\n{float(worker.pre_balance):,.2f}\n"
+            f"السحوبات هذا الاسبوع: {float(worker.approved_withdraws_day):,.2f}\n"
+            f"رصيد المكافآت: {float(worker.daily_rewards_balance):,.2f}\n"
         )
     return text
