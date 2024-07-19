@@ -18,10 +18,10 @@ from common.common import (
 
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_to_admin_home_page_button
+    back_to_admin_home_page_button,
 )
 
-from start import admin_command
+from start import admin_command, start_command
 
 from DB import DB
 import asyncio
@@ -37,7 +37,8 @@ from custom_filters.Admin import Admin
 async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         await update.callback_query.edit_message_text(
-            text="أرسل الرسالة.", reply_markup=InlineKeyboardMarkup(back_to_admin_home_page_button)
+            text="أرسل الرسالة.",
+            reply_markup=InlineKeyboardMarkup(back_to_admin_home_page_button),
         )
         return THE_MESSAGE
 
@@ -151,5 +152,9 @@ broadcast_message_handler = ConversationHandler(
             MessageHandler(filters=filters.Regex("^\d+$"), callback=enter_users),
         ],
     },
-    fallbacks=[back_to_admin_home_page_handler, admin_command],
+    fallbacks=[
+        back_to_admin_home_page_handler,
+        admin_command,
+        start_command,
+    ],
 )

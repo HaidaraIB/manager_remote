@@ -13,7 +13,7 @@ from common.back_to_home_page import back_to_admin_home_page_button
 
 from common.back_to_home_page import back_to_admin_home_page_handler
 
-from start import admin_command
+from start import admin_command, start_command
 
 from custom_filters.Admin import Admin
 
@@ -161,5 +161,6 @@ update_exchange_rates_handler = ConversationHandler(
         ),
         back_to_admin_home_page_handler,
         admin_command,
+        start_command,
     ],
 )

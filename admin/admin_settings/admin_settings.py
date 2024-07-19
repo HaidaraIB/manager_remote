@@ -18,7 +18,7 @@ from common.back_to_home_page import back_to_admin_home_page_button
 
 from common.back_to_home_page import back_to_admin_home_page_handler
 
-from start import admin_command
+from start import admin_command, start_command
 
 import os
 from DB import DB
@@ -173,6 +173,7 @@ add_admin_handler = ConversationHandler(
             pattern="^back_to_admin_settings$",
         ),
         admin_command,
+        start_command,
         back_to_admin_home_page_handler,
     ],
 )
@@ -198,6 +199,7 @@ remove_admin_handler = ConversationHandler(
             pattern="^back_to_admin_settings$",
         ),
         admin_command,
+        start_command,
         back_to_admin_home_page_handler,
     ],
 )

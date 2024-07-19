@@ -17,14 +17,15 @@ from common.common import (
 
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
-    back_to_admin_home_page_button
+    back_to_admin_home_page_button,
 )
 
-from start import admin_command
+from start import admin_command, start_command
 
 from custom_filters.Admin import Admin
 
 NEW_PERCENTAGE = 0
+
 
 async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
@@ -54,18 +55,18 @@ async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE)
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
+
 reward_percentages_dict = {
-    "workers_reward_withdraw_percentage":"مكافأة الموظفين اليومية الجديدة",
-    "workers_reward_percentage":"مكافأة الموظفين الأسبوعية الجديدة",
-    "deposit_gift_percentage":"مكافأة الإيداع الجديدة"
+    "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية الجديدة",
+    "workers_reward_percentage": "مكافأة الموظفين الأسبوعية الجديدة",
+    "deposit_gift_percentage": "مكافأة الإيداع الجديدة",
 }
 
-async def update_percentage(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
+
+async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        target_percentage = update.callback_query.data.replace('update ', '')
-        context.user_data['target_percentage'] = target_percentage
+        target_percentage = update.callback_query.data.replace("update ", "")
+        context.user_data["target_percentage"] = target_percentage
         try:
             context.bot_data["data"][target_percentage]
         except KeyError:
@@ -77,11 +78,9 @@ async def update_percentage(
         return NEW_PERCENTAGE
 
 
-async def new_percentage(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
+async def new_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        context.bot_data["data"][context.user_data['target_percentage']] = float(
+        context.bot_data["data"][context.user_data["target_percentage"]] = float(
             update.message.text
         )
         await update.message.reply_text(
@@ -91,7 +90,9 @@ async def new_percentage(
         return ConversationHandler.END
 
 
-update_percentages_handler = CallbackQueryHandler(update_percentages, "^update percentages$")
+update_percentages_handler = CallbackQueryHandler(
+    update_percentages, "^update percentages$"
+)
 
 update_percentage_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(update_percentage, "^update.*_percentage$")],
@@ -103,5 +104,9 @@ update_percentage_handler = ConversationHandler(
             )
         ]
     },
-    fallbacks=[back_to_admin_home_page_handler, admin_command],
+    fallbacks=[
+        back_to_admin_home_page_handler,
+        admin_command,
+        start_command,
+    ],
 )

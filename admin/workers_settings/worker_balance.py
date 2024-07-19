@@ -22,7 +22,7 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
 )
 
-from start import admin_command
+from start import admin_command, start_command
 
 from DB import DB
 from custom_filters.Admin import Admin
@@ -183,5 +183,6 @@ worker_balance_handler = ConversationHandler(
         back_to_worker_settings_handler,
         back_to_admin_home_page_handler,
         admin_command,
+        start_command,
     ],
 )

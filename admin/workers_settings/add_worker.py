@@ -22,7 +22,7 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
 )
 
-from start import admin_command
+from start import admin_command, start_command
 
 from DB import DB
 from custom_filters.Admin import Admin
@@ -168,6 +168,7 @@ add_worker_cp_handler = ConversationHandler(
     fallbacks=[
         back_to_admin_home_page_handler,
         admin_command,
+        start_command,
         CallbackQueryHandler(back_to_worker_id, "^back_to_worker_id$"),
     ],
 )

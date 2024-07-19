@@ -14,7 +14,7 @@ from common.back_to_home_page import (
     back_to_admin_home_page_handler,
 )
 
-from start import admin_command
+from start import admin_command, start_command
 
 from DB import DB
 from custom_filters.Admin import Admin
@@ -27,9 +27,10 @@ from admin.workers_settings.common import (
     create_worker_info_text,
     back_to_choose_position,
     back_to_worker_settings_handler,
-    op_dict_en_to_ar
+    op_dict_en_to_ar,
 )
 from constants import *
+
 
 async def position_to_show_remove_from(
     update: Update,
@@ -164,6 +165,7 @@ remove_worker_handler = ConversationHandler(
     fallbacks=[
         back_to_admin_home_page_handler,
         admin_command,
+        start_command,
         back_to_worker_settings_handler,
         CallbackQueryHandler(
             back_to_choose_position,
@@ -197,6 +199,7 @@ show_worker_handler = ConversationHandler(
     fallbacks=[
         back_to_admin_home_page_handler,
         admin_command,
+        start_command,
         back_to_worker_settings_handler,
         CallbackQueryHandler(
             back_to_choose_position,
