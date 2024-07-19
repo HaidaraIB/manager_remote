@@ -6,6 +6,7 @@ from database.PaymentOrder import PaymentOrder
 
 class WithdrawOrder(PaymentOrder):
     __tablename__ = "withdraw_orders"
+    acc_number = Column(String)
     withdraw_code = Column(String)
 
     @staticmethod

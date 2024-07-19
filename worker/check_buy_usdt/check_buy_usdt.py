@@ -21,9 +21,6 @@ from common.common import (
     build_worker_keyboard,
 )
 
-DECLINE_REASON = 0
-
-
 def stringify_order(
     amount: float,
     serial: int,
@@ -60,10 +57,10 @@ async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=f"send_buy_usdt_order_{serial}"
+                    text="إرسال الطلب⬅️", callback_data=f"send_buyusdt_order_{serial}"
                 ),
                 InlineKeyboardButton(
-                    text="رفض الطلب❌", callback_data=f"decline_buy_usdt_order_{serial}"
+                    text="رفض الطلب❌", callback_data=f"decline_buyusdt_order_{serial}"
                 ),
             ]
         ]
@@ -95,7 +92,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="قبول الطلب✅", callback_data=f"verify_buy_usdt_order_{serial}"
+                    text="قبول الطلب✅", callback_data=f"verify_buyusdt_order_{serial}"
                 )
             ),
         )
@@ -141,11 +138,10 @@ async def decline_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الرفض🔙",
-                    callback_data=f"back_from_decline_buy_usdt_order_{serial}",
+                    callback_data=f"back_from_decline_buyusdt_order_{serial}",
                 )
             )
         )
-        return DECLINE_REASON
 
 
 async def decline_buy_usdt_order_reason(
@@ -213,7 +209,6 @@ async def decline_buy_usdt_order_reason(
         )
 
         context.user_data["requested"] = False
-        return ConversationHandler.END
 
 
 async def back_from_decline_buy_usdt_order(
@@ -226,32 +221,31 @@ async def back_from_decline_buy_usdt_order(
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=f"send_buy_usdt_order_{serial}"
+                    text="إرسال الطلب⬅️", callback_data=f"send_buyusdt_order_{serial}"
                 ),
                 InlineKeyboardButton(
-                    text="رفض الطلب❌", callback_data=f"decline_buy_usdt_order_{serial}"
+                    text="رفض الطلب❌", callback_data=f"decline_buyusdt_order_{serial}"
                 ),
             ]
         ]
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
-        return ConversationHandler.END
 
 
 check_buy_usdt_handler = CallbackQueryHandler(
     callback=check_buy_usdt,
-    pattern="^check_buy_usdt",
+    pattern="^check_buyusdt",
 )
 
 send_buy_usdt_order_handler = CallbackQueryHandler(
     callback=send_buy_usdt_order,
-    pattern="^send_buy_usdt_order",
+    pattern="^send_buyusdt_order",
 )
 
 decline_buy_usdt_order_handler = CallbackQueryHandler(
     callback=decline_buy_usdt_order,
-    pattern="^decline_buy_usdt_order",
+    pattern="^decline_buyusdt_order",
 )
 decline_buy_usdt_order_reason_handler = MessageHandler(
     filters=filters.REPLY & filters.TEXT & BuyUSDT() & Declined(),
@@ -259,5 +253,5 @@ decline_buy_usdt_order_reason_handler = MessageHandler(
 )
 back_from_decline_buy_usdt_order_handler = CallbackQueryHandler(
     callback=back_from_decline_buy_usdt_order,
-    pattern="^back_from_decline_buy_usdt_order",
+    pattern="^back_from_decline_buyusdt_order",
 )

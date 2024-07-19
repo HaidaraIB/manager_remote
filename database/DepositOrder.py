@@ -10,6 +10,7 @@ import datetime
 class DepositOrder(Order):
     __tablename__ = "deposit_orders"
     ref_number = Column(String)
+    acc_number = Column(String)
 
     @staticmethod
     @connect_and_close

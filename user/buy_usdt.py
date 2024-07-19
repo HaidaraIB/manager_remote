@@ -285,7 +285,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="التحقق ☑️", callback_data=f"check_buy_usdt_order_{serial}"
+                    text="التحقق ☑️", callback_data=f"check_buyusdt_order_{serial}"
                 )
             ),
         )

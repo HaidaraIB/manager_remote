@@ -23,7 +23,6 @@ class Order(BaseOrder):
     method = Column(String)
     amount = Column(Float)
     ex_rate = Column(Float)
-    acc_number = Column(String)
 
     reason = Column(String, default="")
     pending_process_message_id = Column(Integer, default=0)
