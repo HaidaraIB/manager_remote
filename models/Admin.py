@@ -21,12 +21,19 @@ class Admin(Base):
     @connect_and_close
     def check_admin(user_id: int, s: Session = None):
         res = s.execute(select(Admin).where(Admin.id == user_id))
-        return res.fetchone().t[0]
+        try:
+            return res.fetchone().t[0]
+        except:
+            pass
 
     @staticmethod
     @connect_and_close
     def get_admin_ids(s: Session = None):
-        return list(map(lambda x: x[0], s.execute(select(Admin)).tuples().all()))
+        res = s.execute(select(Admin))
+        try:
+            return list(map(lambda x: x[0], res.tuples().all()))
+        except:
+            pass
 
     @staticmethod
     @lock_and_release

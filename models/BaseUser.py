@@ -12,5 +12,3 @@ class BaseUser(Base):
     username = Column(String)
     name = Column(String)
 
-    def __repr__(self) -> str:
-        return f"User(id={self.id!r}, name={self.name!r}, username={self.username!r})"
