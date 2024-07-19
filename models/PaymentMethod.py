@@ -22,7 +22,11 @@ class PaymentMethod(Base):
     @staticmethod
     @lock_and_release
     async def turn_payment_method_on_or_off(name: str, on: int = 0, s: Session = None):
-        s.query(PaymentMethod).filter_by(name=name).update({PaymentMethod.on_off: on})
+        s.query(PaymentMethod).filter_by(name=name).update(
+            {
+                PaymentMethod.on_off: on,
+            }
+        )
 
     @staticmethod
     @connect_and_close

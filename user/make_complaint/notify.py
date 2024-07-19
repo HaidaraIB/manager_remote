@@ -112,7 +112,7 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             message_ids=old_message.id,
         )
 
-        if op["state"] == "sent":
+        if op.state == "sent":
             await parent_to_child_models_mapper[
                 context.user_data["complaint_about"]
             ].add_message_ids(

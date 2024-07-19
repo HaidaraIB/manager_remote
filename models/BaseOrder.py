@@ -24,12 +24,20 @@ class BaseOrder(Base):
         serial: int,
         s: Session = None,
     ):
-        s.query(cls).filter_by(serial=serial).update({cls.state: state})
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: state,
+            }
+        )
 
     @classmethod
     @lock_and_release
     async def add_order_reason(cls, reason: str, serial: int, s: Session = None):
-        s.query(cls).filter_by(serial=serial).update({cls.reason: reason})
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.reason: reason,
+            }
+        )
 
     @classmethod
     @lock_and_release
@@ -125,7 +133,11 @@ class BaseOrder(Base):
     @classmethod
     @lock_and_release
     async def add_checker_id(cls, checker_id: int, serial: int, s: Session = None):
-        s.query(cls).filter_by(serial=serial).update({cls.checker_id: checker_id})
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.checker_id: checker_id,
+            }
+        )
 
     @classmethod
     @lock_and_release
