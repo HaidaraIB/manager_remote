@@ -69,7 +69,6 @@ reward_percentages_dict = {
 
 
 async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
-async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         target_percentage = update.callback_query.data.replace("update ", "")
         context.user_data["target_percentage"] = target_percentage

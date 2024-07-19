@@ -16,7 +16,7 @@ import datetime
 class TrustedAgent(Base):
     __tablename__ = "trusted_agents"
 
-    user_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
     gov = Column(String)
     order_serial = Column(Integer)
     team_cash_user_id = Column(String)
