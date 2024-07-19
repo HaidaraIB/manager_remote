@@ -6,6 +6,7 @@ from telegram import (
 )
 
 from telegram.ext import ContextTypes, CallbackQueryHandler
+from user.work_with_us.common import build_agent_work_with_us_keyboard
 
 
 def create_promo_code_invalid_foramt_login_info():
@@ -48,17 +49,8 @@ async def back_to_check_agent_order(update: Update, context: ContextTypes.DEFAUL
             return
         serial = int(data[-1])
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup.from_row(
-                [
-                    InlineKeyboardButton(
-                        text="قبول ✅",
-                        callback_data=f"accept_agent_order_{serial}",
-                    ),
-                    InlineKeyboardButton(
-                        text="رفض ❌",
-                        callback_data=f"decline_agent_order_{serial}",
-                    ),
-                ]
+            reply_markup=InlineKeyboardMarkup(
+                build_agent_work_with_us_keyboard(serial)
             ),
         )
 

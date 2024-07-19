@@ -135,6 +135,28 @@ WORK_WITH_US_DICT = {
 }
 
 
+def build_agent_work_with_us_keyboard(serial: int):
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="قبول ✅",
+                callback_data=f"accept_agent_order_{serial}",
+            ),
+            InlineKeyboardButton(
+                text="رفض ❌",
+                callback_data=f"decline_agent_order_{serial}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="إشعار باستلام الدفع 🔔",
+                callback_data=f"notify_agent_order_{serial}",
+            ),
+        ],
+    ]
+    return keyboard
+
+
 async def send_to_group(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -159,27 +181,10 @@ async def send_to_group(
             )
         ),
     )
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                text="قبول ✅",
-                callback_data=f"accept_agent_order_{serial}",
-            ),
-            InlineKeyboardButton(
-                text="رفض ❌",
-                callback_data=f"decline_agent_order_{serial}",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="إشعار باستلام الدفع 🔔",
-                callback_data=f"notify_agent_order_{serial}",
-            ),
-        ],
-    ]
+
     await context.bot.send_location(
         chat_id=group_id,
         latitude=context.user_data["agent_location"][0],
         longitude=context.user_data["agent_location"][1],
-        reply_markup=InlineKeyboardMarkup(keyboard),
+        reply_markup=InlineKeyboardMarkup(build_agent_work_with_us_keyboard(serial)),
     )
