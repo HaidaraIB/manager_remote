@@ -11,7 +11,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from database import PaymentAgent, DepositAgent
+from models import PaymentAgent, DepositAgent
 from custom_filters import Complaint, ModAmountUserComplaint
 
 from common.common import build_complaint_keyboard, parent_to_child_models_mapper

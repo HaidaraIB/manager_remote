@@ -16,7 +16,7 @@ from telegram.ext import (
 import os
 import datetime
 from custom_filters import Withdraw, Returned, DepositAgent
-from database import WithdrawOrder
+from models import WithdrawOrder
 from common.common import build_worker_keyboard, pretty_time_delta
 
 

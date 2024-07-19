@@ -9,7 +9,7 @@ from telegram.ext import (
 )
 
 from custom_filters import Ref
-from database import RefNumber, DepositOrder, PaymentMethod
+from models import RefNumber, DepositOrder, PaymentMethod
 from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
 
 

@@ -7,8 +7,8 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import Session
-from database.BaseOrder import BaseOrder
-from database.DB import lock_and_release
+from models.BaseOrder import BaseOrder
+from models.DB import lock_and_release
 
 
 class CreateAccountOrder(BaseOrder):

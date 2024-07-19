@@ -18,7 +18,7 @@ from check_work_with_us.common import (
     create_team_cash_invalid_foramt_login_info,
 )
 from custom_filters import AgentOrder, TeamCash, PromoCode
-from database import TrustedAgentsOrder, TrustedAgent
+from models import TrustedAgentsOrder, TrustedAgent
 import os
 
 

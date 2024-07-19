@@ -3,12 +3,12 @@ from sqlalchemy import (
     and_,
     or_,
 )
-from database.DB import (
+from models.DB import (
     Base,
     lock_and_release,
     connect_and_close,
 )
-from database.RefNumber import RefNumber
+from models.RefNumber import RefNumber
 from sqlalchemy.orm import Session
 import datetime
 

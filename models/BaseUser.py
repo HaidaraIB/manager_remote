@@ -3,7 +3,7 @@ from sqlalchemy import (
     Integer,
     String,
 )
-from database.DB import Base
+from models.DB import Base
 
 
 class BaseUser(Base):

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, TIMESTAMP, Text, Float, func, insert
 from sqlalchemy.orm import Session
-from database.BaseOrder import BaseOrder
-from database.DB import lock_and_release
+from models.BaseOrder import BaseOrder
+from models.DB import lock_and_release
 from telegram import PhotoSize
 import datetime
 

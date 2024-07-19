@@ -5,7 +5,7 @@ from sqlalchemy import (
     insert,
     delete,
 )
-from database.DB import (
+from models.DB import (
     Base,
     connect_and_close,
     lock_and_release,

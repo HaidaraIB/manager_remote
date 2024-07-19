@@ -15,7 +15,7 @@ from telegram.ext import (
 )
 
 from common.common import build_complaint_keyboard, parent_to_child_models_mapper
-from database import Complaint
+from models import Complaint
 from custom_filters import UserRespondToComplaint
 from check_complaint.check_complaint import make_complaint_data
 

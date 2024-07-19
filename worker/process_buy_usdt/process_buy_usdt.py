@@ -15,7 +15,7 @@ from telegram.ext import (
 
 import os
 import datetime
-from database import BuyUsdtdOrder
+from models import BuyUsdtdOrder
 from custom_filters import BuyUSDT, Returned, DepositAgent
 
 from common.common import (

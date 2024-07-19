@@ -23,7 +23,7 @@ from common.back_to_home_page import (
 )
 
 from start import admin_command, start_command
-from database import PaymentAgent, DepositAgent, Checker
+from models import PaymentAgent, DepositAgent, Checker
 from custom_filters import Admin
 from admin.workers_settings.common import (
     build_positions_keyboard,

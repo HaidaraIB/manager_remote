@@ -33,7 +33,7 @@ from common.back_to_home_page import (
 
 from start import start_command
 
-from database import BuyUsdtdOrder, PaymentMethod
+from models import BuyUsdtdOrder, PaymentMethod
 from constants import *
 
 (

@@ -2,7 +2,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-from database import Complaint
+from models import Complaint
 from user.make_complaint.make_complaint import stringify_order, get_photos_from_archive
 from common.common import parent_to_child_models_mapper
 

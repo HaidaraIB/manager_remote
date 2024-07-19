@@ -27,7 +27,7 @@ from start import admin_command, start_command
 
 import os
 from custom_filters import Admin
-import database
+import models
 
 (
     NEW_ADMIN_ID,
@@ -90,7 +90,7 @@ async def new_admin_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             admin_id = int(update.message.text)
 
-        await database.Admin.add_new_admin(admin_id=admin_id)
+        await models.Admin.add_new_admin(admin_id=admin_id)
         await update.message.reply_text(
             text="تمت إضافة الآدمن بنجاح✅.",
             reply_markup=ReplyKeyboardRemove(),
@@ -105,7 +105,7 @@ async def new_admin_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def remove_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         await update.callback_query.answer()
-        admins = database.Admin.get_admin_ids()
+        admins = models.Admin.get_admin_ids()
         admin_ids_keyboard = [
             [InlineKeyboardButton(text=str(admin.id), callback_data=str(admin.id))]
             for admin in admins
@@ -129,9 +129,9 @@ async def choose_admin_id_to_remove(update: Update, context: ContextTypes.DEFAUL
             )
             return
 
-        await database.Admin.remove_admin(admin_id=admin_id)
+        await models.Admin.remove_admin(admin_id=admin_id)
         await update.callback_query.answer(text="تمت إزالة الآدمن بنجاح✅")
-        admins = database.Admin.get_admin_ids()
+        admins = models.Admin.get_admin_ids()
         admin_ids_keyboard = [
             [InlineKeyboardButton(text=str(admin.id), callback_data=str(admin.id))]
             for admin in admins
@@ -156,7 +156,7 @@ async def back_to_admin_settings(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def show_admins(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    admins = database.Admin.get_admin_ids()
+    admins = models.Admin.get_admin_ids()
     text = "آيديات الآدمنز الحاليين:\n\n"
     for admin in admins:
         if admin.id == int(os.getenv("OWNER_ID")):

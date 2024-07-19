@@ -1,7 +1,7 @@
 from sqlalchemy import select, insert, delete, and_
 from sqlalchemy.orm import Session
-from database.BaseUser import BaseUser
-from database.DB import lock_and_release, connect_and_close
+from models.BaseUser import BaseUser
+from models.DB import lock_and_release, connect_and_close
 
 
 class Worker(BaseUser):

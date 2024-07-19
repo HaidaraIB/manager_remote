@@ -7,7 +7,7 @@ from telegram.error import (
 )
 
 import asyncio
-from database import PaymentAgent, DepositAgent
+from models import PaymentAgent, DepositAgent
 from constants import *
 
 worker_type_dict = {

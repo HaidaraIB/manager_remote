@@ -24,7 +24,7 @@ from common.back_to_home_page import (
 
 from start import admin_command, start_command
 
-from database import PaymentAgent
+from models import PaymentAgent
 from custom_filters import Admin
 from admin.workers_settings.common import (
     CHOOSE_POSITION,

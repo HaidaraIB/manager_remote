@@ -1,7 +1,7 @@
 from sqlalchemy import insert
 from sqlalchemy.orm import Session
-from database.PaymentOrder import PaymentOrder
-from database.DB import lock_and_release
+from models.PaymentOrder import PaymentOrder
+from models.DB import lock_and_release
 
 
 class BuyUsdtdOrder(PaymentOrder):

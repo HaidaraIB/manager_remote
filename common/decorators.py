@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 import functools
 from constants import *
-from database import Account, User
+from models import Account, User
 
 
 def check_if_user_created_account_from_bot_decorator(func):

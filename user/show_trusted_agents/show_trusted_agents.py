@@ -7,7 +7,7 @@ from telegram.ext import (
 )
 
 from common.back_to_home_page import back_to_user_home_page_button
-from database import TrustedAgent
+from models import TrustedAgent
 from common.common import build_back_button
 from common.back_to_home_page import (
     back_to_user_home_page_button,

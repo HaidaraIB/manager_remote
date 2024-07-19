@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, PrimaryKeyConstraint
-from database.Worker import Worker
+from models.Worker import Worker
 
 
 class Checker(Worker):

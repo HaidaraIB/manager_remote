@@ -17,7 +17,7 @@ from common.common import build_worker_keyboard, parent_to_child_models_mapper
 from start import worker_command
 from custom_filters import DepositAgent
 from constants import *
-import database
+import models
 
 REQUEST_WHAT = 0
 
@@ -28,7 +28,7 @@ orders_dict = {
 }
 
 
-def build_payment_agent_keyboard(agent: list[database.PaymentAgent]):
+def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):
     usdt = []
     syr = []
     banks = []
@@ -89,7 +89,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("يمكنك معالجة طلب واحد في المرة❗️")
             return ConversationHandler.END
 
-        deposit_agent = database.DepositAgent.get_workers(
+        deposit_agent = models.DepositAgent.get_workers(
             worker_id=update.effective_user.id
         )
         deposit_agent_button = []
@@ -100,7 +100,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             )
 
-        checker = database.Checker.get_workers(worker_id=update.effective_user.id)
+        checker = models.Checker.get_workers(worker_id=update.effective_user.id)
         checker_keyboard = []
         for c in checker:
             if c.check_what == "withdraw":
@@ -116,7 +116,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                 )
 
-        payment_agent = database.PaymentAgent.get_workers(
+        payment_agent = models.PaymentAgent.get_workers(
             worker_id=update.effective_user.id
         )
         payment_agent_keyboard = build_payment_agent_keyboard(payment_agent)
@@ -150,7 +150,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
         operation = ""
         message_id, group_id, serial = 0, 0, 0
         if order_type == "deposit after check":
-            dac_order = database.DepositOrder.get_deposit_after_check_order()
+            dac_order = models.DepositOrder.get_deposit_after_check_order()
             if not dac_order:
                 await update.callback_query.answer("ليس هناك طلبات تنفيذ إيداع حالياً.")
                 return
@@ -173,9 +173,9 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             group_id = c_order.group_id
 
         else:
-            w_order = database.WithdrawOrder.get_payment_order(method=order_type)
+            w_order = models.WithdrawOrder.get_payment_order(method=order_type)
             if not w_order:
-                bu_order = database.BuyUsdtdOrder.get_payment_order(method=order_type)
+                bu_order = models.BuyUsdtdOrder.get_payment_order(method=order_type)
                 if not bu_order:
                     await update.callback_query.answer(
                         f"ليس هناك طلبات دفع {order_type} حالياً."

@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, Session
 import traceback
 from asyncio import Lock
-from database import *
+from models import *
 from constants import *
 
 lock = Lock()

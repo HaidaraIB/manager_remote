@@ -89,7 +89,7 @@ from dotenv import load_dotenv
 
 import datetime
 import os
-from database import create_tables
+from models import create_tables
 
 
 async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):

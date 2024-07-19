@@ -26,7 +26,7 @@ from common.back_to_home_page import (
 from custom_filters import Account, Declined
 
 from start import start_command
-import database
+import models
 
 (FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
 
@@ -40,7 +40,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً ❗️")
             return ConversationHandler.END
 
-        elif database.CreateAccountOrder.check_user_pending_orders(
+        elif models.CreateAccountOrder.check_user_pending_orders(
             user_id=update.effective_user.id,
         ):
             await update.callback_query.answer(
@@ -75,7 +75,7 @@ back_to_full_name = create_account
 async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
-        serial = await database.CreateAccountOrder.add_create_account_order(
+        serial = await models.CreateAccountOrder.add_create_account_order(
             user_id=update.effective_user.id,
             full_name=context.user_data["full_name"],
             nat_num=update.message.text,
@@ -154,7 +154,7 @@ async def reply_to_create_account_order(
         serial = int(data[-1])
 
         account = update.message.text.split("\n")
-        res = await database.Account.add_account(
+        res = await models.Account.add_account(
             full_name=account[0],
             acc_num=int(account[1]),
             password=account[2],
@@ -197,7 +197,7 @@ async def reply_to_create_account_order(
                 )
             ),
         )
-        await database.CreateAccountOrder.change_order_state(
+        await models.CreateAccountOrder.change_order_state(
             serial=serial,
             state="approved",
         )
@@ -248,7 +248,7 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-        await database.CreateAccountOrder.change_order_state(
+        await models.CreateAccountOrder.change_order_state(
             state="declined",
             serial=serial,
         )

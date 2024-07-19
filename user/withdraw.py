@@ -36,7 +36,7 @@ from common.back_to_home_page import (
 )
 
 from start import start_command
-from database import PaymentMethod, WithdrawOrder, Account, Checker, PaymentAgent
+from models import PaymentMethod, WithdrawOrder, Account, Checker, PaymentAgent
 from constants import *
 import os
 import asyncio

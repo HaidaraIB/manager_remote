@@ -29,7 +29,7 @@ from common.back_to_home_page import (
 from user.make_complaint.notify import notify_operation
 from user.make_complaint.common import *
 from start import start_command
-from database import Complaint
+from models import Complaint
 
 (
     COMPLAINT_ABOUT,

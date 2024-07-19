@@ -1,8 +1,8 @@
 from sqlalchemy import Column, String, select, insert, and_
-from database.Order import Order
-from database.DB import connect_and_close, lock_and_release
-from database.DepositAgent import DepositAgent
-from database.User import User
+from models.Order import Order
+from models.DB import connect_and_close, lock_and_release
+from models.DepositAgent import DepositAgent
+from models.User import User
 from sqlalchemy.orm import Session
 import datetime
 

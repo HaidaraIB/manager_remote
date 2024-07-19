@@ -36,7 +36,7 @@ from common.back_to_home_page import (
 )
 from worker.check_deposit.check_deposit import stringify_order
 from start import start_command
-from database import DepositOrder, Account, PaymentMethod, RefNumber, DepositAgent
+from models import DepositOrder, Account, PaymentMethod, RefNumber, DepositAgent
 
 (
     ACCOUNT_DEPOSIT,

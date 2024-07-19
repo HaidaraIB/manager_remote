@@ -12,7 +12,7 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-from database import User
+from models import User
 
 from common.common import (
     build_user_keyboard,

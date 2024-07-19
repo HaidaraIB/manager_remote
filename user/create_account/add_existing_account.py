@@ -27,7 +27,7 @@ from start import start_command
 
 from common.force_join import check_if_user_member_decorator
 
-from database import Account
+from models import Account
 (GET_FULL_NAME, GET_ACC_NUM, GET_PASSWORD) = range(3)
 
 

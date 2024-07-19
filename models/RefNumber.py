@@ -9,7 +9,7 @@ from sqlalchemy import (
     and_,
 )
 from sqlalchemy.orm import Session
-from database.DB import (
+from models.DB import (
     Base,
     lock_and_release,
     connect_and_close,

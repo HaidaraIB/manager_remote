@@ -23,7 +23,7 @@ from common.back_to_home_page import (
 )
 
 from start import admin_command, start_command
-from database import User
+from models import User
 import asyncio
 from custom_filters import Admin
 

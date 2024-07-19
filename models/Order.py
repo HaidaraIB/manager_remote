@@ -6,7 +6,7 @@ from sqlalchemy import (
     TIMESTAMP,
     func,
 )
-from database.BaseOrder import (
+from models.BaseOrder import (
     BaseOrder,
 )
 

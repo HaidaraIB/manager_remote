@@ -14,7 +14,7 @@ from telegram.ext import (
 
 from user.work_with_us.common import syrian_govs_en_ar
 
-from database import TrustedAgentsOrder
+from models import TrustedAgentsOrder
 from custom_filters import Declined, AgentOrder
 
 

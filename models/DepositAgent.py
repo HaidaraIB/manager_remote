@@ -4,8 +4,8 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
 )
 from sqlalchemy.orm import Session
-from database.Worker import Worker
-from database.DB import lock_and_release
+from models.Worker import Worker
+from models.DB import lock_and_release
 
 
 class DepositAgent(Worker):

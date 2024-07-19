@@ -14,7 +14,7 @@ from telegram.ext import (
 )
 from common.common import parent_to_child_models_mapper
 from custom_filters import Complaint, ResponseToUserComplaint
-import database
+import models
 import os
 
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint

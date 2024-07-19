@@ -16,7 +16,7 @@ from telegram.ext import (
 from common.back_to_home_page import back_to_user_home_page_button
 from user.work_with_us.common import send_to_group
 from common.common import build_back_button, build_user_keyboard
-from database import TrustedAgent, TrustedAgentsOrder
+from models import TrustedAgent, TrustedAgentsOrder
 (
     NEIGHBORHOOD,
     LOCATION,

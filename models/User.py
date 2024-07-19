@@ -5,12 +5,12 @@ from sqlalchemy import (
     select,
     insert,
 )
-from database.DB import (
+from models.DB import (
     connect_and_close,
     lock_and_release,
 )
 from sqlalchemy.orm import Session
-from database.BaseUser import BaseUser
+from models.BaseUser import BaseUser
 
 
 class User(BaseUser):

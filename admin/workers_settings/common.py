@@ -18,7 +18,7 @@ from constants import *
 
 from custom_filters.Admin import Admin
 
-from database import DepositAgent, PaymentAgent, Checker
+from models import DepositAgent, PaymentAgent, Checker
 
 (
     CHOOSE_POSITION,

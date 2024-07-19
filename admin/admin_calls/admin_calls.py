@@ -29,7 +29,7 @@ from common.back_to_home_page import (
 from start import admin_command, start_command
 
 from custom_filters import Admin
-from database import PaymentMethod
+from models import PaymentMethod
 
 (
     PAYMENT_METHOD_TO_TURN_ON_OR_OFF,

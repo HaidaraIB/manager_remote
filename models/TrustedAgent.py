@@ -8,8 +8,8 @@ from sqlalchemy import (
     and_,
 )
 from sqlalchemy.orm import Session
-from database.DB import Base, connect_and_close, lock_and_release
-from database.TrustedAgentsOrder import TrustedAgentsOrder
+from models.DB import Base, connect_and_close, lock_and_release
+from models.TrustedAgentsOrder import TrustedAgentsOrder
 import datetime
 
 

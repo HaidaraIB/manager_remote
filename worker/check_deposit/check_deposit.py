@@ -11,7 +11,7 @@ from common.common import (
     apply_ex_rate,
     notify_workers,
 )
-from database import RefNumber, DepositOrder, DepositAgent
+from models import RefNumber, DepositOrder, DepositAgent
 
 import os
 import asyncio

@@ -15,7 +15,7 @@ from telegram.ext import (
 import os
 
 from custom_filters import Deposit, Returned, DepositAgent
-from database import DepositOrder, User
+from models import DepositOrder, User
 from common.common import build_worker_keyboard, pretty_time_delta
 
 import datetime

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, insert, select
 from sqlalchemy.orm import Session
-from database.DB import connect_and_close, lock_and_release
-from database.PaymentOrder import PaymentOrder
+from models.DB import connect_and_close, lock_and_release
+from models.PaymentOrder import PaymentOrder
 
 
 class WithdrawOrder(PaymentOrder):
