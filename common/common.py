@@ -188,13 +188,17 @@ def build_admin_keyboard():
             InlineKeyboardButton(
                 text="🎛 إعدادات الآدمن ⚙️",
                 callback_data="admin settings",
-            )
-        ],
-        [
+            ),
             InlineKeyboardButton(
                 text="🧑🏻‍💻 إعدادات الموظف ⚙️",
                 callback_data="worker settings",
-            )
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="📄 إعدادات الطلب ⚙️",
+                callback_data="order settings",
+            ),
         ],
         [
             InlineKeyboardButton(

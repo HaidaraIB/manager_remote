@@ -71,6 +71,7 @@ from admin.rewards_settings import *
 from admin.broadcast import *
 from admin.groups_settings import *
 from admin.workers_settings import *
+from admin.orders_settings import *
 from admin.exchange_rates import *
 
 from worker.request_order import request_order_handler
@@ -257,6 +258,8 @@ def main():
     app.add_handler(add_worker_cp_handler)
     app.add_handler(remove_worker_handler)
     app.add_handler(show_worker_handler)
+
+    app.add_handler(order_settings_handler)
 
     app.add_handler(check_joined_handler)
 

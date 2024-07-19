@@ -21,8 +21,8 @@ class Order(BaseOrder):
     worker_id = Column(Integer, default=0)
     state = Column(String, default="pending")
     method = Column(String)
-    amount = Column(Float)
-    ex_rate = Column(Float)
+    amount = Column(Float, default=0)
+    ex_rate = Column(Float, default=0)
 
     reason = Column(String, default="")
     pending_process_message_id = Column(Integer, default=0)

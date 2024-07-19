@@ -36,30 +36,30 @@ def govs_pattern(callback_data: str):
 
 def build_govs_keyboard():
     govs = [
-        "دمشق Damascus",
-        "حلب Aleppo",
-        "ريف دمشق Rif-Dimashq",
-        "درعا Daraa",
-        "طرطوس Tartous",
-        "حمص Homs",
-        "حماة Hama",
-        "إدلب Idlib",
-        "الرقة Raqqa",
-        "دير الزور Deir-Ezor",
-        "الحسكة Hasakah",
-        "السويداء Suwayda",
-        "اللاذقية Latakia",
-        "القنيطرة Kenitra",
+        "دمشق / Damascus",
+        "حلب / Aleppo",
+        "ريف دمشق / Rif-Dimashq",
+        "درعا / Daraa",
+        "طرطوس / Tartous",
+        "حمص / Homs",
+        "حماة / Hama",
+        "إدلب / Idlib",
+        "الرقة / Raqqa",
+        "دير الزور / Deir-Ezor",
+        "الحسكة / Hasakah",
+        "السويداء / Suwayda",
+        "اللاذقية / Latakia",
+        "القنيطرة / Kenitra",
     ]
     return [
         [
             InlineKeyboardButton(
                 text=govs[i],
-                callback_data=govs[i].split(" ")[1] + "_gov",
+                callback_data=govs[i].split(" / ")[1] + "_gov",
             ),
             InlineKeyboardButton(
                 text=govs[i + 1],
-                callback_data=govs[i + 1].split(" ")[1] + "_gov",
+                callback_data=govs[i + 1].split(" / ")[1] + "_gov",
             ),
         ]
         for i in range(0, len(govs), 2)

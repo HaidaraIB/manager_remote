@@ -112,7 +112,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         op_text = (
             f"تفاصيل العملية:\n\n"
             f"الرقم التسلسلي: <code>{op.serial}</code>\n"
-            f"الكمية: <b>{op.amount}</b>\n"
+            f"المبلغ: <b>{op.amount}</b>\n"
             f"وسيلة الدفع: <b>{op.method}</b>\n"
             f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
             f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
