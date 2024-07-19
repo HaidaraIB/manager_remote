@@ -7,8 +7,7 @@ from constants import *
 
 lock = Lock()
 Base = declarative_base()
-# engine = create_engine("sqlite:///data/database.sqlite3")
-engine = create_engine("sqlite:///data/database.sqlite3", echo=True)
+engine = create_engine("sqlite:///data/database.sqlite3")
 
 
 def create_tables():
