@@ -83,7 +83,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         actions_keyboard = [*back_buttons]
         await update.message.reply_text(
-            text=stringify_order(order, order_type) + "<b>ملاحظة: التواريخ حسب UTC</b>",
+            text=stringify_order(order, order_type),
             reply_markup=InlineKeyboardMarkup(actions_keyboard),
         )
 

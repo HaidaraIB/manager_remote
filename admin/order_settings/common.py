@@ -9,9 +9,9 @@ from models import (
 )
 from user.make_complaint.common import state_dict_en_to_ar
 from datetime import datetime
-
+from dateutil import tz
 def format_datetime(d:datetime):
-    return d.strftime(r"%d/%m/%Y  %I:%M %p")
+    return d.replace(tzinfo=tz.gettz("Syria/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
 
 
 order_settings_dict: dict[
