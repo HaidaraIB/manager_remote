@@ -71,7 +71,7 @@ from admin.rewards_settings import *
 from admin.broadcast import *
 from admin.groups_settings import *
 from admin.workers_settings import *
-from admin.orders_settings import *
+from admin.order_settings import *
 from admin.exchange_rates import *
 
 from worker.request_order import request_order_handler

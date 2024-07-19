@@ -22,7 +22,7 @@ from common.back_to_home_page import (
 )
 from start import admin_command, start_command
 from custom_filters import Admin
-from admin.orders_settings.common import (
+from admin.order_settings.common import (
     build_order_types_keyboard,
     order_settings_dict,
     stringify_order,
@@ -83,7 +83,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         actions_keyboard = [*back_buttons]
         await update.message.reply_text(
-            text=stringify_order(order, order_type),
+            text=stringify_order(order, order_type) + "<b>ملاحظة: التواريخ حسب UTC</b>",
             reply_markup=InlineKeyboardMarkup(actions_keyboard),
         )
 
@@ -113,8 +113,8 @@ order_settings_handler = ConversationHandler(
         ],
     },
     fallbacks=[
-        CallbackQueryHandler(back_to_choose_order_type, "$back_to_choose_order_type^"),
-        CallbackQueryHandler(back_to_get_serial, "$back_to_get_serial^"),
+        CallbackQueryHandler(back_to_choose_order_type, "^back_to_choose_order_type$"),
+        CallbackQueryHandler(back_to_get_serial, "^back_to_get_serial$"),
         admin_command,
         start_command,
         back_to_admin_home_page_handler,
