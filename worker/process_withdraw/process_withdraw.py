@@ -13,11 +13,10 @@ from telegram.ext import (
     filters,
 )
 
-from DB import DB
 import os
 import datetime
 from custom_filters import Withdraw, Returned, DepositAgent
-
+from database import WithdrawOrder
 from common.common import build_worker_keyboard, pretty_time_delta
 
 
@@ -61,14 +60,14 @@ async def reply_with_payment_proof_withdraw(
                 0
             ].callback_data.split("_")[-1]
         )
-        w_order = DB.get_one_order(order_type="withdraw", serial=serial)
+        w_order = WithdrawOrder.get_one_order(serial=serial)
 
-        amount = w_order["amount"]
-        user_id = w_order["user_id"]
+        amount = w_order.amount
+        user_id = w_order.user_id
 
         caption = (
             f"مبروك، تم تأكيد عملية سحب "
-            f"<b>{amount}'</b> "
+            f"<b>{float(amount):,.2f}</b> "
             "بنجاح✅\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
@@ -110,11 +109,11 @@ async def reply_with_payment_proof_withdraw(
         )
 
         prev_date = (
-            w_order["send_date"]
-            if w_order["state"] != "returned"
-            else w_order["return_date"]
+            w_order.send_date
+            if w_order.state != "returned"
+            else w_order.return_date
         )
-        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_photo(
@@ -125,11 +124,10 @@ async def reply_with_payment_proof_withdraw(
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
-        await DB.reply_with_payment_proof(
-            order_type="withdraw",
+        await WithdrawOrder.reply_with_payment_proof(
             amount=amount,
             archive_message_ids=str(message.id),
-            method=w_order["method"],
+            method=w_order.method,
             serial=serial,
             worker_id=update.effective_user.id,
         )
@@ -169,13 +167,13 @@ async def return_withdraw_order_reason(
                 0
             ].callback_data.split("_")[-1]
         )
-        w_order = DB.get_one_order(order_type="withdraw", serial=serial)
+        w_order = WithdrawOrder.get_one_order(serial=serial)
 
-        withdraw_code = w_order["withdraw_code"]
-        user_id = w_order["user_id"]
+        withdraw_code = w_order.withdraw_code
+        user_id = w_order.user_id
 
         text = (
-            f"تمت إعادة طلب السحب صاحب الكود: <b>{withdraw_code}$</b>❗️\n\n"
+            f"تمت إعادة طلب السحب صاحب الكود: <b>{withdraw_code}</b>❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
@@ -223,11 +221,11 @@ async def return_withdraw_order_reason(
         )
 
         prev_date = (
-            w_order["send_date"]
-            if w_order["state"] != "returned"
-            else w_order["return_date"]
+            w_order.send_date
+            if w_order.state != "returned"
+            else w_order.return_date
         )
-        latency = datetime.datetime.now() - datetime.datetime.fromisoformat(prev_date)
+        latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
             await context.bot.send_message(
@@ -237,14 +235,12 @@ async def return_withdraw_order_reason(
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + text,
             )
 
-        await DB.return_order(
-            order_type="withdraw",
+        await WithdrawOrder.return_order(
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )
         context.user_data["requested"] = False
-        return ConversationHandler.END
 
 
 async def back_from_return_withdraw_order(
@@ -268,7 +264,6 @@ async def back_from_return_withdraw_order(
                 )
             )
         )
-        return ConversationHandler.END
 
 
 user_payment_verified_handler = CallbackQueryHandler(

@@ -21,10 +21,13 @@ from common.common import (
     build_methods_keyboard,
     payment_method_pattern,
     build_back_button,
-    notify_workers
+    notify_workers,
 )
 
-from common.decorators import check_if_user_created_account_from_bot_decorator, check_if_user_present_decorator
+from common.decorators import (
+    check_if_user_created_account_from_bot_decorator,
+    check_if_user_present_decorator,
+)
 
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
@@ -33,8 +36,7 @@ from common.back_to_home_page import (
 )
 
 from start import start_command
-
-from DB import DB
+from database import PaymentMethod, WithdrawOrder, Account, Checker, PaymentAgent
 from constants import *
 import os
 import asyncio
@@ -57,19 +59,18 @@ async def choose_withdraw_account(update: Update, context: ContextTypes.DEFAULT_
         if not context.bot_data["data"]["user_calls"]["withdraw"]:
             await update.callback_query.answer("السحوبات متوقفة حالياً ❗️")
             return ConversationHandler.END
-        
-        elif DB.check_user_pending_orders(
-            order_type="withdraw",
+
+        elif WithdrawOrder.check_user_pending_orders(
             user_id=update.effective_user.id,
         ):
             await update.callback_query.answer("لديك طلب سحب قيد التنفيذ بالفعل ❗️")
             return ConversationHandler.END
 
-        accounts = DB.get_user_accounts(user_id=update.effective_user.id)
+        accounts = Account.get_user_accounts(user_id=update.effective_user.id)
         accounts_keyboard = [
             InlineKeyboardButton(
-                text=a["acc_num"],
-                callback_data=str(a["acc_num"]),
+                text=a.acc_num,
+                callback_data=str(a.acc_num),
             )
             for a in accounts
         ]
@@ -110,8 +111,8 @@ async def choose_payment_info(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         data = update.callback_query.data
         if not data.startswith("back"):
-            method = DB.get_payment_method(name=data)
-            if method[1] == 0:
+            method = PaymentMethod.get_payment_method(name=data)
+            if method.on_off == 0:
                 await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
                 return
 
@@ -216,7 +217,7 @@ async def send_withdraw_order_to_check(
 
         withdraw_code = update.message.text
 
-        code_present = DB.check_withdraw_code(withdraw_code=withdraw_code)
+        code_present = WithdrawOrder.check_withdraw_code(withdraw_code=withdraw_code)
 
         if code_present:
             back_keyboard = [
@@ -244,7 +245,7 @@ async def send_withdraw_order_to_check(
             )
         )
 
-        serial = await DB.add_withdraw_order(
+        serial = await WithdrawOrder.add_withdraw_order(
             group_id=context.bot_data["data"]["withdraw_orders_group"],
             user_id=update.effective_user.id,
             method=method,
@@ -254,14 +255,14 @@ async def send_withdraw_order_to_check(
             payment_method_number=context.user_data["payment_method_number"],
         )
 
-        account = DB.get_account(acc_num=context.user_data["withdraw_account"])
+        account = Account.get_account(acc_num=context.user_data["withdraw_account"])
 
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"]["withdraw_orders_group"],
             text=stringify_order(
                 w_type=context.user_data.get("withdraw_type", "balance"),
                 acc_number=context.user_data["withdraw_account"],
-                password=account["password"],
+                password=account.password,
                 withdraw_code=update.message.text,
                 method=method,
                 serial=serial,
@@ -274,27 +275,26 @@ async def send_withdraw_order_to_check(
             ),
         )
 
-        await DB.add_message_ids(
-            order_type="withdraw",
+        await WithdrawOrder.add_message_ids(
             serial=serial,
             pending_check_message_id=message.id,
         )
 
-        workers = DB.get_workers(check_what="withdraw")
+        workers = Checker.get_workers(check_what="withdraw")
         asyncio.create_task(
             notify_workers(
                 context=context,
                 workers=workers,
-                text="انتباه يوجد طلب تحقق سحب جديد 🚨"
+                text="انتباه يوجد طلب تحقق سحب جديد 🚨",
             )
         )
 
-        workers = DB.get_workers(method=method)
+        workers = PaymentAgent.get_workers(method=method)
         asyncio.create_task(
             notify_workers(
                 context=context,
                 workers=workers,
-                text="انتباه يوجد طلب سحب قيد التحقق 🚨"
+                text="انتباه يوجد طلب سحب قيد التحقق 🚨",
             )
         )
 

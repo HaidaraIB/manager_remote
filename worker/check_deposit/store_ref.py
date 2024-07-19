@@ -9,8 +9,7 @@ from telegram.ext import (
 )
 
 from custom_filters import Ref
-from DB import DB
-
+from database import RefNumber, DepositOrder, PaymentMethod
 from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
 
 
@@ -28,7 +27,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amount = float(ref_number_info[2].split(": ")[1])
         method = ref_number_info[1]
 
-        ref_present = DB.get_ref_number(
+        ref_present = RefNumber.get_ref_number(
             number=number,
             method=method,
         )
@@ -37,21 +36,21 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="رقم عملية مكرر!",
             )
             return
-        await DB.add_ref_number(
+        await RefNumber.add_ref_number(
             number=number,
             method=method,
             amount=amount,
         )
-        ref = DB.get_ref_number(
+        ref = RefNumber.get_ref_number(
             number=number,
             method=method,
         )
         await update.message.reply_text(text="تم ✅")
 
-        d_order = DB.get_one_order("deposit", ref_num=number)
+        d_order = DepositOrder.get_one_order(ref_num=number)
 
         await check_deposit_lock.acquire()
-        if d_order and d_order["state"] == "pending":
+        if d_order and d_order.state == "pending":
             await send_order_to_process(
                 d_order=d_order,
                 ref_info=ref,
@@ -61,10 +60,10 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def create_invalid_foramt_string():
-    methods = DB.get_payment_methods()
+    methods = PaymentMethod.get_payment_methods()
     res = "تنسيق خاطئ الرجاء نسخ أحد القوالب التالية لتفادي الخطأ:\n\n"
     for method in methods:
-        res += "<code>رقم العملية: \n" f"{method['name']}\n" "المبلغ: </code>\n\n"
+        res += "<code>رقم العملية: \n" f"{method.name}\n" "المبلغ: </code>\n\n"
     res += "مثال:\n" "رقم العملية: 1\n" "USDT\n" "المبلغ: 100"
 
     return res

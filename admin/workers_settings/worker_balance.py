@@ -24,8 +24,8 @@ from common.back_to_home_page import (
 
 from start import admin_command, start_command
 
-from DB import DB
-from custom_filters.Admin import Admin
+from database import PaymentAgent
+from custom_filters import Admin
 from admin.workers_settings.common import (
     CHOOSE_POSITION,
     CHOOSE_WORKER,
@@ -49,11 +49,13 @@ async def position_for_worker_balance(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         if not update.callback_query.data.startswith("back"):
-            pos = update.callback_query.data.split("_")[1]
+            pos = update.callback_query.data.split("_")[1].replace(
+                "buyusdt", "buy_usdt"
+            )
             context.user_data["balance_pos"] = pos
         else:
             pos = context.user_data["balance_pos"]
-        workers = DB.get_workers(method=pos)
+        workers = PaymentAgent.get_workers(method=pos)
         if not workers:
             await update.callback_query.answer(f"لا يوجد موظفين سحب {pos} بعد!")
             return
@@ -80,7 +82,7 @@ async def worker_for_worker_balance(update: Update, context: ContextTypes.DEFAUL
         )
         pos = context.user_data["balance_pos"]
 
-        worker = DB.get_worker(worker_id=t_worker.id, method=pos)
+        worker = PaymentAgent.get_workers(worker_id=t_worker.id, method=pos)
         text = create_worker_info_text(t_worker, worker, pos)
         keyboard = [
             [
@@ -125,10 +127,14 @@ back_to_choose_worker_balance = worker_for_worker_balance
 
 async def get_pre_balance_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        await DB.add_pre_balance(
+        await PaymentAgent.add_pre_balance(
             amount=float(update.message.text),
             worker_id=context.user_data["worker_balance_id"],
             method=context.user_data["balance_pos"],
+        )
+        await context.bot.send_message(
+            chat_id=context.user_data["worker_balance_id"],
+            text=f"تمت إضافة دفعة مسبقة بمبلغ: <b>{float(update.message.text):,.2f}</b> إلى رصيد دفع <code>{context.user_data["balance_pos"]}</code> الخاص بك.",
         )
         await update.message.reply_text(
             text="تمت إضافة الدفعة المسبقة بنجاح ✅",

@@ -27,8 +27,7 @@ from start import start_command
 
 from common.force_join import check_if_user_member_decorator
 
-from DB import DB
-
+from database import Account
 (GET_FULL_NAME, GET_ACC_NUM, GET_PASSWORD) = range(3)
 
 
@@ -58,7 +57,7 @@ async def get_acc_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return GET_FULL_NAME
 
-        account = DB.get_account(acc_num=update.message.text)
+        account = Account.get_account(acc_num=update.message.text)
         if not account:
             await update.message.reply_text(
                 text="هذا الحساب غير منشأ عن طريق البوت!",
@@ -103,7 +102,7 @@ back_to_get_full_name = get_acc_num
 
 async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await DB.connect_account_to_user(
+        await Account.connect_account_to_user(
             user_id=update.effective_user.id,
             acc_num=context.user_data["acc_num"],
         )

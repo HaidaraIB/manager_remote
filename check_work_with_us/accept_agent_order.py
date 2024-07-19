@@ -18,7 +18,7 @@ from check_work_with_us.common import (
     create_team_cash_invalid_foramt_login_info,
 )
 from custom_filters import AgentOrder, TeamCash, PromoCode
-from DB import DB
+from database import TrustedAgentsOrder, TrustedAgent
 import os
 
 
@@ -35,19 +35,19 @@ async def notify_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             )
             return
 
-        order = DB.get_one_order(order_type="trusted_agents", serial=serial)
+        order = TrustedAgentsOrder.get_one_order(serial=serial)
         await context.bot.send_message(
-            chat_id=order["user_id"],
+            chat_id=order.user_id,
             text=(
                 "تم استلام الدفعة الخاصة بطلب الوكيل المقدم من قبلك وسيتم تنفيذ طلبك خلال 5 أيام عمل\n\n"
                 + "تفاصيل الطلب:\n\n"
                 + stringify_agent_order(
-                    gov=syrian_govs_en_ar[order["gov"]],
-                    neighborhood=order["neighborhood"],
-                    amount=order["amount"],
-                    email=order["email"],
-                    phone=order["phone"],
-                    ref_num=order["ref_number"],
+                    gov=syrian_govs_en_ar[order.gov],
+                    neighborhood=order.neighborhood,
+                    amount=order.amount,
+                    email=order.email,
+                    phone=order.phone,
+                    ref_num=order.ref_number,
                     serial=serial,
                 )
             ),
@@ -93,7 +93,7 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         serial = int(data[-1])
-        order = DB.get_one_order(order_type="trusted_agents", serial=serial)
+        order = TrustedAgentsOrder.get_one_order(serial=serial)
 
         if (
             update.effective_chat.id == context.bot_data["data"]["agent_orders_group"]
@@ -132,10 +132,10 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.bot_data["data"]["partner_orders_group"]
             ][f"trusted_agent_orders_{serial}"]
 
-            await DB.add_trusted_agent(
-                user_id=order["user_id"],
+            await TrustedAgent.add_trusted_agent(
+                user_id=order.user_id,
                 order_serial=serial,
-                gov=order["gov"],
+                gov=order.gov,
                 team_cash_user_id=team_cash_caption.split("\n")[0].split(" : ")[1],
                 team_cash_password=team_cash_caption.split("\n")[1].split(" : ")[1],
                 team_cash_workplace_id=team_cash_caption.split("\n")[2].split(" : ")[1],
@@ -143,22 +143,22 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 promo_password=promo_code_caption.split("\n")[1].split(" : ")[1],
             )
             await context.bot.send_message(
-                chat_id=order["user_id"],
+                chat_id=order.user_id,
                 text=(
-                    f"مبروك، تمت الموافقة على طلبك للعمل معنا كوكيل لمحافظة <b>{syrian_govs_en_ar[order['gov']]}</b>\n\n"
+                    f"مبروك، تمت الموافقة على طلبك للعمل معنا كوكيل لمحافظة <b>{syrian_govs_en_ar[order.gov]}</b>\n\n"
                     "سيظهر زر يؤدي إلى حسابك الشخصي بين قائمة الوكلاء الموصى بهم في محافظتك من الآن فصاعداً.\n\n"
                     f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
                 ),
             )
             await context.bot.send_document(
-                chat_id=order["user_id"],
+                chat_id=order.user_id,
                 document=os.getenv("TEAM_CASH_ID"),
                 caption="تطبيق شحن وسحب أرصدة اللاعبين:\n\n"
                 + "معلومات تسجيل الدخول:\n\n"
                 + team_cash_caption,
             )
             await context.bot.send_document(
-                chat_id=order["user_id"],
+                chat_id=order.user_id,
                 document=os.getenv("PROMO_CODE_ID"),
                 caption="تطبيق استلام الأرباح من خسائر اللاعبين:\n\n"
                 + "معلومات تسجيل الدخول:\n\n"

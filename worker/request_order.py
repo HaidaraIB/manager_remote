@@ -13,13 +13,11 @@ from telegram.ext import (
 
 from PyroClientSingleton import PyroClientSingleton
 
-from DB import DB
-from common.common import (
-    build_worker_keyboard,
-)
-from start import start_command, worker_command
+from common.common import build_worker_keyboard, parent_to_child_models_mapper
+from start import worker_command
 from custom_filters import DepositAgent
 from constants import *
+import database
 
 REQUEST_WHAT = 0
 
@@ -30,21 +28,21 @@ orders_dict = {
 }
 
 
-def build_payment_agent_keyboard(agent):
+def build_payment_agent_keyboard(agent: list[database.PaymentAgent]):
     usdt = []
     syr = []
     banks = []
     payeer = []
     for m in agent:
         button = InlineKeyboardButton(
-            text=f"دفع {m['method']}",
-            callback_data=f"request {m['method']}",
+            text=f"دفع {m.method}",
+            callback_data=f"request {m.method}",
         )
-        if m["method"] == USDT:
+        if m.method == USDT:
             usdt.append(button)
-        elif m["method"] in [BARAKAH, BEMO]:
+        elif m.method in [BARAKAH, BEMO]:
             banks.append(button)
-        elif m["method"] in [SYRCASH, MTNCASH]:
+        elif m.method in [SYRCASH, MTNCASH]:
             syr.append(button)
         else:
             payeer.append(button)
@@ -68,19 +66,16 @@ async def send_requested_order(
         reply_markup=old_message.reply_markup,
     )
     if order_type.startswith("check"):
-        await DB.add_message_ids(
+        await parent_to_child_models_mapper[operation].add_message_ids(
             serial=serial,
             checking_message_id=message.id,
-            order_type=operation,
         )
     else:
-        await DB.add_message_ids(
+        await parent_to_child_models_mapper[operation].add_message_ids(
             serial=serial,
             processing_message_id=message.id,
-            order_type=operation,
         )
-    await DB.set_working_on_it(
-        order_type=operation,
+    await parent_to_child_models_mapper[operation].set_working_on_it(
         serial=serial,
         working_on_it=1,
         worker_id=worker_id,
@@ -94,7 +89,9 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("يمكنك معالجة طلب واحد في المرة❗️")
             return ConversationHandler.END
 
-        deposit_agent = DB.get_deposit_agent(user_id=update.effective_user.id)
+        deposit_agent = database.DepositAgent.get_workers(
+            worker_id=update.effective_user.id
+        )
         deposit_agent_button = []
         if deposit_agent:
             deposit_agent_button.append(
@@ -103,23 +100,25 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             )
 
-        checker = DB.get_checker(user_id=update.effective_user.id)
+        checker = database.Checker.get_workers(worker_id=update.effective_user.id)
         checker_keyboard = []
         for c in checker:
-            if c["check_what"] == "withdraw":
+            if c.check_what == "withdraw":
                 checker_keyboard.append(
                     InlineKeyboardButton(
                         text="تحقق سحب", callback_data="request check withdraw"
                     )
                 )
-            elif c["check_what"] == "buy_usdt":
+            elif c.check_what == "buy_usdt":
                 checker_keyboard.append(
                     InlineKeyboardButton(
                         text="تحقق شراء USDT", callback_data="request check buyusdt"
                     )
                 )
 
-        payment_agent = DB.get_payment_agent(user_id=update.effective_user.id)
+        payment_agent = database.PaymentAgent.get_workers(
+            worker_id=update.effective_user.id
+        )
         payment_agent_keyboard = build_payment_agent_keyboard(payment_agent)
 
         keyboard = [
@@ -151,46 +150,46 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
         operation = ""
         message_id, group_id, serial = 0, 0, 0
         if order_type == "deposit after check":
-            dac_order = DB.get_deposit_after_check_order()
+            dac_order = database.DepositOrder.get_deposit_after_check_order()
             if not dac_order:
                 await update.callback_query.answer("ليس هناك طلبات تنفيذ إيداع حالياً.")
                 return
             operation = "deposit"
-            serial = dac_order["serial"]
-            message_id = dac_order["pending_process_message_id"]
-            group_id = dac_order["group_id"]
+            serial = dac_order.serial
+            message_id = dac_order.pending_process_message_id
+            group_id = dac_order.group_id
 
         elif order_type.startswith("check"):
             check_what = order_type.split(" ")[1]
-            c_order = DB.get_check_order(check_what=check_what)
+            c_order = parent_to_child_models_mapper[check_what].get_check_order()
             if not c_order:
                 await update.callback_query.answer(
                     f"ليس هناك طلبات تحقق {orders_dict[check_what]} حالياً."
                 )
                 return
-            serial = c_order["serial"]
+            serial = c_order.serial
             operation = check_what
-            message_id = c_order["pending_check_message_id"]
-            group_id = c_order["group_id"]
+            message_id = c_order.pending_check_message_id
+            group_id = c_order.group_id
 
         else:
-            w_order = DB.get_payment_order(order_type="withdraw", method=order_type)
+            w_order = database.WithdrawOrder.get_payment_order(method=order_type)
             if not w_order:
-                bu_order = DB.get_payment_order(order_type="buyusdt", method=order_type)
+                bu_order = database.BuyUsdtdOrder.get_payment_order(method=order_type)
                 if not bu_order:
                     await update.callback_query.answer(
                         f"ليس هناك طلبات دفع {order_type} حالياً."
                     )
                     return
                 operation = "buyusdt"
-                message_id = bu_order["pending_process_message_id"]
-                group_id = bu_order["group_id"]
-                serial = bu_order["serial"]
+                message_id = bu_order.pending_process_message_id
+                group_id = bu_order.group_id
+                serial = bu_order.serial
             else:
                 operation = "withdraw"
-                message_id = w_order["pending_process_message_id"]
-                group_id = w_order["group_id"]
-                serial = w_order["serial"]
+                message_id = w_order.pending_process_message_id
+                group_id = w_order.group_id
+                serial = w_order.serial
 
         await update.callback_query.edit_message_text(text="الرجاء الانتظار...")
         await send_requested_order(

@@ -13,17 +13,13 @@ from telegram.ext import (
     filters,
 )
 
-from common.common import (
-    build_user_keyboard,
-)
+from common.common import build_user_keyboard, parent_to_child_models_mapper
 
 from common.back_to_home_page import back_to_user_home_page_handler
 
 from worker.check_buy_usdt import check_buy_usdt
 from worker.check_deposit import check_deposit
 from worker.check_withdraw import check_withdraw
-
-from DB import DB
 
 (SEND_ATTACHMENTS,) = range(1)
 
@@ -43,11 +39,13 @@ async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TY
 async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         data = context.user_data["returned_data"].split("_")
-        order = DB.get_one_order(order_type=data[2], serial=int(data[-1]))
+        order = parent_to_child_models_mapper[data[2]].get_one_order(
+            serial=int(data[-1])
+        )
         reply_markup = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
                 text="قبول الطلب✅",
-                callback_data=f"verify_{data[2]}_order_{order['serial']}",
+                callback_data=f"verify_{data[2]}_order_{order.serial}",
             )
         )
         if data[2] in ["withdraw", "deposit"]:
@@ -60,15 +58,15 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if data[2] == "deposit"
                         else check_withdraw.stringify_order
                     ),
-                    order["amount"],
-                    order["serial"],
-                    order["method"],
+                    order.amount,
+                    order.serial,
+                    order.method,
                     (
-                        order["acc_number"]
+                        order.acc_number
                         if data[2] == "deposit"
-                        else order["payment_method_number"]
+                        else order.payment_method_number
                     ),
-                    order["ref_number"] if data[2] == "deposit" else None,
+                    order.ref_number if data[2] == "deposit" else None,
                 ),
                 reply_markup=reply_markup,
             )
@@ -79,15 +77,14 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 caption=stringify_returned_order(
                     update.message.text,
                     check_buy_usdt.stringify_order,
-                    order["amount"],
-                    order["serial"],
-                    order["method"],
-                    order["payment_method_number"],
+                    order.amount,
+                    order.serial,
+                    order.method,
+                    order.payment_method_number,
                 ),
                 reply_markup=reply_markup,
             )
-        await DB.add_date(
-            order_type=data[2],
+        await parent_to_child_models_mapper[data[2]].add_date(
             serial=int(data[-1]),
             date_type="return",
         )

@@ -11,33 +11,34 @@ from common.common import (
     apply_ex_rate,
     notify_workers,
 )
-from DB import DB
+from database import RefNumber, DepositOrder, DepositAgent
+
 import os
 import asyncio
 
 check_deposit_lock = asyncio.Lock()
 
+
 async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
-    await check_deposit_lock.acquire() # We're using the lock because we're checking deposit on storing ref too, so there's a possible conflict.
+    await check_deposit_lock.acquire()  # We're using the lock because we're checking deposit on storing ref too, so there's a possible conflict.
 
     serial = int(context.job.data)
-    d_order = DB.get_one_order(
-        "deposit",
+    d_order = DepositOrder.get_one_order(
         serial=serial,
     )
-    if d_order and d_order["state"] != "pending":
+    if d_order and d_order.state != "pending":
         check_deposit_lock.release()
         return
-    
+
     check_deposit_jobs_dict = {
         "1_deposit_check": 240,
         "2_deposit_check": 300,
         "3_deposit_check": 600,
         "4_deposit_check": 600,
     }
-    ref_present = DB.get_ref_number(
-        number=d_order["ref_number"],
-        method=d_order["method"],
+    ref_present = RefNumber.get_ref_number(
+        number=d_order.ref_number,
+        method=d_order.method,
     )
     if ref_present:
         await send_order_to_process(
@@ -73,10 +74,10 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             "تم رفض الطلب❌\n"
             + stringify_order(
                 amount="لا يوجد",
-                account_number=d_order["acc_number"],
-                method=d_order["method"],
-                serial=d_order["serial"],
-                ref_num=d_order["ref_number"],
+                account_number=d_order.acc_number,
+                method=d_order.method,
+                serial=d_order.serial,
+                ref_num=d_order.ref_number,
             )
             + f"\n\nالسبب:\n<b>{reason}</b>"
         )
@@ -85,8 +86,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
-        await DB.decline_order(
-            order_type='deposit',
+        await DepositOrder.decline_order(
             archive_message_ids=message.id,
             reason=reason,
             serial=serial,
@@ -94,19 +94,21 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
     check_deposit_lock.release()
 
 
-async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT_TYPE):
+async def send_order_to_process(
+    d_order: DepositOrder, ref_info: RefNumber, context: ContextTypes.DEFAULT_TYPE
+):
     amount, ex_rate = apply_ex_rate(
-        d_order["method"],
-        ref_info["amount"],
-        "deposit",
-        context,
+        method=d_order.method,
+        amount=ref_info.amount,
+        order_type="deposit",
+        context=context,
     )
     order_text = stringify_order(
         amount=amount,
-        account_number=d_order["acc_number"],
-        method=d_order["method"],
-        serial=d_order["serial"],
-        ref_num=ref_info["number"],
+        account_number=d_order.acc_number,
+        method=d_order.method,
+        serial=d_order.serial,
+        ref_num=ref_info.number,
     )
 
     message = await context.bot.send_message(
@@ -115,25 +117,24 @@ async def send_order_to_process(d_order, ref_info, context: ContextTypes.DEFAULT
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
                 text="قبول الطلب✅",
-                callback_data=f"verify_deposit_order_{d_order['serial']}",
+                callback_data=f"verify_deposit_order_{d_order.serial}",
             )
         ),
     )
 
-    await DB.send_order(
-        order_type="deposit",
+    await DepositOrder.send_order(
         pending_process_message_id=message.id,
-        serial=d_order["serial"],
+        serial=d_order.serial,
         ref_info=ref_info,
         group_id=context.bot_data["data"]["deposit_after_check_group"],
         ex_rate=ex_rate,
     )
-    workers = DB.get_workers()
+    workers = DepositAgent.get_workers()
     asyncio.create_task(
         notify_workers(
             context=context,
             workers=workers,
-            text=f"انتباه تم استلام إيداع جديد رقم العملية <code>{ref_info["number"]}</code> 🚨",
+            text=f"انتباه تم استلام إيداع جديد رقم العملية <code>{ref_info.number}</code> 🚨",
         )
     )
 

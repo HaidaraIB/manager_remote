@@ -36,7 +36,7 @@ from common.back_to_home_page import (
 )
 from worker.check_deposit.check_deposit import stringify_order
 from start import start_command
-from DB import DB
+from database import DepositOrder, Account, PaymentMethod, RefNumber, DepositAgent
 
 (
     ACCOUNT_DEPOSIT,
@@ -55,18 +55,17 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer("الإيداعات متوقفة حالياً ❗️")
             return ConversationHandler.END
 
-        elif DB.check_user_pending_orders(
-            order_type="deposit",
+        elif DepositOrder.check_user_pending_orders(
             user_id=update.effective_user.id,
         ):
             await update.callback_query.answer("لديك طلب إيداع قيد التنفيذ بالفعل ❗️")
             return ConversationHandler.END
 
-        accounts = DB.get_user_accounts(user_id=update.effective_user.id)
+        accounts = Account.get_user_accounts(user_id=update.effective_user.id)
         accounts_keyboard = [
             InlineKeyboardButton(
-                text=a["acc_num"],
-                callback_data=str(a["acc_num"]),
+                text=a.acc_num,
+                callback_data=str(a.acc_num),
             )
             for a in accounts
         ]
@@ -101,8 +100,8 @@ back_to_account_deposit = make_deposit
 async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         data = update.callback_query.data
-        method = DB.get_payment_method(name=data)
-        if method[1] == 0:
+        method = PaymentMethod.get_payment_method(name=data)
+        if method.on_off == 0:
             await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
             return
         context.user_data["deposit_method"] = data
@@ -132,21 +131,22 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
     if update.effective_chat.type == Chat.PRIVATE:
         ref_num = update.message.text
 
-        ref_present = DB.get_ref_number(
+        ref_present = RefNumber.get_ref_number(
             number=ref_num,
             method=context.user_data["deposit_method"],
         )
-        order_present = DB.get_one_order(
-            order_type="deposit",
+        order_present = DepositOrder.get_one_order(
             ref_num=ref_num,
         )
-        if (ref_present and ref_present["order_serial"] != -1) or (order_present and order_present['state'] == "approved"):
+        if (ref_present and ref_present.order_serial != -1) or (
+            order_present and order_present["state"] == "approved"
+        ):
             await update.message.reply_text(
                 text="رقم عملية مكرر!",
             )
             return
 
-        serial = await DB.add_deposit_order(
+        serial = await DepositOrder.add_deposit_order(
             user_id=update.effective_user.id,
             method=context.user_data["deposit_method"],
             acc_number=context.user_data["account_deposit"],
@@ -176,7 +176,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             ),
         )
 
-        workers = DB.get_workers()
+        workers = DepositAgent.get_workers()
         asyncio.create_task(
             notify_workers(
                 context=context,

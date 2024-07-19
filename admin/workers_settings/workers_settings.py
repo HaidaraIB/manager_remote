@@ -16,8 +16,8 @@ from common.back_to_home_page import (
 
 from start import admin_command, start_command
 
-from DB import DB
-from custom_filters.Admin import Admin
+from database import PaymentAgent, DepositAgent, Checker
+from custom_filters import Admin
 from admin.workers_settings.common import (
     CHOOSE_POSITION,
     CHOOSE_WORKER,
@@ -38,7 +38,9 @@ async def position_to_show_remove_from(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         if not update.callback_query.data.startswith("back"):
-            pos = update.callback_query.data.split("_")[1]
+            pos = update.callback_query.data.split("_")[1].replace(
+                "buyusdt", "buy_usdt"
+            )
             context.user_data[
                 f"pos_to_{context.user_data['worker_settings_option']}"
             ] = pos
@@ -47,15 +49,15 @@ async def position_to_show_remove_from(
                 f"pos_to_{context.user_data['worker_settings_option']}"
             ]
         if pos == "deposit after check":
-            workers = DB.get_workers()
+            workers = DepositAgent.get_workers()
             ans_text = "ليس لديك موظفي تنفيذ إيداعات بعد❗️"
 
-        elif pos in ["deposit", "withdraw", "buy_usdt"]:
-            workers = DB.get_workers(check_what=pos)
+        elif pos in ["withdraw", "buy_usdt"]:
+            workers = Checker.get_workers(check_what=pos)
             ans_text = f"ليس لديك موظفي تحقق {op_dict_en_to_ar[pos]} بعد❗️"
 
         else:
-            workers = DB.get_workers(method=pos)
+            workers = PaymentAgent.get_workers(method=pos)
             ans_text = f"ليس لديك وكلاء {pos} بعد❗️"
 
         if not workers:
@@ -83,16 +85,16 @@ async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TY
         t_worker = await context.bot.get_chat(chat_id=w_id)
         pos = context.user_data[f"pos_to_{context.user_data['worker_settings_option']}"]
         if pos == "deposit after check":
-            worker = DB.get_worker(worker_id=w_id)
-            workers = DB.get_workers()
+            worker = DepositAgent.get_workers(worker_id=w_id)[0]
+            workers = DepositAgent.get_workers()
 
-        elif pos in ["deposit", "withdraw", "buy_usdt"]:
-            worker = DB.get_worker(worker_id=w_id, check_what=pos)
-            workers = DB.get_workers(check_what=pos)
+        elif pos in ["withdraw", "buy_usdt"]:
+            worker = Checker.get_workers(worker_id=w_id, check_what=pos)
+            workers = Checker.get_workers(check_what=pos)
 
         else:
-            worker = DB.get_worker(worker_id=w_id, method=pos)
-            workers = DB.get_workers(method=pos)
+            worker = PaymentAgent.get_workers(worker_id=w_id, method=pos)
+            workers = PaymentAgent.get_workers(method=pos)
 
         text = create_worker_info_text(t_worker, worker, pos) + "يمكنك عرض موظف آخر."
         keyboard = build_workers_keyboard(workers, "show")
@@ -108,16 +110,16 @@ async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_
         pos = context.user_data[f"pos_to_{context.user_data['worker_settings_option']}"]
 
         if pos == "deposit after check":
-            await DB.remove_worker(worker_id=worker_to_remove_id)
-            workers = DB.get_workers()
+            await DepositAgent.remove_worker(worker_id=worker_to_remove_id)
+            workers = DepositAgent.get_workers()
 
         elif pos in ["deposit", "withdraw", "buy_usdt"]:
-            await DB.remove_worker(worker_id=worker_to_remove_id, check_what=pos)
-            workers = DB.get_workers(check_what=pos)
+            await Checker.remove_worker(worker_id=worker_to_remove_id, check_what=pos)
+            workers = Checker.get_workers(check_what=pos)
 
         else:
-            await DB.remove_worker(worker_id=worker_to_remove_id, method=pos)
-            workers = DB.get_workers(method=pos)
+            await PaymentAgent.remove_worker(worker_id=worker_to_remove_id, method=pos)
+            workers = PaymentAgent.get_workers(method=pos)
 
         await update.callback_query.answer(
             text="تمت إزالة الموظف بنجاح✅",

@@ -1,12 +1,7 @@
-from telegram import (
-    Update,
-)
-
-import re
-
+from telegram import Update
 from telegram.ext.filters import UpdateFilter
-
 from common.common import payment_method_pattern
+import re
 
 
 class Ref(UpdateFilter):

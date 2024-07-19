@@ -1,7 +1,4 @@
-from telegram import (
-    Update,
-)
-
+from telegram import Update
 from telegram.ext.filters import UpdateFilter
 import re
 

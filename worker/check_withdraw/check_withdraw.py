@@ -14,8 +14,8 @@ from telegram.ext import (
 )
 
 from custom_filters import Withdraw, Declined, Sent, DepositAgent
+from database import WithdrawOrder, PaymentAgent
 from constants import *
-from DB import DB
 import os
 import asyncio
 
@@ -55,8 +55,7 @@ async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         serial = int(update.callback_query.data.split("_")[-1])
 
-        await DB.add_checker_id(
-            order_type="withdraw",
+        await WithdrawOrder.add_checker_id(
             serial=serial,
             checker_id=update.effective_user.id,
         )
@@ -109,24 +108,28 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             ].callback_data.split("_")[-1]
         )
         amount = float(update.message.text)
-        await DB.edit_order_amount(
-            order_type="withdraw",
+        await WithdrawOrder.edit_order_amount(
             new_amount=amount,
             serial=serial,
         )
 
-        w_order = DB.get_one_order(order_type="withdraw", serial=serial)
+        w_order = WithdrawOrder.get_one_order(serial=serial)
 
-        method = w_order["method"]
+        method = w_order.method
         target_group = f"{method}_group"
 
-        amount, ex_rate = apply_ex_rate(method, amount, "withdraw", context)
+        amount, ex_rate = apply_ex_rate(
+            method=method,
+            amount=amount,
+            order_type="withdraw",
+            context=context,
+        )
 
         order_text = stringify_order(
             amount=amount,
             serial=serial,
             method=method,
-            payment_method_number=w_order["payment_method_number"],
+            payment_method_number=w_order.payment_method_number,
         )
 
         message = await context.bot.send_message(
@@ -159,15 +162,14 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             ),
         )
 
-        context.user_data["requested"] = False
-        await DB.send_order(
-            order_type="withdraw",
+        await WithdrawOrder.send_order(
             pending_process_message_id=message.id,
             serial=serial,
             group_id=context.bot_data["data"][target_group],
             ex_rate=ex_rate,
         )
-        workers = DB.get_workers(method=method)
+        workers = PaymentAgent.get_workers(method=method)
+
         asyncio.create_task(
             notify_workers(
                 context=context,
@@ -175,6 +177,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
                 text=f"انتباه تم استلام سحب جديد 🚨",
             )
         )
+        context.user_data["requested"] = False
 
 
 async def decline_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -212,10 +215,10 @@ async def decline_withdraw_order_reason(
             ].callback_data.split("_")[-1]
         )
 
-        w_order = DB.get_one_order(order_type="withdraw", serial=serial)
+        w_order = WithdrawOrder.get_one_order(serial=serial)
 
-        w_code = w_order["withdraw_code"]
-        user_id = w_order["user_id"]
+        w_code = w_order.withdraw_code
+        user_id = w_order.user_id
 
         text = (
             f"تم رفض عملية السحب ذات الكود <b>{w_code}$</b>❗️\n\n"
@@ -261,14 +264,12 @@ async def decline_withdraw_order_reason(
             ),
         )
 
-        context.user_data["requested"] = False
-        await DB.decline_order(
-            order_type="withdraw",
+        await WithdrawOrder.decline_order(
             archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )
-        return ConversationHandler.END
+        context.user_data["requested"] = False
 
 
 async def back_to_withdraw_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -293,7 +294,6 @@ async def back_to_withdraw_check(update: Update, context: ContextTypes.DEFAULT_T
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
-        return ConversationHandler.END
 
 
 check_payment_handler = CallbackQueryHandler(

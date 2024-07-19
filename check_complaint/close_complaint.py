@@ -12,11 +12,9 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-
-from custom_filters.Complaint import Complaint
-from custom_filters.ResponseToUserComplaint import ResponseToUserComplaint
-
-from DB import DB
+from common.common import parent_to_child_models_mapper
+from custom_filters import Complaint, ResponseToUserComplaint
+import database
 import os
 
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
@@ -49,8 +47,8 @@ async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         callback_data = update.callback_query.data.split("_")
-        op = DB.get_one_order(
-            order_type=callback_data[-2], serial=int(callback_data[-1])
+        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+            serial=int(callback_data[-1])
         )
 
         data = await make_complaint_data(context, callback_data)
@@ -68,7 +66,7 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
                 caption=final_text,
             )
             await context.bot.send_media_group(
-                chat_id=op["user_id"],
+                chat_id=op.user_id,
                 media=[InputMediaPhoto(media=photo) for photo in data["media"]],
                 caption=final_text,
             )
@@ -78,7 +76,7 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
                 text=final_text,
             )
             await context.bot.send_message(
-                chat_id=op["user_id"],
+                chat_id=op.user_id,
                 text=final_text,
             )
 
@@ -93,12 +91,13 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
             ),
         )
 
-        await DB.set_complaint_took_care_of(
-            serial=op["serial"],
-            order_type=callback_data[-2],
+        await parent_to_child_models_mapper[
+            callback_data[-2]
+        ].set_complaint_took_care_of(
+            serial=op.serial,
             took_care_of=1,
         )
-        context.bot_data["suspended_workers"].discard(op["worker_id"])
+        context.bot_data["suspended_workers"].discard(op.worker_id)
 
 
 async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -109,8 +108,8 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
 
         data = await make_complaint_data(context, callback_data)
 
-        op = DB.get_one_order(
-            order_type=callback_data[-2], serial=int(callback_data[-1])
+        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+            serial=int(callback_data[-1])
         )
         final_text = (
             data["text"]
@@ -125,7 +124,7 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
                 text=final_text,
             )
             await context.bot.send_message(
-                chat_id=op["user_id"],
+                chat_id=op.user_id,
                 text=final_text,
             )
         else:
@@ -139,7 +138,7 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
                 caption=final_text,
             )
             await context.bot.send_media_group(
-                chat_id=op["user_id"],
+                chat_id=op.user_id,
                 media=[InputMediaPhoto(media=photo) for photo in data["media"]],
                 caption=final_text,
             )
@@ -155,13 +154,11 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             ),
         )
 
+        await parent_to_child_models_mapper[
+            callback_data[-2]
+        ].set_complaint_took_care_of(serial=op.serial, took_care_of=1)
 
-        await DB.set_complaint_took_care_of(
-            serial=op["serial"],
-            order_type=callback_data[-2],
-            took_care_of=1,
-        )
-        context.bot_data["suspended_workers"].discard(op["worker_id"])
+        context.bot_data["suspended_workers"].discard(op.worker_id)
 
 
 back_from_close_complaint = back_from_respond_to_user_complaint

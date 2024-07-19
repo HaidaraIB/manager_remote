@@ -1,18 +1,14 @@
-from telegram import (
-    Update,
-)
-
-from telegram import Chat
+from telegram import Update
 from telegram.ext.filters import UpdateFilter
-from DB import DB
+import database
 
 
 class User(UpdateFilter):
     def filter(self, update: Update):
         try:
-            user = DB.get_user(user_id=update.effective_user.id)
-            result = DB.get_admin_ids()
-            admin_ids = [id[0] for id in result]
+            admins = database.Admin.get_admin_ids()
+            admin_ids = [admin.id for admin in admins]
+
             return update.effective_user.id not in admin_ids
         except:
             return False

@@ -1212,20 +1212,20 @@ class DB:
     @staticmethod
     @lock_and_release
     async def update_worker_approved_deposits(
-        worder_id: int, amount: float, cr: sqlite3.Cursor = None
+        worker_id: int, amount: float, cr: sqlite3.Cursor = None
     ):
         cr.execute(
             """
                    UPDATE deposit_agents SET approved_deposits = approved_deposits + ?,
                                              approved_deposits_week = approved_deposits_week + ?
                    WHERE id = ?""",
-            (amount, amount, worder_id),
+            (amount, amount, worker_id),
         )
 
     @staticmethod
     @lock_and_release
     async def update_worker_approved_withdraws(
-        worder_id: int, method: str, amount: float, cr: sqlite3.Cursor = None
+        worker_id: int, method: str, amount: float, cr: sqlite3.Cursor = None
     ):
         cr.execute(
             f"""
@@ -1235,7 +1235,7 @@ class DB:
                                       -- pre_balance = CASE WHEN pre_balance > 0 THEN pre_balance - ? ELSE 0 END
             WHERE id = ? AND method = ?
             """,
-            (amount, amount, amount, worder_id, method),
+            (amount, amount, amount, worker_id, method),
         )
 
     @staticmethod

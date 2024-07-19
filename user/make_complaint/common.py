@@ -1,27 +1,16 @@
 from telegram import (
-    Update,
     InlineKeyboardButton,
-    InlineKeyboardMarkup,
     PhotoSize,
 )
 
-from telegram.ext import (
-    ContextTypes,
-)
 
 from pyrogram.types import Message
-
 from PyroClientSingleton import PyroClientSingleton
-from DB import DB
 import os
 
-from common.common import (
-    build_back_button
-)
+from common.common import build_back_button, parent_to_child_models_mapper
 
-from common.back_to_home_page import (
-    back_to_user_home_page_button
-)
+from common.back_to_home_page import back_to_user_home_page_button
 
 state_dict_en_to_ar = {
     "declined": "مرفوض",
@@ -50,24 +39,24 @@ complaints_keyboard = [
 
 
 def stringify_order(serial: int, order_type: str):
-    op = DB.get_one_order(order_type=order_type, serial=serial)
+    op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
     payment_method_number = bank_account_name = "لا يوجد"
     if order_type != "deposit":
         payment_method_number = (
-            op["payment_method_number"] if op["payment_method_number"] else "لا يوجد"
+            op.payment_method_number if op.payment_method_number else "لا يوجد"
         )
         bank_account_name = (
-            op["bank_account_name"] if op["bank_account_name"] else "لا يوجد"
+            op.bank_account_name if op.bank_account_name else "لا يوجد"
         )
 
     return (
-        f"الرقم التسلسلي: <code>{op['serial']}</code>\n"
-        f"المبلغ: <b>{op['amount']}</b>\n"
-        f"وسيلة الدفع: <b>{op['method']}</b>\n"
+        f"الرقم التسلسلي: <code>{op.serial}</code>\n"
+        f"المبلغ: <b>{op.amount}</b>\n"
+        f"وسيلة الدفع: <b>{op.method}</b>\n"
         f"عنوان الدفع: <code>{payment_method_number}</code>\n"
         f"اسم صاحب الحساب البنكي: <code>{bank_account_name}</code>\n"
-        f"الحالة: <b>{state_dict_en_to_ar[op['state']]}</b>\n"
-        f"سبب إعادة/رفض: <b>{op['reason'] if op['reason'] else 'لا يوجد'}</b>\n\n"
+        f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
+        f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
     )
 
 
@@ -91,7 +80,6 @@ async def get_photos_from_archive(message_ids: list[int]):
                 file_size=m.photo.file_size,
             )
         )
-
 
     return photos
 
@@ -162,4 +150,3 @@ def build_operations_keyboard(serials: list[int]):
     keyboard.append(build_back_button(f"back_to_complaint_about"))
     keyboard.append(back_to_user_home_page_button[0])
     return keyboard
-

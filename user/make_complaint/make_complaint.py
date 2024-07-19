@@ -14,27 +14,22 @@ from telegram.ext import (
     filters,
 )
 
-
 from common.common import (
     build_user_keyboard,
     build_back_button,
     build_complaint_keyboard,
+    parent_to_child_models_mapper,
 )
 from common.decorators import check_if_user_present_decorator
-
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-
 from user.make_complaint.notify import notify_operation
-
-from start import start_command
-
-from DB import DB
-
 from user.make_complaint.common import *
+from start import start_command
+from database import Complaint
 
 (
     COMPLAINT_ABOUT,
@@ -75,7 +70,9 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             ar_texts = ["شراء USDT", "شراء USDT"]
 
-        operations = DB.get_orders(order_type=about, user_id=update.effective_user.id)
+        operations = parent_to_child_models_mapper[about].get_orders(
+            user_id=update.effective_user.id
+        )
 
         if not operations:
             await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد❗️")
@@ -83,7 +80,7 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = build_operations_keyboard(
             serials=[
-                op["serial"] for op in operations if not op["complaint_took_care_of"]
+                op.serial for op in operations if not op.complaint_took_care_of
             ]
         )
 
@@ -106,23 +103,24 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             serial = context.user_data["complaint_serial"]
 
-        op = DB.get_one_order(
+        op = parent_to_child_models_mapper[
+            context.user_data["complaint_about"]
+        ].get_one_order(
             serial=serial,
-            order_type=context.user_data["complaint_about"],
         )
 
         op_text = (
             f"تفاصيل العملية:\n\n"
-            f"الرقم التسلسلي: <code>{op['serial']}</code>\n"
-            f"الكمية: <b>{op['amount']}</b>\n"
-            f"وسيلة الدفع: <b>{op['method']}</b>\n"
-            f"الحالة: <b>{state_dict_en_to_ar[op['state']]}</b>\n"
-            f"سبب إعادة/رفض: <b>{op['reason'] if op['reason'] else 'لا يوجد'}</b>\n\n"
+            f"الرقم التسلسلي: <code>{op.serial}</code>\n"
+            f"الكمية: <b>{op.amount}</b>\n"
+            f"وسيلة الدفع: <b>{op.method}</b>\n"
+            f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
+            f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
         )
 
         if (
             context.user_data["complaint_about"] == "deposit"
-            and op["state"] == "pending"
+            and op.state == "pending"
         ):
             await update.callback_query.answer(
                 text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",
@@ -130,18 +128,18 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        if op["state"] in ["sent", "pending"]:
+        if op.state in ["sent", "pending"]:
             alert_button = [
                 [
                     InlineKeyboardButton(
                         text="إرسال تنبيه🔔",
-                        callback_data=f"notify_{op['state']}_operation_{serial}",
+                        callback_data=f"notify_{op.state}_operation_{serial}",
                     )
                 ],
                 build_back_button("back_to_choose_operation"),
                 back_to_user_home_page_button[0],
             ]
-            if op["state"] == "sent":
+            if op.state == "sent":
                 text = op_text + "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير بشأنها.</b>"
 
             else:
@@ -198,12 +196,10 @@ back_to_complaint_reason = choose_operation
 
 async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        order_type = context.user_data["complaint_about"]
+        serial = context.user_data["complaint_serial"]
         if update.callback_query.data.startswith("yes"):
-            serial = context.user_data["complaint_serial"]
-            order_type = context.user_data["complaint_about"]
-            op = DB.get_one_order(order_type=order_type, serial=serial)
-
-            archive_message_ids: str = op["archive_message_ids"]
+            op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
 
             complaint_text = (
                 f"شكوى جديدة:\n\n"
@@ -212,11 +208,13 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 f"<b>{context.user_data['reason']}</b>\n"
             )
             photos = await get_photos_from_archive(
-                message_ids=[m_id for m_id in map(int, archive_message_ids.split(","))]
+                message_ids=[
+                    m_id for m_id in map(int, str(op.archive_message_ids).split(","))
+                ]
             )
 
-            if op["worker_id"]:
-                context.bot_data["suspended_workers"].add(op["worker_id"])
+            if op.worker_id:
+                context.bot_data["suspended_workers"].add(op.worker_id)
 
             data = [order_type, serial]
             complaint_keyboard = build_complaint_keyboard(data, True)
@@ -245,7 +243,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 reply_markup=build_user_keyboard(),
             )
 
-            await DB.add_complaint(
+            await Complaint.add_complaint(
                 order_serial=serial,
                 order_type=order_type,
                 reason=context.user_data["reason"],
@@ -254,16 +252,11 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
             return ConversationHandler.END
 
         else:  # in case of no complaint selection
-            operations = DB.get_orders(
-                order_type=context.user_data["complaint_about"],
+            operations = parent_to_child_models_mapper[order_type].get_orders(
                 user_id=update.effective_user.id,
             )
             keyboard = build_operations_keyboard(
-                serials=[
-                    op["serial"]
-                    for op in operations
-                    if not op["complaint_took_care_of"]
-                ]
+                serials=[serial for op in operations if not op.complaint_took_care_of]
             )
             await context.bot.send_message(
                 chat_id=update.effective_user.id,

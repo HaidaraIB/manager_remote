@@ -16,10 +16,7 @@ from telegram.ext import (
 from custom_filters.Complaint import Complaint
 from custom_filters.ResponseToUserComplaint import ResponseToUserComplaint
 
-from DB import DB
-from common.common import (
-    build_complaint_keyboard,
-)
+from common.common import build_complaint_keyboard, parent_to_child_models_mapper
 
 from check_complaint.check_complaint import make_complaint_data
 
@@ -50,18 +47,17 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
             0
         ].callback_data.split("_")
 
-        op = DB.get_one_order(
-            order_type=callback_data[-2],
+        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
             serial=int(callback_data[-1]),
         )
 
         data = await make_complaint_data(context, callback_data)
 
-        user_text = f"تمت الإجابة الشكوى الخاصة بطلبك ذي الرقم التسلسلي <b>{op['serial']}</b>\n\nإليك الطلب⬇️⬇️⬇️"
+        user_text = f"تمت الإجابة الشكوى الخاصة بطلبك ذي الرقم التسلسلي <b>{op.serial}</b>\n\nإليك الطلب⬇️⬇️⬇️"
 
         try:
             await context.bot.send_message(
-                chat_id=op["user_id"],
+                chat_id=op.user_id,
                 text=user_text,
             )
             respond_button = InlineKeyboardButton(
@@ -70,7 +66,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
             )
             if not update.message.photo and not data["media"]:
                 await context.bot.send_message(
-                    chat_id=op["user_id"],
+                    chat_id=op.user_id,
                     text=data["text"],
                     reply_markup=InlineKeyboardMarkup.from_button(respond_button),
                 )
@@ -80,12 +76,12 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                     photos.append(update.message.photo[-1])
 
                 await context.bot.send_media_group(
-                    chat_id=op["user_id"],
+                    chat_id=op.user_id,
                     media=[InputMediaPhoto(media=photo) for photo in photos],
                     caption=data["text"],
                 )
             await context.bot.send_message(
-                chat_id=op["user_id"],
+                chat_id=op.user_id,
                 text=update.effective_message.reply_to_message.text_html
                 + f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>",
                 reply_markup=InlineKeyboardMarkup.from_button(respond_button),
@@ -104,7 +100,6 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 )
             ),
         )
-
 
 
 async def back_from_respond_to_user_complaint(

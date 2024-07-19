@@ -7,9 +7,7 @@ from telegram.ext import (
 )
 
 from common.back_to_home_page import back_to_user_home_page_button
-
-from DB import DB
-
+from database import TrustedAgent
 from common.common import build_back_button
 from common.back_to_home_page import (
     back_to_user_home_page_button,
@@ -47,7 +45,7 @@ async def show_trusted_agents(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         gov = update.callback_query.data.split("_")[0]
-        trusted_agents = DB.get_trusted_agents(gov=gov)
+        trusted_agents = TrustedAgent.get_trusted_agents(gov=gov)
         if not trusted_agents:
             await update.callback_query.answer(
                 text="لا يوجد وكلاء لهذه المحافظة بعد",
@@ -55,7 +53,7 @@ async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         agents_tg_chats = [
-            (await context.bot.get_chat(chat_id=agent["user_id"]))
+            (await context.bot.get_chat(chat_id=agent.user_id))
             for agent in trusted_agents
         ]
         keyboard = [
