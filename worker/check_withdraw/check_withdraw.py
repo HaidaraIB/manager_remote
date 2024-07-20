@@ -292,7 +292,7 @@ def stringify_order(
 ):
     return (
         "تفاصيل طلب سحب :\n\n"
-        f"المبلغ 💵: <code>{format_amount(amount) if amount else 'لا يوجد بعد'}</code>\n\n"
+        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"

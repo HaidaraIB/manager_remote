@@ -18,25 +18,7 @@ from custom_filters import BuyUSDT, Declined, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
-    format_amount
 )
-
-def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    payment_method_number: str,
-    *args,
-):
-    return (
-        "طلب شراء USDT جديد:\n\n"
-        f"المبلغ 💵: <code>{format_amount(amount) if amount else 'لا يوجد بعد'}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n\n"
-        f"Payment Info: <code>{payment_method_number}</code>\n\n"
-        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
-    )
-
 
 async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
@@ -232,6 +214,21 @@ async def back_from_decline_buy_usdt_order(
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
 
+def stringify_order(
+    amount: float,
+    serial: int,
+    method: str,
+    payment_method_number: str,
+    *args,
+):
+    return (
+        "طلب شراء USDT جديد:\n\n"
+        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n\n"
+        f"Payment Info: <code>{payment_method_number}</code>\n\n"
+        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
+    )
 
 check_buy_usdt_handler = CallbackQueryHandler(
     callback=check_buy_usdt,
