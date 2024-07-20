@@ -13,8 +13,6 @@ from telegram.ext import (
     filters,
 )
 
-from custom_filters.User import User
-
 from common.common import (
     build_user_keyboard,
     payment_method_pattern,
@@ -77,25 +75,47 @@ async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        context.user_data["usdt_to_buy_amount"] = float(update.message.text)
+        back_buttons = [
+            build_back_button("back_to_usdt_to_buy_amount"),
+            back_to_user_home_page_button[0],
+        ]
+        if update.message:
+            amount = float(update.message.text)
+
+            if amount <= 0:
+                await update.message.reply_text(
+                    text="الرجاء إرسال عدد موجب لا يساوي الصفر",
+                    reply_markup=InlineKeyboardMarkup(back_buttons),
+                )
+                return
+            
+            context.user_data["usdt_to_buy_amount"] = amount
+        else:
+            amount = context.user_data["usdt_to_buy_amount"]
+            
         keyboard = [
             [
                 InlineKeyboardButton(text="موافق 👍", callback_data="yes buy usdt"),
                 InlineKeyboardButton(text="غير موافق 👎", callback_data="no buy usdt"),
             ],
-            build_back_button("back_to_usdt_to_buy_amount"),
-            back_to_user_home_page_button[0],
+            *back_buttons,
         ]
         text = (
             f"الكمية المرسلة تساوي:\n\n"
-            f"<b>{context.user_data['usdt_to_buy_amount']} USDT = {float(context.user_data['usdt_to_buy_amount'] * context.bot_data['data']['usdt_to_syp']):,.2f} SYP</b>\n\n"
+            f"<b>{amount} USDT = {float(amount * context.bot_data['data']['usdt_to_syp']):,.2f} SYP</b>\n\n"
             "هل أنت موافق؟"
         )
+        if update.message:
+            await update.message.reply_text(
+                text=text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text=text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
 
-        await update.message.reply_text(
-            text=text,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
         return YES_NO_BUY_USDT
 
 
@@ -122,26 +142,7 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return BUY_USDT_METHOD
 
 
-async def back_to_yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        keyboard = [
-            [
-                InlineKeyboardButton(text="موافق 👍", callback_data="yes buy usdt"),
-                InlineKeyboardButton(text="غير موافق 👎", callback_data="no buy usdt"),
-            ],
-            build_back_button("back_to_buy_usdt_amount"),
-            back_to_user_home_page_button[0],
-        ]
-        text = (
-            f"الكمية المرسلة تساوي:\n\n"
-            f"{context.user_data['usdt_to_buy_amount']} USDT = {float(context.user_data['usdt_to_buy_amount'] * context.bot_data['data']['usdt_to_syp']):,.2f} SYP\n\n"
-            "هل أنت موافق؟"
-        )
-
-        await update.callback_query.edit_message_text(
-            text=text, reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        return YES_NO_BUY_USDT
+back_to_yes_no_buy_usdt = usdt_to_buy_amount
 
 
 async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -170,7 +171,7 @@ async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return CASH_CODE
 
 
-back_to_cash_code = back_to_bank_number_buy_usdt = buy_usdt_method
+back_to_buy_usdt_method = yes_no_buy_usdt
 
 
 async def bank_number_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -179,40 +180,22 @@ async def bank_number_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYP
             build_back_button("back_to_bank_number_buy_usdt"),
             back_to_user_home_page_button[0],
         ]
-        context.user_data["payment_method_number_buy_usdt"] = update.message.text
+        if update.message:
+            context.user_data["payment_method_number_buy_usdt"] = update.message.text
+            await update.message.reply_text(
+                text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
 
-        await update.message.reply_text(
-            text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
         return BANK_ACCOUNT_NAME_BUY_USDT
 
 
-async def back_to_bank_account_name_buy_usdt(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type == Chat.PRIVATE:
-        back_keyboard = [
-            build_back_button("back_to_bank_number_buy_usdt"),
-            back_to_user_home_page_button[0],
-        ]
-        await update.callback_query.edit_message_text(
-            text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
-        return BANK_ACCOUNT_NAME_BUY_USDT
-
-
-async def back_to_buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        buy_usdt_methods = build_methods_keyboard(buy_usdt=True)
-        buy_usdt_methods.append(build_back_button("back_to_yes_no_buy_usdt"))
-        buy_usdt_methods.append(back_to_user_home_page_button[0])
-        await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع لاستلام أموالك 💳",
-            reply_markup=InlineKeyboardMarkup(buy_usdt_methods),
-        )
-        return BUY_USDT_METHOD
+back_to_bank_number_buy_usdt = buy_usdt_method
 
 
 async def cash_code_bank_account_name_buy_usdt(
@@ -250,6 +233,10 @@ async def cash_code_bank_account_name_buy_usdt(
         )
 
         return BUY_USDT_CHECK
+
+
+back_to_cash_code_buy_usdt = buy_usdt_method
+back_to_bank_account_name_buy_usdt = bank_number_buy_usdt
 
 
 async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -355,7 +342,9 @@ buy_usdt_handler = ConversationHandler(
         CallbackQueryHandler(
             back_to_bank_account_name_buy_usdt, "^back_to_bank_account_name_buy_usdt$"
         ),
-        CallbackQueryHandler(back_to_cash_code, "^back_to_cash_code_buy_usdt$"),
+        CallbackQueryHandler(
+            back_to_cash_code_buy_usdt, "^back_to_cash_code_buy_usdt$"
+        ),
         CallbackQueryHandler(
             back_to_usdt_to_buy_amount, "^back_to_usdt_to_buy_amount$"
         ),

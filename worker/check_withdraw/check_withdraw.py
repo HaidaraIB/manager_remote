@@ -32,11 +32,15 @@ from common.common import (
 
 
 def stringify_order(
-    amount: float, serial: int, method: str, payment_method_number: str, *args
+    amount: float,
+    serial: int,
+    method: str,
+    payment_method_number: str,
+    *args,
 ):
     return (
         "تفاصيل طلب سحب :\n\n"
-        f"المبلغ💵: <code>{amount}</code>\n\n"
+        f"المبلغ 💵: <code>{f'{amount:,.2f}' if amount else 'لا يوجد بعد'}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
