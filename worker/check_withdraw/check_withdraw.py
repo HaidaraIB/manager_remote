@@ -161,7 +161,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             notify_workers(
                 context=context,
                 workers=workers,
-                text=f"انتباه تم استلام سحب جديد 🚨",
+                text=f"انتباه تم استلام سحب {method} جديد 🚨",
             )
         )
         context.user_data["requested"] = False

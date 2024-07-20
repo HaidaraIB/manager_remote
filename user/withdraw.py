@@ -285,7 +285,7 @@ async def send_withdraw_order_to_check(
             notify_workers(
                 context=context,
                 workers=workers,
-                text="انتباه يوجد طلب تحقق سحب جديد 🚨",
+                text=f"انتباه يوجد طلب تحقق سحب {method} جديد 🚨",
             )
         )
 
@@ -294,7 +294,7 @@ async def send_withdraw_order_to_check(
             notify_workers(
                 context=context,
                 workers=workers,
-                text="انتباه يوجد طلب سحب قيد التحقق 🚨",
+                text=f"انتباه يوجد طلب سحب {method} قيد التحقق 🚨",
             )
         )
 
