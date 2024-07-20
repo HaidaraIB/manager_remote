@@ -10,6 +10,7 @@ from telegram.ext import (
 from common.common import (
     apply_ex_rate,
     notify_workers,
+    format_amount,
 )
 from models import RefNumber, DepositOrder, DepositAgent
 
@@ -73,7 +74,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         text = (
             "تم رفض الطلب❌\n"
             + stringify_order(
-                amount="لا يوجد",
+                amount=0,
                 account_number=d_order.acc_number,
                 method=d_order.method,
                 serial=d_order.serial,
@@ -150,7 +151,7 @@ def stringify_order(
     return (
         "إيداع جديد:\n"
         f"رقم العملية: <code>{ref_num}</code>\n"
-        f"المبلغ 💵: <code>{f'{amount:,.2f}' if amount else 'لا يوجد بعد'}</code>\n"
+        f"المبلغ 💵: <code>{format_amount(amount) if amount else 'لا يوجد بعد'}</code>\n"
         f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"

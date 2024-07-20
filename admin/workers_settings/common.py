@@ -11,7 +11,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler
 )
-from common.common import build_back_button
+from common.common import build_back_button, format_amount
 from common.back_to_home_page import back_to_admin_home_page_button
 
 from constants import *
@@ -228,10 +228,10 @@ def create_worker_info_text(
     )
     if pos == "deposit after check":
         text += (
-            f"الإيداعات حتى الآن: {float(worker.approved_deposits):,.2f}\n"
+            f"الإيداعات حتى الآن: {format_amount(worker.approved_deposits)}\n"
             f"عددها: {worker.approved_deposits_num}\n"
-            f"الإيداعات هذا الاسبوع: {float(worker.approved_deposits_week):,.2f}\n"
-            f"رصيد المكافآت: {float(worker.weekly_rewards_balance):,.2f}\n"
+            f"الإيداعات هذا الاسبوع: {format_amount(worker.approved_deposits_week)}\n"
+            f"رصيد المكافآت: {format_amount(worker.weekly_rewards_balance)}\n"
         )
 
     elif pos in ["deposit", "withdraw", "buy_usdt"]:
@@ -240,10 +240,10 @@ def create_worker_info_text(
     else:
         text += (
             f"الوظيفة: {"سحب " + worker.method}\n"
-            f"السحوبات حتى الآن: {float(worker.approved_withdraws):,.2f}\n"
+            f"السحوبات حتى الآن: {format_amount(worker.approved_withdraws)}\n"
             f"عددها: {worker.approved_withdraws_num}\n"
-            f"الدفعات المسبقة:\n{float(worker.pre_balance):,.2f}\n"
-            f"السحوبات هذا الاسبوع: {float(worker.approved_withdraws_day):,.2f}\n"
-            f"رصيد المكافآت: {float(worker.daily_rewards_balance):,.2f}\n"
+            f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"
+            f"السحوبات هذا الاسبوع: {format_amount(worker.approved_withdraws_day)}\n"
+            f"رصيد المكافآت: {format_amount(worker.daily_rewards_balance)}\n"
         )
     return text

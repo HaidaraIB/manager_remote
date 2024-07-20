@@ -7,7 +7,6 @@ from telegram import (
 
 from telegram.ext import (
     ContextTypes,
-    ConversationHandler,
     CallbackQueryHandler,
     MessageHandler,
     filters,
@@ -17,7 +16,7 @@ import os
 import datetime
 from custom_filters import Withdraw, Returned, DepositAgent
 from models import WithdrawOrder
-from common.common import build_worker_keyboard, pretty_time_delta
+from common.common import build_worker_keyboard, pretty_time_delta, format_amount
 
 
 async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -67,7 +66,7 @@ async def reply_with_payment_proof_withdraw(
 
         caption = (
             f"مبروك، تم تأكيد عملية سحب "
-            f"<b>{float(amount):,.2f}</b> "
+            f"<b>{format_amount(amount)}</b> "
             "بنجاح✅\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )

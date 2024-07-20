@@ -7,7 +7,6 @@ from telegram import (
 
 from telegram.ext import (
     ContextTypes,
-    ConversationHandler,
     CallbackQueryHandler,
     MessageHandler,
     filters,
@@ -19,6 +18,7 @@ from custom_filters import BuyUSDT, Declined, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
+    format_amount
 )
 
 def stringify_order(
@@ -30,7 +30,7 @@ def stringify_order(
 ):
     return (
         "طلب شراء USDT جديد:\n\n"
-        f"المبلغ 💵: <code>{f'{amount:,.2f}' if amount else 'لا يوجد بعد'}</code>\n\n"
+        f"المبلغ 💵: <code>{format_amount(amount) if amount else 'لا يوجد بعد'}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"

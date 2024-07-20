@@ -18,11 +18,10 @@ from common.common import (
     payment_method_pattern,
     build_back_button,
     build_methods_keyboard,
+    format_amount,
 )
 
 from common.decorators import check_if_user_present_decorator
-
-
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
@@ -102,7 +101,7 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ]
         text = (
             f"الكمية المرسلة تساوي:\n\n"
-            f"<b>{amount} USDT = {float(amount * context.bot_data['data']['usdt_to_syp']):,.2f} SYP</b>\n\n"
+            f"<b>{amount} USDT = {format_amount(amount * context.bot_data['data']['usdt_to_syp'])} SYP</b>\n\n"
             "هل أنت موافق؟"
         )
         if update.message:

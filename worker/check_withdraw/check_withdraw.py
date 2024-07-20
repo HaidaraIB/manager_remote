@@ -7,7 +7,6 @@ from telegram import (
 
 from telegram.ext import (
     ContextTypes,
-    ConversationHandler,
     CallbackQueryHandler,
     MessageHandler,
     filters,
@@ -23,29 +22,13 @@ from common.common import (
     build_worker_keyboard,
     apply_ex_rate,
     notify_workers,
+    format_amount,
 )
 
 (
     DECLINE_REASON,
     AMOUNT,
 ) = range(2)
-
-
-def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    payment_method_number: str,
-    *args,
-):
-    return (
-        "تفاصيل طلب سحب :\n\n"
-        f"المبلغ 💵: <code>{f'{amount:,.2f}' if amount else 'لا يوجد بعد'}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n\n"
-        f"Payment Info: <code>{payment_method_number}</code>\n\n"
-        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
-    )
 
 
 async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -298,6 +281,23 @@ async def back_to_withdraw_check(update: Update, context: ContextTypes.DEFAULT_T
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
+
+
+def stringify_order(
+    amount: float,
+    serial: int,
+    method: str,
+    payment_method_number: str,
+    *args,
+):
+    return (
+        "تفاصيل طلب سحب :\n\n"
+        f"المبلغ 💵: <code>{format_amount(amount) if amount else 'لا يوجد بعد'}</code>\n\n"
+        f"Serial: <code>{serial}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n\n"
+        f"Payment Info: <code>{payment_method_number}</code>\n\n"
+        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
+    )
 
 
 check_payment_handler = CallbackQueryHandler(

@@ -168,7 +168,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
         await context.bot.send_message(
             chat_id=context.bot_data["data"]["deposit_orders_group"],
             text=stringify_order(
-                amount="لا يوجد بعد",
+                amount=0,
                 account_number=context.user_data["account_deposit"],
                 method=context.user_data["deposit_method"],
                 serial=serial,

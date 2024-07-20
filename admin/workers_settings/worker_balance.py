@@ -134,7 +134,7 @@ async def get_pre_balance_amount(update: Update, context: ContextTypes.DEFAULT_T
         )
         await context.bot.send_message(
             chat_id=context.user_data["worker_balance_id"],
-            text=f"تمت إضافة دفعة مسبقة بمبلغ: <b>{float(update.message.text):,.2f}</b> إلى رصيد دفع <code>{context.user_data["balance_pos"]}</code> الخاص بك.",
+            text=f"تمت إضافة دفعة مسبقة بمبلغ: <b>{format(update.message.text)}</b> إلى رصيد دفع <code>{context.user_data["balance_pos"]}</code> الخاص بك.",
         )
         await update.message.reply_text(
             text="تمت إضافة الدفعة المسبقة بنجاح ✅",

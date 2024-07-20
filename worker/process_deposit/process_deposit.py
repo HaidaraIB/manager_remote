@@ -16,7 +16,7 @@ import os
 
 from custom_filters import Deposit, Returned, DepositAgent
 from models import DepositOrder, User
-from common.common import build_worker_keyboard, pretty_time_delta
+from common.common import build_worker_keyboard, pretty_time_delta, format_amount
 
 import datetime
 
@@ -69,11 +69,11 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             await User.million_gift_user(user_id=d_order.user_id, amount=gifts_amount)
 
         caption = (
-            f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{float(d_order.amount):,.2f}$</b> إلى رصيدك\n"
-            f"{f'بالإضافة إلى <b>{float(gifts_amount):,.2f}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000$</b>' if gifts_amount else ''}\n\n"
+            f"مبروك🎉، تم إضافة المبلغ الذي قمت بإيداعه <b>{format_amount(d_order.amount)}$</b> إلى رصيدك\n"
+            f"{f'بالإضافة إلى <b>{format_amount(gifts_amount)}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000$</b>' if gifts_amount else ''}\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
-            f"Congrats🎉, the deposit you made <b>{float(d_order.amount):,.2f}$</b> was added to your balance\n"
-            f"{f'plus <b>{float(gifts_amount):,.2f}$</b> gift for reaching <b>1,000,000$</b> deposits.' if gifts_amount else ''}\n\n"
+            f"Congrats🎉, the deposit you made <b>{format_amount(d_order.amount)}$</b> was added to your balance\n"
+            f"{f'plus <b>{format_amount(gifts_amount)}$</b> gift for reaching <b>1,000,000$</b> deposits.' if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
         await context.bot.send_photo(
@@ -231,7 +231,6 @@ async def return_deposit_order_reason(
         )
 
         context.user_data["requested"] = False
-        return ConversationHandler.END
 
 
 async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):

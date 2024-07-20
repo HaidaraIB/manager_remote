@@ -9,6 +9,7 @@ from telegram.error import (
 import asyncio
 from models import PaymentAgent, DepositAgent
 from constants import *
+from common.common import format_amount
 
 worker_type_dict = {
     "daily": {
@@ -67,12 +68,12 @@ def stringify_reward_report(
     
     worker_text = (
         f"الوظيفة: {f'سحب {updated_worker.method}' if role == 'withdraws' else 'تنفيذ إيداع'}\n"
-        f"مجموع المكافآت السابق: <b>{float(prev_rewards_balance):,.2f}</b>\n"
-        f"قيمة المكافأة: <b>{float(amount):,.2f}</b>\n"
-        f"مجموع المكافآت الحالي: <b>{float(rewards_balance):,.2f}</b>\n"
+        f"مجموع المكافآت السابق: <b>{format_amount(prev_rewards_balance)}</b>\n"
+        f"قيمة المكافأة: <b>{format_amount(amount)}</b>\n"
+        f"مجموع المكافآت الحالي: <b>{format_amount(rewards_balance)}</b>\n"
         f"عدد الطلبات حتى الآن: <b>{orders_num}</b>\n"
-        f"مجموع المبالغ حتى الآن: <b>{float(balance):,.2f}</b>\n"
-        f"مجموع المبالغ هذا {work_type}: <b>{float(partial_balance):,.2f}</b>"
+        f"مجموع المبالغ حتى الآن: <b>{format_amount(balance)}</b>\n"
+        f"مجموع المبالغ هذا {work_type}: <b>{format_amount(partial_balance)}</b>"
     )
     return worker_text
 

@@ -44,6 +44,8 @@ parent_to_child_models_mapper: dict[
     "buyusdt": BuyUsdtdOrder,
 }
 
+def format_amount(amount:float):
+    return f"{float(amount):,.2f}".rstrip('0').rstrip('.')
 
 def pretty_time_delta(seconds):
     seconds = int(seconds)

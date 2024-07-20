@@ -8,8 +8,12 @@ from models import (
     BuyUsdtdOrder,
 )
 from user.make_complaint.common import state_dict_en_to_ar
+from common.common import format_amount
+
 from datetime import datetime
 from dateutil import tz
+
+
 def format_datetime(d:datetime):
     return d.replace(tzinfo=tz.gettz("Syria/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
 
@@ -36,7 +40,7 @@ def stringify_order(order:WithdrawOrder|DepositOrder|BuyUsdtdOrder, order_type:s
         f"تفاصيل الطلب:\n\n"
         f"الرقم التسلسلي: {order.serial}\n"
         f"النوع: <b>{order_settings_dict[order_type]['t']}</b>\n"
-        f"المبلغ: <code>{order.amount:,.2f}</code>\n"
+        f"المبلغ: <code>{format_amount(order.amount)}</code>\n"
         f"وسيلة الدفع: <code>{order.method}</code>\n"
         f"الحالة: <b>{state_dict_en_to_ar[order.state]}</b>\n"
         f"رقم الحساب: <code>{order.acc_number if hasattr(order, "acc_number") else 'لا يوجد'}</code>\n"
