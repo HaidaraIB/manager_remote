@@ -34,6 +34,7 @@ class Worker(BaseUser):
         worker_id: int = None,
         method: str = None,
         check_what: str = None,
+        deposit: str = None,
         s: Session = None,
     ):
         if worker_id:
@@ -41,24 +42,26 @@ class Worker(BaseUser):
                 res = s.execute(
                     select(cls).where(and_(cls.id == worker_id, cls.method == method))
                 )  # get payment agent
-                try:
-                    return res.fetchone().t[0]
-                except:
-                    pass
             elif check_what:
                 res = s.execute(
                     select(cls).where(
                         and_(cls.id == worker_id, cls.check_what == check_what)
                     )
                 )  # get checker
+            elif deposit:
+                res = s.execute(
+                    select(cls).where(cls.id == worker_id)
+                )  # get deposit agent
+            else:
+                res = s.execute(
+                    select(cls).where(cls.id == worker_id)
+                )  # get list of workers by id
+
+            if method or check_what or deposit:
                 try:
                     return res.fetchone().t[0]
                 except:
                     pass
-            else:
-                res = s.execute(
-                    select(cls).where(cls.id == worker_id)
-                )  # get deposit agent, worker, checker by id
 
         elif method:
             res = s.execute(
