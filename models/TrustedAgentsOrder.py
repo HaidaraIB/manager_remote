@@ -59,9 +59,9 @@ class TrustedAgentsOrder(BaseOrder):
         neighborhood: str,
         latitude: str,
         longitude: str,
-        email:str,
-        phone:str,
-        amount:float,
+        email: str,
+        phone: str,
+        amount: float,
         front_id: PhotoSize,
         back_id: PhotoSize,
         ref_num: str,
@@ -91,3 +91,14 @@ class TrustedAgentsOrder(BaseOrder):
             )
         )
         return res.lastrowid
+
+    @staticmethod
+    @lock_and_release
+    async def approve_order(order_serial: int, s: Session = None):
+        s.query(TrustedAgentsOrder).filter_by(serial=order_serial).update(
+            {
+                TrustedAgentsOrder.approve_date: datetime.datetime.now(),
+                TrustedAgentsOrder.state: "approved",
+            }
+        )
+    

@@ -41,28 +41,23 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_admin_home_page_handler,
 )
-from common.force_join import (
-    check_joined_handler,
-)
+from common.force_join import check_joined_handler
 
-from user.withdraw import (
-    withdraw_handler,
-)
+from agent.login import *
 
-from user.deposit import (
-    deposit_handler,
-)
+from user.withdraw import withdraw_handler
+from user.deposit import deposit_handler
 from user.buy_usdt import buy_usdt_handler
 from user.make_complaint import complaint_handler
 from user.return_order import *
 from user.create_account import *
+from user.work_with_us import *
+from user.show_trusted_agents import *
 from user.respond_to_complaint import (
     reply_to_returned_complaint_handler,
     correct_returned_complaint_handler,
     back_from_reply_to_returned_complaint_handler,
 )
-from user.work_with_us import *
-from user.show_trusted_agents import *
 
 from admin.admin_calls import *
 from admin.admin_settings import *
@@ -215,7 +210,7 @@ def main():
 
     # WORK_WITH_US
     # Agent_Orders
-    app.add_handler(invalid_login_info_agent_order_handler, group=2)
+    app.add_handler(login_agent_handler)
     app.add_handler(notify_agent_order_handler)
     app.add_handler(accept_agent_order_handler)
     app.add_handler(get_login_info_handler)
@@ -263,6 +258,7 @@ def main():
 
     app.add_handler(check_joined_handler)
 
+    app.add_handler(agent_command)
     app.add_handler(worker_command)
     app.add_handler(admin_command)
     app.add_handler(start_command)

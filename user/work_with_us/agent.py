@@ -17,6 +17,7 @@ from common.back_to_home_page import back_to_user_home_page_button
 from user.work_with_us.common import send_to_group
 from common.common import build_back_button, build_user_keyboard
 from models import TrustedAgent, TrustedAgentsOrder
+
 (
     NEIGHBORHOOD,
     LOCATION,
@@ -26,7 +27,8 @@ from models import TrustedAgent, TrustedAgentsOrder
     BACK_ID,
     AMOUNT,
     REF_NUM,
-) = range(3, 11)
+    SCREEN_SHOT,
+) = range(3, 12)
 
 
 async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -272,14 +274,35 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 back_to_get_amount = get_back_id
 
 
+async def get_ref_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        back_buttons = [
+            build_back_button("back_to_get_amount"),
+            back_to_user_home_page_button[0],
+        ]
+        if update.message:
+            t_order = TrustedAgentsOrder.get_one_order(ref_num=update.message.text)
+            if t_order:
+                await update.message.reply_text(
+                    text="رقم عملية مكرر!",
+                )
+                return
+            context.user_data["agent_ref_num"] = update.message.text
+            await update.message.reply_text(
+                text="أخيراً، أرسل لقطة شاشة لعملية الدفع السابقة.",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text="أخيراً، أرسل لقطة شاشة لعملية الدفع السابقة.",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+
+        return SCREEN_SHOT
+
+
 async def send_to_check_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        t_order = TrustedAgentsOrder.get_one_order(ref_num=update.message.text)
-        if t_order:
-            await update.message.reply_text(
-                text="رقم عملية مكرر!",
-            )
-            return
         serial = await TrustedAgentsOrder.add_trusted_agent_order(
             user_id=update.effective_user.id,
             gov=context.user_data["agent_gov"],
@@ -291,7 +314,7 @@ async def send_to_check_agent_order(update: Update, context: ContextTypes.DEFAUL
             front_id=context.user_data["agent_front_id"],
             back_id=context.user_data["agent_back_id"],
             amount=context.user_data["agent_amount"],
-            ref_num=update.message.text,
+            ref_num=context.user_data["agent_ref_num"],
         )
         media = [
             InputMediaPhoto(
@@ -299,6 +322,9 @@ async def send_to_check_agent_order(update: Update, context: ContextTypes.DEFAUL
             ),
             InputMediaPhoto(
                 media=context.user_data["agent_back_id"],
+            ),
+            InputMediaPhoto(
+                media=update.message.photo[-1],
             ),
         ]
 

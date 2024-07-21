@@ -9,8 +9,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session
 from models.DB import Base, connect_and_close, lock_and_release
-from models.TrustedAgentsOrder import TrustedAgentsOrder
-import datetime
 
 
 class TrustedAgent(Base):
@@ -18,6 +16,7 @@ class TrustedAgent(Base):
 
     user_id = Column(Integer)
     gov = Column(String)
+    neighborhood = Column(String)
     order_serial = Column(Integer)
     team_cash_user_id = Column(String)
     team_cash_password = Column(String)
@@ -28,9 +27,16 @@ class TrustedAgent(Base):
 
     @staticmethod
     @connect_and_close
-    def get_trusted_agents(gov: str, user_id: int = None, s: Session = None):
+    def get_trusted_agents(gov: str = None, user_id: int = None, order_serial:int = None, s: Session = None):
         try:
-            if user_id:
+            if order_serial:
+                res = s.execute(
+                    select(TrustedAgent).where(
+                        and_(TrustedAgent.order_serial == order_serial)
+                    )
+                )
+                return res.fetchone().t[0]
+            elif user_id:
                 res = s.execute(
                     select(TrustedAgent).where(
                         and_(TrustedAgent.gov == gov, TrustedAgent.user_id == user_id)
@@ -48,6 +54,7 @@ class TrustedAgent(Base):
     async def add_trusted_agent(
         user_id: int,
         gov: str,
+        neighborhood:str,
         order_serial: int,
         team_cash_user_id: str,
         team_cash_password: str,
@@ -60,6 +67,7 @@ class TrustedAgent(Base):
             insert(TrustedAgent).values(
                 user_id=user_id,
                 gov=gov,
+                neighborhood=neighborhood,
                 team_cash_user_id=team_cash_user_id,
                 team_cash_password=team_cash_password,
                 team_cash_workplace_id=team_cash_workplace_id,
@@ -67,10 +75,4 @@ class TrustedAgent(Base):
                 promo_password=promo_password,
                 order_serial=order_serial,
             )
-        )
-        s.query(TrustedAgentsOrder).filter_by(serial=order_serial).update(
-            {
-                TrustedAgentsOrder.approve_date: datetime.datetime.now(),
-                TrustedAgentsOrder.state: "approved",
-            }
         )

@@ -59,10 +59,10 @@ async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
             [
                 InlineKeyboardButton(
-                    text=agent.full_name, url=f"t.me/{agent.username}"
+                    text=agent.neighborhood, url=f"t.me/{tg_agent.username}"
                 ),
             ]
-            for agent in agents_tg_chats
+            for agent, tg_agent in zip(trusted_agents, agents_tg_chats)
         ]
         keyboard.append(build_back_button("back_to_choose_gov"))
         keyboard.append(back_to_user_home_page_button[0])

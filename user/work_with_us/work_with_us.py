@@ -26,6 +26,8 @@ from user.work_with_us.agent import (
     BACK_ID,
     AMOUNT,
     REF_NUM,
+    SCREEN_SHOT,
+    get_ref_num,
     choose_gov,
     get_neighborhood,
     share_location,
@@ -194,6 +196,12 @@ work_with_us_handler = ConversationHandler(
         REF_NUM: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
+                callback=get_ref_num,
+            )
+        ],
+        SCREEN_SHOT: [
+            MessageHandler(
+                filters=filters.PHOTO,
                 callback=send_to_check_agent_order,
             )
         ],
