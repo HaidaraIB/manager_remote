@@ -48,7 +48,7 @@ async def login_agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.delete_message()
         await context.bot.send_video(
             chat_id=update.effective_user.id,
-            video="BAACAgQAAxkBAAJrdWadEfA3wxYl1GVA3KzlJaI48iu1AAKpEwACOC3oUAwXm9fnknJTNQQ",
+            video=os.getenv("LOGIN_GUIDE_VIDEO_ID"),
             caption=LOGIN_GUIDE_TEXT,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(text="إلغاء", callback_data="cancel_login_agent")
@@ -70,7 +70,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 not order
                 or order.state != "approved"
                 or order.user_id != update.effective_user.id
-                or ag
+                # or ag
             ):
                 await update.message.reply_text(
                     text=(
