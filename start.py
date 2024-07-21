@@ -27,21 +27,7 @@ from custom_filters import Admin, Worker, DepositAgent
 
 
 async def inits(app: Application):
-    if not app.bot_data.get("data", False):
-        app.bot_data["data"] = {
-            "deposit_gift_percentage": 1,
-            "workers_reward_percentage": 1,
-            "workers_reward_withdraw_percentage": 1,
-            "user_calls": {
-                "withdraw": True,
-                "deposit": True,
-                "buy_usdt": True,
-                "create_account": True,
-                "make_complaint": True,
-            },
-        }
-    if not app.bot_data.get("suspended_workers", False):
-        app.bot_data["suspended_workers"] = set()
+    pass # Fill this when you need to run a code only once and then clear it.
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):

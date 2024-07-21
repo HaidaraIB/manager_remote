@@ -27,6 +27,8 @@ from common.common import (
 from common.decorators import (
     check_if_user_created_account_from_bot_decorator,
     check_if_user_present_decorator,
+    check_user_call_on_or_off_decorator,
+    check_user_pending_orders_decorator,
 )
 
 from common.force_join import check_if_user_member_decorator
@@ -49,23 +51,13 @@ import asyncio
     WITHDRAW_CODE,
 ) = range(5)
 
-
+@check_user_pending_orders_decorator
+@check_user_call_on_or_off_decorator
 @check_if_user_present_decorator
 @check_if_user_member_decorator
 @check_if_user_created_account_from_bot_decorator
 async def choose_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-
-        if not context.bot_data["data"]["user_calls"]["withdraw"]:
-            await update.callback_query.answer("السحوبات متوقفة حالياً ❗️")
-            return ConversationHandler.END
-
-        elif WithdrawOrder.check_user_pending_orders(
-            user_id=update.effective_user.id,
-        ):
-            await update.callback_query.answer("لديك طلب سحب قيد التنفيذ بالفعل ❗️")
-            return ConversationHandler.END
-
         accounts = Account.get_user_accounts(user_id=update.effective_user.id)
         accounts_keyboard = [
             InlineKeyboardButton(

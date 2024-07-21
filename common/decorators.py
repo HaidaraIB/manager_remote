@@ -8,7 +8,59 @@ from telegram.ext import (
 )
 import functools
 from constants import *
-from models import Account, User
+from models import (
+    Account,
+    User,
+    BuyUsdtdOrder,
+    DepositOrder,
+    WithdrawOrder,
+    CreateAccountOrder,
+)
+
+parent_to_child_models_mapper: dict[
+    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder
+] = {
+    "withdraw": WithdrawOrder,
+    "deposit": DepositOrder,
+    "buy usdt": BuyUsdtdOrder,
+    "create account": CreateAccountOrder,
+}
+
+
+def check_user_pending_orders_decorator(func):
+    @functools.wraps(func)
+    async def wrapper(
+        update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
+    ):
+        try:
+            if parent_to_child_models_mapper[
+                update.callback_query.data
+            ].check_user_pending_orders(
+                user_id=update.effective_user.id,
+            ):
+                await update.callback_query.answer("لديك طلب قيد التنفيذ بالفعل ❗️")
+                return ConversationHandler.END
+        except KeyError:
+            pass
+        return await func(update, context, *args, **kwargs)
+
+    return wrapper
+
+
+def check_user_call_on_or_off_decorator(func):
+    @functools.wraps(func)
+    async def wrapper(
+        update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
+    ):
+        try:
+            if not context.bot_data["data"]["user_calls"][update.callback_query.data]:
+                await update.callback_query.answer("هذه الخدمة متوقفة حالياً ❗️")
+                return ConversationHandler.END
+        except KeyError:
+            pass
+        return await func(update, context, *args, **kwargs)
+
+    return wrapper
 
 
 def check_if_user_created_account_from_bot_decorator(func):

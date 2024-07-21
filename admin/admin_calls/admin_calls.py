@@ -42,6 +42,7 @@ turn_user_calls_on_or_off_keyboard = [
     [InlineKeyboardButton(text="إنشاء حساب موثق™️", callback_data="acreate account")],
     [InlineKeyboardButton(text="شراء USDT", callback_data="abuy usdt")],
     [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="amake complaint")],
+    [InlineKeyboardButton(text="عملك معنا 💼", callback_data="awork with us")],
     back_to_admin_home_page_button[0],
 ]
 
@@ -132,15 +133,6 @@ async def payment_method_to_turn_on_or_off(
 
 async def turn_user_calls_on_or_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        if not context.bot_data["data"].get("user_calls", False):
-            context.bot_data["data"]["user_calls"] = {
-                "withdraw": True,
-                "deposit": True,
-                "buy_usdt": True,
-                "create_account": True,
-                "make_complaint": True,
-            }
-
         await update.callback_query.edit_message_text(
             text="اختر الزر🔘",
             reply_markup=InlineKeyboardMarkup(turn_user_calls_on_or_off_keyboard),
@@ -153,7 +145,7 @@ async def user_call_to_turn_on_or_off(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = update.callback_query.data[1:]
-        if context.bot_data["data"]["user_calls"].get(data, None) == None:
+        if context.bot_data["data"]["user_calls"].get(data, None) is None:
             context.bot_data["data"]["user_calls"][data] = True
 
         if context.bot_data["data"]["user_calls"][data]:
@@ -198,7 +190,7 @@ turn_user_calls_on_or_off_handler = ConversationHandler(
         USER_CALL_TO_TURN_ON_OR_OFF: [
             CallbackQueryHandler(
                 user_call_to_turn_on_or_off,
-                "^a(withdraw|deposit|buy usdt|create account|make complaint)$",
+                "^a(withdraw|deposit|buy usdt|create account|make complaint|work with us)$",
             )
         ]
     },

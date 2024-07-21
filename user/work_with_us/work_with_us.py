@@ -53,6 +53,8 @@ from user.work_with_us.common import (
     govs_pattern,
 )
 from common.common import build_back_button
+from common.decorators import check_user_call_on_or_off_decorator, check_if_user_present_decorator
+from common.back_to_home_page import check_if_user_member_decorator
 from start import start_command
 
 (
@@ -62,6 +64,9 @@ from start import start_command
 ) = range(3)
 
 
+@check_user_call_on_or_off_decorator
+@check_if_user_present_decorator
+@check_if_user_member_decorator
 async def work_with_us(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(

@@ -28,6 +28,8 @@ from common.common import (
 from common.decorators import (
     check_if_user_created_account_from_bot_decorator,
     check_if_user_present_decorator,
+    check_user_call_on_or_off_decorator,
+    check_user_pending_orders_decorator,
 )
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
@@ -45,22 +47,13 @@ from models import DepositOrder, Account, PaymentMethod, RefNumber, DepositAgent
 ) = range(3)
 
 
+@check_user_pending_orders_decorator
+@check_user_call_on_or_off_decorator
 @check_if_user_present_decorator
 @check_if_user_member_decorator
 @check_if_user_created_account_from_bot_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-
-        if not context.bot_data["data"]["user_calls"]["deposit"]:
-            await update.callback_query.answer("الإيداعات متوقفة حالياً ❗️")
-            return ConversationHandler.END
-
-        elif DepositOrder.check_user_pending_orders(
-            user_id=update.effective_user.id,
-        ):
-            await update.callback_query.answer("لديك طلب إيداع قيد التنفيذ بالفعل ❗️")
-            return ConversationHandler.END
-
         accounts = Account.get_user_accounts(user_id=update.effective_user.id)
         accounts_keyboard = [
             InlineKeyboardButton(

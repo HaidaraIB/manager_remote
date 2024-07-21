@@ -66,10 +66,14 @@ async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         keyboard.append(build_back_button("back_to_choose_gov"))
         keyboard.append(back_to_user_home_page_button[0])
-        await update.callback_query.edit_message_text(
-            text=f"وكلاء محافظة <b>{syrian_govs_en_ar[gov]}</b>",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
+        try:
+            await update.callback_query.edit_message_text(
+                text=f"وكلاء محافظة <b>{syrian_govs_en_ar[gov]}</b>",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+        except:
+            import traceback
+            traceback.print_exc()
 
 
 back_to_choose_gov = show_trusted_agents

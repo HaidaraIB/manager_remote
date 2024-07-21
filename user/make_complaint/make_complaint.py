@@ -20,7 +20,7 @@ from common.common import (
     build_complaint_keyboard,
     parent_to_child_models_mapper,
 )
-from common.decorators import check_if_user_present_decorator
+from common.decorators import check_if_user_present_decorator, check_user_call_on_or_off_decorator
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
@@ -40,14 +40,11 @@ from models import Complaint
 ) = range(5)
 
 
+@check_user_call_on_or_off_decorator
 @check_if_user_present_decorator
 @check_if_user_member_decorator
 async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        if not context.bot_data["data"]["user_calls"]["make_complaint"]:
-            await update.callback_query.answer("قسم الشكاوي متوقف حالياً❗️")
-            return ConversationHandler.END
-
         await update.callback_query.edit_message_text(
             text="شكوى فيما يخص:",
             reply_markup=InlineKeyboardMarkup(complaints_keyboard),
@@ -79,9 +76,7 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         keyboard = build_operations_keyboard(
-            serials=[
-                op.serial for op in operations if not op.complaint_took_care_of
-            ]
+            serials=[op.serial for op in operations if not op.complaint_took_care_of]
         )
 
         await update.callback_query.edit_message_text(
@@ -118,10 +113,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
         )
 
-        if (
-            context.user_data["complaint_about"] == "deposit"
-            and op.state == "pending"
-        ):
+        if context.user_data["complaint_about"] == "deposit" and op.state == "pending":
             await update.callback_query.answer(
                 text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",
                 show_alert=True,

@@ -17,7 +17,11 @@ from common.common import (
     build_user_keyboard,
     build_back_button,
 )
-from common.decorators import check_if_user_present_decorator
+from common.decorators import (
+    check_if_user_present_decorator,
+    check_user_call_on_or_off_decorator,
+    check_user_pending_orders_decorator,
+)
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_button,
@@ -31,23 +35,12 @@ import models
 (FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
 
 
+@check_user_pending_orders_decorator
+@check_user_call_on_or_off_decorator
 @check_if_user_present_decorator
 @check_if_user_member_decorator
 async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-
-        if not context.bot_data["data"]["user_calls"]["create_account"]:
-            await update.callback_query.answer("طلبات انشاء الحسابات متوقفة حالياً ❗️")
-            return ConversationHandler.END
-
-        elif models.CreateAccountOrder.check_user_pending_orders(
-            user_id=update.effective_user.id,
-        ):
-            await update.callback_query.answer(
-                "لديك طلب إنشاء حساب قيد التنفيذ بالفعل ❗️"
-            )
-            return ConversationHandler.END
-
         await update.callback_query.edit_message_text(
             text="حسناً، قم بإرسال اسمك الثلاثي الآن 👤🪪",
             reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),

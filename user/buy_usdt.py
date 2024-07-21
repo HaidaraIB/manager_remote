@@ -21,7 +21,11 @@ from common.common import (
     format_amount,
 )
 
-from common.decorators import check_if_user_present_decorator
+from common.decorators import (
+    check_if_user_present_decorator,
+    check_user_call_on_or_off_decorator,
+    check_user_pending_orders_decorator,
+)
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
@@ -44,23 +48,12 @@ from constants import *
 ) = range(7)
 
 
+@check_user_pending_orders_decorator
+@check_user_call_on_or_off_decorator
 @check_if_user_present_decorator
 @check_if_user_member_decorator
 async def buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-
-        if not context.bot_data["data"]["user_calls"]["buy_usdt"]:
-            await update.callback_query.answer("شراء USDT متوقف حالياً ❗️")
-            return ConversationHandler.END
-
-        elif BuyUsdtdOrder.check_user_pending_orders(
-            user_id=update.effective_user.id,
-        ):
-            await update.callback_query.answer(
-                "لديك طلب شراء USDT قيد التنفيذ بالفعل ❗️"
-            )
-            return ConversationHandler.END
-
         text = (
             f"<b>1 USDT = {context.bot_data['data']['usdt_to_syp']} SYP</b>\n\n"
             "كم تريد أن تبيع؟💵"
@@ -87,11 +80,11 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     reply_markup=InlineKeyboardMarkup(back_buttons),
                 )
                 return
-            
+
             context.user_data["usdt_to_buy_amount"] = amount
         else:
             amount = context.user_data["usdt_to_buy_amount"]
-            
+
         keyboard = [
             [
                 InlineKeyboardButton(text="موافق 👍", callback_data="yes buy usdt"),
