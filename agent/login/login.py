@@ -18,7 +18,7 @@ from models import TrustedAgent, TrustedAgentsOrder
 from custom_filters import TeamCash, PromoCode
 from common.common import build_back_button
 from constants import *
-
+from start import admin_command, start_command
 (
     SERIAL,
     TEAM_CASH,
@@ -205,6 +205,8 @@ login_agent_handler = ConversationHandler(
         ],
     },
     fallbacks=[
+        start_command,
+        admin_command,
         agent_command,
         CallbackQueryHandler(cancel_login_agent, "^cancel_login_agent$"),
         CallbackQueryHandler(back_to_get_affiliate, "^back_to_get_affiliate$"),
