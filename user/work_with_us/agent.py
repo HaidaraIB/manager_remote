@@ -17,6 +17,7 @@ from common.back_to_home_page import back_to_user_home_page_button
 from user.work_with_us.common import send_to_group
 from common.common import build_back_button, build_user_keyboard
 from models import TrustedAgent, TrustedAgentsOrder
+
 (
     NEIGHBORHOOD,
     LOCATION,
@@ -31,17 +32,6 @@ from models import TrustedAgent, TrustedAgentsOrder
 
 async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        gov = update.callback_query.data.split("_")[0]
-        agent = TrustedAgent.get_trusted_agents(
-            gov=gov,
-            user_id=update.effective_user.id,
-        )
-        if agent:
-            await update.callback_query.answer(
-                text="أنت وكيل في هذه المحافظة بالفعل ❗️",
-                show_alert=True,
-            )
-            return
         back_buttons = [
             build_back_button("back_to_choose_gov"),
             back_to_user_home_page_button[0],

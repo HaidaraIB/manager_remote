@@ -85,7 +85,7 @@ async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TY
         t_worker = await context.bot.get_chat(chat_id=w_id)
         pos = context.user_data[f"pos_to_{context.user_data['worker_settings_option']}"]
         if pos == "deposit after check":
-            worker = DepositAgent.get_workers(worker_id=w_id)[0]
+            worker = DepositAgent.get_workers(worker_id=w_id, deposit=True)
             workers = DepositAgent.get_workers()
 
         elif pos in ["withdraw", "buy_usdt"]:
