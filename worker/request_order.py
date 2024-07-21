@@ -90,7 +90,8 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return ConversationHandler.END
 
         deposit_agent = models.DepositAgent.get_workers(
-            worker_id=update.effective_user.id
+            worker_id=update.effective_user.id,
+            deposit=True,
         )
         deposit_agent_button = []
         if deposit_agent:

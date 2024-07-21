@@ -109,6 +109,7 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
         updated_worker = model.get_workers(
             worker_id=worker.id,
             method=worker.method if worker_type == "daily" else None,
+            deposit=worker_type != "daily"
         )
 
         worker_text = (
