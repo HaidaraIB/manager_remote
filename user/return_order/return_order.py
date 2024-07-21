@@ -13,7 +13,11 @@ from telegram.ext import (
     filters,
 )
 
-from common.common import build_user_keyboard, parent_to_child_models_mapper
+from common.common import (
+    build_user_keyboard,
+    parent_to_child_models_mapper,
+    apply_ex_rate,
+)
 
 from common.back_to_home_page import back_to_user_home_page_handler
 
@@ -49,6 +53,12 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         )
         if data[2] in ["withdraw", "deposit"]:
+            amount, _ = apply_ex_rate(
+                method=order.method,
+                amount=amount,
+                order_type=data[2],
+                context=context,
+            )
             await context.bot.send_message(
                 chat_id=int(data[-2]),
                 text=stringify_returned_order(
@@ -58,7 +68,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if data[2] == "deposit"
                         else check_withdraw.stringify_order
                     ),
-                    order.amount,
+                    amount,
                     order.serial,
                     order.method,
                     (
