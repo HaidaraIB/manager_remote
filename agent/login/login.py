@@ -13,12 +13,13 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-
+from pathlib import Path
 from models import TrustedAgent, TrustedAgentsOrder
 from custom_filters import TeamCash, PromoCode
 from common.common import build_back_button
 from constants import *
 from start import admin_command, start_command
+import os
 (
     SERIAL,
     TEAM_CASH,
@@ -32,23 +33,23 @@ async def agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
         login_button = InlineKeyboardButton(
             text="تسجيل الدخول", callback_data="login_agent"
         )
-        if update.message:
-            await update.message.reply_text(
-                text=AGENT_COMMAND_TEXT,
-                reply_markup=InlineKeyboardMarkup.from_button(login_button),
-            )
-        else:
-            await update.callback_query.edit_message_text(
-                text=AGENT_COMMAND_TEXT,
-                reply_markup=InlineKeyboardMarkup.from_button(login_button),
-            )
+        if update.callback_query:
+            await update.callback_query.delete_message()
+        await context.bot.send_message(
+            chat_id=update.effective_user.id,
+            text=AGENT_COMMAND_TEXT,
+            reply_markup=InlineKeyboardMarkup.from_button(login_button),
+        )
         return ConversationHandler.END
 
 
 async def login_agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await update.callback_query.edit_message_text(
-            text="أرسل الرقم التسلسلي للطلب",
+        await update.callback_query.delete_message()
+        await context.bot.send_video(
+            chat_id=update.effective_user.id,
+            video="BAACAgQAAxkBAAJrdWadEfA3wxYl1GVA3KzlJaI48iu1AAKpEwACOC3oUAwXm9fnknJTNQQ",
+            caption=LOGIN_GUIDE_TEXT,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(text="إلغاء", callback_data="cancel_login_agent")
             ),
@@ -64,12 +65,12 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.message:
             serial = int(update.message.text)
             order = TrustedAgentsOrder.get_one_order(serial=serial)
-            agent = TrustedAgent.get_trusted_agents(order_serial=serial)
+            ag = TrustedAgent.get_trusted_agents(order_serial=serial)
             if (
                 not order
                 or order.state != "approved"
                 or order.user_id != update.effective_user.id
-                or agent
+                or ag
             ):
                 await update.message.reply_text(
                     text=(
@@ -81,7 +82,9 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "تحقق من الأمر وأعد المحاولة."
                     ),
                     reply_markup=InlineKeyboardMarkup.from_button(
-                        InlineKeyboardButton(text="إلغاء", callback_data="cancel_login_agent")
+                        InlineKeyboardButton(
+                            text="إلغاء", callback_data="cancel_login_agent"
+                        )
                     ),
                 )
                 return
@@ -113,20 +116,15 @@ async def get_team_cash(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 map(lambda x: x.split(": ")[1], update.message.text.split("\n"))
             )
             context.user_data["team_cash_info"] = team_cash_info
-            await update.message.reply_text(
-                text=AFFILIATE_TEXT,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    *build_back_button("back_to_get_team_cash")
-                ),
-            )
         else:
-            await update.callback_query.edit_message_text(
-                text=AFFILIATE_TEXT,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    *build_back_button("back_to_get_team_cash")
-                ),
-            )
-
+            await update.callback_query.delete_message()
+        await context.bot.send_message(
+            chat_id=update.effective_user.id,
+            text=AFFILIATE_TEXT,
+            reply_markup=InlineKeyboardMarkup.from_button(
+                *build_back_button("back_to_get_team_cash")
+            ),
+        )
         return AFFILIATE
 
 
@@ -139,8 +137,9 @@ async def get_affiliate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             map(lambda x: x.split(": ")[1], update.message.text.split("\n"))
         )
         context.user_data["affiliate_info"] = affiliate_info
-        await update.message.reply_text(
-            text="أرسل الآن الحي باللغة الانكليزية كما تم إرساله إليك",
+        await update.message.reply_photo(
+            photo=Path("assets/show_agent_sample.jpg"),
+            caption="أرسل الآن الاسم الذي تريد أن يظهر في قائمة الوكلاء الموصى بهم",
             reply_markup=InlineKeyboardMarkup.from_button(
                 *build_back_button("back_to_get_affiliate")
             ),
@@ -213,4 +212,6 @@ login_agent_handler = ConversationHandler(
         CallbackQueryHandler(back_to_get_serial, "^back_to_get_serial$"),
         CallbackQueryHandler(back_to_get_team_cash, "^back_to_get_team_cash$"),
     ],
+    name="agent_login_conversation",
+    persistent=True,
 )

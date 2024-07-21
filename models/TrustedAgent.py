@@ -74,5 +74,5 @@ class TrustedAgent(Base):
                 promo_username=promo_username,
                 promo_password=promo_password,
                 order_serial=order_serial,
-            )
+            ).prefix_with("OR IGNORE")
         )

@@ -176,7 +176,7 @@ async def send_to_group(
                 email=context.user_data["agent_email"],
                 phone=context.user_data["agent_phone"],
                 amount=context.user_data["agent_amount"],
-                ref_num=update.message.text,
+                ref_num=context.user_data["agent_ref_num"],
                 serial=serial,
             )
         ),
