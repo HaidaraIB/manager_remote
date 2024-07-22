@@ -14,12 +14,10 @@ from telegram.ext import (
 )
 from common.common import parent_to_child_models_mapper
 from custom_filters import Complaint, ResponseToUserComplaint
-import models
-import os
-
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_complaint_data
 
+import os
 
 async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
@@ -112,12 +110,11 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             serial=int(callback_data[-1])
         )
         final_text = (
-            data["text"]
-            + "\n\n"
-            + update.effective_message.reply_to_message.text_html
-            + f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>\n\n"
-            + "🏁🏁 النسخة النهائية 🏁🏁"
+            data["text"] + "\n\n" + update.effective_message.reply_to_message.text_html
         )
+        if update.message.caption or update.message.text:
+            final_text += f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>\n\n"
+        final_text += "🏁🏁 النسخة النهائية 🏁🏁"
         if not update.message.photo and not data["media"]:
             await context.bot.send_message(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
