@@ -64,16 +64,20 @@ async def edit_order_amount_user_complaint(
         )
 
         if op.worker_id:
+            if op.state == 'returned':
+                updated_amount = new_amount
+            else:
+                updated_amount = new_amount - old_amount
             if callback_data[-2] in ["withdraw", "buy usdt"]:
                 await PaymentAgent.update_worker_approved_withdraws(
                     worker_id=op.worker_id,
                     method=op.method,
-                    amount=-old_amount + new_amount,
+                    amount=updated_amount,
                 )
             elif callback_data[-2] == "deposit":
                 await DepositAgent.update_worker_approved_deposits(
                     worker_id=op.worker_id,
-                    amount=-old_amount + new_amount,
+                    amount=updated_amount,
                 )
 
         text_list = data["text"].split("\n")
