@@ -73,8 +73,10 @@ def stringify_reward_report(
         f"مجموع المكافآت الحالي: <b>{format_amount(rewards_balance)}</b>\n"
         f"عدد الطلبات حتى الآن: <b>{orders_num}</b>\n"
         f"مجموع المبالغ حتى الآن: <b>{format_amount(balance)}</b>\n"
-        f"مجموع المبالغ هذا {work_type}: <b>{format_amount(partial_balance)}</b>"
+        f"مجموع المبالغ هذا {work_type}: <b>{format_amount(partial_balance)}</b>\n"
     )
+    worker_text += f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n" if isinstance(worker, PaymentAgent) else ''
+    
     return worker_text
 
 
