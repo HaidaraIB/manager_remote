@@ -127,4 +127,6 @@ handle_returned_order_handler = ConversationHandler(
         ]
     },
     fallbacks=[back_to_user_home_page_handler],
+    name='return_order_conversation',
+    persistent=True,
 )
