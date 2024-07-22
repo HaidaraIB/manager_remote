@@ -55,7 +55,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if data[2] in ["withdraw", "deposit"]:
             amount, _ = apply_ex_rate(
                 method=order.method,
-                amount=amount,
+                amount=order.amount,
                 order_type=data[2],
                 context=context,
             )
