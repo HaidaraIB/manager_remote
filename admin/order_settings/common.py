@@ -35,15 +35,17 @@ order_settings_dict: dict[
     },
 }
 
-def stringify_order(order:WithdrawOrder|DepositOrder|BuyUsdtdOrder, order_type:str):
+def stringify_order(order:WithdrawOrder|DepositOrder|BuyUsdtdOrder, order_type:str, name:str):
     return (
         f"تفاصيل الطلب:\n\n"
-        f"الرقم التسلسلي: {order.serial}\n"
-        f"النوع: <b>{order_settings_dict[order_type]['t']}</b>\n"
+        f"الرقم التسلسلي: <code>{order.serial}</code>\n\n"
+        f"آيدي المستخدم صاحب الطلب: <code>{order.user_id}</code>\n"
+        f"اسمه: <b>{name}</b>\n\n"
+        f"نوع الطلب: <b>{order_settings_dict[order_type]['t']}</b>\n"
         f"المبلغ: <code>{format_amount(order.amount)}</code>\n"
-        f"وسيلة الدفع: <code>{order.method}</code>\n"
-        f"الحالة: <b>{state_dict_en_to_ar[order.state]}</b>\n"
         f"رقم الحساب: <code>{order.acc_number if hasattr(order, "acc_number") else 'لا يوجد'}</code>\n"
+        f"وسيلة الدفع: <code>{order.method}</code>\n\n"
+        f"الحالة: <b>{state_dict_en_to_ar[order.state]}</b>\n"
         f"سبب إعادة/رفض: <b>{'\n' + order.reason if order.reason else 'لا يوجد'}</b>\n\n"
         f"جاري العمل عليه: <b>{"نعم" if order.working_on_it else "لا"}</b>\n"
         f"تم إغلاق شكوى عنه : <b>{"نعم" if order.complaint_took_care_of else "لا"}</b>\n\n"

@@ -82,8 +82,13 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         actions_keyboard = [*back_buttons]
+        tg_user = await context.bot.get_chat(chat_id=order.user_id)
         await update.message.reply_text(
-            text=stringify_order(order, order_type),
+            text=stringify_order(
+                order,
+                order_type,
+                tg_user.username if tg_user.username else tg_user.full_name,
+            ),
             reply_markup=InlineKeyboardMarkup(actions_keyboard),
         )
 
