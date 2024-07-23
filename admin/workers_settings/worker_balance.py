@@ -49,9 +49,7 @@ async def position_for_worker_balance(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         if not update.callback_query.data.startswith("back"):
-            pos = update.callback_query.data.split("_")[1].replace(
-                "buyusdt", "buy_usdt"
-            )
+            pos = update.callback_query.data.split("_")[1]
             context.user_data["balance_pos"] = pos
         else:
             pos = context.user_data["balance_pos"]

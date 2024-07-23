@@ -41,7 +41,7 @@ parent_to_child_models_mapper: dict[
 ] = {
     "withdraw": WithdrawOrder,
     "deposit": DepositOrder,
-    "buyusdt": BuyUsdtdOrder,
+    "buy_usdt": BuyUsdtdOrder,
 }
 
 def format_amount(amount:float):

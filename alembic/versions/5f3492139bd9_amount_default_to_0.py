@@ -32,7 +32,7 @@ def upgrade() -> None:
             type_=sa.Float,
             server_default='0',
         )
-    with op.batch_alter_table("buyusdt_orders") as batch_op:
+    with op.batch_alter_table("buy_usdt_orders") as batch_op:
         batch_op.alter_column(
             "amount",
             type_=sa.Float,

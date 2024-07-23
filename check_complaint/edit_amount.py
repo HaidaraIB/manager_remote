@@ -65,7 +65,7 @@ async def edit_order_amount_user_complaint(
 
         if op.worker_id:
             updated_amount = new_amount - old_amount
-            if callback_data[-2] in ["withdraw", "buyusdt"]:
+            if callback_data[-2] in ["withdraw", "buy_usdt"]:
                 await PaymentAgent.update_worker_approved_withdraws(
                     worker_id=op.worker_id,
                     method=op.method,

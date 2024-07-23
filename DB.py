@@ -124,7 +124,7 @@ class DB:
             decline_date TIMESTAMP
         );
 
-        CREATE TABLE IF NOT EXISTS buyusdt_orders (
+        CREATE TABLE IF NOT EXISTS buy_usdt_orders (
             serial INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             group_id INTEGER,
@@ -765,7 +765,7 @@ class DB:
     ):
         cr.execute(
             """
-                INSERT INTO buyusdt_orders(
+                INSERT INTO buy_usdt_orders(
                     user_id,
                     group_id,
                     method,

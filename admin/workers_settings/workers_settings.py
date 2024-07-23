@@ -38,9 +38,7 @@ async def position_to_show_remove_from(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         if not update.callback_query.data.startswith("back"):
-            pos = update.callback_query.data.split("_")[1].replace(
-                "buyusdt", "buy_usdt"
-            )
+            pos = update.callback_query.data.split("_")[1]
             context.user_data[
                 f"pos_to_{context.user_data['worker_settings_option']}"
             ] = pos
@@ -52,7 +50,7 @@ async def position_to_show_remove_from(
             workers = DepositAgent.get_workers()
             ans_text = "ليس لديك موظفي تنفيذ إيداعات بعد❗️"
 
-        elif pos in ["withdraw", "buy_usdt"]:
+        elif pos in ["withdraw", "buy"]:
             workers = Checker.get_workers(check_what=pos)
             ans_text = f"ليس لديك موظفي تحقق {op_dict_en_to_ar[pos]} بعد❗️"
 
@@ -88,7 +86,7 @@ async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TY
             worker = DepositAgent.get_workers(worker_id=w_id, deposit=True)
             workers = DepositAgent.get_workers()
 
-        elif pos in ["withdraw", "buy_usdt"]:
+        elif pos in ["withdraw", "buy"]:
             worker = Checker.get_workers(worker_id=w_id, check_what=pos)
             workers = Checker.get_workers(check_what=pos)
 
@@ -113,7 +111,7 @@ async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_
             await DepositAgent.remove_worker(worker_id=worker_to_remove_id)
             workers = DepositAgent.get_workers()
 
-        elif pos in ["deposit", "withdraw", "buy_usdt"]:
+        elif pos in ["deposit", "withdraw", "buy"]:
             await Checker.remove_worker(worker_id=worker_to_remove_id, check_what=pos)
             workers = Checker.get_workers(check_what=pos)
 

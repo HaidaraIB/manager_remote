@@ -104,7 +104,7 @@ def build_positions_keyboard(op: str):
                 text="تحقق سحب", callback_data=f"{op}_withdraw_checker"
             ),
             InlineKeyboardButton(
-                text="تحقق شراء USDT", callback_data=f"{op}_buyusdt_checker"
+                text="تحقق شراء USDT", callback_data=f"{op}_buy_usdt_checker"
             ),
         ],
         *build_payment_positions_keyboard(op),

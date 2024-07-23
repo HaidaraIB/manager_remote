@@ -116,14 +116,14 @@ async def worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         worker_to_add: Chat = context.user_data["worker_to_add"]
-        pos = update.callback_query.data.split("_")[1].replace("buyusdt", "buy_usdt")
+        pos = update.callback_query.data.split("_")[1]
         if pos == "deposit after check":
             await DepositAgent.add_worker(
                 worker_id=worker_to_add.id,
                 name=worker_to_add.full_name,
                 username=worker_to_add.username,
             )
-        elif pos in ["deposit", "withdraw", "buy_usdt"]:
+        elif pos in ["deposit", "withdraw", "buy"]:
             await Checker.add_worker(
                 worker_id=worker_to_add.id,
                 name=worker_to_add.full_name,

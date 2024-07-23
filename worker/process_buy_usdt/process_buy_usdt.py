@@ -49,7 +49,7 @@ async def user_payment_verified_buy_usdt(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إعادة الطلب📥",
-                    callback_data=f"return_buyusdt_order_{serial}",
+                    callback_data=f"return_buy_usdt_order_{serial}",
                 )
             )
         )
@@ -155,7 +155,7 @@ async def return_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الإعادة🔙",
-                    callback_data=f"back_from_return_buyusdt_order_{serial}",
+                    callback_data=f"back_from_return_buy_usdt_order_{serial}",
                 )
             )
         )
@@ -194,7 +194,7 @@ async def return_buy_usdt_order_reason(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرفاق المطلوب",
-                    callback_data=f"handle_return_buyusdt_{update.effective_chat.id}_{serial}",
+                    callback_data=f"handle_return_buy_usdt_{update.effective_chat.id}_{serial}",
                 )
             ),
         )
@@ -268,7 +268,7 @@ async def back_from_return_buy_usdt_order(update: Update, _: ContextTypes.DEFAUL
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إعادة الطلب📥",
-                    callback_data=f"return_buyusdt_order_{serial}",
+                    callback_data=f"return_buy_usdt_order_{serial}",
                 )
             )
         )
@@ -276,7 +276,7 @@ async def back_from_return_buy_usdt_order(update: Update, _: ContextTypes.DEFAUL
 
 user_payment_verified_buy_usdt_handler = CallbackQueryHandler(
     callback=user_payment_verified_buy_usdt,
-    pattern="^verify_buyusdt_order",
+    pattern="^verify_buy_usdt_order",
 )
 
 reply_with_payment_proof_buy_usdt_handler = MessageHandler(
@@ -286,7 +286,7 @@ reply_with_payment_proof_buy_usdt_handler = MessageHandler(
 
 return_buy_usdt_order_handler = CallbackQueryHandler(
     callback=return_buy_usdt_order,
-    pattern="^return_buyusdt_order",
+    pattern="^return_buy_usdt_order",
 )
 return_buy_usdt_order_reason_handler = MessageHandler(
     filters=filters.REPLY & filters.TEXT & BuyUSDT() & Returned(),
@@ -294,5 +294,5 @@ return_buy_usdt_order_reason_handler = MessageHandler(
 )
 back_from_return_buy_usdt_order_handler = CallbackQueryHandler(
     callback=back_from_return_buy_usdt_order,
-    pattern="^back_from_return_buyusdt_order",
+    pattern="^back_from_return_buy_usdt_order",
 )
