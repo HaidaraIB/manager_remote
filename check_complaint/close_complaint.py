@@ -131,12 +131,12 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
 
             await context.bot.send_media_group(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-                media=[InputMediaPhoto(media=photo) for photo in data["media"]],
+                media=[InputMediaPhoto(media=photo) for photo in photos],
                 caption=final_text,
             )
             await context.bot.send_media_group(
                 chat_id=op.user_id,
-                media=[InputMediaPhoto(media=photo) for photo in data["media"]],
+                media=[InputMediaPhoto(media=photo) for photo in photos],
                 caption=final_text,
             )
 
