@@ -19,6 +19,7 @@ from check_complaint.check_complaint import make_complaint_data
 
 import os
 
+
 async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         data = update.callback_query.data.split("_")
@@ -113,8 +114,8 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             data["text"] + "\n\n" + update.effective_message.reply_to_message.text_html
         )
         if update.message.caption or update.message.text:
-            final_text += f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>\n\n"
-        final_text += "🏁🏁 النسخة النهائية 🏁🏁"
+            final_text += f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>"
+        final_text += "\n\n🏁🏁 النسخة النهائية 🏁🏁"
         if not update.message.photo and not data["media"]:
             await context.bot.send_message(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
@@ -128,15 +129,15 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             photos = data["media"] if data["media"] else []
             if update.message.photo:
                 photos.append(update.message.photo[-1])
-
+            media = [InputMediaPhoto(media=photo) for photo in photos]
             await context.bot.send_media_group(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-                media=[InputMediaPhoto(media=photo) for photo in photos],
+                media=media,
                 caption=final_text,
             )
             await context.bot.send_media_group(
                 chat_id=op.user_id,
-                media=[InputMediaPhoto(media=photo) for photo in photos],
+                media=media,
                 caption=final_text,
             )
 

@@ -21,6 +21,8 @@ from common.common import (
 
 from common.back_to_home_page import back_to_user_home_page_handler
 
+from models import WithdrawOrder, RefNumber, DepositOrder
+
 from worker.check_buy_usdt import check_buy_usdt
 from worker.check_deposit import check_deposit
 from worker.check_withdraw import check_withdraw
@@ -30,11 +32,27 @@ from worker.check_withdraw import check_withdraw
 
 async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        
+        await update.callback_query.edit_message_reply_markup()
+        data = update.callback_query.data
+
+        order = parent_to_child_models_mapper[data[2]].get_one_order(
+            serial=int(data[-1])
+        )
+        if data[2] == "withdraw":
+            code_present = WithdrawOrder.check_withdraw_code(
+                withdraw_code=order.withdraw_code
+            )
+            if code_present and code_present.state == "approved":
+                await update.message.reply_text(
+                    text="تمت الموافقة على هذا الطلب بالفعل",
+                )
+                return ConversationHandler.END
+
         await update.callback_query.answer(
             "قم بإرفاق المطلوب في السبب.", show_alert=True
         )
-        await update.callback_query.edit_message_reply_markup()
-        context.user_data["returned_data"] = update.callback_query.data
+        context.user_data["returned_data"] = data
         if update.effective_message.photo:
             context.user_data["effective_photo"] = update.effective_message.photo[-1]
         return SEND_ATTACHMENTS
@@ -127,6 +145,6 @@ handle_returned_order_handler = ConversationHandler(
         ]
     },
     fallbacks=[back_to_user_home_page_handler],
-    name='return_order_conversation',
+    name="return_order_conversation",
     persistent=True,
 )

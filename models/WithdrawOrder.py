@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, insert, select
+from sqlalchemy import Column, String, insert, select, desc
 from sqlalchemy.orm import Session
 from models.DB import connect_and_close, lock_and_release
 from models.PaymentOrder import PaymentOrder
@@ -38,7 +38,9 @@ class WithdrawOrder(PaymentOrder):
     @connect_and_close
     def check_withdraw_code(withdraw_code: str, s: Session = None):
         res = s.execute(
-            select(WithdrawOrder).where(WithdrawOrder.withdraw_code == withdraw_code)
+            select(WithdrawOrder)
+            .where(WithdrawOrder.withdraw_code == withdraw_code)
+            .order_by(desc(WithdrawOrder.serial))
         )
         try:
             return res.fetchone().t[0]
