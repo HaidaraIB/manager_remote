@@ -67,7 +67,7 @@ async def reply_with_payment_proof_withdraw(
         caption = (
             f"مبروك، تم تأكيد عملية سحب "
             f"<b>{format_amount(amount)}</b> "
-            "بنجاح✅\n\n"
+            "بنجاح ✅\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
 

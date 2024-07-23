@@ -42,10 +42,14 @@ parent_to_child_models_mapper: dict[
     "withdraw": WithdrawOrder,
     "deposit": DepositOrder,
     "buy_usdt": BuyUsdtdOrder,
+    "buy": BuyUsdtdOrder,
+    "usdt": BuyUsdtdOrder,
 }
 
-def format_amount(amount:float):
-    return f"{float(amount):,.2f}".rstrip('0').rstrip('.')
+
+def format_amount(amount: float):
+    return f"{float(amount):,.2f}".rstrip("0").rstrip(".")
+
 
 def pretty_time_delta(seconds):
     seconds = int(seconds)
@@ -307,24 +311,25 @@ def callback_button_uuid_generator():
     return uuid.uuid4().hex
 
 
-def build_complaint_keyboard(data: list, send_to_worker: bool):
+def build_complaint_keyboard(data: list[str], send_to_worker: bool):
+    order_type = data[-2].replace("usdt", 'buy_usdt')
     complaint_keyboard = [
         [
             InlineKeyboardButton(
                 text="الرد على المستخدم",
-                callback_data=f"respond_to_user_complaint_{data[-2]}_{data[-1]}",
+                callback_data=f"respond_to_user_complaint_{order_type}_{data[-1]}",
             ),
         ],
         [
             InlineKeyboardButton(
                 text="تعديل المبلغ",
-                callback_data=f"mod_amount_user_complaint_{data[-2]}_{data[-1]}",
+                callback_data=f"mod_amount_user_complaint_{order_type}_{data[-1]}",
             ),
         ],
         [
             InlineKeyboardButton(
                 text="إغلاق الشكوى 🔐",
-                callback_data=f"close_complaint_{data[-2]}_{data[-1]}",
+                callback_data=f"close_complaint_{order_type}_{data[-1]}",
             ),
         ],
     ]
@@ -332,7 +337,7 @@ def build_complaint_keyboard(data: list, send_to_worker: bool):
         complaint_keyboard[0].append(
             InlineKeyboardButton(
                 text="إرسال إلى الموظف المسؤول",
-                callback_data=f"send_to_worker_user_complaint_{data[-2]}_{data[-1]}",
+                callback_data=f"send_to_worker_user_complaint_{order_type}_{data[-1]}",
             )
         )
     return InlineKeyboardMarkup(complaint_keyboard)

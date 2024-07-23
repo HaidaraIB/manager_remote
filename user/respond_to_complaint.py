@@ -33,6 +33,8 @@ async def reply_to_returned_complaint(
 
         data = update.callback_query.data.split("_")
 
+        order_type = data[-2].replace("usdt", "buy_usdt")
+
         context.user_data["callback_data"] = data
 
         await make_complaint_data(context, data)
@@ -41,7 +43,7 @@ async def reply_to_returned_complaint(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الرد على الشكوى 🔙",
-                    callback_data=f"back_from_reply_to_returned_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                    callback_data=f"back_from_reply_to_returned_complaint_{data[-3]}_{order_type}_{data[-1]}",
                 )
             )
         )
@@ -55,13 +57,14 @@ async def correct_returned_complaint(
     if update.effective_chat.type == Chat.PRIVATE:
 
         callback_data = context.user_data["callback_data"]
+        order_type = callback_data[-2].replace("usdt", "buy_usdt")
         complaint = Complaint.get_complaint(
             order_serial=int(callback_data[-1]),
-            order_type=callback_data[-2],
+            order_type=order_type,
         )
         data = context.user_data[f"complaint_data_{complaint.id}"]
 
-        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+        op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1]),
         )
 
@@ -113,11 +116,12 @@ async def back_from_reply_to_returned_complaint(
 ):
     if update.effective_chat.type == Chat.PRIVATE:
         data = update.callback_query.data.split("_")
+        order_type = data[-2].replace("usdt", "buy_usdt")
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرسال رد⬅️",
-                    callback_data=f"user_reply_to_complaint_{data[-3]}_{data[-2]}_{data[-1]}",
+                    callback_data=f"user_reply_to_complaint_{data[-3]}_{order_type}_{data[-1]}",
                 )
             ),
         )

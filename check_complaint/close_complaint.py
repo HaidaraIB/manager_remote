@@ -22,7 +22,8 @@ import os
 
 async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
-        data = update.callback_query.data.split("_")
+        data: list[str] = update.callback_query.data.split("_")
+        order_type = data[-2].replace("usdt", "buy_usdt")
         await update.callback_query.answer(
             "قم بالرد على هذه الرسالة بما تريد إرساله إلى المستخدم إن وجد، إن لم يوجد اضغط تخطي.",
             show_alert=True,
@@ -32,11 +33,11 @@ async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [
                     InlineKeyboardButton(
                         text="تخطي⬅️",
-                        callback_data=f"skip_close_complaint_{data[-2]}_{data[-1]}",
+                        callback_data=f"skip_close_complaint_{order_type}_{data[-1]}",
                     ),
                     InlineKeyboardButton(
                         text="الرجوع عن إغلاق الشكوى🔙",
-                        callback_data=f"back_from_close_complaint_{data[-2]}_{data[-1]}",
+                        callback_data=f"back_from_close_complaint_{order_type}_{data[-1]}",
                     ),
                 ]
             )
@@ -46,7 +47,8 @@ async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         callback_data = update.callback_query.data.split("_")
-        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+        order_type = callback_data[-2].replace("usdt", "buy_usdt")
+        op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1])
         )
 
@@ -90,9 +92,7 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
             ),
         )
 
-        await parent_to_child_models_mapper[
-            callback_data[-2]
-        ].set_complaint_took_care_of(
+        await parent_to_child_models_mapper[order_type].set_complaint_took_care_of(
             serial=op.serial,
             took_care_of=1,
         )
@@ -106,8 +106,8 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
         ].callback_data.split("_")
 
         data = await make_complaint_data(context, callback_data)
-
-        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+        order_type = callback_data[-2].replace("usdt", "buy_usdt")
+        op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1])
         )
         final_text = (
@@ -152,9 +152,9 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             ),
         )
 
-        await parent_to_child_models_mapper[
-            callback_data[-2]
-        ].set_complaint_took_care_of(serial=op.serial, took_care_of=1)
+        await parent_to_child_models_mapper[order_type].set_complaint_took_care_of(
+            serial=op.serial, took_care_of=1
+        )
 
         context.bot_data["suspended_workers"].discard(op.worker_id)
 

@@ -26,6 +26,7 @@ async def handle_respond_to_user_complaint(
 ):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         data = update.callback_query.data.split("_")
+        order_type = data[-2].replace('usdt', 'buy_usdt')
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بما تريد إرساله إلى المستخدم.",
             show_alert=True,
@@ -34,7 +35,7 @@ async def handle_respond_to_user_complaint(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الرد على المستخدم🔙",
-                    callback_data=f"back_from_respond_to_user_complaint_{data[-2]}_{data[-1]}",
+                    callback_data=f"back_from_respond_to_user_complaint_{order_type}_{data[-1]}",
                 )
             )
         )
@@ -46,8 +47,9 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         callback_data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
         ].callback_data.split("_")
+        order_type = callback_data[-2].replace("usdt", 'buy_usdt')
 
-        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+        op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1]),
         )
 
@@ -62,7 +64,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
             )
             respond_button = InlineKeyboardButton(
                 text="إرسال رد⬅️",
-                callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{callback_data[-2]}_{callback_data[-1]}",
+                callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{order_type}_{callback_data[-1]}",
             )
             if not update.message.photo and not data["media"]:
                 await context.bot.send_message(

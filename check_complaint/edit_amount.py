@@ -24,8 +24,9 @@ async def handle_edit_amount_user_complaint(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
-
         data = update.callback_query.data.split("_")
+        order_type = data[-2].replace('usdt', 'buy_usdt')
+
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بقيمة المبلغ الجديدة.", show_alert=True
         )
@@ -33,7 +34,7 @@ async def handle_edit_amount_user_complaint(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن تعديل المبلغ🔙",
-                    callback_data=f"back_from_mod_amount_to_user_complaint_{data[-2]}_{data[-1]}",
+                    callback_data=f"back_from_mod_amount_to_user_complaint_{order_type}_{data[-1]}",
                 )
             )
         )
@@ -49,7 +50,9 @@ async def edit_order_amount_user_complaint(
             0
         ].callback_data.split("_")
 
-        op = parent_to_child_models_mapper[callback_data[-2]].get_one_order(
+        order_type = callback_data[-2].replace("usdt", "buy_usdt")
+
+        op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1])
         )
 
@@ -58,20 +61,20 @@ async def edit_order_amount_user_complaint(
         new_amount = float(update.message.text)
         old_amount = op.amount
 
-        await parent_to_child_models_mapper[callback_data[-2]].edit_order_amount(
+        await parent_to_child_models_mapper[order_type].edit_order_amount(
             serial=op.serial,
             new_amount=new_amount,
         )
 
         if op.worker_id:
             updated_amount = new_amount - old_amount
-            if callback_data[-2] in ["withdraw", "buy_usdt"]:
+            if order_type in ["withdraw", "buy_usdt"]:
                 await PaymentAgent.update_worker_approved_withdraws(
                     worker_id=op.worker_id,
                     method=op.method,
                     amount=updated_amount,
                 )
-            elif callback_data[-2] == "deposit":
+            elif order_type == "deposit":
                 await DepositAgent.update_worker_approved_deposits(
                     worker_id=op.worker_id,
                     amount=updated_amount,
