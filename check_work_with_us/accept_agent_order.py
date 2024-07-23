@@ -77,16 +77,16 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
         ].callback_data.split("_")
-        manager_id = int(data[-2])
+        # manager_id = int(data[-2])
 
-        if update.effective_user.id != manager_id or (
-            update.effective_chat.id
-            not in [
-                context.bot_data["data"]["partner_orders_group"],
-                context.bot_data["data"]["agent_orders_group"],
-            ]
-        ):
-            return
+        # if update.effective_user.id != manager_id or (
+        #     update.effective_chat.id
+        #     not in [
+        #         context.bot_data["data"]["partner_orders_group"],
+        #         context.bot_data["data"]["agent_orders_group"],
+        #     ]
+        # ):
+        #     return
 
         serial = int(data[-1])
         order = TrustedAgentsOrder.get_one_order(serial=serial)

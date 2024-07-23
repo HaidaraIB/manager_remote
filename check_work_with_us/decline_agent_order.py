@@ -44,8 +44,8 @@ async def get_decline_agent_order_reason(
         ].callback_data.split("_")
         manager_id = int(data[-2])
 
-        if update.effective_user.id != manager_id:
-            return
+        # if update.effective_user.id != manager_id:
+        #     return
 
         serial = int(data[-1])
         order = TrustedAgentsOrder.get_one_order(serial=serial)
