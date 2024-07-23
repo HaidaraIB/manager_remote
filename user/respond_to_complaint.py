@@ -34,6 +34,10 @@ async def reply_to_returned_complaint(
         data = update.callback_query.data.split("_")
 
         order_type = data[-2].replace("usdt", "buy_usdt")
+        try:
+            from_worker = int(data[-3])
+        except ValueError:
+            from_worker = int(data[-4])
 
         context.user_data["callback_data"] = data
 
@@ -43,7 +47,7 @@ async def reply_to_returned_complaint(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الرد على الشكوى 🔙",
-                    callback_data=f"back_from_reply_to_returned_complaint_{data[-3]}_{order_type}_{data[-1]}",
+                    callback_data=f"back_from_reply_to_returned_complaint_{from_worker}_{order_type}_{data[-1]}",
                 )
             )
         )
@@ -57,7 +61,13 @@ async def correct_returned_complaint(
     if update.effective_chat.type == Chat.PRIVATE:
 
         callback_data = context.user_data["callback_data"]
+
         order_type = callback_data[-2].replace("usdt", "buy_usdt")
+        try:
+            from_worker = int(callback_data[-3])
+        except ValueError:
+            from_worker = int(callback_data[-4])
+
         complaint = Complaint.get_complaint(
             order_serial=int(callback_data[-1]),
             order_type=order_type,
@@ -70,7 +80,7 @@ async def correct_returned_complaint(
 
         chat_id = (
             (op.worker_id if op.worker_id else op.checker_id)
-            if int(callback_data[-3])
+            if int(from_worker)
             else context.bot_data["data"]["complaints_group"]
         )
 
@@ -97,7 +107,7 @@ async def correct_returned_complaint(
             + f"\n\nرد المستخدم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>",
             reply_markup=build_complaint_keyboard(
                 data=callback_data,
-                send_to_worker=(not int(callback_data[-3])),
+                send_to_worker=(not int(from_worker)),
             ),
         )
         await context.bot.edit_message_reply_markup(
@@ -117,11 +127,15 @@ async def back_from_reply_to_returned_complaint(
     if update.effective_chat.type == Chat.PRIVATE:
         data = update.callback_query.data.split("_")
         order_type = data[-2].replace("usdt", "buy_usdt")
+        try:
+            from_worker = int(data[-3])
+        except ValueError:
+            from_worker = int(data[-4])
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرسال رد⬅️",
-                    callback_data=f"user_reply_to_complaint_{data[-3]}_{order_type}_{data[-1]}",
+                    callback_data=f"user_reply_to_complaint_{from_worker}_{order_type}_{data[-1]}",
                 )
             ),
         )
