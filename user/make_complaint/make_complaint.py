@@ -20,7 +20,10 @@ from common.common import (
     build_complaint_keyboard,
     parent_to_child_models_mapper,
 )
-from common.decorators import check_if_user_present_decorator, check_user_call_on_or_off_decorator
+from common.decorators import (
+    check_if_user_present_decorator,
+    check_user_call_on_or_off_decorator,
+)
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
@@ -113,6 +116,11 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
         )
 
+        back_buttons = [
+            build_back_button("back_to_choose_operation"),
+            back_to_user_home_page_button[0],
+        ]
+
         if context.user_data["complaint_about"] == "deposit" and op.state == "pending":
             await update.callback_query.answer(
                 text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",
@@ -120,7 +128,18 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        if op.state in ["sent", "pending"]:
+        elif op.state == "returned":
+            await update.callback_query.edit_message_text(
+                text=(
+                    op_text
+                    + "<b>طلب معاد راجع محادثة البوت وقم بإرفاق المطلوب.\n"
+                    + "في حال لم تجدها أعد تقديم الطلب من جديد، مع الأخذ بعين الاعتبار سبب الإعادة.</b>"
+                ),
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+            return
+
+        elif op.state in ["sent", "pending"]:
             alert_button = [
                 [
                     InlineKeyboardButton(
@@ -128,17 +147,16 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         callback_data=f"notify_{op.state}_operation_{serial}",
                     )
                 ],
-                build_back_button("back_to_choose_operation"),
-                back_to_user_home_page_button[0],
+                *back_buttons,
             ]
             if op.state == "sent":
-                text = op_text + "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير بشأنها.</b>"
+                op_text += "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير بشأنها.</b>"
 
             else:
-                text = op_text + "<b>عملية قيد التحقق، يمكنك إرسال تذكير بشأنها.</b>"
+                op_text += "<b>عملية قيد التحقق، يمكنك إرسال تذكير بشأنها.</b>"
 
             await update.callback_query.edit_message_text(
-                text=text,
+                text=op_text,
                 reply_markup=InlineKeyboardMarkup(alert_button),
             )
             return NOTIFY_OPERATION

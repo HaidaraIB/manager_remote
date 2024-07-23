@@ -13,10 +13,11 @@ from telegram.ext import (
 )
 
 from user.work_with_us.common import syrian_govs_en_ar, stringify_agent_order
-from custom_filters import AgentOrder
+from custom_filters import AgentOrder, Declined
 from models import TrustedAgentsOrder
 import os
 from constants import *
+
 
 async def notify_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
@@ -163,6 +164,6 @@ accept_agent_order_handler = CallbackQueryHandler(
 )
 
 get_login_info_handler = MessageHandler(
-    filters=AgentOrder() & filters.REPLY & filters.TEXT,
+    filters=AgentOrder() & ~Declined() & filters.REPLY & filters.TEXT & ~filters.COMMAND,
     callback=get_login_info,
 )

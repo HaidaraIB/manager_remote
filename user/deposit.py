@@ -135,7 +135,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
             order_present and order_present.state == "approved"
         ):
             await update.message.reply_text(
-                text="رقم عملية مكرر!",
+                text="رقم عملية مكرر ❗️",
             )
             return
 

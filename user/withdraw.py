@@ -211,18 +211,9 @@ async def send_withdraw_order_to_check(
 
         code_present = WithdrawOrder.check_withdraw_code(withdraw_code=withdraw_code)
 
-        if code_present:
-            back_keyboard = [
-                (
-                    build_back_button("back_to_bank_account_name")
-                    if context.user_data["bank_account_name"]
-                    else build_back_button("back_to_choose_payment_info")
-                ),
-                back_to_user_home_page_button[0],
-            ]
+        if code_present and code_present.state == "approved":
             await update.message.reply_text(
                 text="لقد تم إرسال هذا الكود إلى البوت من قبل ❗️",
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
             )
             return
 
