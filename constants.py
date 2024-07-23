@@ -29,7 +29,7 @@ TEAM_CASH_TEXT = (
 )
 
 AFFILIATE_TEXT = (
-    "جيد، الآن معلومات Affiliate أيضاً بنسخ الرابط أدناه:\n\n"
+    "جيد، الآن معلومات Affiliate أيضاً بنسخ القالب أدناه:\n\n"
     "<code>Username: \n"
     "Password: </code>\n\n"
     "مثال:\n\n"
