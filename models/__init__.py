@@ -19,3 +19,4 @@ from models.User import User
 from models.WithdrawOrder import WithdrawOrder
 from models.Worker import Worker
 from models.BaseOrder import BaseOrder
+from models.Photo import Photo

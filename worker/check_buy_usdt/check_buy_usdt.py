@@ -18,6 +18,7 @@ from custom_filters import BuyUSDT, Declined, DepositAgent
 
 from common.common import (
     build_worker_keyboard,
+    send_to_photos_archive
 )
 
 async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -94,6 +95,12 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
+        )
+        await send_to_photos_archive(
+            context=context,
+            photo=update.message.photo[-1],
+            order_type="buy_usdt",
+            serial=serial,
         )
 
         await BuyUsdtdOrder.send_order(

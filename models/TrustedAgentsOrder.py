@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, TIMESTAMP, Text, Float, func, in
 from sqlalchemy.orm import Session
 from models.BaseOrder import BaseOrder
 from models.DB import lock_and_release
-from telegram import PhotoSize
 import datetime
 
 
@@ -19,20 +18,6 @@ class TrustedAgentsOrder(BaseOrder):
     phone = Column(Text)
     state = Column(String, default="pending")
     reason = Column(Text)
-
-    # Front sign details
-    front_id = Column(Text)
-    front_unique_id = Column(Text)
-    front_width = Column(Text)
-    front_height = Column(Text)
-    front_size = Column(Text)
-
-    # Back sign details
-    back_id = Column(Text)
-    back_unique_id = Column(Text)
-    back_width = Column(Text)
-    back_height = Column(Text)
-    back_size = Column(Text)
 
     amount = Column(Float)
     ref_number = Column(Text)
@@ -62,8 +47,6 @@ class TrustedAgentsOrder(BaseOrder):
         email: str,
         phone: str,
         amount: float,
-        front_id: PhotoSize,
-        back_id: PhotoSize,
         ref_num: str,
         s: Session = None,
     ):
@@ -77,16 +60,6 @@ class TrustedAgentsOrder(BaseOrder):
                 email=email,
                 phone=phone,
                 amount=amount,
-                front_id=front_id.file_id,
-                front_unique_id=front_id.file_unique_id,
-                front_size=front_id.file_size,
-                front_width=front_id.width,
-                front_height=front_id.height,
-                back_id=back_id.file_id,
-                back_unique_id=back_id.file_unique_id,
-                back_size=back_id.file_size,
-                back_width=back_id.width,
-                back_height=back_id.height,
                 ref_number=ref_num,
             )
         )

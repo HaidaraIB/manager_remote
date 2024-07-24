@@ -12,7 +12,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from common.common import parent_to_child_models_mapper
+from common.common import parent_to_child_models_mapper, send_to_photos_archive
 from custom_filters import Complaint, ResponseToUserComplaint
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_complaint_data
@@ -107,8 +107,9 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             0
         ].callback_data.split("_")
         order_type = callback_data[-2]
+        serial = int(callback_data[-1])
         op = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=int(callback_data[-1])
+            serial=serial
         )
 
         data = await make_complaint_data(context, callback_data)
@@ -135,6 +136,12 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             photos = data["media"] if data["media"] else []
             if update.message.photo:
                 photos.append(update.message.photo[-1])
+                await send_to_photos_archive(
+                    context=context,
+                    photo=update.message.photo[-1],
+                    order_type=order_type,
+                    serial=serial,
+                )
             media = [InputMediaPhoto(media=photo) for photo in photos]
             await context.bot.send_media_group(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),

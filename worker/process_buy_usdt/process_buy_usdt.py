@@ -21,7 +21,8 @@ from custom_filters import BuyUSDT, Returned, DepositAgent
 from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
-    format_amount
+    format_amount,
+    send_to_photos_archive,
 )
 
 
@@ -138,6 +139,12 @@ async def reply_with_payment_proof_buy_usdt(
             serial=serial,
             worker_id=update.effective_user.id,
         )
+        await send_to_photos_archive(
+            context=context,
+            photo=update.message.photo[-1],
+            order_type="buy_usdt",
+            serial=serial,
+        )
         context.user_data["requested"] = False
 
 
@@ -249,7 +256,12 @@ async def return_buy_usdt_order_reason(
             reason=update.message.text,
             serial=serial,
         )
-
+        await send_to_photos_archive(
+            context=context,
+            photo=update.message.photo[-1],
+            order_type="buy_usdt",
+            serial=serial,
+        )
         context.user_data["requested"] = False
 
 

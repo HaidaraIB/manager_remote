@@ -16,7 +16,12 @@ import os
 import datetime
 from custom_filters import Withdraw, Returned, DepositAgent
 from models import WithdrawOrder
-from common.common import build_worker_keyboard, pretty_time_delta, format_amount
+from common.common import (
+    build_worker_keyboard,
+    pretty_time_delta,
+    format_amount,
+    send_to_photos_archive,
+)
 
 
 async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -108,9 +113,7 @@ async def reply_with_payment_proof_withdraw(
         )
 
         prev_date = (
-            w_order.send_date
-            if w_order.state != "returned"
-            else w_order.return_date
+            w_order.send_date if w_order.state != "returned" else w_order.return_date
         )
         latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
@@ -129,6 +132,12 @@ async def reply_with_payment_proof_withdraw(
             method=w_order.method,
             serial=serial,
             worker_id=update.effective_user.id,
+        )
+        await send_to_photos_archive(
+            context=context,
+            photo=update.message.photo[-1],
+            order_type="buy_usdt",
+            serial=serial,
         )
         context.user_data["requested"] = False
 
@@ -220,9 +229,7 @@ async def return_withdraw_order_reason(
         )
 
         prev_date = (
-            w_order.send_date
-            if w_order.state != "returned"
-            else w_order.return_date
+            w_order.send_date if w_order.state != "returned" else w_order.return_date
         )
         latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)

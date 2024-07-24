@@ -16,7 +16,11 @@ from telegram.ext import (
 from custom_filters.Complaint import Complaint
 from custom_filters.ResponseToUserComplaint import ResponseToUserComplaint
 
-from common.common import build_complaint_keyboard, parent_to_child_models_mapper
+from common.common import (
+    build_complaint_keyboard,
+    parent_to_child_models_mapper,
+    send_to_photos_archive,
+)
 
 from check_complaint.check_complaint import make_complaint_data
 
@@ -48,9 +52,9 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
             0
         ].callback_data.split("_")
         order_type = callback_data[-2]
-
+        serial = int(callback_data[-1])
         op = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=int(callback_data[-1]),
+            serial=serial,
         )
 
         data = await make_complaint_data(context, callback_data)
@@ -64,7 +68,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
             )
             respond_button = InlineKeyboardButton(
                 text="إرسال رد⬅️",
-                callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{order_type}_{callback_data[-1]}",
+                callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{order_type}_{serial}",
             )
             if not update.message.photo and not data["media"]:
                 await context.bot.send_message(
@@ -76,7 +80,12 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 photos = data["media"] if data["media"] else []
                 if update.message.photo:
                     photos.append(update.message.photo[-1])
-
+                    await send_to_photos_archive(
+                        context=context,
+                        photo=update.message.photo[-1],
+                        order_type=order_type,
+                        serial=serial,
+                    )
                 await context.bot.send_media_group(
                     chat_id=op.user_id,
                     media=[InputMediaPhoto(media=photo) for photo in photos],

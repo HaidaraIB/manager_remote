@@ -19,6 +19,7 @@ from common.common import (
     build_back_button,
     build_methods_keyboard,
     format_amount,
+    send_to_photos_archive,
 )
 
 from common.decorators import (
@@ -34,8 +35,10 @@ from common.back_to_home_page import (
 
 from start import start_command
 
-from models import BuyUsdtdOrder, PaymentMethod
+from models import BuyUsdtdOrder, PaymentMethod, Photo
 from constants import *
+
+import os
 
 (
     USDT_TO_BUY_AMOUNT,
@@ -267,6 +270,12 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="التحقق ☑️", callback_data=f"check_busdt_order_{serial}"
                 )
             ),
+        )
+        await send_to_photos_archive(
+            context=context,
+            photo=update.message.photo[-1],
+            order_type="buy_usdt",
+            serial=serial,
         )
         await BuyUsdtdOrder.add_message_ids(
             serial=serial,

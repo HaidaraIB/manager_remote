@@ -34,7 +34,22 @@ from models import (
     DepositAgent,
     PaymentAgent,
     Checker,
+    Photo,
 )
+
+
+async def send_to_photos_archive(
+    context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type
+):
+    p = (
+        await context.bot.send_photo(chat_id=os.getenv("PHOTOS_ARCHIVE"), photo=photo)
+    ).photo[-1]
+    await Photo.add(
+        [p],
+        order_serial=serial,
+        order_type=order_type,
+    )
+
 
 parent_to_child_models_mapper: dict[
     str, DepositOrder | WithdrawOrder | BuyUsdtdOrder

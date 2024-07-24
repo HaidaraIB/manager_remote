@@ -16,7 +16,7 @@ from telegram.ext import (
 from common.back_to_home_page import back_to_user_home_page_button
 from user.work_with_us.common import send_to_group
 from common.common import build_back_button, build_user_keyboard
-from models import TrustedAgent, TrustedAgentsOrder
+from models import TrustedAgent, TrustedAgentsOrder, Photo
 
 (
     NEIGHBORHOOD,
@@ -300,22 +300,18 @@ async def send_to_check_agent_order(update: Update, context: ContextTypes.DEFAUL
             longitude=context.user_data["agent_location"][1],
             email=context.user_data["agent_email"],
             phone=context.user_data["agent_phone"],
-            front_id=context.user_data["agent_front_id"],
-            back_id=context.user_data["agent_back_id"],
             amount=context.user_data["agent_amount"],
             ref_num=context.user_data["agent_ref_num"],
         )
-        media = [
-            InputMediaPhoto(
-                media=context.user_data["agent_front_id"],
-            ),
-            InputMediaPhoto(
-                media=context.user_data["agent_back_id"],
-            ),
-            InputMediaPhoto(
-                media=update.message.photo[-1],
-            ),
+        photos = [
+            update.message.photo[-1],
+            context.user_data["agent_back_id"],
+            context.user_data["agent_front_id"],
         ]
+
+        await Photo.add(photos=photos, order_serial=serial, order_type="trusted_agent")
+
+        media = [InputMediaPhoto(media=p) for p in photos]
 
         await send_to_group(
             update=update,

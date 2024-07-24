@@ -8,7 +8,6 @@ from telegram.ext import (
     ContextTypes,
     filters,
     CallbackQueryHandler,
-    ConversationHandler,
     MessageHandler,
 )
 
@@ -16,7 +15,12 @@ import os
 
 from custom_filters import Deposit, Returned, DepositAgent
 from models import DepositOrder, User
-from common.common import build_worker_keyboard, pretty_time_delta, format_amount
+from common.common import (
+    build_worker_keyboard,
+    pretty_time_delta,
+    format_amount,
+    send_to_photos_archive,
+)
 
 import datetime
 
@@ -128,6 +132,12 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             serial=serial,
             user_id=d_order.user_id,
             worker_id=update.effective_user.id,
+        )
+        await send_to_photos_archive(
+            context=context,
+            photo=update.message.photo[-1],
+            order_type="deposit",
+            serial=serial,
         )
         context.user_data["requested"] = False
 
