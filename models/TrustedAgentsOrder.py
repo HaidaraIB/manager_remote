@@ -88,7 +88,13 @@ class TrustedAgentsOrder(BaseOrder):
     @staticmethod
     @connect_and_close
     def get_user_ids(s: Session = None):
-        res = s.execute(select(TrustedAgentsOrder.user_id).distinct())
+        res = s.execute(
+            select(TrustedAgentsOrder.user_id)
+            .where(
+                TrustedAgentsOrder.state == "approved",
+            )
+            .distinct()
+        )
         try:
             return list(map(lambda x: x[0], res.tuples().all()))
         except:
