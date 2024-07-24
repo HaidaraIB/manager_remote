@@ -47,7 +47,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_text(text="تم ✅")
 
-        d_order = DepositOrder.get_one_order(ref_num=number)
+        d_order = DepositOrder.get_one_order(ref_num=number, method=method)
 
         await check_deposit_lock.acquire()
         if d_order and d_order.state == "pending":

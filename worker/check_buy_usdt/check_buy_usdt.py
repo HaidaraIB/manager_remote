@@ -96,12 +96,6 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
-        await send_to_photos_archive(
-            context=context,
-            photo=update.message.photo[-1],
-            order_type="buy_usdt",
-            serial=serial,
-        )
 
         await BuyUsdtdOrder.send_order(
             pending_process_message_id=message.id,

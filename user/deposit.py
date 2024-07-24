@@ -130,6 +130,7 @@ async def send_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
         )
         order_present = DepositOrder.get_one_order(
             ref_num=ref_num,
+            method=context.user_data["deposit_method"]
         )
         if (ref_present and ref_present.order_serial != -1) or (
             order_present and order_present.state == "approved"

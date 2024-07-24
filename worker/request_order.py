@@ -24,7 +24,7 @@ REQUEST_WHAT = 0
 orders_dict = {
     "withdraw": "سحب",
     "deposit": "إيداع",
-    "buy_usdt": "شراء usdt",
+    "busdt": "شراء usdt",
 }
 
 
@@ -182,7 +182,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         f"ليس هناك طلبات دفع {order_type} حالياً."
                     )
                     return
-                operation = "buy_usdt"
+                operation = "busdt"
                 message_id = bu_order.pending_process_message_id
                 group_id = bu_order.group_id
                 serial = bu_order.serial

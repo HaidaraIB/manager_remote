@@ -81,12 +81,22 @@ class BaseOrder(Base):
         cls,
         serial: int = None,
         ref_num: str = None,
+        method: str = None,
         s: Session = None,
     ):
         if serial:
             res = s.execute(select(cls).where(cls.serial == serial))
+        elif ref_num and method:
+            res = s.execute(
+                select(cls).where(
+                    and_(
+                        cls.ref_number == ref_num,
+                        cls.method == method,
+                    )
+                )
+            )
         elif ref_num:
-            res = s.execute(select(cls).where(cls.ref_number == ref_num))
+            res = s.execute(select(cls).where(and_(cls.ref_number == ref_num)))
         try:
             return res.fetchone().t[0]
         except:

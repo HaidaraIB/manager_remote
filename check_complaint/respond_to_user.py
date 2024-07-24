@@ -91,10 +91,12 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                     media=[InputMediaPhoto(media=photo) for photo in photos],
                     caption=data["text"],
                 )
+            response = update.effective_message.reply_to_message.text_html
+            if update.message.caption or update.message.text:
+                response += f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>"
             await context.bot.send_message(
                 chat_id=op.user_id,
-                text=update.effective_message.reply_to_message.text_html
-                + f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>",
+                text=response,
                 reply_markup=InlineKeyboardMarkup.from_button(respond_button),
             )
 

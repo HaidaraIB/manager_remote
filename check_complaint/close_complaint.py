@@ -54,13 +54,11 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
 
         data = await make_complaint_data(context, callback_data)
 
-        effective_text = update.effective_message.text_html.split("\n")
-        del effective_text[0]
-        del effective_text[-1]
-        effective_text = "\n".join(effective_text)
-
         final_text = (
-            data["text"] + "\n\n" + effective_text + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
+            data["text"]
+            + "\n\n"
+            + update.effective_message.text_html
+            + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
         )
         if data["media"]:
             await context.bot.send_media_group(
@@ -108,18 +106,13 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
         ].callback_data.split("_")
         order_type = callback_data[-2]
         serial = int(callback_data[-1])
-        op = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=serial
-        )
+        op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
 
         data = await make_complaint_data(context, callback_data)
 
-        effective_text = update.effective_message.text_html.split("\n")
-        del effective_text[0]
-        del effective_text[-1]
-        effective_text = "\n".join(effective_text)
-
-        final_text = data["text"] + "\n\n" + effective_text
+        final_text = (
+            data["text"] + "\n\n" + update.effective_message.reply_to_message.text_html
+        )
         if update.message.caption or update.message.text:
             final_text += f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>"
         final_text += "\n\n🏁🏁 النسخة النهائية 🏁🏁"
