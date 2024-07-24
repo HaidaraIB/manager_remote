@@ -1,7 +1,17 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP, Text, Float, func, insert
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    TIMESTAMP,
+    Text,
+    Float,
+    func,
+    insert,
+    select,
+)
 from sqlalchemy.orm import Session
 from models.BaseOrder import BaseOrder
-from models.DB import lock_and_release
+from models.DB import lock_and_release, connect_and_close
 import datetime
 
 
@@ -74,4 +84,12 @@ class TrustedAgentsOrder(BaseOrder):
                 TrustedAgentsOrder.state: "approved",
             }
         )
-    
+
+    @staticmethod
+    @connect_and_close
+    def get_user_ids(s: Session = None):
+        res = s.execute(select(TrustedAgentsOrder.user_id).distinct())
+        try:
+            return list(map(lambda x: x[0], res.tuples().all()))
+        except:
+            pass
