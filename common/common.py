@@ -312,7 +312,7 @@ def callback_button_uuid_generator():
 
 
 def build_complaint_keyboard(data: list[str], send_to_worker: bool):
-    order_type = data[-2].replace("usdt", 'buy_usdt')
+    order_type = data[-2]
     complaint_keyboard = [
         [
             InlineKeyboardButton(

@@ -11,7 +11,7 @@ async def make_complaint_data(
     context: ContextTypes.DEFAULT_TYPE,
     callback_data: list[str],
 ):
-    order_type = callback_data[-2].replace("usdt", "buy_usdt")
+    order_type = callback_data[-2]
     complaint = Complaint.get_complaint(
         order_serial=int(callback_data[-1]),
         order_type=order_type,

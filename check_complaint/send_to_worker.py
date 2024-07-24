@@ -21,7 +21,7 @@ async def send_to_worker_user_complaint(
 ):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         callback_data = update.callback_query.data.split("_")
-        order_type = callback_data[-2].replace("usdt", "buy_usdt")
+        order_type = callback_data[-2]
         op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1])
         )

@@ -26,7 +26,7 @@ async def handle_respond_to_user_complaint(
 ):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         data = update.callback_query.data.split("_")
-        order_type = data[-2].replace('usdt', 'buy_usdt')
+        order_type = data[-2]
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بما تريد إرساله إلى المستخدم.",
             show_alert=True,
@@ -47,7 +47,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         callback_data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
         ].callback_data.split("_")
-        order_type = callback_data[-2].replace("usdt", 'buy_usdt')
+        order_type = callback_data[-2]
 
         op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1]),

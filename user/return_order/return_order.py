@@ -61,7 +61,7 @@ async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TY
 async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         data: list[str] = context.user_data["returned_data"]
-        order_type = data[2].replace("buy", "buy_usdt")
+        order_type = data[2]
         order = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(data[-1])
         )

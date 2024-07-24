@@ -31,7 +31,7 @@ complaints_keyboard = [
     [
         InlineKeyboardButton(
             text="شراء USDT💰",
-            callback_data="buy_usdt complaint",
+            callback_data="busdt complaint",
         )
     ],
     back_to_user_home_page_button[0],

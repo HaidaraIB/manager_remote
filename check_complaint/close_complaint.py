@@ -23,7 +23,7 @@ import os
 async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         data: list[str] = update.callback_query.data.split("_")
-        order_type = data[-2].replace("usdt", "buy_usdt")
+        order_type = data[-2]
         await update.callback_query.answer(
             "قم بالرد على هذه الرسالة بما تريد إرساله إلى المستخدم إن وجد، إن لم يوجد اضغط تخطي.",
             show_alert=True,
@@ -47,7 +47,7 @@ async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         callback_data = update.callback_query.data.split("_")
-        order_type = callback_data[-2].replace("usdt", "buy_usdt")
+        order_type = callback_data[-2]
         op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1])
         )
@@ -106,7 +106,7 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
         ].callback_data.split("_")
 
         data = await make_complaint_data(context, callback_data)
-        order_type = callback_data[-2].replace("usdt", "buy_usdt")
+        order_type = callback_data[-2]
         op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(callback_data[-1])
         )
