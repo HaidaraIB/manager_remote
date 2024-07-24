@@ -1,8 +1,4 @@
-from sqlalchemy import (
-    select,
-    and_,
-    or_,
-)
+from sqlalchemy import select, and_, or_, desc
 from models.DB import (
     Base,
     lock_and_release,
@@ -88,15 +84,19 @@ class BaseOrder(Base):
             res = s.execute(select(cls).where(cls.serial == serial))
         elif ref_num and method:
             res = s.execute(
-                select(cls).where(
+                select(cls)
+                .where(
                     and_(
                         cls.ref_number == ref_num,
                         cls.method == method,
                     )
                 )
+                .order_by(desc(cls.order_date))
             )
         elif ref_num:
-            res = s.execute(select(cls).where(and_(cls.ref_number == ref_num)))
+            res = s.execute(
+                select(cls).where(and_(cls.ref_number == ref_num))
+            ).order_by(desc(cls.order_date))
         try:
             return res.fetchone().t[0]
         except:

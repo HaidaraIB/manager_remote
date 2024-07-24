@@ -42,7 +42,7 @@ async def send_to_photos_archive(
     context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type
 ):
     p = (
-        await context.bot.send_photo(chat_id=os.getenv("PHOTOS_ARCHIVE"), photo=photo)
+        await context.bot.send_photo(chat_id=int(os.getenv("PHOTOS_ARCHIVE")), photo=photo)
     ).photo[-1]
     await Photo.add(
         [p],
