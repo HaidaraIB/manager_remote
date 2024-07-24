@@ -290,7 +290,7 @@ def stringify_order(amount, method, serial, method_info):
 
 
 buy_usdt_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(buy_usdt, "^buy usdt$")],
+    entry_points=[CallbackQueryHandler(buy_usdt, "^busdt$")],
     states={
         USDT_TO_BUY_AMOUNT: [
             MessageHandler(

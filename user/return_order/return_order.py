@@ -35,11 +35,11 @@ async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TY
         
         await update.callback_query.edit_message_reply_markup()
         data = update.callback_query.data.split("_")
-
-        order = parent_to_child_models_mapper[data[2]].get_one_order(
+        order_type = data[2]
+        order = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(data[-1])
         )
-        if data[2] == "withdraw":
+        if order_type == "withdraw":
             code_present = WithdrawOrder.check_withdraw_code(
                 withdraw_code=order.withdraw_code
             )

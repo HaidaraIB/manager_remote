@@ -282,7 +282,7 @@ complaint_handler = ConversationHandler(
         COMPLAINT_ABOUT: [
             CallbackQueryHandler(
                 complaint_about,
-                "^((deposit)|(buy_usdt)|(withdraw)) complaint$",
+                "^((deposit)|(busdt)|(withdraw)) complaint$",
             )
         ],
         CHOOSE_OPERATION: [CallbackQueryHandler(choose_operation, "^serial \d+$")],

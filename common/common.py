@@ -41,9 +41,7 @@ parent_to_child_models_mapper: dict[
 ] = {
     "withdraw": WithdrawOrder,
     "deposit": DepositOrder,
-    "buy_usdt": BuyUsdtdOrder,
-    "buy": BuyUsdtdOrder,
-    "usdt": BuyUsdtdOrder,
+    "busdt": BuyUsdtdOrder,
 }
 
 
@@ -156,7 +154,7 @@ def build_user_keyboard():
                 text="إضافة حساب سابق ➕", callback_data="add existing account"
             )
         ],
-        [InlineKeyboardButton(text="شراء USDT 💰", callback_data="buy usdt")],
+        [InlineKeyboardButton(text="شراء USDT 💰", callback_data="busdt")],
         [InlineKeyboardButton(text="إنشاء شكوى 🗳", callback_data="make complaint")],
         [InlineKeyboardButton(text="عملك معنا 💼", callback_data="work with us")],
         [
