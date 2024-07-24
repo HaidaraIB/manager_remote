@@ -53,14 +53,12 @@ class Photo(Base):
         )
         try:
             return [
-                InputMediaPhoto(
-                    media=PhotoSize(
-                        file_id=p.file_id,
-                        file_unique_id=p.file_unique_id,
-                        width=p.width,
-                        height=p.height,
-                        file_size=p.file_size,
-                    )
+                PhotoSize(
+                    file_id=p.file_id,
+                    file_unique_id=p.file_unique_id,
+                    width=p.width,
+                    height=p.height,
+                    file_size=p.file_size,
                 )
                 for p in list(map(lambda x: x[0], res.tuples().fetchall()))
             ]

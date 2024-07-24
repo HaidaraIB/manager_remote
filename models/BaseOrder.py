@@ -111,13 +111,9 @@ class BaseOrder(Base):
         pending_check_message_id: int = 0,
         processing_message_id: int = 0,
         pending_process_message_id: int = 0,
-        archive_message_ids: str = 0,
         s: Session = None,
     ):
         update_dict = {}
-        update_dict[cls.archive_message_ids] = (
-            archive_message_ids if archive_message_ids else cls.archive_message_ids
-        )
         update_dict[cls.processing_message_id] = (
             processing_message_id
             if processing_message_id
@@ -162,7 +158,6 @@ class BaseOrder(Base):
     @lock_and_release
     async def decline_order(
         cls,
-        archive_message_ids: int,
         reason: str,
         serial: int,
         s: Session = None,
@@ -172,7 +167,6 @@ class BaseOrder(Base):
                 cls.state: "declined",
                 cls.working_on_it: 0,
                 cls.reason: reason,
-                cls.archive_message_ids: archive_message_ids,
                 cls.decline_date: datetime.datetime.now(),
             }
         )
@@ -181,7 +175,6 @@ class BaseOrder(Base):
     @lock_and_release
     async def return_order(
         cls,
-        archive_message_ids: str,
         reason: str,
         serial: int,
         s: Session = None,
@@ -191,7 +184,6 @@ class BaseOrder(Base):
                 cls.state: "returned",
                 cls.reason: reason,
                 cls.working_on_it: 0,
-                cls.archive_message_ids: archive_message_ids,
             }
         )
 
@@ -277,5 +269,15 @@ class BaseOrder(Base):
         )
         try:
             return res.fetchone().t[0]
+        except:
+            pass
+
+    
+    @classmethod
+    @connect_and_close
+    def get_all_orders(cls, s:Session = None):
+        res = s.execute(select(cls))
+        try:
+            return list(map(lambda x: x[0], res.tuples().all()))
         except:
             pass

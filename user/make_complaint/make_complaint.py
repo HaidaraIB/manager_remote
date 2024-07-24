@@ -206,7 +206,7 @@ back_to_complaint_reason = choose_operation
 
 async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        order_type = context.user_data["complaint_about"]
+        order_type: str = context.user_data["complaint_about"]
         serial = context.user_data["complaint_serial"]
         if update.callback_query.data.startswith("yes"):
             op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
@@ -217,10 +217,8 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 "سبب الشكوى:\n"
                 f"<b>{context.user_data['reason']}</b>\n"
             )
-            photos = await get_photos_from_archive(
-                message_ids=[
-                    m_id for m_id in map(int, str(op.archive_message_ids).split(","))
-                ]
+            photos = await Photo.get(
+                order_serial=serial, order_type=order_type.replace("busdt", "buy_usdt")
             )
 
             if op.worker_id:

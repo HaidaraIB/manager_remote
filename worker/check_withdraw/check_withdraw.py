@@ -227,7 +227,7 @@ async def decline_withdraw_order_reason(
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
 
-        message = await context.bot.send_message(
+        await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
@@ -252,7 +252,6 @@ async def decline_withdraw_order_reason(
         )
 
         await WithdrawOrder.decline_order(
-            archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )

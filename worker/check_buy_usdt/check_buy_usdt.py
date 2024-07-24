@@ -161,7 +161,7 @@ async def decline_buy_usdt_order_reason(
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
 
-        message = await context.bot.send_photo(
+        await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.reply_to_message.photo[-1],
             caption=caption,
@@ -186,7 +186,6 @@ async def decline_buy_usdt_order_reason(
             ),
         )
         await BuyUsdtdOrder.decline_order(
-            archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )

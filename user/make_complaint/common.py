@@ -12,6 +12,8 @@ from common.common import build_back_button, parent_to_child_models_mapper, form
 
 from common.back_to_home_page import back_to_user_home_page_button
 
+from models import Photo
+
 state_dict_en_to_ar = {
     "declined": "مرفوض",
     "approved": "تمت الموافقة",
@@ -58,30 +60,6 @@ def stringify_order(serial: int, order_type: str):
         f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
         f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
     )
-
-
-async def get_photos_from_archive(message_ids: list[int]):
-    photos: list[PhotoSize] = []
-    cpyro = PyroClientSingleton()
-
-    ms: list[Message] = await cpyro.get_messages(
-        chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-        message_ids=message_ids,
-    )
-    for m in ms:
-        if not m.photo:
-            continue
-        photos.append(
-            PhotoSize(
-                file_id=m.photo.file_id,
-                file_unique_id=m.photo.file_unique_id,
-                width=m.photo.width,
-                height=m.photo.height,
-                file_size=m.photo.file_size,
-            )
-        )
-
-    return photos
 
 
 def build_operations_keyboard(serials: list[int]):

@@ -83,12 +83,11 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             + f"\n\nالسبب:\n<b>{reason}</b>"
         )
 
-        message = await context.bot.send_message(
+        await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
         await DepositOrder.decline_order(
-            archive_message_ids=message.id,
             reason=reason,
             serial=serial,
         )

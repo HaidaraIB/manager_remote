@@ -27,7 +27,6 @@ class Order(BaseOrder):
     reason = Column(String, default="")
     pending_process_message_id = Column(Integer, default=0)
     processing_message_id = Column(Integer, default=0)
-    archive_message_ids = Column(String, default="")
     complaint_took_care_of = Column(Integer, default=0)
     working_on_it = Column(Integer, default=0)
 

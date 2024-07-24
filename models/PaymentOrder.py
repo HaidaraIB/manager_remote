@@ -36,7 +36,6 @@ class PaymentOrder(Order):
     @lock_and_release
     async def reply_with_payment_proof(
         cls,
-        archive_message_ids: int,
         serial: int,
         worker_id: int,
         method: str,
@@ -47,7 +46,6 @@ class PaymentOrder(Order):
             {
                 cls.state: "approved",
                 cls.working_on_it: 0,
-                cls.archive_message_ids: archive_message_ids,
                 cls.approve_date: datetime.datetime.now(),
             }
         )

@@ -48,7 +48,6 @@ class DepositOrder(Order):
     @staticmethod
     @lock_and_release
     async def reply_with_deposit_proof(
-        archive_message_ids: int,
         serial: int,
         worker_id: int,
         user_id: int,
@@ -59,7 +58,6 @@ class DepositOrder(Order):
             {
                 DepositOrder.state: "approved",
                 DepositOrder.working_on_it: 0,
-                DepositOrder.archive_message_ids: archive_message_ids,
                 DepositOrder.approve_date: datetime.datetime.now(),
             }
         )

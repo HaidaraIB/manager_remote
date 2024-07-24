@@ -87,7 +87,7 @@ async def reply_with_payment_proof_withdraw(
 
         caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
 
-        message = await context.bot.send_photo(
+        await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.photo[-1],
             caption=caption,
@@ -128,7 +128,6 @@ async def reply_with_payment_proof_withdraw(
 
         await WithdrawOrder.reply_with_payment_proof(
             amount=amount,
-            archive_message_ids=str(message.id),
             method=w_order.method,
             serial=serial,
             worker_id=update.effective_user.id,
@@ -204,7 +203,7 @@ async def return_withdraw_order_reason(
             + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
 
-        message = await context.bot.send_message(
+        await context.bot.send_message(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             text=text,
         )
@@ -242,7 +241,6 @@ async def return_withdraw_order_reason(
             )
 
         await WithdrawOrder.return_order(
-            archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )

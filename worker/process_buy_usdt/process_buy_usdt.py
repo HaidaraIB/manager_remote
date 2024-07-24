@@ -94,7 +94,7 @@ async def reply_with_payment_proof_buy_usdt(
 
         caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
 
-        messages = await context.bot.send_media_group(
+        await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             media=media,
             caption=caption,
@@ -133,7 +133,6 @@ async def reply_with_payment_proof_buy_usdt(
             )
 
         await BuyUsdtdOrder.reply_with_payment_proof(
-            archive_message_ids=f"{messages[0].id},{messages[1].id}",
             amount=amount,
             method=b_order.method,
             serial=serial,
@@ -212,7 +211,7 @@ async def return_buy_usdt_order_reason(
             + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
 
-        message = await context.bot.send_photo(
+        await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             photo=update.message.reply_to_message.photo[-1],
             caption=caption,
@@ -252,7 +251,6 @@ async def return_buy_usdt_order_reason(
             )
 
         await BuyUsdtdOrder.return_order(
-            archive_message_ids=str(message.id),
             reason=update.message.text,
             serial=serial,
         )
