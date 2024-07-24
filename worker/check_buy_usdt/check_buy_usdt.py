@@ -17,8 +17,7 @@ from models import BuyUsdtdOrder
 from custom_filters import BuyUSDT, Declined, DepositAgent
 
 from common.common import (
-    build_worker_keyboard,
-    send_to_photos_archive
+    build_worker_keyboard
 )
 
 async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -33,6 +33,7 @@ from user.make_complaint.notify import notify_operation
 from user.make_complaint.common import *
 from start import start_command
 from models import Complaint
+from constants import CHOOSE_OPERATIONS_TEXT
 
 (
     COMPLAINT_ABOUT,
@@ -74,16 +75,15 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_id=update.effective_user.id
         )
 
-        if not operations:
-            await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد❗️")
-            return
-
         keyboard = build_operations_keyboard(
             serials=[op.serial for op in operations if not op.complaint_took_care_of]
         )
+        if not operations or len(keyboard) == 2:
+            await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد❗️")
+            return
 
         await update.callback_query.edit_message_text(
-            text=choose_operations_text,
+            text=CHOOSE_OPERATIONS_TEXT,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
@@ -217,7 +217,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 "سبب الشكوى:\n"
                 f"<b>{context.user_data['reason']}</b>\n"
             )
-            photos = await Photo.get(
+            photos = Photo.get(
                 order_serial=serial, order_type=order_type.replace("busdt", "buy_usdt")
             )
 
@@ -268,7 +268,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
             )
             await context.bot.send_message(
                 chat_id=update.effective_user.id,
-                text=choose_operations_text,
+                text=CHOOSE_OPERATIONS_TEXT,
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
             return CHOOSE_OPERATION

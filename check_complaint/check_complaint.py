@@ -31,7 +31,7 @@ async def make_complaint_data(
                 f"<b>{complaint.reason}</b>\n\n"
             ),
             "media": (
-                await Photo.get(
+                Photo.get(
                     order_serial=order_serial,
                     order_type=order_type.replace("busdt", "buy_usdt"),
                 )

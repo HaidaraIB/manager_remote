@@ -135,7 +135,7 @@ async def reply_with_payment_proof_withdraw(
         await send_to_photos_archive(
             context=context,
             photo=update.message.photo[-1],
-            order_type="buy_usdt",
+            order_type="withdraw",
             serial=serial,
         )
         context.user_data["requested"] = False
