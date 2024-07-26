@@ -31,7 +31,7 @@ class TrustedAgentsOrder(BaseOrder):
 
     amount = Column(Float)
     ref_number = Column(Text)
-    creation_date = Column(TIMESTAMP, server_default=func.current_timestamp())
+    order_date = Column(TIMESTAMP, server_default=func.current_timestamp())
     approve_date = Column(TIMESTAMP)
     decline_date = Column(TIMESTAMP)
 
