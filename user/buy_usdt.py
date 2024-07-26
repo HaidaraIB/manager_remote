@@ -122,7 +122,7 @@ async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.callback_query.data.startswith("no"):
             await update.callback_query.answer("حسناً، تم الإلغاء")
             await update.callback_query.edit_message_text(
-                text="القائمة الرئيسية🔝",
+                text=HOME_PAGE_TEXT,
                 reply_markup=build_user_keyboard(),
             )
             return ConversationHandler.END

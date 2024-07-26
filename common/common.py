@@ -43,7 +43,9 @@ async def send_to_photos_archive(
     context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type
 ):
     p = (
-        await context.bot.send_photo(chat_id=int(os.getenv("PHOTOS_ARCHIVE")), photo=photo)
+        await context.bot.send_photo(
+            chat_id=int(os.getenv("PHOTOS_ARCHIVE")), photo=photo
+        )
     ).photo[-1]
     await Photo.add(
         [p],
@@ -53,7 +55,7 @@ async def send_to_photos_archive(
 
 
 parent_to_child_models_mapper: dict[
-    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder |CreateAccountOrder
+    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder
 ] = {
     "withdraw": WithdrawOrder,
     "deposit": DepositOrder,
@@ -270,6 +272,33 @@ def build_admin_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
+def build_agent_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="تسجيل الدخول",
+                callback_data="login_agent",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="إيداع نقطة",
+                callback_data="point_deposit",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="إيداع لاعبين",
+                callback_data="player_deposit",
+            ),
+            InlineKeyboardButton(
+                text="سحب لاعبين",
+                callback_data="player_withdraw",
+            ),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
 def build_methods_keyboard(buy_usdt: bool = False):
     if len(PAYMENT_METHODS_LIST) == 1:

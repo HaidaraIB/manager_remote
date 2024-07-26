@@ -1,13 +1,11 @@
 from telegram import (
     Update,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
     Chat,
 )
 
 from telegram.ext import (
     ContextTypes,
-    CommandHandler,
     ConversationHandler,
     CallbackQueryHandler,
     MessageHandler,
@@ -17,30 +15,20 @@ from pathlib import Path
 from models import TrustedAgent, TrustedAgentsOrder
 from custom_filters import TeamCash, PromoCode
 from common.common import build_back_button
+from common.back_to_home_page import (
+    back_to_agent_home_page_handler,
+    back_to_agent_home_page_button,
+)
 from constants import *
-from start import admin_command, start_command
+from start import start_command, agent_command
 import os
+
 (
     SERIAL,
     TEAM_CASH,
     AFFILIATE,
     NEIGHBORHOOD,
 ) = range(4)
-
-
-async def agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        login_button = InlineKeyboardButton(
-            text="تسجيل الدخول", callback_data="login_agent"
-        )
-        if update.callback_query:
-            await update.callback_query.delete_message()
-        await context.bot.send_message(
-            chat_id=update.effective_user.id,
-            text=AGENT_COMMAND_TEXT,
-            reply_markup=InlineKeyboardMarkup.from_button(login_button),
-        )
-        return ConversationHandler.END
 
 
 async def login_agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -50,14 +38,9 @@ async def login_agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=update.effective_user.id,
             video=os.getenv("LOGIN_GUIDE_VIDEO_ID"),
             caption=LOGIN_GUIDE_TEXT,
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(text="إلغاء", callback_data="cancel_login_agent")
-            ),
+            reply_markup=InlineKeyboardMarkup(back_to_agent_home_page_button[0]),
         )
         return SERIAL
-
-
-cancel_login_agent = agent
 
 
 async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -70,7 +53,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 not order
                 or order.state != "approved"
                 or order.user_id != update.effective_user.id
-                # or ag
+                or ag
             ):
                 await update.message.reply_text(
                     text=(
@@ -81,10 +64,8 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "4 - هذا الطلب قد تم تسجيل الدخول باستخدامه بالفعل.\n\n"
                         "تحقق من الأمر وأعد المحاولة."
                     ),
-                    reply_markup=InlineKeyboardMarkup.from_button(
-                        InlineKeyboardButton(
-                            text="إلغاء", callback_data="cancel_login_agent"
-                        )
+                    reply_markup=InlineKeyboardMarkup(
+                        back_to_agent_home_page_button[0]
                     ),
                 )
                 return
@@ -174,7 +155,6 @@ async def get_neighborhood(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
 
-agent_command = CommandHandler("agent", agent)
 login_agent_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(login_agent, "^login_agent$")],
     states={
@@ -205,9 +185,8 @@ login_agent_handler = ConversationHandler(
     },
     fallbacks=[
         start_command,
-        admin_command,
         agent_command,
-        CallbackQueryHandler(cancel_login_agent, "^cancel_login_agent$"),
+        back_to_agent_home_page_handler,
         CallbackQueryHandler(back_to_get_affiliate, "^back_to_get_affiliate$"),
         CallbackQueryHandler(back_to_get_serial, "^back_to_get_serial$"),
         CallbackQueryHandler(back_to_get_team_cash, "^back_to_get_team_cash$"),

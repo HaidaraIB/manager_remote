@@ -28,6 +28,8 @@ from start import admin_command, start_command
 import os
 from custom_filters import Admin
 import models
+from constants import *
+
 
 (
     NEW_ADMIN_ID,
@@ -96,7 +98,7 @@ async def new_admin_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=ReplyKeyboardRemove(),
         )
         await update.message.reply_text(
-            text="القائمة الرئيسية🔝",
+            text=HOME_PAGE_TEXT,
             reply_markup=build_admin_keyboard(),
         )
         return ConversationHandler.END

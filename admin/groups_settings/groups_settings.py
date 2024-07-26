@@ -27,7 +27,7 @@ from common.back_to_home_page import (
 )
 
 from start import admin_command, start_command
-
+from constants import *
 from custom_filters import Admin
 
 NEW_GROUP_ID = 0
@@ -86,7 +86,7 @@ async def get_new_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=check_hidden_keyboard(context),
         )
         await update.message.reply_text(
-            text="القائمة الرئيسية🔝",
+            text=HOME_PAGE_TEXT,
             reply_markup=build_admin_keyboard(),
         )
         return ConversationHandler.END

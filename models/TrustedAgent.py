@@ -27,25 +27,30 @@ class TrustedAgent(Base):
 
     @staticmethod
     @connect_and_close
-    def get_trusted_agents(gov: str = None, user_id: int = None, order_serial:int = None, s: Session = None):
+    def get_trusted_agents(
+        gov: str = None,
+        user_id: int = None,
+        order_serial: int = None,
+        s: Session = None,
+    ):
         try:
             if order_serial:
-                res = s.execute(
-                    select(TrustedAgent).where(
-                        and_(TrustedAgent.order_serial == order_serial)
-                    )
+                where_clause = TrustedAgent.order_serial == order_serial
+            elif user_id and gov:
+                where_clause = and_(
+                    TrustedAgent.gov == gov, TrustedAgent.user_id == user_id
                 )
-                return res.fetchone().t[0]
             elif user_id:
-                res = s.execute(
-                    select(TrustedAgent).where(
-                        and_(TrustedAgent.gov == gov, TrustedAgent.user_id == user_id)
-                    )
-                )
-                return res.fetchone().t[0]
+                where_clause = TrustedAgent.user_id == user_id
             else:
-                res = s.execute(select(TrustedAgent).where(TrustedAgent.gov == gov))
+                where_clause = TrustedAgent.gov == gov
+
+            res = s.execute(select(TrustedAgent).where(where_clause))
+
+            if gov and not user_id:
                 return list(map(lambda x: x[0], res.tuples().all()))
+            else:
+                return res.fetchone().t[0]
         except:
             pass
 
@@ -54,7 +59,7 @@ class TrustedAgent(Base):
     async def add_trusted_agent(
         user_id: int,
         gov: str,
-        neighborhood:str,
+        neighborhood: str,
         order_serial: int,
         team_cash_user_id: str,
         team_cash_password: str,
@@ -64,7 +69,8 @@ class TrustedAgent(Base):
         s: Session = None,
     ):
         s.execute(
-            insert(TrustedAgent).values(
+            insert(TrustedAgent)
+            .values(
                 user_id=user_id,
                 gov=gov,
                 neighborhood=neighborhood,
@@ -74,5 +80,6 @@ class TrustedAgent(Base):
                 promo_username=promo_username,
                 promo_password=promo_password,
                 order_serial=order_serial,
-            ).prefix_with("OR IGNORE")
+            )
+            .prefix_with("OR IGNORE")
         )

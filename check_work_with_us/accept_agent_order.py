@@ -15,8 +15,9 @@ from telegram.ext import (
 from user.work_with_us.common import syrian_govs_en_ar, stringify_agent_order
 from custom_filters import AgentOrder, Declined
 from models import TrustedAgentsOrder
-import os
+from common.common import build_agent_keyboard
 from constants import *
+import os
 
 
 async def notify_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -140,11 +141,7 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=order.user_id,
                 text=AGENT_COMMAND_TEXT,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    InlineKeyboardButton(
-                        text="تسجيل الدخول", callback_data="login_agent"
-                    )
-                ),
+                reply_markup=build_agent_keyboard(),
             )
 
         await update.message.reply_to_message.edit_reply_markup(

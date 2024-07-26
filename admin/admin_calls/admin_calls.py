@@ -30,6 +30,8 @@ from start import admin_command, start_command
 
 from custom_filters import Admin
 from models import PaymentMethod
+from constants import *
+
 
 (
     PAYMENT_METHOD_TO_TURN_ON_OR_OFF,
@@ -74,7 +76,7 @@ async def hide_ids_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await context.bot.send_message(
                 chat_id=update.effective_user.id,
-                text="القائمة الرئيسية🔝",
+                text=HOME_PAGE_TEXT,
                 reply_markup=build_admin_keyboard(),
             )
         else:
@@ -88,7 +90,7 @@ async def hide_ids_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await context.bot.send_message(
                 chat_id=update.effective_user.id,
-                text="القائمة الرئيسية🔝",
+                text=HOME_PAGE_TEXT,
                 reply_markup=build_admin_keyboard(),
             )
 

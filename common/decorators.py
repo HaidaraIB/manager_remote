@@ -11,8 +11,25 @@ from constants import *
 from models import (
     Account,
     User,
+    TrustedAgent,
 )
 from common.common import parent_to_child_models_mapper
+
+
+
+def check_if_user_agent_decorator(func):
+    @functools.wraps(func)
+    async def wrapper(
+        update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
+    ):
+        agent = TrustedAgent.get_trusted_agents(user_id=update.effective_user.id)
+        if not agent:
+            await update.callback_query.answer("قم بتسجيل الدخول أولاً", show_alert=True)
+            return
+        return await func(update, context, *args, **kwargs)
+
+    return wrapper
+
 
 def check_user_pending_orders_decorator(func):
     @functools.wraps(func)

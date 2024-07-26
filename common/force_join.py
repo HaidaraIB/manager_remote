@@ -14,11 +14,9 @@ from telegram.constants import (
     ChatMemberStatus,
 )
 
-import os
-
 from common.common import build_user_keyboard
-
 import functools
+import os
 
 
 def check_if_user_member_decorator(func):

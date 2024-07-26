@@ -17,3 +17,4 @@ from custom_filters.AgentOrder import AgentOrder
 from custom_filters.PromoCode import PromoCode
 from custom_filters.TeamCash import TeamCash
 from custom_filters.UserRespondToComplaint import UserRespondToComplaint
+from custom_filters.Agent import Agent
