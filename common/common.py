@@ -31,6 +31,7 @@ from models import (
     WithdrawOrder,
     DepositOrder,
     BuyUsdtdOrder,
+    CreateAccountOrder,
     DepositAgent,
     PaymentAgent,
     Checker,
@@ -52,11 +53,12 @@ async def send_to_photos_archive(
 
 
 parent_to_child_models_mapper: dict[
-    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder
+    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder |CreateAccountOrder
 ] = {
     "withdraw": WithdrawOrder,
     "deposit": DepositOrder,
     "busdt": BuyUsdtdOrder,
+    "create account": CreateAccountOrder,
 }
 
 

@@ -267,7 +267,7 @@ class BaseOrder(Base):
                     cls.user_id == user_id,
                 )
             )
-            .limit(1)
+            .order_by(desc(cls.order_date))
         )
         try:
             return res.fetchone().t[0]

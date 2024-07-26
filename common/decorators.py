@@ -11,21 +11,8 @@ from constants import *
 from models import (
     Account,
     User,
-    BuyUsdtdOrder,
-    DepositOrder,
-    WithdrawOrder,
-    CreateAccountOrder,
 )
-
-parent_to_child_models_mapper: dict[
-    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder
-] = {
-    "withdraw": WithdrawOrder,
-    "deposit": DepositOrder,
-    "buy usdt": BuyUsdtdOrder,
-    "create account": CreateAccountOrder,
-}
-
+from common.common import parent_to_child_models_mapper
 
 def check_user_pending_orders_decorator(func):
     @functools.wraps(func)
