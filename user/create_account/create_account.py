@@ -129,17 +129,22 @@ async def reply_to_create_account_order(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
-
-        if (
-            "✅"
-            in update.effective_message.reply_to_message.reply_markup.inline_keyboard[
+        button_text = (
+            update.effective_message.reply_to_message.reply_markup.inline_keyboard[0][
                 0
-            ][0].text
-        ):
+            ].text
+        )
+        if "✅" in button_text:
             await update.effective_message.reply_text(
                 text="تم إنجاز هذا الطلب بالفعل 👍"
             )
             return
+        elif "❌" in button_text:
+            await update.effective_message.reply_text(
+                text="تم رفض هذا الطلب بالفعل 👍"
+            )
+            return
+
         data = update.effective_message.reply_to_message.reply_markup.inline_keyboard[
             0
         ][0].callback_data.split("_")

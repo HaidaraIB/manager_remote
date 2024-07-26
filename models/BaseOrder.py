@@ -95,8 +95,10 @@ class BaseOrder(Base):
             )
         elif ref_num:
             res = s.execute(
-                select(cls).where(and_(cls.ref_number == ref_num))
-            ).order_by(desc(cls.order_date))
+                select(cls)
+                .where(and_(cls.ref_number == ref_num))
+                .order_by(desc(cls.order_date))
+            )
         try:
             return res.fetchone().t[0]
         except:
@@ -272,10 +274,9 @@ class BaseOrder(Base):
         except:
             pass
 
-    
     @classmethod
     @connect_and_close
-    def get_all_orders(cls, s:Session = None):
+    def get_all_orders(cls, s: Session = None):
         res = s.execute(select(cls))
         try:
             return list(map(lambda x: x[0], res.tuples().all()))
