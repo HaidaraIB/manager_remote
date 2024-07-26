@@ -85,7 +85,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="الرفض ❌",
+                    text="الرفض ⛔️",
                     callback_data=f"decline_create_account_{update.effective_user.id}_{serial}",
                 )
             ),
@@ -139,12 +139,6 @@ async def reply_to_create_account_order(
                 text="تم إنجاز هذا الطلب بالفعل 👍"
             )
             return
-        elif "❌" in button_text:
-            await update.effective_message.reply_text(
-                text="تم رفض هذا الطلب بالفعل 👍"
-            )
-            return
-
         data = update.effective_message.reply_to_message.reply_markup.inline_keyboard[
             0
         ][0].callback_data.split("_")
@@ -276,11 +270,11 @@ async def back_from_decline_create_account(
 
 
 invalid_account_format_handler = MessageHandler(
-    filters=filters.REPLY & ~Account(),
+    filters=filters.REPLY & ~Account() & ~Declined(),
     callback=invalid_account_format,
 )
 reply_to_create_account_order_handler = MessageHandler(
-    filters=filters.REPLY & Account(),
+    filters=filters.REPLY & Account() & ~Declined(),
     callback=reply_to_create_account_order,
 )
 
