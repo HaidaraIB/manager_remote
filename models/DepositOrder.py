@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, select, insert, and_
+from sqlalchemy import Column, String, Integer, select, insert, and_
 from models.Order import Order
 from models.DB import connect_and_close, lock_and_release
 from models.DepositAgent import DepositAgent
@@ -11,6 +11,7 @@ class DepositOrder(Order):
     __tablename__ = "deposit_orders"
     ref_number = Column(String)
     acc_number = Column(String)
+    agent_id = Column(Integer, default=0)
 
     @staticmethod
     @connect_and_close
@@ -32,6 +33,7 @@ class DepositOrder(Order):
         method: str,
         ref_number: str,
         acc_number: str,
+        agent_id: int = None,
         s: Session = None,
     ):
         res = s.execute(
@@ -40,8 +42,8 @@ class DepositOrder(Order):
                 method=method,
                 ref_number=ref_number,
                 acc_number=acc_number,
+                agent_id=agent_id if agent_id else 0,
             ),
-            (),
         )
         return res.lastrowid
 

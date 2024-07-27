@@ -75,6 +75,7 @@ async def get_ref_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
             acc_number=context.user_data["player_number"],
             method=SYRCASH,
             target_group=context.bot_data["data"]["deposit_orders_group"],
+            agent_id=update.effective_user.id
         )
         if not res:
             await update.message.reply_text(

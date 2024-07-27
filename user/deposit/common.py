@@ -12,6 +12,7 @@ async def send_to_check_deposit(
     method: str,
     acc_number: str,
     target_group: int,
+    agent_id:int = None,
 ):
     ref_present = RefNumber.get_ref_number(
         number=ref_num,
@@ -28,6 +29,7 @@ async def send_to_check_deposit(
         method=method,
         acc_number=acc_number,
         ref_number=ref_num,
+        agent_id=agent_id if agent_id else 0,
     )
 
     context.job_queue.run_once(

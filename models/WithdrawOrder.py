@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, insert, select, desc
+from sqlalchemy import Column, String, Integer, insert, select, desc
 from sqlalchemy.orm import Session
 from models.DB import connect_and_close, lock_and_release
 from models.PaymentOrder import PaymentOrder
@@ -8,6 +8,7 @@ class WithdrawOrder(PaymentOrder):
     __tablename__ = "withdraw_orders"
     acc_number = Column(String)
     withdraw_code = Column(String)
+    agent_id = Column(Integer, default=0)
 
     @staticmethod
     @lock_and_release
@@ -19,6 +20,7 @@ class WithdrawOrder(PaymentOrder):
         bank_account_name: str,
         payment_method_number: int,
         acc_number: str,
+        agent_id:int = None,
         s: Session = None,
     ):
         res = s.execute(
@@ -30,6 +32,7 @@ class WithdrawOrder(PaymentOrder):
                 bank_account_name=bank_account_name,
                 payment_method_number=payment_method_number,
                 acc_number=acc_number,
+                agent_id = agent_id if agent_id else 0,
             )
         )
         return res.lastrowid
