@@ -56,6 +56,7 @@ async def edit_order_amount_user_complaint(
         complaint = models.Complaint.get_complaint(
             order_serial=serial, order_type=order_type
         )
+        
         new_amount = float(update.message.text)
         old_amount = op.amount
 

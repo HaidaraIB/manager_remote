@@ -56,15 +56,13 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
         complaint = models.Complaint.get_complaint(
             order_serial=serial, order_type=order_type
         )
-        main_text = make_complaint_main_text(
-            order_serial=serial, order_type=order_type, reason=complaint.reason
-        )
         photos = models.Photo.get(order_serial=serial, order_type=order_type)
 
         final_text = (
-            main_text
-            + "\n\n"
-            + update.effective_message.text_html
+            make_complaint_main_text(
+                order_serial=serial, order_type=order_type, reason=complaint.reason
+            )
+            + make_conv_text(complaint_id=complaint.id)
             + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
         )
         if photos:
@@ -119,9 +117,6 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
         complaint = models.Complaint.get_complaint(
             order_serial=serial, order_type=order_type
         )
-        main_text = make_complaint_main_text(
-            order_serial=serial, order_type=order_type, reason=complaint.reason
-        )
         media = models.Photo.get(order_serial=serial, order_type=order_type)
 
         if update.message.caption or update.message.text:
@@ -136,11 +131,13 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
                 from_user=False,
             )
 
-        conv_text = (
-            EXT_COMPLAINT_LINE.format(serial)
+        final_text = (
+            make_complaint_main_text(
+                order_serial=serial, order_type=order_type, reason=complaint.reason
+            )
             + make_conv_text(complaint_id=complaint.id)
+            + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
         )
-        final_text = main_text + "\n\n" + conv_text + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
 
         if not update.message.photo and not media:
             await context.bot.send_message(

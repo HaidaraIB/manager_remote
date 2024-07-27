@@ -28,16 +28,16 @@ async def send_to_worker_user_complaint(
             order_serial=serial, order_type=order_type
         )
 
-        media = models.Photo.get(order_serial=serial, order_type=order_type)
+        photos = models.Photo.get(order_serial=serial, order_type=order_type)
         main_text = make_complaint_main_text(
             order_serial=serial, order_type=order_type, reason=complaint.reason
         )
 
-        if media:
-            media_group = [InputMediaPhoto(media=photo) for photo in media]
+        if photos:
+            media = [InputMediaPhoto(media=photo) for photo in photos]
             await context.bot.send_media_group(
                 chat_id=op.worker_id if op.worker_id else op.checker_id,
-                media=media_group,
+                media=media,
                 caption=main_text,
             )
         else:
