@@ -13,16 +13,15 @@ from telegram.ext import (
     filters,
 )
 
-from custom_filters.Complaint import Complaint
-from custom_filters.ResponseToUserComplaint import ResponseToUserComplaint
-
+from custom_filters import Complaint, ResponseToUserComplaint
+from check_complaint.check_complaint import make_conv_text, make_complaint_main_text
 from common.common import (
     build_complaint_keyboard,
     parent_to_child_models_mapper,
     send_to_photos_archive,
 )
-
-from check_complaint.check_complaint import make_complaint_data
+from constants import EXT_COMPLAINT_LINE
+import models
 
 
 async def handle_respond_to_user_complaint(
@@ -53,31 +52,39 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         ].callback_data.split("_")
         order_type = callback_data[-2]
         serial = int(callback_data[-1])
-        op = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=serial,
+
+        op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
+        complaint = models.Complaint.get_complaint(
+            order_serial=serial,
+            order_type=order_type,
         )
 
-        data = await make_complaint_data(context, callback_data)
+        media = models.Photo.get(
+            order_serial=serial,
+            order_type=order_type.replace("busdt", "buy_usdt"),
+        )
 
-        user_text = f"تمت الإجابة الشكوى الخاصة بطلبك ذي الرقم التسلسلي <b>{op.serial}</b>\n\nإليك الطلب⬇️⬇️⬇️"
+        main_text = make_complaint_main_text(
+            order_serial=serial, order_type=order_type, reason=complaint.reason
+        )
 
         try:
             await context.bot.send_message(
                 chat_id=op.user_id,
-                text=user_text,
+                text=f"تمت الإجابة الشكوى الخاصة بطلبك ذي الرقم التسلسلي <b>{op.serial}</b>\n\nإليك الطلب⬇️⬇️⬇️",
             )
             respond_button = InlineKeyboardButton(
                 text="إرسال رد⬅️",
                 callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{order_type}_{serial}",
             )
-            if not update.message.photo and not data["media"]:
+            if not update.message.photo and not media:
                 await context.bot.send_message(
                     chat_id=op.user_id,
-                    text=data["text"],
+                    text=main_text,
                     reply_markup=InlineKeyboardMarkup.from_button(respond_button),
                 )
             else:
-                photos = data["media"] if data["media"] else []
+                photos = media if media else []
                 if update.message.photo:
                     photos.append(update.message.photo[-1])
                     await send_to_photos_archive(
@@ -89,14 +96,28 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 await context.bot.send_media_group(
                     chat_id=op.user_id,
                     media=[InputMediaPhoto(media=photo) for photo in photos],
-                    caption=data["text"],
+                    caption=main_text,
                 )
-            response = update.effective_message.reply_to_message.text_html
+
             if update.message.caption or update.message.text:
-                response += f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>"
+                msg = (
+                    update.message.caption
+                    if update.message.caption
+                    else update.message.text
+                )
+                await models.ComplaintConv.add_response(
+                    complaint_id=complaint.id,
+                    msg=msg,
+                    from_user=False,
+                )
+
+            conv_text = (
+                EXT_COMPLAINT_LINE.format(serial)
+                + make_conv_text(complaint_id=complaint.id)
+            )
             await context.bot.send_message(
                 chat_id=op.user_id,
-                text=response,
+                text=conv_text,
                 reply_markup=InlineKeyboardMarkup.from_button(respond_button),
             )
 

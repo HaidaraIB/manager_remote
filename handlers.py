@@ -48,16 +48,12 @@ from agent.login import *
 from user.withdraw import withdraw_handler
 from user.deposit import deposit_handler
 from user.buy_usdt import buy_usdt_handler
-from user.make_complaint import complaint_handler
+from user.complaint import complaint_handler
 from user.return_order import *
 from user.create_account import *
 from user.work_with_us import *
 from user.show_trusted_agents import *
-from user.respond_to_complaint import (
-    reply_to_returned_complaint_handler,
-    correct_returned_complaint_handler,
-    back_from_reply_to_returned_complaint_handler,
-)
+from user.complaint import *
 
 from admin.admin_calls import *
 from admin.admin_settings import *
@@ -179,9 +175,6 @@ def main():
 
     # RETURN
     app.add_handler(handle_returned_order_handler)
-    app.add_handler(reply_to_returned_complaint_handler)
-    app.add_handler(correct_returned_complaint_handler)
-    app.add_handler(back_from_reply_to_returned_complaint_handler)
 
     app.add_handler(work_with_us_handler)
 
@@ -207,6 +200,9 @@ def main():
     app.add_handler(reply_on_close_complaint_handler)
     app.add_handler(skip_close_complaint_handler)
     app.add_handler(close_complaint_handler)
+    app.add_handler(reply_to_returned_complaint_handler)
+    app.add_handler(correct_returned_complaint_handler)
+    app.add_handler(back_from_reply_to_returned_complaint_handler)
 
     # WORK_WITH_US
     # Agent_Orders

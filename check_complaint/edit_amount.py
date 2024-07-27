@@ -11,13 +11,13 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from models import PaymentAgent, DepositAgent
 from custom_filters import Complaint, ModAmountUserComplaint
-
 from common.common import build_complaint_keyboard, parent_to_child_models_mapper
-
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
-from check_complaint.check_complaint import make_complaint_data
+from check_complaint.check_complaint import make_conv_text
+from constants import EXT_COMPLAINT_LINE
+
+import models
 
 
 async def handle_edit_amount_user_complaint(
@@ -49,15 +49,13 @@ async def edit_order_amount_user_complaint(
         callback_data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
         ].callback_data.split("_")
-
+        serial = int(callback_data[-1])
         order_type = callback_data[-2]
 
-        op = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=int(callback_data[-1])
+        op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
+        complaint = models.Complaint.get_complaint(
+            order_serial=serial, order_type=order_type
         )
-
-        data = await make_complaint_data(context, callback_data)
-
         new_amount = float(update.message.text)
         old_amount = op.amount
 
@@ -69,37 +67,28 @@ async def edit_order_amount_user_complaint(
         if op.worker_id:
             updated_amount = new_amount - old_amount
             if order_type in ["withdraw", "busdt"]:
-                await PaymentAgent.update_worker_approved_withdraws(
+                await models.PaymentAgent.update_worker_approved_withdraws(
                     worker_id=op.worker_id,
                     method=op.method,
                     amount=updated_amount,
                 )
             elif order_type == "deposit":
-                await DepositAgent.update_worker_approved_deposits(
+                await models.DepositAgent.update_worker_approved_deposits(
                     worker_id=op.worker_id,
                     amount=updated_amount,
                 )
 
-        text_list = data["text"].split("\n")
-        text_list[3] = f"المبلغ: <b>{new_amount}</b>"
-        data["text"] = "\n".join(text_list)
-
-        context.user_data["complaint_data"] = data
-
-        reply_to_text = update.effective_message.reply_to_message.text.split("\n")
-        if "تم تعديل المبلغ بنجاح✅" not in reply_to_text:
-            reply_to_text.insert(
-                1, "\nتم تعديل المبلغ بنجاح✅\n" f"المبلغ: <b>{new_amount}</b>\n"
-            )
-        else:
-            reply_to_text[3] = f"المبلغ: <b>{new_amount}</b>"
-
+        conv_text = (
+            EXT_COMPLAINT_LINE.format(serial)
+            +"تم تعديل المبلغ بنجاح ✅\n"
+            +f"المبلغ: <b>{new_amount}</b>\n"
+        )
+        conv_text += make_conv_text(complaint_id=complaint.id)
         await update.message.delete()
-
         await context.bot.edit_message_text(
             chat_id=update.effective_chat.id,
             message_id=update.message.reply_to_message.id,
-            text="\n".join(reply_to_text),
+            text=conv_text,
             reply_markup=build_complaint_keyboard(
                 data=callback_data,
                 send_to_worker=update.effective_chat.type != Chat.PRIVATE,

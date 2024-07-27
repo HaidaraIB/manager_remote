@@ -1,41 +1,26 @@
-from telegram.ext import (
-    ContextTypes,
-)
+from models import ComplaintConv
+from user.complaint.common import stringify_order
 
-from models import Complaint, Photo
-from user.make_complaint.make_complaint import stringify_order
-from common.common import parent_to_child_models_mapper
-
-
-async def make_complaint_data(
-    context: ContextTypes.DEFAULT_TYPE,
-    callback_data: list[str],
-):
-    order_type = callback_data[-2]
-    order_serial = int(callback_data[-1])
-    complaint = Complaint.get_complaint(
-        order_serial=order_serial,
-        order_type=order_type,
+def make_complaint_main_text(order_serial:int, order_type:str, reason:str):
+    text = (
+        f"شكوى جديدة:\n\n"
+        f"{stringify_order(serial=order_serial, order_type=order_type)}\n\n"
+        "سبب الشكوى:\n"
+        f"<b>{reason}</b>\n\n"
     )
-    try:
-        data = context.user_data[f"complaint_data_{complaint.id}"]
-    except KeyError:
-        order = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=order_serial
-        )
-        data = {
-            "text": (
-                f"شكوى جديدة:\n\n"
-                f"{stringify_order(serial=order_serial, order_type=order_type)}\n\n"
-                "سبب الشكوى:\n"
-                f"<b>{complaint.reason}</b>\n\n"
-            ),
-            "media": (
-                Photo.get(
-                    order_serial=order_serial,
-                    order_type=order_type.replace("busdt", "buy_usdt"),
-                )
-            ),
-        }
-        context.user_data[f"complaint_data_{complaint.id}"] = data
-    return data
+
+    return text
+
+
+def make_conv_text(complaint_id:int):
+    conv = ComplaintConv.get_conv(
+        complaint_id=complaint_id
+    )
+    conv_text = ""
+    for m in conv:
+        if m.from_user:
+            conv_text += f"رد المستخدم على الشكوى:\n<b>{m.msg}</b>\n\n"
+        else:
+            conv_text += f"رد الدعم على الشكوى:\n<b>{m.msg}</b>\n\n"
+    
+    return conv_text

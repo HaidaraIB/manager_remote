@@ -1,18 +1,9 @@
 from telegram import (
     InlineKeyboardButton,
-    PhotoSize,
 )
-
-
-from pyrogram.types import Message
-from PyroClientSingleton import PyroClientSingleton
-import os
-
 from common.common import build_back_button, parent_to_child_models_mapper, format_amount
 
 from common.back_to_home_page import back_to_user_home_page_button
-
-from models import Photo
 
 state_dict_en_to_ar = {
     "declined": "مرفوض",

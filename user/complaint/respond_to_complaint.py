@@ -16,12 +16,13 @@ from telegram.ext import (
 
 from common.common import (
     build_complaint_keyboard,
-    parent_to_child_models_mapper,
     send_to_photos_archive,
+    parent_to_child_models_mapper,
 )
-from models import Complaint
+from models import Complaint, ComplaintConv, Photo
 from custom_filters import UserRespondToComplaint
-from check_complaint.check_complaint import make_complaint_data
+from check_complaint.check_complaint import make_complaint_main_text, make_conv_text
+from constants import EXT_COMPLAINT_LINE
 
 (CORRECT_RETURNED_COMPLAINT,) = range(1)
 
@@ -42,8 +43,6 @@ async def reply_to_returned_complaint(
 
         context.user_data["callback_data"] = data
 
-        await make_complaint_data(context, data)
-
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -62,59 +61,69 @@ async def correct_returned_complaint(
     if update.effective_chat.type == Chat.PRIVATE:
 
         callback_data = context.user_data["callback_data"]
-
-        order_type = callback_data[-2]
+        order_type: str = callback_data[-2]
         from_worker = int(callback_data[-3])
         serial = int(callback_data[-1])
 
-        complaint = Complaint.get_complaint(
-            order_serial=serial,
-            order_type=order_type,
+        complaint = Complaint.get_complaint(order_serial=serial, order_type=order_type)
+        main_text = make_complaint_main_text(
+            order_serial=serial, order_type=order_type, reason=complaint.reason
         )
-        data = context.user_data[f"complaint_data_{complaint.id}"]
+        media = Photo.get(
+            order_serial=serial, order_type=order_type.replace("busdt", "buy_usdt")
+        )
 
         op = parent_to_child_models_mapper[order_type].get_one_order(
             serial=serial,
         )
-
         chat_id = (
             (op.worker_id if op.worker_id else op.checker_id)
             if int(from_worker)
             else context.bot_data["data"]["complaints_group"]
         )
 
-        if not update.message.photo and not data["media"]:
+        if not update.message.photo and not media:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=data["text"],
+                text=main_text,
             )
 
         else:
-            photos = data["media"] if data["media"] else []
+            photos = media if media else []
             if update.message.photo:
                 photos.append(update.message.photo[-1])
                 await send_to_photos_archive(
                     context=context,
                     photo=update.message.photo[-1],
-                    order_type=order_type.replace('busdt', 'buy_usdt'),
+                    order_type=order_type.replace("busdt", "buy_usdt"),
                     serial=serial,
                 )
 
             await context.bot.send_media_group(
                 chat_id=chat_id,
                 media=[InputMediaPhoto(media=photo) for photo in photos],
-                caption=data["text"],
+                caption=main_text,
             )
 
-        response = update.effective_message.reply_to_message.text_html
         if update.message.caption or update.message.text:
-            response += (
-                f"\n\nرد المستخدم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>",
+            msg = (
+                update.message.caption
+                if update.message.caption
+                else update.message.text
+            )
+            await ComplaintConv.add_response(
+                complaint_id=complaint.id,
+                msg=msg,
+                from_user=True,
             )
 
+        conv_text = (
+            EXT_COMPLAINT_LINE.format(serial)
+            + make_conv_text(complaint_id=complaint.id)
+        )
         await context.bot.send_message(
             chat_id=chat_id,
-            text=response,
+            text=conv_text,
             reply_markup=build_complaint_keyboard(
                 data=callback_data,
                 send_to_worker=(not int(from_worker)),

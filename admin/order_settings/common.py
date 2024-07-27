@@ -7,7 +7,7 @@ from models import (
     CreateAccountOrder,
     BuyUsdtdOrder,
 )
-from user.make_complaint.common import state_dict_en_to_ar
+from user.complaint.common import state_dict_en_to_ar
 from common.common import format_amount
 
 from datetime import datetime

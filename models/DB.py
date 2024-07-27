@@ -7,6 +7,7 @@ from constants import *
 
 lock = Lock()
 Base = declarative_base()
+# engine = create_engine("sqlite:///data_test/test.sqlite3")
 engine = create_engine("sqlite:///data/database.sqlite3")
 
 

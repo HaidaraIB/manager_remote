@@ -15,8 +15,10 @@ from telegram.ext import (
 from common.common import parent_to_child_models_mapper, send_to_photos_archive
 from custom_filters import Complaint, ResponseToUserComplaint
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
-from check_complaint.check_complaint import make_complaint_data
+from check_complaint.check_complaint import make_complaint_main_text, make_conv_text
+from constants import EXT_COMPLAINT_LINE
 
+import models
 import os
 
 
@@ -47,28 +49,34 @@ async def close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
         callback_data = update.callback_query.data.split("_")
+        serial = int(callback_data[-1])
         order_type = callback_data[-2]
-        op = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=int(callback_data[-1])
-        )
+        op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
 
-        data = await make_complaint_data(context, callback_data)
+        complaint = models.Complaint.get_complaint(
+            order_serial=serial, order_type=order_type
+        )
+        main_text = make_complaint_main_text(
+            order_serial=serial, order_type=order_type, reason=complaint.reason
+        )
+        photos = models.Photo.get(order_serial=serial, order_type=order_type)
 
         final_text = (
-            data["text"]
+            main_text
             + "\n\n"
             + update.effective_message.text_html
             + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
         )
-        if data["media"]:
+        if photos:
+            media = [InputMediaPhoto(media=photo) for photo in photos]
             await context.bot.send_media_group(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-                media=[InputMediaPhoto(media=photo) for photo in data["media"]],
+                media=media,
                 caption=final_text,
             )
             await context.bot.send_media_group(
                 chat_id=op.user_id,
-                media=[InputMediaPhoto(media=photo) for photo in data["media"]],
+                media=media,
                 caption=final_text,
             )
         else:
@@ -106,17 +114,35 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
         ].callback_data.split("_")
         order_type = callback_data[-2]
         serial = int(callback_data[-1])
+
         op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
-
-        data = await make_complaint_data(context, callback_data)
-
-        final_text = (
-            data["text"] + "\n\n" + update.effective_message.reply_to_message.text_html
+        complaint = models.Complaint.get_complaint(
+            order_serial=serial, order_type=order_type
         )
+        main_text = make_complaint_main_text(
+            order_serial=serial, order_type=order_type, reason=complaint.reason
+        )
+        media = models.Photo.get(order_serial=serial, order_type=order_type)
+
         if update.message.caption or update.message.text:
-            final_text += f"\n\nرد الدعم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>"
-        final_text += "\n\n🏁🏁 النسخة النهائية 🏁🏁"
-        if not update.message.photo and not data["media"]:
+            msg = (
+                update.message.caption
+                if update.message.caption
+                else update.message.text
+            )
+            await models.ComplaintConv.add_response(
+                complaint_id=complaint.id,
+                msg=msg,
+                from_user=False,
+            )
+
+        conv_text = (
+            EXT_COMPLAINT_LINE.format(serial)
+            + make_conv_text(complaint_id=complaint.id)
+        )
+        final_text = main_text + "\n\n" + conv_text + "\n\n🏁🏁 النسخة النهائية 🏁🏁"
+
+        if not update.message.photo and not media:
             await context.bot.send_message(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
                 text=final_text,
@@ -126,7 +152,7 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
                 text=final_text,
             )
         else:
-            photos = data["media"] if data["media"] else []
+            photos = media if media else []
             if update.message.photo:
                 photos.append(update.message.photo[-1])
                 await send_to_photos_archive(
