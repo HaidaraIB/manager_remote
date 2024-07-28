@@ -190,6 +190,7 @@ back_to_bank_account_name = get_withdraw_code_bank_account_name
 
 async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        account = Account.get_account(acc_num=context.user_data["withdraw_account"])
         res = await send_withdraw_order_to_check(
             acc_number=context.user_data["withdraw_account"],
             bank_account_name=context.user_data["bank_account_name"],
@@ -199,6 +200,7 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             target_group=context.bot_data["data"]["withdraw_orders_group"],
             user_id=update.effective_user.id,
             w_type=context.user_data.get("withdraw_type", "balance"),
+            password=account.password,
             withdraw_code=update.message.text,
         )
         if not res:

@@ -24,21 +24,23 @@ from common.common import (
 
 from common.force_join import check_if_user_member
 
-from custom_filters import Admin, Worker, DepositAgent
+from custom_filters import Admin, Worker, DepositAgent, Agent
 from constants import *
 
+
 async def inits(app: Application):
-    pass # Fill this when you need to run a code only once and then clear it.
+    pass  # Fill this when you need to run a code only once and then clear it.
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     st_cmd = ("start", "start command")
+    commands = [st_cmd]
     if Worker().filter(update):
-        commands = [("worker", "worker command"), st_cmd]
-    elif Admin().filter(update):
-        commands = [("admin", "admin command"), st_cmd]
-    else:
-        commands = [st_cmd]
+        commands.append(("worker", "worker command"))
+    if Admin().filter(update):
+        commands.append(("admin", "admin command"))
+    if Agent().filter(update):
+        commands.append(("agent", "agent command"))
     await context.bot.set_my_commands(
         commands=commands, scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
     )
@@ -94,6 +96,7 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return ConversationHandler.END
 
+
 async def agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if update.callback_query:
@@ -104,9 +107,9 @@ async def agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=build_agent_keyboard(),
         )
         return ConversationHandler.END
-    
+
+
 worker_command = CommandHandler(command="worker", callback=worker)
 admin_command = CommandHandler(command="admin", callback=admin)
 start_command = CommandHandler(command="start", callback=start)
 agent_command = CommandHandler(command="agent", callback=agent)
-

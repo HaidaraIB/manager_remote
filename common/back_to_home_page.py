@@ -45,9 +45,9 @@ back_to_agent_home_page_button = [
     [
         InlineKeyboardButton(
             text=BACK_TO_HOME_PAGE_TEXT,
-            callback_data="back_to_agent_home_page"
+            callback_data="back_to_agent_home_page",
         )
-    ]
+    ],
 ]
 
 
@@ -67,7 +67,7 @@ async def back_to_agent_home_page(update: Update, context: ContextTypes.DEFAULT_
                 reply_markup=build_agent_keyboard(),
             )
         return ConversationHandler.END
-    
+
 
 @check_if_user_member_decorator
 async def back_to_user_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):

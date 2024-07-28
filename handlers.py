@@ -73,6 +73,9 @@ from worker.check_buy_usdt import *
 from worker.process_buy_usdt import *
 from worker.check_deposit import *
 
+from agent.player_deposit import *
+from agent.player_withdraw import *
+
 from check_complaint import *
 
 from check_work_with_us import *
@@ -129,6 +132,10 @@ def main():
             callback=invalid_callback_data, pattern=InvalidCallbackData
         )
     )
+
+    # AGENT
+    app.add_handler(player_deposit_handler)
+    app.add_handler(player_withdraw_handler)
 
     app.add_handler(show_trusted_agents_handler)
 

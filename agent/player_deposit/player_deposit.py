@@ -33,7 +33,7 @@ async def player_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(
             text="أرسل رقم حساب اللاعب",
-            reply_markup=InlineKeyboardMarkup(back_to_agent_home_page_button[0]),
+            reply_markup=InlineKeyboardMarkup(back_to_agent_home_page_button),
         )
         return PLAYER_NUMBER
 
@@ -114,4 +114,6 @@ player_deposit_handler = ConversationHandler(
             back_to_send_to_check_deposit, "^back_to_send_to_check_deposit$"
         ),
     ],
+    name="player_deposit_handler",
+    persistent=True,
 )

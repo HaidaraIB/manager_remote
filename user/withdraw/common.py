@@ -38,6 +38,8 @@ async def send_withdraw_order_to_check(
     bank_account_name: str,
     payment_method_number: str,
     w_type: str,
+    password:str = None,
+    agent_id: int = None,
 ):
 
     code_present = WithdrawOrder.check_withdraw_code(withdraw_code=withdraw_code)
@@ -53,10 +55,9 @@ async def send_withdraw_order_to_check(
         withdraw_code=withdraw_code,
         bank_account_name=bank_account_name,
         payment_method_number=payment_method_number,
+        agent_id=agent_id,
     )
 
-    account = Account.get_account(acc_num=acc_number)
-    
     method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (
         f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
         if method in [BARAKAH, BARAKAH]
@@ -67,7 +68,7 @@ async def send_withdraw_order_to_check(
         text=stringify_order(
             w_type=w_type,
             acc_number=acc_number,
-            password=account.password,
+            password=password,
             withdraw_code=withdraw_code,
             method=method,
             serial=serial,

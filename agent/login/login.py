@@ -38,13 +38,17 @@ async def login_agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=update.effective_user.id,
             video=os.getenv("LOGIN_GUIDE_VIDEO_ID"),
             caption=LOGIN_GUIDE_TEXT,
-            reply_markup=InlineKeyboardMarkup(back_to_agent_home_page_button[0]),
+            reply_markup=InlineKeyboardMarkup(back_to_agent_home_page_button),
         )
         return SERIAL
 
 
 async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        back_buttons = [
+            build_back_button("back_to_get_serial"),
+            back_to_agent_home_page_button[0],
+        ]
         if update.message:
             serial = int(update.message.text)
             order = TrustedAgentsOrder.get_one_order(serial=serial)
@@ -64,24 +68,18 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "4 - هذا الطلب قد تم تسجيل الدخول باستخدامه بالفعل.\n\n"
                         "تحقق من الأمر وأعد المحاولة."
                     ),
-                    reply_markup=InlineKeyboardMarkup(
-                        back_to_agent_home_page_button[0]
-                    ),
+                    reply_markup=InlineKeyboardMarkup(back_to_agent_home_page_button),
                 )
                 return
             context.user_data["trusted_agent_order_serial"] = serial
             await update.message.reply_text(
                 text=TEAM_CASH_TEXT,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    *build_back_button("back_to_get_serial")
-                ),
+                reply_markup=InlineKeyboardMarkup(back_buttons),
             )
         else:
             await update.callback_query.edit_message_text(
                 text=TEAM_CASH_TEXT,
-                reply_markup=InlineKeyboardMarkup.from_button(
-                    *build_back_button("back_to_get_serial")
-                ),
+                reply_markup=InlineKeyboardMarkup(back_buttons),
             )
 
         return TEAM_CASH
@@ -92,6 +90,10 @@ back_to_get_serial = login_agent
 
 async def get_team_cash(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        back_buttons = [
+            build_back_button("back_to_get_team_cash"),
+            back_to_agent_home_page_button[0],
+        ]
         if update.message:
             team_cash_info = list(
                 map(lambda x: x.split(": ")[1], update.message.text.split("\n"))
@@ -102,9 +104,7 @@ async def get_team_cash(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=update.effective_user.id,
             text=AFFILIATE_TEXT,
-            reply_markup=InlineKeyboardMarkup.from_button(
-                *build_back_button("back_to_get_team_cash")
-            ),
+            reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return AFFILIATE
 
@@ -114,6 +114,10 @@ back_to_get_team_cash = get_serial
 
 async def get_affiliate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        back_buttons = [
+            build_back_button("back_to_get_affiliate"),
+            back_to_agent_home_page_button[0],
+        ]
         affiliate_info = list(
             map(lambda x: x.split(": ")[1], update.message.text.split("\n"))
         )
@@ -121,9 +125,7 @@ async def get_affiliate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_photo(
             photo=Path("assets/show_agent_sample.jpg"),
             caption="أرسل الآن الاسم الذي تريد أن يظهر في قائمة الوكلاء الموصى بهم",
-            reply_markup=InlineKeyboardMarkup.from_button(
-                *build_back_button("back_to_get_affiliate")
-            ),
+            reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return NEIGHBORHOOD
 

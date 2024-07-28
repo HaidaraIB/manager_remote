@@ -1,15 +1,9 @@
-from telegram.ext import (
-    ContextTypes,
-)
-
-from telegram.error import (
-    RetryAfter,
-)
-
-import asyncio
+from telegram.ext import ContextTypes
+from telegram.error import RetryAfter
 from models import PaymentAgent, DepositAgent
-from constants import *
 from common.common import format_amount
+from constants import *
+import asyncio
 
 worker_type_dict = {
     "daily": {
@@ -59,13 +53,15 @@ def stringify_reward_report(
     reward_type: str,
 ):
     role = worker_type_dict[reward_type]["role"]
-    balance = updated_worker.__getattribute__(f'approved_{role}')
-    partial_balance = worker.__getattribute__(f'approved_{role}_{worker_type_dict[reward_type]['day_week']['en']}')
-    prev_rewards_balance = worker.__getattribute__(f'{reward_type}_rewards_balance')
-    rewards_balance = updated_worker.__getattribute__(f'{reward_type}_rewards_balance')
-    orders_num = updated_worker.__getattribute__(f'approved_{role}_num')
-    work_type = worker_type_dict[reward_type]['day_week']['ar']
-    
+    balance = updated_worker.__getattribute__(f"approved_{role}")
+    partial_balance = worker.__getattribute__(
+        f"approved_{role}_{worker_type_dict[reward_type]['day_week']['en']}"
+    )
+    prev_rewards_balance = worker.__getattribute__(f"{reward_type}_rewards_balance")
+    rewards_balance = updated_worker.__getattribute__(f"{reward_type}_rewards_balance")
+    orders_num = updated_worker.__getattribute__(f"approved_{role}_num")
+    work_type = worker_type_dict[reward_type]["day_week"]["ar"]
+
     worker_text = (
         f"الوظيفة: {f'سحب {updated_worker.method}' if role == 'withdraws' else 'تنفيذ إيداع'}\n"
         f"مجموع المكافآت السابق: <b>{format_amount(prev_rewards_balance)}</b>\n"
@@ -75,8 +71,12 @@ def stringify_reward_report(
         f"مجموع المبالغ حتى الآن: <b>{format_amount(balance)}</b>\n"
         f"مجموع المبالغ هذا {work_type}: <b>{format_amount(partial_balance)}</b>\n"
     )
-    worker_text += f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n" if isinstance(worker, PaymentAgent) else ''
-    
+    worker_text += (
+        f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"
+        if isinstance(worker, PaymentAgent)
+        else ""
+    )
+
     return worker_text
 
 
@@ -111,7 +111,7 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
         updated_worker = model.get_workers(
             worker_id=worker.id,
             method=worker.method if worker_type == "daily" else None,
-            deposit=worker_type != "daily"
+            deposit=worker_type != "daily",
         )
 
         worker_text = (
