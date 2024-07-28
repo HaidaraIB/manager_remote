@@ -9,7 +9,6 @@ import datetime
 
 class DepositOrder(Order):
     __tablename__ = "deposit_orders"
-    ref_number = Column(String)
     acc_number = Column(String)
     agent_id = Column(Integer, default=0)
 
@@ -31,7 +30,6 @@ class DepositOrder(Order):
     async def add_deposit_order(
         user_id: int,
         method: str,
-        ref_number: str,
         acc_number: str,
         agent_id: int = None,
         s: Session = None,
@@ -40,7 +38,6 @@ class DepositOrder(Order):
             insert(DepositOrder).values(
                 user_id=user_id,
                 method=method,
-                ref_number=ref_number,
                 acc_number=acc_number,
                 agent_id=agent_id if agent_id else 0,
             ),

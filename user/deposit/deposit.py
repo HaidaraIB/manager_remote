@@ -37,9 +37,10 @@ from user.deposit.common import send_to_check_deposit
 
 (
     ACCOUNT_DEPOSIT,
+    DEPOSIT_AMOUNT,
     DEPOSIT_METHOD,
-    REF_NUM,
-) = range(3)
+    SCREENSHOT,
+) = range(4)
 
 
 @check_user_pending_orders_decorator
@@ -70,19 +71,41 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        back_buttons = [
+            build_back_button("back_to_account_deposit"),
+            back_to_user_home_page_button[0],
+        ]
         if not update.callback_query.data.startswith("back"):
             context.user_data["account_deposit"] = int(update.callback_query.data)
-        deposit_methods = build_methods_keyboard()
-        deposit_methods.append(build_back_button("back_to_account_number_deposit"))
-        deposit_methods.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع 💳",
-            reply_markup=InlineKeyboardMarkup(deposit_methods),
+            text="أرسل الملبغ", reply_markup=InlineKeyboardMarkup(back_buttons)
         )
-        return DEPOSIT_METHOD
+        return DEPOSIT_AMOUNT
 
 
 back_to_account_deposit = make_deposit
+
+
+async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        deposit_methods = build_methods_keyboard()
+        deposit_methods.append(build_back_button("back_to_deposit_amount"))
+        deposit_methods.append(back_to_user_home_page_button[0])
+        if update.message:
+            context.user_data["deposit_amount"] = float(update.message.text)
+            await update.message.reply_text(
+                text="اختر وسيلة الدفع 💳",
+                reply_markup=InlineKeyboardMarkup(deposit_methods),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text="اختر وسيلة الدفع 💳",
+                reply_markup=InlineKeyboardMarkup(deposit_methods),
+            )
+        return DEPOSIT_METHOD
+
+
+back_to_deposit_amount = account_deposit
 
 
 async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -109,18 +132,19 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text,
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
-        return REF_NUM
+        return SCREENSHOT
 
 
-back_to_deposit_method = account_deposit
+back_to_deposit_method = deposit_amount
 
 
-async def get_ref_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         res = await send_to_check_deposit(
             context=context,
             user_id=update.effective_user.id,
-            ref_num=update.message.text,
+            screen_shot=update.message.photo[-1],
+            amount=context.user_data['deposit_amount'],
             acc_number=context.user_data["account_deposit"],
             method=context.user_data["deposit_method"],
             target_group=context.bot_data["data"]["deposit_orders_group"],
@@ -143,16 +167,16 @@ deposit_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(make_deposit, "^deposit$")],
     states={
         ACCOUNT_DEPOSIT: [CallbackQueryHandler(account_deposit, "^\d+$")],
+        DEPOSIT_AMOUNT: [MessageHandler(filters=filters.Regex("^\d+.?\d*$"), callback=deposit_amount)],
         DEPOSIT_METHOD: [CallbackQueryHandler(deposit_method, payment_method_pattern)],
-        REF_NUM: [MessageHandler(filters=filters.Regex("^\d+$"), callback=get_ref_num)],
+        SCREENSHOT: [MessageHandler(filters=filters.PHOTO, callback=get_screenshot)],
     },
     fallbacks=[
         start_command,
         back_to_user_home_page_handler,
         CallbackQueryHandler(back_to_deposit_method, "^back_to_deposit_method$"),
-        CallbackQueryHandler(
-            back_to_account_deposit, "^back_to_account_number_deposit$"
-        ),
+        CallbackQueryHandler(back_to_deposit_amount, "^back_to_deposit_amount$"),
+        CallbackQueryHandler(back_to_account_deposit, "^back_to_account_deposit$"),
     ],
     name="deposit_handler",
     persistent=True,

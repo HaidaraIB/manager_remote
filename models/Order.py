@@ -25,6 +25,8 @@ class Order(BaseOrder):
     ex_rate = Column(Float, default=0)
 
     reason = Column(String, default="")
+    pending_check_message_id = Column(Integer)
+    checking_message_id = Column(Integer, default=0)
     pending_process_message_id = Column(Integer, default=0)
     processing_message_id = Column(Integer, default=0)
     complaint_took_care_of = Column(Integer, default=0)
