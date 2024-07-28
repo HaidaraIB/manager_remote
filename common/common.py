@@ -26,7 +26,7 @@ import uuid
 import traceback
 import json
 import logging
-from constants import *
+from common.constants import *
 from models import (
     WithdrawOrder,
     DepositOrder,
@@ -102,15 +102,15 @@ def apply_ex_rate(
     if method in [PAYEER, PERFECT_MONEY, USDT]:
         if method == PAYEER:
             ex_rate = context.bot_data["data"][
-                f"payeer_to_syp_{buy_or_sell_dict[order_type]}"
+                f"payeer_to_aed_{buy_or_sell_dict[order_type]}"
             ]
         elif method == PERFECT_MONEY:
             ex_rate = context.bot_data["data"][
-                f"perfect_money_to_syp_{buy_or_sell_dict[order_type]}"
+                f"perfect_money_to_aed_{buy_or_sell_dict[order_type]}"
             ]
         elif method == USDT:
             ex_rate = context.bot_data["data"][
-                f"usdt_to_syp_{buy_or_sell_dict[order_type]}"
+                f"usdt_to_aed_{buy_or_sell_dict[order_type]}"
             ]
 
         if order_type == "deposit":
@@ -156,25 +156,25 @@ def payment_method_pattern(callback_data: str):
 
 
 def build_back_button(data: str):
-    return [InlineKeyboardButton(text="الرجوع🔙", callback_data=data)]
+    return [InlineKeyboardButton(text="الرجوع 🔙 - Back 🔙", callback_data=data)]
 
 
 def build_user_keyboard():
     keyboard = [
-        [InlineKeyboardButton(text="سحب 💳", callback_data="withdraw")],
-        [InlineKeyboardButton(text="إيداع 📥", callback_data="deposit")],
+        [InlineKeyboardButton(text=WITHDRAW_BUTTON_TEXT, callback_data="withdraw")],
+        [InlineKeyboardButton(text=DEPOSIT_BUTTON_TEXT, callback_data="deposit")],
         [
             InlineKeyboardButton(
-                text="إنشاء حساب موثق ™️", callback_data="create account"
+                text=CREATE_ACCOUNT_BUTTON_TEXT, callback_data="create account"
             )
         ],
         [
             InlineKeyboardButton(
-                text="إضافة حساب سابق ➕", callback_data="add existing account"
+                text=ADD_ACCOUNT_BUTTON_TEXT, callback_data="add existing account"
             )
         ],
-        [InlineKeyboardButton(text="شراء USDT 💰", callback_data="busdt")],
-        [InlineKeyboardButton(text="إنشاء شكوى 🗳", callback_data="make complaint")],
+        [InlineKeyboardButton(text=BUY_USDT_BUTTON_TEXT, callback_data="busdt")],
+        [InlineKeyboardButton(text=MAKE_COMPLAINT_BUTTON_TEXT, callback_data="make complaint")],
         [InlineKeyboardButton(text="عملك معنا 💼", callback_data="work with us")],
         [
             InlineKeyboardButton(
@@ -299,6 +299,7 @@ def build_agent_keyboard():
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
+
 
 def build_methods_keyboard(buy_usdt: bool = False):
     if len(PAYMENT_METHODS_LIST) == 1:

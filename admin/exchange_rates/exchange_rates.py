@@ -32,17 +32,17 @@ async def choose_exchange_rate_to_update(
         exchange_rates_keyboard = [
             [
                 InlineKeyboardButton(
-                    text="شراء USDT", callback_data="buy_usdt/usdt_to_syp"
+                    text="شراء USDT", callback_data="buy_usdt/usdt_to_aed"
                 )
             ],
-            [InlineKeyboardButton(text="USDT", callback_data="USDT/usdt_to_syp")],
+            [InlineKeyboardButton(text="USDT", callback_data="USDT/usdt_to_aed")],
             [
                 InlineKeyboardButton(
                     text="Perfect Money",
-                    callback_data="Perfect Money/perfect_money_to_syp",
+                    callback_data="Perfect Money/perfect_money_to_aed",
                 )
             ],
-            [InlineKeyboardButton(text="Payeer", callback_data="Payeer/payeer_to_syp")],
+            [InlineKeyboardButton(text="Payeer", callback_data="Payeer/payeer_to_aed")],
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -62,8 +62,12 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         shared_text = f"أرسل السعر الجديد، السعر الحالي:\n\n"
         if data[0] == "buy_usdt":
+            try:
+                context.bot_data['data']['usdt_to_aed']
+            except KeyError:
+                context.bot_data['data']['usdt_to_aed'] = 3.67
             text = shared_text + (
-                f"Buy USDT: <b>{context.bot_data['data']['usdt_to_syp']}</b>"
+                f"Buy USDT: <b>{context.bot_data['data']['usdt_to_aed']}</b>"
             )
             await update.callback_query.edit_message_text(
                 text=text,
@@ -77,8 +81,8 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.bot_data["data"][f"{data[1]}_sell_rate"] = 14500
             context.bot_data["data"][f"{data[1]}_buy_rate"] = 14200
         text = shared_text + (
-            f"بيع: <b>{context.bot_data['data'][f'{data[1]}_buy_rate']} SYP</b>\n"
-            f"شراء: <b>{context.bot_data['data'][f'{data[1]}_sell_rate']} SYP</b>"
+            f"بيع: <b>{context.bot_data['data'][f'{data[1]}_buy_rate']} AED</b>\n"
+            f"شراء: <b>{context.bot_data['data'][f'{data[1]}_sell_rate']} AED</b>"
         )
         await update.callback_query.edit_message_text(
             text=text,
@@ -144,7 +148,7 @@ update_exchange_rates_handler = ConversationHandler(
     ],
     states={
         CHOOSE_EXCHANGE_RATE_TO_UPDATE: [
-            CallbackQueryHandler(get_new_rate, lambda x: x.endswith("to_syp"))
+            CallbackQueryHandler(get_new_rate, lambda x: x.endswith("to_aed"))
         ],
         NEW_RATE: [
             MessageHandler(filters=filters.Regex("^\d+\.?\d*$"), callback=buy_or_sell)

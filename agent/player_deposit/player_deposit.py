@@ -17,7 +17,7 @@ from common.back_to_home_page import (
     back_to_agent_home_page_handler,
 )
 from common.decorators import check_if_user_agent_decorator
-from constants import *
+from common.constants import *
 from start import agent_command
 from user.deposit.common import send_to_check_deposit
 

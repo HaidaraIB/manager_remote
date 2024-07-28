@@ -7,7 +7,7 @@ from telegram.ext import (
     ConversationHandler,
 )
 import functools
-from constants import *
+from common.constants import *
 from models import (
     Account,
     User,
@@ -42,7 +42,7 @@ def check_user_pending_orders_decorator(func):
             ].check_user_pending_orders(
                 user_id=update.effective_user.id,
             ):
-                await update.callback_query.answer("لديك طلب قيد التنفيذ بالفعل ❗️")
+                await update.callback_query.answer("لديك طلب قيد التنفيذ بالفعل ❗️ - You have an order under process ❗️")
                 return ConversationHandler.END
         except KeyError:
             pass
@@ -58,7 +58,7 @@ def check_user_call_on_or_off_decorator(func):
     ):
         try:
             if not context.bot_data["data"]["user_calls"][update.callback_query.data]:
-                await update.callback_query.answer("هذه الخدمة متوقفة حالياً ❗️")
+                await update.callback_query.answer("هذه الخدمة متوقفة حالياً ❗️ - This freature is off ❗️")
                 return ConversationHandler.END
         except KeyError:
             pass
@@ -75,7 +75,7 @@ def check_if_user_created_account_from_bot_decorator(func):
         accounts = Account.get_user_accounts(user_id=update.effective_user.id)
         if not accounts:
             await update.callback_query.answer(
-                "قم بإنشاء حساب موثق عن طريق البوت أولاً ❗️",
+                "قم بإنشاء حساب موثق عن طريق البوت أولاً  ❗️ - Create an account via the bot first ❗️",
                 show_alert=True,
             )
             return ConversationHandler.END

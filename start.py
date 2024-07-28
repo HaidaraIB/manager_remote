@@ -25,7 +25,7 @@ from common.common import (
 from common.force_join import check_if_user_member
 
 from custom_filters import Admin, Worker, DepositAgent, Agent
-from constants import *
+from common.constants import *
 
 
 async def inits(app: Application):
@@ -63,7 +63,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         await update.message.reply_text(
-            text="أهلاً بك...",
+            text="أهلاً بك... - Welcome...",
             reply_markup=ReplyKeyboardRemove(),
         )
         await update.message.reply_text(

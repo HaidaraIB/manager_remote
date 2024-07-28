@@ -2,9 +2,21 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from common.common import notify_workers
 from models import WithdrawOrder, Account, Checker, PaymentAgent
-from constants import *
+from common.constants import *
 import asyncio
 
+
+SEND_WITHDRAW_CODE_TEXT = (
+    "أرسل كود السحب\n\n"
+    "يوضح الفيديو المرفق كيفية الحصول على الكود.\n\n"
+    "Send the withdraw code\n\n"
+    "The video shows how you can get it."
+)
+
+DUPLICATE_CODE_TEXT = (
+    "لقد تم إرسال هذا الكود إلى البوت من قبل ❗️\n\n"
+    "Duplicate code ❗️"
+)
 
 def stringify_order(
     w_type: str,
@@ -38,7 +50,7 @@ async def send_withdraw_order_to_check(
     bank_account_name: str,
     payment_method_number: str,
     w_type: str,
-    password:str = None,
+    password: str = None,
     agent_id: int = None,
 ):
 

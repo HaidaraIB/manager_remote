@@ -86,7 +86,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             caption=caption,
         )
 
-        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
+        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
 
         await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
@@ -194,7 +194,7 @@ async def return_deposit_order_reason(
 
         text = (
             "تمت إعادة الطلب📥\n"
-            + update.message.reply_to_message.text_html
+            + update.message.reply_to_message.caption_html
             + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
 

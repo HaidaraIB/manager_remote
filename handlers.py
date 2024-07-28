@@ -148,8 +148,11 @@ def main():
     app.add_handler(back_from_return_deposit_order_handler)
 
     app.add_handler(return_deposit_order_handler)
-    app.add_handler(store_ref_number_handler, group=1)
-    app.add_handler(invalid_ref_format_handler, group=1)
+    app.add_handler(check_deposit_handler)
+    app.add_handler(send_deposit_order_handler)
+    app.add_handler(decline_deposit_order_handler)
+    app.add_handler(decline_deposit_order_reason_handler)
+    app.add_handler(back_from_decline_deposit_order_handler)
 
     # WITHDRAW
     app.add_handler(check_payment_handler)

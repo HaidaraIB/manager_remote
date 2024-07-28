@@ -5,11 +5,20 @@ from worker.check_deposit.check_deposit import check_deposit, stringify_order
 from common.common import notify_workers, send_to_photos_archive
 import asyncio
 
+SEND_MONEY_TEXT = (
+    "قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
+    "<code>{}</code>\n\n"
+    "ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+    "Send the money to:\n\n"
+    "<code>{}</code>\n\n"
+    "And send a screenshot in order to confirm it."
+)
+
 
 async def send_to_check_deposit(
     context: ContextTypes.DEFAULT_TYPE,
     user_id: int,
-    amount:float,
+    amount: float,
     screenshot: PhotoSize,
     method: str,
     acc_number: str,
@@ -21,6 +30,8 @@ async def send_to_check_deposit(
         method=method,
         acc_number=acc_number,
         agent_id=agent_id if agent_id else 0,
+        group_id=target_group,
+        amount=amount,
     )
 
     await send_to_photos_archive(
@@ -30,7 +41,7 @@ async def send_to_check_deposit(
         order_type="deposit",
     )
 
-    await context.bot.send_photo(
+    message = await context.bot.send_photo(
         chat_id=target_group,
         photo=screenshot,
         caption=stringify_order(
@@ -46,6 +57,11 @@ async def send_to_check_deposit(
         ),
     )
 
+    await DepositOrder.add_message_ids(
+        serial=serial,
+        pending_check_message_id=message.id
+    )
+
     workers = DepositAgent.get_workers()
     asyncio.create_task(
         notify_workers(
@@ -54,4 +70,3 @@ async def send_to_check_deposit(
             text=f"انتباه يوجد طلب تحقق إيداع جديد 🚨",
         )
     )
-    return True

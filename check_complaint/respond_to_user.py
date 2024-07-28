@@ -20,7 +20,7 @@ from common.common import (
     parent_to_child_models_mapper,
     send_to_photos_archive,
 )
-from constants import EXT_COMPLAINT_LINE
+from common.constants import EXT_COMPLAINT_LINE
 import models
 
 

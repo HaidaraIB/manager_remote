@@ -64,7 +64,7 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         amount, ex_rate = apply_ex_rate(
             method=d_order.method,
-            amount=amount,
+            amount=d_order.amount,
             order_type="deposit",
             context=context,
         )

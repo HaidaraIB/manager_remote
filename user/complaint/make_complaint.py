@@ -33,7 +33,7 @@ from user.complaint.notify import notify_operation
 from user.complaint.common import *
 from start import start_command
 from models import Complaint, Photo
-from constants import CHOOSE_OPERATIONS_TEXT, EXT_COMPLAINT_LINE
+from common.constants import CHOOSE_OPERATIONS_TEXT, EXT_COMPLAINT_LINE
 
 (
     COMPLAINT_ABOUT,
@@ -50,7 +50,7 @@ from constants import CHOOSE_OPERATIONS_TEXT, EXT_COMPLAINT_LINE
 async def make_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(
-            text="شكوى فيما يخص:",
+            text="شكوى فيما يخص - Complaint about:",
             reply_markup=InlineKeyboardMarkup(complaints_keyboard),
         )
         return COMPLAINT_ABOUT
@@ -65,11 +65,11 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
             about = context.user_data["complaint_about"]
 
         if about == "deposit":
-            ar_texts = ["إيداع", "الإيداع"]
+            ar_texts = ["إيداع - deposit", "الإيداع - the deposit"]
         elif about == "withdraw":
-            ar_texts = ["سحب", "السحب"]
+            ar_texts = ["سحب - withdraw", "السحب - the withdraw"]
         else:
-            ar_texts = ["شراء USDT", "شراء USDT"]
+            ar_texts = ["شراء USDT - buy USDT", "شراء USDT - buy USDT"]
 
         operations = parent_to_child_models_mapper[about].get_orders(
             user_id=update.effective_user.id
@@ -79,7 +79,9 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serials=[op.serial for op in operations if not op.complaint_took_care_of]
         )
         if not operations or len(keyboard) == 2:
-            await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد❗️")
+            await update.callback_query.answer(
+                NO_OPERATIONS_TEXT.format(ar_texts[0], ar_texts[0])
+            )
             return
 
         await update.callback_query.edit_message_text(
@@ -101,40 +103,23 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             serial = context.user_data["complaint_serial"]
 
+        op_text = stringify_order(
+            serial=serial, order_type=context.user_data["complaint_about"]
+        )
+
         op = parent_to_child_models_mapper[
             context.user_data["complaint_about"]
         ].get_one_order(
             serial=serial,
         )
-
-        op_text = (
-            f"تفاصيل العملية:\n\n"
-            f"الرقم التسلسلي: <code>{op.serial}</code>\n"
-            f"المبلغ: <b>{op.amount}</b>\n"
-            f"وسيلة الدفع: <b>{op.method}</b>\n"
-            f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
-            f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
-        )
-
         back_buttons = [
             build_back_button("back_to_choose_operation"),
             back_to_user_home_page_button[0],
         ]
 
-        if context.user_data["complaint_about"] == "deposit" and op.state == "pending":
-            await update.callback_query.answer(
-                text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",
-                show_alert=True,
-            )
-            return
-
-        elif op.state == "returned":
+        if op.state == "returned":
             await update.callback_query.edit_message_text(
-                text=(
-                    op_text
-                    + "<b>طلب معاد راجع محادثة البوت وقم بإرفاق المطلوب.\n"
-                    + "في حال لم تجدها أعد تقديم الطلب من جديد، مع الأخذ بعين الاعتبار سبب الإعادة.</b>"
-                ),
+                text=op_text + RETURN_COMPLAINT_TEXT,
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
             return
@@ -143,18 +128,14 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             alert_button = [
                 [
                     InlineKeyboardButton(
-                        text="إرسال تنبيه🔔",
+                        text=NOTIFY_BUTTON_TEXT,
                         callback_data=f"notify_{op.state}_operation_{serial}",
                     )
                 ],
                 *back_buttons,
             ]
-            if op.state == "sent":
-                op_text += "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير بشأنها.</b>"
-
-            else:
-                op_text += "<b>عملية قيد التحقق، يمكنك إرسال تذكير بشأنها.</b>"
-
+            sp_en_to_ar = {"sent": "التنفيذ", "pending": "التحقق"}
+            op_text += SP_TEXT.format(sp_en_to_ar[op.state], op.state)
             await update.callback_query.edit_message_text(
                 text=op_text,
                 reply_markup=InlineKeyboardMarkup(alert_button),
@@ -166,7 +147,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
-            text=op_text + "<b>أرسل سبب هذه الشكوى</b>",
+            text=op_text + SEND_REASON_TEXT,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return COMPLAINT_REASON
@@ -179,16 +160,20 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["reason"] = update.message.text
         complaint_text = (
-            f"هل أنت متأكد من أنك تريد إرسال شكوى فيما يخص الطلب:\n\n"
+            f"هل أنت متأكد من أنك تريد إرسال شكوى فيما يخص الطلب - Are you sure you want to complaint about the order:\n\n"
             f"{stringify_order(serial=context.user_data['complaint_serial'], order_type=context.user_data['complaint_about'])}\n"
-            "سبب الشكوى:\n"
+            "سبب الشكوى - Because:\n"
             f"<b>{update.message.text}</b>"
         )
 
         keyboard = [
             [
-                InlineKeyboardButton(text="نعم👍", callback_data="yes complaint"),
-                InlineKeyboardButton(text="لا👎", callback_data="no complaint"),
+                InlineKeyboardButton(
+                    text="نعم 👍 - Yes 👍", callback_data="yes complaint"
+                ),
+                InlineKeyboardButton(
+                    text="لا 👎 - No 👎", callback_data="no complaint"
+                ),
             ],
             build_back_button("back_to_complaint_reason"),
             back_to_user_home_page_button[0],
@@ -247,7 +232,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
             )
 
             await update.callback_query.edit_message_text(
-                text="شكراً لك، تم إرسال الشكوى خاصتك إلى قسم المراجعة بنجاح، سنعمل على إصلاح المشكلة والرد عليك في أقرب وقت ممكن.",
+                text=THANK_YOU_TEXT,
                 reply_markup=build_user_keyboard(),
             )
 

@@ -31,6 +31,8 @@ class DepositOrder(Order):
         user_id: int,
         method: str,
         acc_number: str,
+        group_id: int,
+        amount: float,
         agent_id: int = None,
         s: Session = None,
     ):
@@ -39,6 +41,8 @@ class DepositOrder(Order):
                 user_id=user_id,
                 method=method,
                 acc_number=acc_number,
+                group_id=group_id,
+                amount=amount,
                 agent_id=agent_id if agent_id else 0,
             ),
         )

@@ -1,4 +1,7 @@
-from worker.check_deposit.store_ref import (
-    store_ref_number_handler,
-    invalid_ref_format_handler,
+from worker.check_deposit.check_deposit import (
+    check_deposit_handler,
+    send_deposit_order_handler,
+    decline_deposit_order_handler,
+    decline_deposit_order_reason_handler,
+    back_from_decline_deposit_order_handler,
 )

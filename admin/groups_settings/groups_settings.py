@@ -27,7 +27,7 @@ from common.back_to_home_page import (
 )
 
 from start import admin_command, start_command
-from constants import *
+from common.constants import *
 from custom_filters import Admin
 
 NEW_GROUP_ID = 0

@@ -34,6 +34,8 @@ from common.back_to_home_page import (
 from start import start_command
 from models import Account, PaymentMethod
 from user.deposit.common import send_to_check_deposit
+from common.constants import *
+from user.deposit.common import SEND_MONEY_TEXT
 
 (
     ACCOUNT_DEPOSIT,
@@ -63,7 +65,7 @@ async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
-            text="اختر حساباً من حساباتك المسجلة لدينا",
+            text="اختر حساباً من حساباتك المسجلة لدينا - Choose an account",
             reply_markup=InlineKeyboardMarkup(keybaord),
         )
         return ACCOUNT_DEPOSIT
@@ -78,7 +80,8 @@ async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.callback_query.data.startswith("back"):
             context.user_data["account_deposit"] = int(update.callback_query.data)
         await update.callback_query.edit_message_text(
-            text="أرسل الملبغ", reply_markup=InlineKeyboardMarkup(back_buttons)
+            text="أرسل الملبغ - Send the amount",
+            reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return DEPOSIT_AMOUNT
 
@@ -94,12 +97,12 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.message:
             context.user_data["deposit_amount"] = float(update.message.text)
             await update.message.reply_text(
-                text="اختر وسيلة الدفع 💳",
+                text="اختر وسيلة الدفع 💳 - Choose payment method 💳",
                 reply_markup=InlineKeyboardMarkup(deposit_methods),
             )
         else:
             await update.callback_query.edit_message_text(
-                text="اختر وسيلة الدفع 💳",
+                text="اختر وسيلة الدفع 💳 - Choose payment method 💳",
                 reply_markup=InlineKeyboardMarkup(deposit_methods),
             )
         return DEPOSIT_METHOD
@@ -113,23 +116,22 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = update.callback_query.data
         method = PaymentMethod.get_payment_method(name=data)
         if method.on_off == 0:
-            await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
+            await update.callback_query.answer(METHOD_IS_OFF_TEXT)
             return
         context.user_data["deposit_method"] = data
         back_buttons = [
             build_back_button("back_to_deposit_method"),
             back_to_user_home_page_button[0],
         ]
-        text = (
-            f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
-            f"<code>{context.bot_data['data'][f'{data}_number']}</code>\n\n"
-            f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-        )
+        text = SEND_MONEY_TEXT
         if data == "USDT":
-            text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n"
+            text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20 - Note that the network is TRC20</b>\n"
 
         await update.callback_query.edit_message_text(
-            text=text,
+            text=SEND_MONEY_TEXT.format(
+                context.bot_data["data"][f"{data}_number"],
+                context.bot_data["data"][f"{data}_number"],
+            ),
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return SCREENSHOT
@@ -140,23 +142,17 @@ back_to_deposit_method = deposit_amount
 
 async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        res = await send_to_check_deposit(
+        await send_to_check_deposit(
             context=context,
             user_id=update.effective_user.id,
-            screen_shot=update.message.photo[-1],
-            amount=context.user_data['deposit_amount'],
+            screenshot=update.message.photo[-1],
+            amount=context.user_data["deposit_amount"],
             acc_number=context.user_data["account_deposit"],
             method=context.user_data["deposit_method"],
             target_group=context.bot_data["data"]["deposit_orders_group"],
         )
-        if not res:
-            await update.message.reply_text(
-                text="رقم عملية مكرر ❗️",
-            )
-            return
-
         await update.message.reply_text(
-            text="شكراً لك، سيتم التحقق من العملية وإضافة المبلغ المودع خلال وقت قصير.",
+            text=THANK_YOU_TEXT,
             reply_markup=build_user_keyboard(),
         )
 
@@ -167,7 +163,9 @@ deposit_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(make_deposit, "^deposit$")],
     states={
         ACCOUNT_DEPOSIT: [CallbackQueryHandler(account_deposit, "^\d+$")],
-        DEPOSIT_AMOUNT: [MessageHandler(filters=filters.Regex("^\d+.?\d*$"), callback=deposit_amount)],
+        DEPOSIT_AMOUNT: [
+            MessageHandler(filters=filters.Regex("^\d+.?\d*$"), callback=deposit_amount)
+        ],
         DEPOSIT_METHOD: [CallbackQueryHandler(deposit_method, payment_method_pattern)],
         SCREENSHOT: [MessageHandler(filters=filters.PHOTO, callback=get_screenshot)],
     },

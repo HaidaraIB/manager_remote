@@ -33,10 +33,10 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-from user.withdraw.common import send_withdraw_order_to_check
+from user.withdraw.common import *
 from start import start_command
 from models import PaymentMethod, Account
-from constants import *
+from common.constants import *
 import os
 
 (
@@ -68,7 +68,7 @@ async def withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
-            text="اختر حساباً من حساباتك المسجلة لدينا",
+            text="اختر حساباً من حساباتك المسجلة لدينا - Choose an account",
             reply_markup=InlineKeyboardMarkup(keybaord),
         )
         return WITHDRAW_ACCOUNT
@@ -83,7 +83,7 @@ async def choose_withdraw_account(update: Update, context: ContextTypes.DEFAULT_
         payment_methods.append(back_to_user_home_page_button[0])
 
         await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع 💳",
+            text="اختر وسيلة الدفع 💳 - Choose a payment method 💳",
             reply_markup=InlineKeyboardMarkup(payment_methods),
         )
         return PAYMENT_METHOD
@@ -99,7 +99,7 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
             data = update.callback_query.data
             method = PaymentMethod.get_payment_method(name=data)
             if not method.on_off:
-                await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
+                await update.callback_query.answer(METHOD_IS_OFF_TEXT)
                 return
 
             context.user_data["payment_method"] = data
@@ -112,9 +112,12 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
         ]
 
         if context.user_data["payment_method"] == USDT:
-            text = "أرسل كود محفظتك👝\n\n<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
+            text = (
+                "أرسل كود محفظتك 👝\n\n<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n\n"
+                "Send your wallet address 👝\n\n<b>Note that the network is TRC20</b>"
+            )
         else:
-            text = f"أرسل رقم حساب {data}"
+            text = f"أرسل رقم حساب {data} - Send {data} number"
 
         await update.callback_query.edit_message_text(
             text=text,
@@ -139,12 +142,12 @@ async def get_withdraw_code_bank_account_name(
         if context.user_data["payment_method"] in (BARAKAH, BEMO):
             if update.message:
                 await update.message.reply_text(
-                    text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+                    text=SEND_BANK_ACCOUNT_NAME_TEXT,
                     reply_markup=InlineKeyboardMarkup(back_keyboard),
                 )
             else:
                 await update.callback_query.edit_message_text(
-                    text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+                    text=SEND_BANK_ACCOUNT_NAME_TEXT,
                     reply_markup=InlineKeyboardMarkup(back_keyboard),
                 )
             return BANK_ACCOUNT_NAME
@@ -155,9 +158,7 @@ async def get_withdraw_code_bank_account_name(
         await update.message.reply_video(
             video=os.getenv("VIDEO_ID"),
             filename="how_to_get_withdraw_code",
-            caption=(
-                "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
-            ),
+            caption=SEND_WITHDRAW_CODE_TEXT,
             reply_markup=InlineKeyboardMarkup(back_keyboard),
         )
         return WITHDRAW_CODE
@@ -166,7 +167,7 @@ async def get_withdraw_code_bank_account_name(
 back_to_get_payment_info = choose_payment_method
 
 
-async def get_bank_accuont_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if update.message:
             context.user_data["bank_account_name"] = update.message.text
@@ -177,9 +178,7 @@ async def get_bank_accuont_name(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_video(
             video=os.getenv("VIDEO_ID"),
             filename="how_to_get_withdraw_code",
-            caption=(
-                "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
-            ),
+            caption=SEND_WITHDRAW_CODE_TEXT,
             reply_markup=InlineKeyboardMarkup(back_keyboard),
         )
         return WITHDRAW_CODE
@@ -205,12 +204,12 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         if not res:
             await update.message.reply_text(
-                text="لقد تم إرسال هذا الكود إلى البوت من قبل ❗️",
+                text=DUPLICATE_CODE_TEXT,
             )
             return
 
         await update.message.reply_text(
-            text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
+            text=THANK_YOU_TEXT,
             reply_markup=build_user_keyboard(),
         )
 
@@ -220,7 +219,7 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
 withdraw_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            choose_withdraw_account,
+            withdraw,
             "^withdraw$",
         ),
     ],
@@ -246,7 +245,7 @@ withdraw_handler = ConversationHandler(
         BANK_ACCOUNT_NAME: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_bank_accuont_name,
+                callback=get_bank_account_name,
             )
         ],
         WITHDRAW_CODE: [

@@ -1,7 +1,7 @@
 from telegram import InlineKeyboardButton
 from PyroClientSingleton import PyroClientSingleton
 from common.common import parent_to_child_models_mapper
-from constants import *
+from common.constants import *
 import models
 
 orders_dict = {

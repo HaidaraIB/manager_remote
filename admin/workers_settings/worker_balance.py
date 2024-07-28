@@ -35,7 +35,7 @@ from admin.workers_settings.common import (
     back_to_choose_position,
     back_to_worker_settings_handler,
 )
-from constants import *
+from common.constants import *
 
 (
     CHOOSE_WORKER_BALANCE,

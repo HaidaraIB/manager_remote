@@ -67,7 +67,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             chat_id=context.bot_data["data"][target_group],
             photo=update.effective_message.photo[-1],
             caption=stringify_order(
-                amount=amount * context.bot_data["data"]["usdt_to_syp"],
+                amount=amount * context.bot_data["data"]["usdt_to_aed"],
                 serial=serial,
                 method=method,
                 payment_method_number=b_order.payment_method_number,
@@ -100,7 +100,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             pending_process_message_id=message.id,
             serial=serial,
             group_id=context.bot_data["data"][target_group],
-            ex_rate=context.bot_data["data"]["usdt_to_syp"],
+            ex_rate=context.bot_data["data"]["usdt_to_aed"],
         )
         context.user_data["requested"] = False
 

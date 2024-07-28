@@ -18,6 +18,17 @@ from common.common import build_user_keyboard
 import functools
 import os
 
+FORCE_JOIN_TEXT = (
+    "لبدء استخدام البوت يجب عليك الانضمام الى قناة البوت أولاً.\n"
+    "✅ اشترك أولاً 👇.\n"
+    f"🔗 {os.getenv('CHANNEL_LINK')}\n\n"
+    "ثم اضغط تحقق✅\n\n"
+    "To be abel to use the bot you have to join first\n"
+    "✅ Join 👇.\n"
+    f"🔗 {os.getenv('CHANNEL_LINK')}\n\n"
+    "And press Verify ✅\n\n"
+)
+
 
 def check_if_user_member_decorator(func):
     @functools.wraps(func)
@@ -36,22 +47,21 @@ async def check_if_user_member(update: Update, context: ContextTypes.DEFAULT_TYP
         user_id=update.effective_user.id,
     )
     if chat_member.status == ChatMemberStatus.LEFT:
-        text = f"""لبدء استخدام البوت  يجب عليك الانضمام الى قناة البوت أولاً.
-        
-✅ اشترك أولاً 👇.
-🔗 {os.getenv("CHANNEL_LINK")}
 
-ثم اضغط تحقق✅"""
         check_joined_button = [
-            [InlineKeyboardButton(text="تحقق✅", callback_data="check joined")]
+            [
+                InlineKeyboardButton(
+                    text="تحقق ✅ - Verify ✅", callback_data="check joined"
+                )
+            ]
         ]
         if update.callback_query:
             await update.callback_query.edit_message_text(
-                text=text, reply_markup=InlineKeyboardMarkup(check_joined_button)
+                text=FORCE_JOIN_TEXT, reply_markup=InlineKeyboardMarkup(check_joined_button)
             )
         else:
             await update.message.reply_text(
-                text=text, reply_markup=InlineKeyboardMarkup(check_joined_button)
+                text=FORCE_JOIN_TEXT, reply_markup=InlineKeyboardMarkup(check_joined_button)
             )
         return False
     return True
@@ -64,12 +74,12 @@ async def check_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     if chat_memeber.status == ChatMemberStatus.LEFT:
         await update.callback_query.answer(
-            text="قم بالاشتراك بالقناة أولاً", show_alert=True
+            text="قم بالاشتراك بالقناة أولاً - Join first", show_alert=True
         )
         return
 
     await update.callback_query.edit_message_text(
-        text="أهلاً بك...",
+        text="أهلاً بك... - Welcome...",
         reply_markup=build_user_keyboard(),
     )
 

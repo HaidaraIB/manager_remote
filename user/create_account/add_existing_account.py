@@ -28,6 +28,7 @@ from start import start_command
 from common.force_join import check_if_user_member_decorator
 
 from models import Account
+
 (GET_FULL_NAME, GET_ACC_NUM, GET_PASSWORD) = range(3)
 
 
@@ -36,7 +37,7 @@ from models import Account
 async def add_existing_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(
-            text="قم بإرسال رقم الحساب",
+            text="قم بإرسال رقم الحساب - Send your account number",
             reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
         )
         return GET_ACC_NUM
@@ -52,7 +53,7 @@ async def get_acc_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if update.callback_query:
             await update.callback_query.edit_message_text(
-                text="قم بإرسال الاسم الثلاثي",
+                text="قم بإرسال الاسم الثلاثي - Send your full name",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
             return GET_FULL_NAME
@@ -60,14 +61,14 @@ async def get_acc_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
         account = Account.get_account(acc_num=update.message.text)
         if not account:
             await update.message.reply_text(
-                text="هذا الحساب غير منشأ عن طريق البوت!",
+                text="هذا الحساب غير منشأ عن طريق البوت ! - This account is't created by the bot.",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
             return
 
         context.user_data["acc_num"] = update.message.text
         await update.message.reply_text(
-            text="قم بإرسال الاسم الثلاثي",
+            text="قم بإرسال الاسم الثلاثي - Send your full name",
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return GET_FULL_NAME
@@ -85,12 +86,12 @@ async def get_full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.message:
             context.user_data["full_name"] = update.message.text
             await update.message.reply_text(
-                text="قم بإرسال كلمة المرور",
+                text="قم بإرسال كلمة المرور - Send the password",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
         else:
             await update.callback_query.edit_message_text(
-                text="قم بإرسال كلمة المرور",
+                text="قم بإرسال كلمة المرور - Send the password",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
 
@@ -107,7 +108,8 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
             acc_num=context.user_data["acc_num"],
         )
         await update.message.reply_text(
-            text="تمت إضافة الحساب بنجاح ✅", reply_markup=build_user_keyboard()
+            text="تمت إضافة الحساب بنجاح ✅ - Account added successfully ✅",
+            reply_markup=build_user_keyboard(),
         )
         return ConversationHandler.END
 

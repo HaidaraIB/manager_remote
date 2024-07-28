@@ -74,8 +74,14 @@ async def reply_with_payment_proof_buy_usdt(
         amount = b_order.amount
 
         user_caption = (
-            f"مبروك، تم تأكيد عملية شراء <b>{format_amount(amount)} USDT</b> بنجاح ✅\n\n"
-            f"الرقم التسلسلي للطلب: <code>{serial}</code>"
+            "مبروك، تم تأكيد عملية شراء "
+            f"<b>{format_amount(amount)} USDT</b> "
+            "بنجاح ✅\n\n"
+            f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
+            "Congrats, your buy usdt order "
+            f"<b>{format_amount(amount)} USDT</b> "
+            "has been approved ✅\n\n"
+            f"Serial: <code>{serial}</code>"
         )
 
         try:

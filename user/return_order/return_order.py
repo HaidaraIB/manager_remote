@@ -26,7 +26,7 @@ from models import WithdrawOrder
 from worker.check_buy_usdt import check_buy_usdt
 from worker.check_deposit import check_deposit
 from worker.check_withdraw import check_withdraw
-
+from common.constants import *
 (SEND_ATTACHMENTS,) = range(1)
 
 
@@ -45,12 +45,12 @@ async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TY
             )
             if code_present and code_present.state == "approved":
                 await update.message.reply_text(
-                    text="تمت الموافقة على هذا الطلب بالفعل",
+                    text="تمت الموافقة على هذا الطلب بالفعل - This order has been approved",
                 )
                 return ConversationHandler.END
 
         await update.callback_query.answer(
-            "قم بإرفاق المطلوب في السبب.", show_alert=True
+            "قم بإرفاق المطلوب في السبب - Send the requested attachments", show_alert=True
         )
         context.user_data["returned_data"] = data
         if update.effective_message.photo:
@@ -67,7 +67,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         reply_markup = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
-                text="قبول الطلب✅",
+                text="قبول الطلب ✅",
                 callback_data=f"verify_{order_type}_order_{order.serial}",
             )
         )
@@ -95,7 +95,6 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if order_type == "deposit"
                         else order.payment_method_number
                     ),
-                    order.ref_number if order_type == "deposit" else None,
                 ),
                 reply_markup=reply_markup,
             )
@@ -118,7 +117,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             date_type="return",
         )
         await update.message.reply_text(
-            text="شكراً لك، تمت إعادة طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
+            text=THANK_YOU_TEXT,
             reply_markup=build_user_keyboard(),
         )
         return ConversationHandler.END

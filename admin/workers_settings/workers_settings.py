@@ -29,7 +29,7 @@ from admin.workers_settings.common import (
     back_to_worker_settings_handler,
     op_dict_en_to_ar,
 )
-from constants import *
+from common.constants import *
 
 
 async def position_to_show_remove_from(
@@ -50,7 +50,7 @@ async def position_to_show_remove_from(
             workers = DepositAgent.get_workers()
             ans_text = "ليس لديك موظفي تنفيذ إيداعات بعد❗️"
 
-        elif pos in ["withdraw", "buy"]:
+        elif pos in ["deposit", "withdraw", "buy"]:
             workers = Checker.get_workers(check_what=pos)
             ans_text = f"ليس لديك موظفي تحقق {op_dict_en_to_ar[pos]} بعد❗️"
 
@@ -86,7 +86,7 @@ async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TY
             worker = DepositAgent.get_workers(worker_id=w_id, deposit=True)
             workers = DepositAgent.get_workers()
 
-        elif pos in ["withdraw", "buy"]:
+        elif pos in ["withdraw", "buy", "deposit"]:
             worker = Checker.get_workers(worker_id=w_id, check_what=pos)
             workers = Checker.get_workers(check_what=pos)
 

@@ -57,6 +57,13 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text="تحقق شراء USDT", callback_data="request check busdt"
                     )
                 )
+            else:
+                checker_keyboard.append(
+                    InlineKeyboardButton(
+                        text="تحقق إيداع", callback_data="request check deposit"
+                    )
+                )
+
 
         payment_agent = models.PaymentAgent.get_workers(
             worker_id=update.effective_user.id
