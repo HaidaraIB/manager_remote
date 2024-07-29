@@ -97,19 +97,7 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
 
-async def agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        if update.callback_query:
-            await update.callback_query.delete_message()
-        await context.bot.send_message(
-            chat_id=update.effective_user.id,
-            text=AGENT_COMMAND_TEXT,
-            reply_markup=build_agent_keyboard(),
-        )
-        return ConversationHandler.END
-
 
 worker_command = CommandHandler(command="worker", callback=worker)
 admin_command = CommandHandler(command="admin", callback=admin)
 start_command = CommandHandler(command="start", callback=start)
-agent_command = CommandHandler(command="agent", callback=agent)

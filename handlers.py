@@ -43,16 +43,12 @@ from common.back_to_home_page import (
 )
 from common.force_join import check_joined_handler
 
-from agent.login import *
-
 from user.withdraw import withdraw_handler
 from user.deposit import deposit_handler
 from user.buy_usdt import buy_usdt_handler
 from user.complaint import complaint_handler
 from user.return_order import *
 from user.create_account import *
-from user.work_with_us import *
-from user.show_trusted_agents import *
 from user.complaint import *
 
 from admin.admin_calls import *
@@ -73,12 +69,8 @@ from worker.check_buy_usdt import *
 from worker.process_buy_usdt import *
 from worker.check_deposit import *
 
-from agent.player_deposit import *
-from agent.player_withdraw import *
 
 from check_complaint import *
-
-from check_work_with_us import *
 
 from dotenv import load_dotenv
 
@@ -133,11 +125,6 @@ def main():
         )
     )
 
-    # AGENT
-    app.add_handler(player_deposit_handler)
-    app.add_handler(player_withdraw_handler)
-
-    app.add_handler(show_trusted_agents_handler)
 
     # DEPOSIT
     app.add_handler(reply_with_payment_proof_handler)
@@ -186,7 +173,6 @@ def main():
     # RETURN
     app.add_handler(handle_returned_order_handler)
 
-    app.add_handler(work_with_us_handler)
 
     # ADMIN SETTINGS
     app.add_handler(admin_settings_handler)
@@ -214,15 +200,6 @@ def main():
     app.add_handler(correct_returned_complaint_handler)
     app.add_handler(back_from_reply_to_returned_complaint_handler)
 
-    # WORK_WITH_US
-    # Agent_Orders
-    app.add_handler(login_agent_handler)
-    app.add_handler(notify_agent_order_handler)
-    app.add_handler(accept_agent_order_handler)
-    app.add_handler(get_login_info_handler)
-    app.add_handler(decline_agent_order_handler)
-    app.add_handler(get_decline_agent_order_reason_handler)
-    app.add_handler(back_to_check_agent_order_handler)
 
     app.add_handler(reply_to_create_account_order_handler)
     app.add_handler(add_existing_account_handler)
@@ -264,7 +241,6 @@ def main():
 
     app.add_handler(check_joined_handler)
 
-    app.add_handler(agent_command)
     app.add_handler(worker_command)
     app.add_handler(admin_command)
     app.add_handler(start_command)

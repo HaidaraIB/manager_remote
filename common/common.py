@@ -8,18 +8,9 @@ from telegram import (
     ReplyKeyboardRemove,
     ReplyKeyboardMarkup,
 )
-
-from telegram.ext import (
-    ContextTypes,
-)
-
-
-from telegram.constants import (
-    ChatType,
-)
-
+from telegram.ext import ContextTypes
+from telegram.constants import ChatType
 from telegram.error import TimedOut, NetworkError
-
 import asyncio
 import os
 import uuid
@@ -174,11 +165,9 @@ def build_user_keyboard():
             )
         ],
         [InlineKeyboardButton(text=BUY_USDT_BUTTON_TEXT, callback_data="busdt")],
-        [InlineKeyboardButton(text=MAKE_COMPLAINT_BUTTON_TEXT, callback_data="make complaint")],
-        [InlineKeyboardButton(text="عملك معنا 💼", callback_data="work with us")],
         [
             InlineKeyboardButton(
-                text="وكلاء موصى بهم 🈂️", callback_data="trusted agents"
+                text=MAKE_COMPLAINT_BUTTON_TEXT, callback_data="make complaint"
             )
         ],
     ]
@@ -268,34 +257,6 @@ def build_admin_keyboard():
                 text="رسالة جماعية 👥",
                 callback_data="broadcast",
             )
-        ],
-    ]
-    return InlineKeyboardMarkup(keyboard)
-
-
-def build_agent_keyboard():
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                text="تسجيل الدخول",
-                callback_data="login_agent",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="إيداع نقطة",
-                callback_data="point_deposit",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="إيداع لاعبين",
-                callback_data="player_deposit",
-            ),
-            InlineKeyboardButton(
-                text="سحب لاعبين",
-                callback_data="player_withdraw",
-            ),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

@@ -20,7 +20,6 @@ from common.common import (
 
 from custom_filters import Admin, DepositAgent
 from common.force_join import check_if_user_member_decorator
-from common.decorators import check_if_user_agent_decorator
 from common.constants import *
 
 back_to_admin_home_page_button = [
@@ -41,32 +40,6 @@ back_to_user_home_page_button = [
     ],
 ]
 
-back_to_agent_home_page_button = [
-    [
-        InlineKeyboardButton(
-            text=BACK_TO_HOME_PAGE_TEXT,
-            callback_data="back_to_agent_home_page",
-        )
-    ],
-]
-
-
-@check_if_user_agent_decorator
-async def back_to_agent_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        try:
-            await update.callback_query.edit_message_text(
-                text=HOME_PAGE_TEXT,
-                reply_markup=build_agent_keyboard(),
-            )
-        except error.BadRequest:
-            await update.effective_message.delete()
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=HOME_PAGE_TEXT,
-                reply_markup=build_agent_keyboard(),
-            )
-        return ConversationHandler.END
 
 
 @check_if_user_member_decorator
@@ -119,7 +92,4 @@ back_to_user_home_page_handler = CallbackQueryHandler(
 )
 back_to_admin_home_page_handler = CallbackQueryHandler(
     back_to_admin_home_page, "^back_to_admin_home_page$"
-)
-back_to_agent_home_page_handler = CallbackQueryHandler(
-    back_to_agent_home_page, "^back_to_agent_home_page$"
 )
