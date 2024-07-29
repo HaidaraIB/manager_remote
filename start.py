@@ -18,13 +18,12 @@ from common.common import (
     build_user_keyboard,
     build_admin_keyboard,
     build_worker_keyboard,
-    build_agent_keyboard,
     check_hidden_keyboard,
 )
 
 from common.force_join import check_if_user_member
 
-from custom_filters import Admin, Worker, DepositAgent, Agent
+from custom_filters import Admin, Worker, DepositAgent
 from common.constants import *
 
 
@@ -39,8 +38,6 @@ async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
         commands.append(("worker", "worker command"))
     if Admin().filter(update):
         commands.append(("admin", "admin command"))
-    if Agent().filter(update):
-        commands.append(("agent", "agent command"))
     await context.bot.set_my_commands(
         commands=commands, scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
     )

@@ -1,10 +1,5 @@
 from sqlalchemy import select, and_, or_, desc
-from models.DB import (
-    Base,
-    lock_and_release,
-    connect_and_close,
-)
-from models.RefNumber import RefNumber
+from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
 import datetime
 
@@ -223,14 +218,8 @@ class BaseOrder(Base):
         serial: int,
         group_id: int,
         ex_rate: float,
-        ref_info: RefNumber = None,
         s: Session = None,
     ):
-        if ref_info:
-            s.query(RefNumber).filter_by(
-                number=ref_info.number,
-                method=ref_info.method,
-            ).update({RefNumber.order_serial: serial})
         s.query(cls).filter_by(serial=serial).update(
             {
                 cls.state: "sent",
@@ -239,7 +228,7 @@ class BaseOrder(Base):
                 cls.group_id: group_id,
                 cls.ex_rate: ex_rate,
                 cls.send_date: datetime.datetime.now(),
-                cls.amount: ref_info.amount if ref_info else cls.amount,
+                cls.amount: cls.amount,
             }
         )
 

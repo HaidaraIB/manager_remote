@@ -23,7 +23,7 @@ from common.back_to_home_page import (
 )
 
 from start import admin_command, start_command
-from models import User, TrustedAgentsOrder
+from models import User
 import asyncio
 from custom_filters import Admin
 
@@ -53,7 +53,6 @@ async def the_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton(
                     text="مستخدمين محددين👤", callback_data="specific users"
                 ),
-                InlineKeyboardButton(text="الوكلاء", callback_data="agents"),
             ],
             build_back_button("back_to_the_message"),
             back_to_admin_home_page_button[0],
@@ -117,10 +116,6 @@ async def send_to(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.callback_query.data == "all users":
             asyncio.create_task(send_to_all(context=context))
 
-        elif update.callback_query.data == "agents":
-            asyncio.create_task(
-                send_to_some(users=TrustedAgentsOrder.get_user_ids(), context=context)
-            )
         keyboard = build_admin_keyboard()
         await update.callback_query.edit_message_text(
             text="يقوم البوت بإرسال الرسائل الآن، يمكنك متابعة استخدامه بشكل طبيعي.",
@@ -164,7 +159,7 @@ broadcast_message_handler = ConversationHandler(
         ],
         SEND_TO: [
             CallbackQueryHandler(
-                callback=send_to, pattern="^((all)|(specific))users$|^agents$"
+                callback=send_to, pattern="^((all)|(specific))users$"
             )
         ],
         ENTER_USERS: [

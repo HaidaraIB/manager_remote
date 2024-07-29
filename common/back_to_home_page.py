@@ -15,7 +15,6 @@ from common.common import (
     build_user_keyboard,
     build_admin_keyboard,
     build_worker_keyboard,
-    build_agent_keyboard,
 )
 
 from custom_filters import Admin, DepositAgent
