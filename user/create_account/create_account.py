@@ -22,17 +22,20 @@ from common.decorators import (
     check_user_call_on_or_off_decorator,
     check_user_pending_orders_decorator,
 )
-from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_button,
     back_to_user_home_page_handler,
 )
 from custom_filters import Account, Declined
-
+from common.force_join import check_if_user_member_decorator
 from start import start_command
 import models
 
-(FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
+(
+    FULL_NAME,
+    NATIONAL_NUMBER,
+    DECLINE_REASON,
+) = range(3)
 
 
 @check_user_pending_orders_decorator

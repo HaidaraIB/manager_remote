@@ -63,7 +63,6 @@ EXT_COMPLAINT_LINE = "<b>ملحق بالشكوى على الطلب ذي الرق
 
 DEPOSIT_BUTTON_TEXT = "إيداع 📥 - Deposit 📥"
 CREATE_ACCOUNT_BUTTON_TEXT = "إنشاء حساب موثق ™️ - Create account ™️"
-ADD_ACCOUNT_BUTTON_TEXT = "إضافة حساب سابق ➕ - Add account ➕"
 WITHDRAW_BUTTON_TEXT = "سحب 💳 - Withdraw 💳"
 BUY_USDT_BUTTON_TEXT = "شراء USDT 💰 - Buy USDT 💰"
 MAKE_COMPLAINT_BUTTON_TEXT = "إنشاء شكوى 🗳 - Make complaint 🗳"

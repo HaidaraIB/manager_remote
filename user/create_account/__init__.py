@@ -7,6 +7,3 @@ from user.create_account.create_account import (
     invalid_account_format_handler,
 )
 
-from user.create_account.add_existing_account import (
-    add_existing_account_handler,
-)

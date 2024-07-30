@@ -99,7 +99,7 @@ def build_positions_keyboard(op: str):
                 callback_data=f"{op}_deposit after check_worker",
             ),
             InlineKeyboardButton(
-                text="تنفيذ إيداع",
+                text="تحقق إيداع",
                 callback_data=f"{op}_deposit_checker",
             ),
         ],

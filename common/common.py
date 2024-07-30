@@ -159,11 +159,6 @@ def build_user_keyboard():
                 text=CREATE_ACCOUNT_BUTTON_TEXT, callback_data="create account"
             )
         ],
-        [
-            InlineKeyboardButton(
-                text=ADD_ACCOUNT_BUTTON_TEXT, callback_data="add existing account"
-            )
-        ],
         [InlineKeyboardButton(text=BUY_USDT_BUTTON_TEXT, callback_data="busdt")],
         [
             InlineKeyboardButton(
