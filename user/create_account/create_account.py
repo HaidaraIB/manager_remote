@@ -32,7 +32,7 @@ from custom_filters import Account, Declined
 from start import start_command
 import models
 
-(FULL_NAME, NATIONAL_NUMBER, DECLINE_REASON) = range(3)
+(FULL_NAME, NATIONAL_NUMBER,) = range(2)
 
 
 @check_user_pending_orders_decorator
@@ -85,7 +85,7 @@ async def national_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="الرفض ⛔️",
+                    text="رفض ⛔️",
                     callback_data=f"decline_create_account_{update.effective_user.id}_{serial}",
                 )
             ),
@@ -210,7 +210,6 @@ async def decline_create_account(update: Update, context: ContextTypes.DEFAULT_T
                 )
             ),
         )
-        return DECLINE_REASON
 
 
 async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -245,7 +244,6 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serial=serial,
         )
 
-        return ConversationHandler.END
 
 
 async def back_from_decline_create_account(
@@ -266,7 +264,6 @@ async def back_from_decline_create_account(
                 )
             ),
         )
-        return ConversationHandler.END
 
 
 invalid_account_format_handler = MessageHandler(
