@@ -108,9 +108,8 @@ async def correct_returned_complaint(
 
         response = update.effective_message.reply_to_message.text_html
         if update.message.caption or update.message.text:
-            response += (
-                f"\n\nرد المستخدم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>",
-            )
+            response += f"\n\nرد المستخدم على الشكوى:\n<b>{update.message.caption if update.message.caption else update.message.text}</b>"
+            
 
         await context.bot.send_message(
             chat_id=chat_id,
