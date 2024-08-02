@@ -145,17 +145,17 @@ def build_agent_work_with_us_keyboard(serial: int, role: str):
         [
             InlineKeyboardButton(
                 text="قبول ✅",
-                callback_data=f"accept_{role}_order_{serial}",
+                callback_data=f"accept_{role}_{serial}",
             ),
             InlineKeyboardButton(
                 text="رفض ❌",
-                callback_data=f"decline_{role}_order_{serial}",
+                callback_data=f"decline_{role}_{serial}",
             ),
         ],
         [
             InlineKeyboardButton(
                 text="إشعار باستلام الدفع 🔔",
-                callback_data=f"notify_{role}_order_{serial}",
+                callback_data=f"notify_{role}_{serial}",
             ),
         ],
     ]

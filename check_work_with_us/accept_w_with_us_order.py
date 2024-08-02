@@ -22,12 +22,15 @@ import models
 
 async def notify_w_with_us_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
-
+        role_en_to_ar_dict = {
+            "agent": "الوكيل",
+            "partner": "الشريك",
+        }
         data = update.callback_query.data.split("_")
         serial = int(data[-1])
         role = data[-2]
 
-        if context.bot_data.get(f"notified_{role}_order_{serial}", False):
+        if context.bot_data.get(f"notified_{role}_{serial}", False):
             await update.callback_query.answer(
                 "تم الإشعار بالفعل",
                 show_alert=True,
@@ -38,7 +41,7 @@ async def notify_w_with_us_order(update: Update, context: ContextTypes.DEFAULT_T
         await context.bot.send_message(
             chat_id=order.user_id,
             text=(
-                "تم استلام الدفعة الخاصة بطلب الوكيل المقدم من قبلك وسيتم تنفيذ طلبك خلال 5 أيام عمل\n\n"
+                f"تم استلام الدفعة الخاصة بطلب {role_en_to_ar_dict[role]} المقدم من قبلك وسيتم تنفيذ طلبك خلال 5 أيام عمل\n\n"
                 + "تفاصيل الطلب:\n\n"
                 + stringify_w_with_us_order(
                     gov=syrian_govs_en_ar[order.gov],
@@ -55,7 +58,7 @@ async def notify_w_with_us_order(update: Update, context: ContextTypes.DEFAULT_T
             "تم ✅",
             show_alert=True,
         )
-        context.bot_data[f"notified_{role}_order_{serial}"] = True
+        context.bot_data[f"notified_{role}_{serial}"] = True
 
 
 async def accept_w_with_us_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,7 +87,7 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ].callback_data.split("_")
 
         serial = int(data[-1])
-        role = data[-2]
+        role = data[-3]
         order = models.WorkWithUsOrder.get_one_order(serial=serial)
 
         if role == "agent":
@@ -168,10 +171,10 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 notify_agent_order_handler = CallbackQueryHandler(
-    notify_w_with_us_order, "^notify_((agent)|(partner))_order_\d+$"
+    notify_w_with_us_order, "^notify_((agent)|(partner))_\d+$"
 )
 accept_agent_order_handler = CallbackQueryHandler(
-    accept_w_with_us_order, "^accept_((agent)|(partner))_order_\d+$"
+    accept_w_with_us_order, "^accept_((agent)|(partner))_\d+$"
 )
 
 get_login_info_handler = MessageHandler(

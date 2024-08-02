@@ -19,7 +19,9 @@ import models
 
 async def decline_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
-        serial = update.callback_query.data.split("_")[-1]
+        data = update.callback_query.data.split("_")
+        serial = int(data[-1])
+        role = data[-2]
         await update.callback_query.answer(
             text="قم بالرد على هذه الرسالة بسبب الرفض",
             show_alert=True,
@@ -28,7 +30,7 @@ async def decline_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن رفض الطلب 🔙",
-                    callback_data=f"back_from_decline_w_with_us_order_{update.effective_user.id}_{serial}",
+                    callback_data=f"back_from_decline_{role}_{update.effective_user.id}_{serial}",
                 )
             )
         )
@@ -41,10 +43,6 @@ async def get_decline_agent_order_reason(
         data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
         ].callback_data.split("_")
-        manager_id = int(data[-2])
-
-        # if update.effective_user.id != manager_id:
-        #     return
 
         serial = int(data[-1])
         order = models.WorkWithUsOrder.get_one_order(serial=serial)
@@ -72,7 +70,7 @@ async def get_decline_agent_order_reason(
 
 
 decline_agent_order_handler = CallbackQueryHandler(
-    decline_agent_order, "^decline_agent_order_\d+$"
+    decline_agent_order, "^decline_((agent)|(partner))_\d+$"
 )
 
 get_decline_agent_order_reason_handler = MessageHandler(

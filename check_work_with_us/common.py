@@ -39,13 +39,6 @@ def create_team_cash_invalid_foramt_login_info():
 async def back_to_check_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         data = update.callback_query.data.split("_")
-        # manager_id = int(data[-2])
-        # if update.effective_user.id != manager_id:
-        #     await update.callback_query.answer(
-        #         text="شخص آخر يعمل على هذا الطلب.",
-        #         show_alert=True,
-        #     )
-        #     return
         serial = int(data[-1])
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(
@@ -56,5 +49,5 @@ async def back_to_check_agent_order(update: Update, context: ContextTypes.DEFAUL
 
 back_to_check_agent_order_handler = CallbackQueryHandler(
     back_to_check_agent_order,
-    "^back_from_((decline)|(accept))_w_with_us_order",
+    "^back_from_((decline)|(accept))_((agent)|(partner))",
 )
