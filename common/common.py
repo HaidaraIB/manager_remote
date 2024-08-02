@@ -507,7 +507,7 @@ def build_groups_keyboard(op: str):
         [
             InlineKeyboardButton(
                 text="شراء USDT",
-                callback_data=f"{op} buy_usdt_orders_group",
+                callback_data=f"{op} busdt_orders_group",
             )
         ],
         [

@@ -12,7 +12,7 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-from models import User
+import models
 
 from common.common import (
     build_user_keyboard,
@@ -26,7 +26,6 @@ from common.force_join import check_if_user_member
 
 from custom_filters import Admin, Worker, DepositAgent, Agent
 from constants import *
-
 
 async def inits(app: Application):
     pass  # Fill this when you need to run a code only once and then clear it.
@@ -49,10 +48,10 @@ async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         await set_commands(update, context)
-        old_user = User.get_user(user_id=update.effective_user.id)
+        old_user = models.User.get_user(user_id=update.effective_user.id)
         if not old_user:
             new_user = update.effective_user
-            await User.add_new_user(
+            await models.User.add_new_user(
                 user_id=new_user.id,
                 username=new_user.username,
                 name=new_user.full_name,

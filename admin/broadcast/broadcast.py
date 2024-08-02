@@ -23,9 +23,9 @@ from common.back_to_home_page import (
 )
 
 from start import admin_command, start_command
-from models import User, TrustedAgentsOrder
-import asyncio
 from custom_filters import Admin
+import models
+import asyncio
 
 (
     THE_MESSAGE,
@@ -77,7 +77,7 @@ back_to_the_message = broadcast_message
 
 
 async def send_to_all(context: ContextTypes.DEFAULT_TYPE):
-    all_users = User.get_all_users()
+    all_users = models.User.get_all_users()
     text = context.user_data["the message"]
     for user in all_users:
         try:
@@ -113,13 +113,16 @@ async def send_to(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(done_button),
             )
             return ENTER_USERS
-        
+
         if update.callback_query.data == "all users":
             asyncio.create_task(send_to_all(context=context))
 
         elif update.callback_query.data == "agents":
             asyncio.create_task(
-                send_to_some(users=TrustedAgentsOrder.get_user_ids(), context=context)
+                send_to_some(
+                    users=models.WorkWithUsOrder.get_user_ids(role="agent"),
+                    context=context,
+                )
             )
         keyboard = build_admin_keyboard()
         await update.callback_query.edit_message_text(

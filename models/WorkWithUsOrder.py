@@ -8,6 +8,7 @@ from sqlalchemy import (
     func,
     insert,
     select,
+    and_,
 )
 from sqlalchemy.orm import Session
 from models.BaseOrder import BaseOrder
@@ -15,8 +16,8 @@ from models.DB import lock_and_release, connect_and_close
 import datetime
 
 
-class TrustedAgentsOrder(BaseOrder):
-    __tablename__ = "trusted_agents_orders"
+class WorkWithUsOrder(BaseOrder):
+    __tablename__ = "work_with_us_orders"
 
     serial = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer)
@@ -28,6 +29,7 @@ class TrustedAgentsOrder(BaseOrder):
     phone = Column(Text)
     state = Column(String, default="pending")
     reason = Column(Text)
+    role = Column(Text)
 
     amount = Column(Float)
     ref_number = Column(Text)
@@ -37,18 +39,18 @@ class TrustedAgentsOrder(BaseOrder):
 
     @staticmethod
     @lock_and_release
-    async def decline_trusted_agent_order(serial: int, reason: str, s: Session = None):
-        s.query(TrustedAgentsOrder).filter_by(serial=serial).update(
+    async def decline_work_with_us_order(serial: int, reason: str, s: Session = None):
+        s.query(WorkWithUsOrder).filter_by(serial=serial).update(
             {
-                TrustedAgentsOrder.decline_date: datetime.datetime.now(),
-                TrustedAgentsOrder.state: "decline",
-                TrustedAgentsOrder.reason: reason,
+                WorkWithUsOrder.decline_date: datetime.datetime.now(),
+                WorkWithUsOrder.state: "decline",
+                WorkWithUsOrder.reason: reason,
             }
         )
 
     @staticmethod
     @lock_and_release
-    async def add_trusted_agent_order(
+    async def add_work_with_us_order(
         user_id: int,
         gov: str,
         neighborhood: str,
@@ -58,10 +60,11 @@ class TrustedAgentsOrder(BaseOrder):
         phone: str,
         amount: float,
         ref_num: str,
+        role: str,
         s: Session = None,
     ):
         res = s.execute(
-            insert(TrustedAgentsOrder).values(
+            insert(WorkWithUsOrder).values(
                 user_id=user_id,
                 gov=gov,
                 neighborhood=neighborhood,
@@ -71,6 +74,7 @@ class TrustedAgentsOrder(BaseOrder):
                 phone=phone,
                 amount=amount,
                 ref_number=ref_num,
+                role=role,
             )
         )
         return res.lastrowid
@@ -78,20 +82,20 @@ class TrustedAgentsOrder(BaseOrder):
     @staticmethod
     @lock_and_release
     async def approve_order(order_serial: int, s: Session = None):
-        s.query(TrustedAgentsOrder).filter_by(serial=order_serial).update(
+        s.query(WorkWithUsOrder).filter_by(serial=order_serial).update(
             {
-                TrustedAgentsOrder.approve_date: datetime.datetime.now(),
-                TrustedAgentsOrder.state: "approved",
+                WorkWithUsOrder.approve_date: datetime.datetime.now(),
+                WorkWithUsOrder.state: "approved",
             }
         )
 
     @staticmethod
     @connect_and_close
-    def get_user_ids(s: Session = None):
+    def get_user_ids(role: str, s: Session = None):
         res = s.execute(
-            select(TrustedAgentsOrder.user_id)
+            select(WorkWithUsOrder.user_id)
             .where(
-                TrustedAgentsOrder.state == "approved",
+                and_(WorkWithUsOrder.role == role, WorkWithUsOrder.state == "approved"),
             )
             .distinct()
         )

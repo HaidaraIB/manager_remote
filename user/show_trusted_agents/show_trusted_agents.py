@@ -45,7 +45,7 @@ async def show_trusted_agents(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def choose_gov(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         gov = update.callback_query.data.split("_")[0]
-        trusted_agents = TrustedAgent.get_trusted_agents(gov=gov)
+        trusted_agents = TrustedAgent.get_workers(gov=gov)
         if not trusted_agents:
             await update.callback_query.answer(
                 text="لا يوجد وكلاء لهذه المحافظة بعد",

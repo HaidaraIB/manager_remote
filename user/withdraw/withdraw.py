@@ -220,7 +220,7 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
 withdraw_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            choose_withdraw_account,
+            withdraw,
             "^withdraw$",
         ),
     ],

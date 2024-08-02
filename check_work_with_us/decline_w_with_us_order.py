@@ -13,9 +13,8 @@ from telegram.ext import (
 )
 
 from user.work_with_us.common import syrian_govs_en_ar
-
-from models import TrustedAgentsOrder
 from custom_filters import Declined, AgentOrder
+import models
 
 
 async def decline_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -29,7 +28,7 @@ async def decline_agent_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن رفض الطلب 🔙",
-                    callback_data=f"back_from_decline_trusted_agent_order_{update.effective_user.id}_{serial}",
+                    callback_data=f"back_from_decline_w_with_us_order_{update.effective_user.id}_{serial}",
                 )
             )
         )
@@ -48,9 +47,9 @@ async def get_decline_agent_order_reason(
         #     return
 
         serial = int(data[-1])
-        order = TrustedAgentsOrder.get_one_order(serial=serial)
+        order = models.WorkWithUsOrder.get_one_order(serial=serial)
 
-        await TrustedAgentsOrder.decline_trusted_agent_order(
+        await models.WorkWithUsOrder.decline_work_with_us_order(
             serial=serial, reason=update.message.text
         )
         await context.bot.send_message(

@@ -218,7 +218,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 f"<b>{context.user_data['reason']}</b>\n"
             )
             photos = Photo.get(
-                order_serial=serial, order_type=order_type.replace("busdt", "buy_usdt")
+                order_serial=serial, order_type=order_type
             )
 
             if op.worker_id:

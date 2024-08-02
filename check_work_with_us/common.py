@@ -1,7 +1,6 @@
 from telegram import (
     Update,
     Chat,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
 
@@ -57,5 +56,5 @@ async def back_to_check_agent_order(update: Update, context: ContextTypes.DEFAUL
 
 back_to_check_agent_order_handler = CallbackQueryHandler(
     back_to_check_agent_order,
-    "^back_from_((decline)|(accept))_trusted_agent_order",
+    "^back_from_((decline)|(accept))_w_with_us_order",
 )

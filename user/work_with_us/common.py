@@ -6,8 +6,13 @@ from telegram import (
 )
 
 from telegram.ext import ContextTypes
-
+import models
 from common.back_to_home_page import back_to_user_home_page_button
+
+parent_to_child_mapper: dict[str, models.TrustedAgent | models.Partner] = {
+    "agent": models.TrustedAgent,
+    "partner": models.Partner,
+}
 
 syrian_govs_en_ar = {
     "Damascus": "دمشق",
@@ -66,7 +71,7 @@ def build_govs_keyboard():
     ]
 
 
-def stringify_agent_order(
+def stringify_w_with_us_order(
     gov: str,
     neighborhood: str,
     email: str,
@@ -135,22 +140,22 @@ WORK_WITH_US_DICT = {
 }
 
 
-def build_agent_work_with_us_keyboard(serial: int):
+def build_agent_work_with_us_keyboard(serial: int, role: str):
     keyboard = [
         [
             InlineKeyboardButton(
                 text="قبول ✅",
-                callback_data=f"accept_agent_order_{serial}",
+                callback_data=f"accept_{role}_order_{serial}",
             ),
             InlineKeyboardButton(
                 text="رفض ❌",
-                callback_data=f"decline_agent_order_{serial}",
+                callback_data=f"decline_{role}_order_{serial}",
             ),
         ],
         [
             InlineKeyboardButton(
                 text="إشعار باستلام الدفع 🔔",
-                callback_data=f"notify_agent_order_{serial}",
+                callback_data=f"notify_{role}_order_{serial}",
             ),
         ],
     ]
@@ -158,25 +163,28 @@ def build_agent_work_with_us_keyboard(serial: int):
 
 
 async def send_to_group(
-    update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     serial: int,
     media: list[InputMediaPhoto],
     group_id: int,
 ):
+    role_en_to_ar_dict = {
+        "agent": "وكيل",
+        "partner": "شريك",
+    }
     await context.bot.send_media_group(
         chat_id=group_id,
         media=media,
         caption=(
-            f"طلب عمل وكيل جديد\n\n"
-            + "النوع: <b>وكيل</b>\n"
-            + stringify_agent_order(
-                gov=syrian_govs_en_ar[context.user_data["agent_gov"]],
-                neighborhood=context.user_data["agent_neighborhood"],
-                email=context.user_data["agent_email"],
-                phone=context.user_data["agent_phone"],
-                amount=context.user_data["agent_amount"],
-                ref_num=context.user_data["agent_ref_num"],
+            f"طلب عمل جديد\n\n"
+            + f"النوع: <b>{role_en_to_ar_dict[context.user_data['work_with_us_role']]}</b>\n"
+            + stringify_w_with_us_order(
+                gov=syrian_govs_en_ar[context.user_data["w_with_us_gov"]],
+                neighborhood=context.user_data["w_with_us_neighborhood"],
+                email=context.user_data["w_with_us_email"],
+                phone=context.user_data["w_with_us_phone"],
+                amount=context.user_data["w_with_us_amount"],
+                ref_num=context.user_data["w_with_us_ref_num"],
                 serial=serial,
             )
         ),
@@ -184,7 +192,11 @@ async def send_to_group(
 
     await context.bot.send_location(
         chat_id=group_id,
-        latitude=context.user_data["agent_location"][0],
-        longitude=context.user_data["agent_location"][1],
-        reply_markup=InlineKeyboardMarkup(build_agent_work_with_us_keyboard(serial)),
+        latitude=context.user_data["w_with_us_location"][0],
+        longitude=context.user_data["w_with_us_location"][1],
+        reply_markup=InlineKeyboardMarkup(
+            build_agent_work_with_us_keyboard(
+                serial, context.user_data["work_with_us_role"]
+            )
+        ),
     )

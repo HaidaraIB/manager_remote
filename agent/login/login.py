@@ -12,7 +12,7 @@ from telegram.ext import (
     filters,
 )
 from pathlib import Path
-from models import TrustedAgent, TrustedAgentsOrder
+import models
 from custom_filters import TeamCash, PromoCode
 from common.common import build_back_button
 from common.back_to_home_page import (
@@ -51,8 +51,8 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         if update.message:
             serial = int(update.message.text)
-            order = TrustedAgentsOrder.get_one_order(serial=serial)
-            ag = TrustedAgent.get_trusted_agents(order_serial=serial)
+            order = models.WorkWithUsOrder.get_one_order(serial=serial)
+            ag = models.TrustedAgent.get_workers(order_serial=serial)
             if (
                 not order
                 or order.state != "approved"
@@ -139,9 +139,9 @@ async def get_neighborhood(update: Update, context: ContextTypes.DEFAULT_TYPE):
         team_cash_info = context.user_data["team_cash_info"]
         affiliate_info = context.user_data["affiliate_info"]
         serial = context.user_data["trusted_agent_order_serial"]
-        order = TrustedAgentsOrder.get_one_order(serial=serial)
+        order = models.WorkWithUsOrder.get_one_order(serial=serial)
 
-        await TrustedAgent.add_trusted_agent(
+        await models.TrustedAgent.add_trusted_agent(
             user_id=update.effective_user.id,
             order_serial=serial,
             gov=order.gov,

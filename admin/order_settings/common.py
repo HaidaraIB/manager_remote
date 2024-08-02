@@ -29,7 +29,7 @@ order_settings_dict: dict[
         "cls": DepositOrder,
         "t": "إيداع"
     },
-    "buy_usdt": {
+    "busdt": {
         "cls": BuyUsdtdOrder,
         "t": "شراء USDT"
     },
@@ -73,7 +73,7 @@ def build_order_types_keyboard():
         [
             InlineKeyboardButton(
                 text="شراء USDT 💰",
-                callback_data="buy_usdt_order#settings",
+                callback_data="busdt_order#settings",
             )
         ],
     ]

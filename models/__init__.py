@@ -14,10 +14,11 @@ from models.PaymentOrder import PaymentOrder
 from models.PaymentMethod import PaymentMethod
 from models.RefNumber import RefNumber
 from models.TrustedAgent import TrustedAgent
-from models.TrustedAgentsOrder import TrustedAgentsOrder
+from models.WorkWithUsOrder import WorkWithUsOrder
 from models.User import User
 from models.WithdrawOrder import WithdrawOrder
 from models.Worker import Worker
 from models.BaseOrder import BaseOrder
 from models.Photo import Photo
 from models.ComplaintConv import ComplaintConv
+from models.Partner import Partner

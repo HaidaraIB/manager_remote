@@ -123,7 +123,7 @@ async def position(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 name=worker_to_add.full_name,
                 username=worker_to_add.username,
             )
-        elif pos in ["deposit", "withdraw", "buy"]:
+        elif pos in ["deposit", "withdraw", "busdt"]:
             await Checker.add_worker(
                 worker_id=worker_to_add.id,
                 name=worker_to_add.full_name,

@@ -51,7 +51,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text="تحقق سحب", callback_data="request check withdraw"
                     )
                 )
-            elif c.check_what == "buy_usdt":
+            elif c.check_what == "busdt":
                 checker_keyboard.append(
                     InlineKeyboardButton(
                         text="تحقق شراء USDT", callback_data="request check busdt"

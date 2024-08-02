@@ -61,7 +61,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
 
         media = models.Photo.get(
             order_serial=serial,
-            order_type=order_type.replace("busdt", "buy_usdt"),
+            order_type=order_type,
         )
 
         main_text = make_complaint_main_text(
@@ -90,7 +90,7 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                     await send_to_photos_archive(
                         context=context,
                         photo=update.message.photo[-1],
-                        order_type=order_type.replace("busdt", "buy_usdt"),
+                        order_type=order_type,
                         serial=serial,
                     )
                 await context.bot.send_media_group(

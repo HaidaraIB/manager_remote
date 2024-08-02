@@ -22,7 +22,7 @@ def check_if_user_agent_decorator(func):
     async def wrapper(
         update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
     ):
-        agent = TrustedAgent.get_trusted_agents(user_id=update.effective_user.id)
+        agent = TrustedAgent.get_workers(user_id=update.effective_user.id)
         if not agent:
             await update.callback_query.answer("قم بتسجيل الدخول أولاً", show_alert=True)
             return
