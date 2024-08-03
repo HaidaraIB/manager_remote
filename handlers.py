@@ -1,6 +1,4 @@
-from telegram import (
-    Update,
-)
+from telegram import Update
 
 from telegram.ext import (
     CallbackQueryHandler,
@@ -13,9 +11,7 @@ from telegram.ext import (
     filters,
 )
 
-from telegram.constants import (
-    ParseMode,
-)
+from telegram.constants import ParseMode
 
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 
@@ -27,9 +23,7 @@ from start import (
     inits,
 )
 
-from jobs import (
-    reward_worker,
-)
+from jobs import reward_worker
 
 from common.common import (
     invalid_callback_data,
@@ -222,7 +216,6 @@ def main():
     app.add_handler(back_to_check_agent_order_handler)
 
     app.add_handler(reply_to_create_account_order_handler)
-    app.add_handler(add_existing_account_handler)
     app.add_handler(create_account_handler)
     app.add_handler(decline_create_account_handler)
     app.add_handler(decline_account_reason_handler)

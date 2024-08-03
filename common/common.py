@@ -168,11 +168,6 @@ def build_user_keyboard():
                 text="إنشاء حساب موثق ™️", callback_data="create account"
             )
         ],
-        [
-            InlineKeyboardButton(
-                text="إضافة حساب سابق ➕", callback_data="add existing account"
-            )
-        ],
         [InlineKeyboardButton(text="شراء USDT 💰", callback_data="busdt")],
         [InlineKeyboardButton(text="إنشاء شكوى 🗳", callback_data="make complaint")],
         [InlineKeyboardButton(text="عملك معنا 💼", callback_data="work with us")],
