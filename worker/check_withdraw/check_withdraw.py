@@ -208,7 +208,7 @@ async def decline_withdraw_order_reason(
         user_id = w_order.user_id
 
         text = (
-            f"تم رفض عملية السحب ذات الكود <b>{w_code}$</b>❗️\n\n"
+            f"تم رفض عملية السحب ذات الكود <b>{w_code}</b>❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"

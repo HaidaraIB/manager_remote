@@ -40,9 +40,10 @@ async def back_to_check_agent_order(update: Update, context: ContextTypes.DEFAUL
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         data = update.callback_query.data.split("_")
         serial = int(data[-1])
+        role = data[-3]
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(
-                build_agent_work_with_us_keyboard(serial)
+                build_agent_work_with_us_keyboard(serial, role)
             ),
         )
 

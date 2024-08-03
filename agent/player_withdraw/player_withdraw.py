@@ -194,7 +194,7 @@ async def get_withdraw_code_player_withdraw(
 
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
-            reply_markup=build_agent_keyboard,
+            reply_markup=build_agent_keyboard(),
         )
 
         return ConversationHandler.END

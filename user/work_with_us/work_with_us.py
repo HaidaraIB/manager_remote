@@ -335,7 +335,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"أرسل مبلغ الإيداع المسبق إلى الرقم\n\n"
             f"<code>{context.bot_data['data']['طلبات الوكيل_number']}</code>\n\n"
             f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-            "<b>ملاحظة: التحويل مقبول فقط من أجهزة سيريتيل أو من خطوط الجملة الخاصة لمحلات الموبايل .. 'غير مقبول التحويل من رقم شخصي'</b>"
+            "<b>ملاحظة: التحويل مقبول فقط من أجهزة سيريتيل أو من خطوط الجملة الخاصة لمحلات الموبايل (غير مقبول التحويل من رقم شخصي)</b>"
         )
         if not update.callback_query:
             context.user_data["w_with_us_amount"] = float(update.message.text)
