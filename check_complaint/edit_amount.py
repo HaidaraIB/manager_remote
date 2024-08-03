@@ -82,7 +82,7 @@ async def edit_order_amount_user_complaint(
         conv_text = (
             EXT_COMPLAINT_LINE.format(serial)
             +"تم تعديل المبلغ بنجاح ✅\n"
-            +f"المبلغ: <b>{new_amount}</b>\n"
+            +f"المبلغ: <b>{new_amount}</b>\n\n"
         )
         conv_text += make_conv_text(complaint_id=complaint.id)
         await update.message.delete()

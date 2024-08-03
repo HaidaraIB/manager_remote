@@ -79,7 +79,7 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serials=[op.serial for op in operations if not op.complaint_took_care_of]
         )
         if not operations or len(keyboard) == 2:
-            await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد❗️")
+            await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد ❗️")
             return
 
         await update.callback_query.edit_message_text(
@@ -264,10 +264,9 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 user_id=update.effective_user.id,
             )
             keyboard = build_operations_keyboard(
-                serials=[serial for op in operations if not op.complaint_took_care_of]
+                serials=[op.serial for op in operations if not op.complaint_took_care_of]
             )
-            await context.bot.send_message(
-                chat_id=update.effective_user.id,
+            await update.callback_query.edit_message_text(
                 text=CHOOSE_OPERATIONS_TEXT,
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )

@@ -244,7 +244,7 @@ async def return_buy_usdt_order_reason(
         if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
-                photo=update.message.photo[-1],
+                photo=update.message.reply_to_message.photo[-1],
                 caption=f"طلب متأخر بمقدار\n"
                 + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
@@ -252,12 +252,6 @@ async def return_buy_usdt_order_reason(
 
         await BuyUsdtdOrder.return_order(
             reason=update.message.text,
-            serial=serial,
-        )
-        await send_to_photos_archive(
-            context=context,
-            photo=update.message.photo[-1],
-            order_type="busdt",
             serial=serial,
         )
         context.user_data["requested"] = False
