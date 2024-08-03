@@ -9,24 +9,9 @@ from telegram import (
     ReplyKeyboardMarkup,
 )
 
-from telegram.ext import (
-    ContextTypes,
-)
+from telegram.ext import ContextTypes
+from telegram.constants import ChatType
 
-
-from telegram.constants import (
-    ChatType,
-)
-
-from telegram.error import TimedOut, NetworkError
-
-import asyncio
-import os
-import uuid
-import traceback
-import json
-import logging
-from constants import *
 from models import (
     WithdrawOrder,
     DepositOrder,
@@ -37,6 +22,12 @@ from models import (
     Checker,
     Photo,
 )
+from constants import *
+
+import asyncio
+import os
+import uuid
+import logging
 
 
 async def send_to_photos_archive(
@@ -295,6 +286,7 @@ def build_agent_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 def build_methods_keyboard(buy_usdt: bool = False):
     if len(PAYMENT_METHODS_LIST) == 1:
         payment_methods = [
@@ -385,49 +377,6 @@ def build_complaint_keyboard(data: list[str], send_to_worker: bool):
 async def invalid_callback_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == ChatType.PRIVATE:
         await update.callback_query.answer("انتهت صلاحية هذا الزر")
-        # try:
-        #     await update.callback_query.delete_message()
-        # except BadRequest:
-        #     pass
-
-
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if isinstance(context.error, (TimedOut, NetworkError)):
-        return
-    update_str = update.to_dict() if isinstance(update, Update) else str(update)
-    try:
-        error = f"""update = {json.dumps(update_str, indent=2, ensure_ascii=False)} 
-        
-user_data = {str(context.user_data)}
-chat_data = {str(context.chat_data)}
-
-{''.join(traceback.format_exception(None, context.error, context.error.__traceback__))}
-
-{'-'*100}
-
-
-    """
-
-        write_error(error)
-    except TypeError:
-        error = f"""update = TypeError
-        
-user_data = {str(context.user_data)}
-chat_data = {str(context.chat_data)}
-
-{''.join(traceback.format_exception(None, context.error, context.error.__traceback__))}
-
-{'-'*100}
-
-
-    """
-
-        write_error(error)
-
-
-def write_error(error: str):
-    with open("errors.txt", "a", encoding="utf-8") as f:
-        f.write(error)
 
 
 def create_folders():

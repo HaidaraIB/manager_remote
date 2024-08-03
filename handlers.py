@@ -16,6 +16,7 @@ from telegram.constants import ParseMode
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 
 from PyroClientSingleton import PyroClientSingleton
+
 from start import (
     start_command,
     admin_command,
@@ -25,17 +26,13 @@ from start import (
 
 from jobs import reward_worker
 
-from common.common import (
-    invalid_callback_data,
-    error_handler,
-    create_folders,
-)
-
+from common.common import invalid_callback_data, create_folders
+from common.error_handler import error_handler
+from common.force_join import check_joined_handler
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_admin_home_page_handler,
 )
-from common.force_join import check_joined_handler
 
 from agent.login import *
 
