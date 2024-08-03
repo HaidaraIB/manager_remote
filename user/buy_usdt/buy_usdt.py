@@ -274,7 +274,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_to_photos_archive(
             context=context,
             photo=update.message.photo[-1],
-            order_type="buy_usdt",
+            order_type="busdt",
             serial=serial,
         )
         await BuyUsdtdOrder.add_message_ids(
