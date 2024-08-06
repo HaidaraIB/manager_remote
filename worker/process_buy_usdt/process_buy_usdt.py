@@ -22,7 +22,8 @@ from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
     format_amount,
-    send_to_photos_archive,
+    send_to_media_archive,
+    send_media_group,
 )
 
 
@@ -93,17 +94,14 @@ async def reply_with_payment_proof_buy_usdt(
         except:
             pass
 
-        media = [
-            InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
-            InputMediaPhoto(media=update.message.photo[-1]),
-        ]
-
         caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
 
-        await context.bot.send_media_group(
+        await send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            media=media,
             caption=caption,
+            context=context,
+            update=update
+
         )
 
         await context.bot.edit_message_reply_markup(
@@ -131,9 +129,10 @@ async def reply_with_payment_proof_buy_usdt(
         latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
-            await context.bot.send_media_group(
+            await send_media_group(
+                update=update,
+                context=context,
                 chat_id=context.bot_data["data"]["latency_group"],
-                media=media,
                 caption=f"طلب متأخر بمقدار\n<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n\n"
                 + caption,
             )
@@ -144,9 +143,9 @@ async def reply_with_payment_proof_buy_usdt(
             serial=serial,
             worker_id=update.effective_user.id,
         )
-        await send_to_photos_archive(
+        await send_to_media_archive(
             context=context,
-            photo=update.message.photo[-1],
+            media=update.message.photo[-1],
             order_type="buy_usdt",
             serial=serial,
         )
@@ -260,9 +259,9 @@ async def return_buy_usdt_order_reason(
             reason=update.message.text,
             serial=serial,
         )
-        await send_to_photos_archive(
+        await send_to_media_archive(
             context=context,
-            photo=update.message.photo[-1],
+            media=update.message.photo[-1],
             order_type="buy_usdt",
             serial=serial,
         )

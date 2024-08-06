@@ -12,7 +12,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from common.common import parent_to_child_models_mapper, send_to_photos_archive
+from common.common import parent_to_child_models_mapper, send_to_media_archive
 from custom_filters import Complaint, ResponseToUserComplaint
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_complaint_main_text, make_conv_text
@@ -152,9 +152,9 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             photos = media if media else []
             if update.message.photo:
                 photos.append(update.message.photo[-1])
-                await send_to_photos_archive(
+                await send_to_media_archive(
                     context=context,
-                    photo=update.message.photo[-1],
+                    media=update.message.photo[-1],
                     order_type=order_type,
                     serial=serial,
                 )

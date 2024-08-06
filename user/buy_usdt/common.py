@@ -23,10 +23,10 @@ SEND_PAYMENT_INFO_TEXT = "أرسل رقم حساب {}\n\n" "Send {} account numb
 SEND_MONEY_TEXT = (
     "أرسل الآن العملات إلى المحفظة:\n\n"
     "<code>{}</code>\n\n"
-    "ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+    "ثم أرسل لقطة شاشة أو ملف pdf لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
     "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n\n"
     "Send the currencies to the address:\n\n"
     "<code>{}</code>\n\n"
-    "And then provide a screenshot for the process.\n\n"
+    "And then provide a screenshot or a pdf for the process.\n\n"
     "<b>Pleas note that the network is TRC20</b>\n\n"
 )

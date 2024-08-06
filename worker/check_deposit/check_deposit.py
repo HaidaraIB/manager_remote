@@ -16,6 +16,7 @@ from common.common import (
     apply_ex_rate,
     notify_workers,
     build_worker_keyboard,
+    send_media,
 )
 from worker.check_deposit.common import build_check_deposit_keyboard
 import models
@@ -76,21 +77,16 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ].callback_data.split("_")[-1]
         )
         d_order = models.DepositOrder.get_one_order(serial=serial)
+        new_amount = float(update.message.text)
         await models.DepositOrder.edit_order_amount(
-            new_amount=float(update.message.text), serial=serial
+            new_amount=new_amount, serial=serial
         )
 
         await update.message.delete()
 
-        amount, _ = apply_ex_rate(
-            method=d_order.method,
-            amount=float(update.message.text),
-            order_type="deposit",
-            context=context,
-        )
         await update.message.reply_to_message.edit_caption(
             caption=stringify_order(
-                amount=amount,
+                amount=new_amount,
                 serial=serial,
                 account_number=d_order.acc_number,
                 method=d_order.method,
@@ -113,20 +109,22 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             order_type="deposit",
             context=context,
         )
-        message = await context.bot.send_photo(
+        message = await send_media(
+            context=context,
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
-            photo=update.effective_message.photo[-1],
+            media=update.effective_message.photo[-1] if update.effective_message.photo else update.effective_message.document,
             caption=stringify_order(
                 amount=amount,
                 account_number=d_order.acc_number,
                 method=d_order.method,
                 serial=d_order.serial,
             ),
-            reply_markup=InlineKeyboardMarkup.from_button(
+            markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب ✅", callback_data=f"verify_deposit_order_{serial}"
                 )
             ),
+
         )
 
         await update.callback_query.edit_message_reply_markup(
@@ -220,10 +218,15 @@ async def decline_deposit_order_reason(
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
 
-        await context.bot.send_photo(
+        await send_media(
+            context=context,
+            media=(
+                update.message.reply_to_message.photo[-1]
+                if update.message.reply_to_message.photo
+                else update.message.reply_to_message.document
+            ),
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            photo=update.message.reply_to_message.photo[-1],
-            caption=caption,
+            caption=caption
         )
 
         await context.bot.edit_message_reply_markup(

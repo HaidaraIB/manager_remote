@@ -7,6 +7,9 @@ from telegram import (
     KeyboardButton,
     ReplyKeyboardRemove,
     ReplyKeyboardMarkup,
+    PhotoSize,
+    Document,
+    InputMediaPhoto,
 )
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
@@ -27,18 +30,80 @@ from models import (
     PaymentAgent,
     Checker,
     Photo,
+    Doc,
 )
 
 
-async def send_to_photos_archive(
-    context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type
+async def send_media_group(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id, caption
 ):
-    p = (
-        await context.bot.send_photo(
-            chat_id=int(os.getenv("PHOTOS_ARCHIVE")), photo=photo
+    if update.message.reply_to_message.photo:
+        await context.bot.send_media_group(
+            chat_id=chat_id,
+            media=[
+                InputMediaPhoto(
+                    media=update.message.photo[-1],
+                ),
+                InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
+            ],
+            caption=caption,
         )
-    ).photo[-1]
-    await Photo.add(
+    else:
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=update.message.photo[-1],
+        )
+        await context.bot.send_document(
+            chat_id=chat_id,
+            document=update.message.reply_to_message.document,
+            caption=caption,
+        )
+
+
+async def send_media(
+    context: ContextTypes.DEFAULT_TYPE,
+    chat_id,
+    media,
+    caption,
+    markup=None,
+):
+    if isinstance(media, PhotoSize):
+        m = await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=media,
+            caption=caption,
+            reply_markup=markup,
+        )
+    elif isinstance(media, Document):
+        m = await context.bot.send_document(
+            chat_id=chat_id,
+            document=media,
+            caption=caption,
+            reply_markup=markup,
+        )
+
+    return m
+
+
+async def send_to_media_archive(
+    context: ContextTypes.DEFAULT_TYPE, media, serial, order_type
+):
+    media_dict: dict[str, Photo | Doc] = {"photo": Photo, "doc": Doc}
+    if isinstance(media, PhotoSize):
+        p = (
+            await context.bot.send_photo(
+                chat_id=int(os.getenv("PHOTOS_ARCHIVE")), photo=media
+            )
+        ).photo[-1]
+        m = "photo"
+    elif isinstance(media, Document):
+        p = (
+            await context.bot.send_document(
+                chat_id=int(os.getenv("PHOTOS_ARCHIVE")), document=media
+            )
+        ).document
+        m = "doc"
+    await media_dict[m].add(
         [p],
         order_serial=serial,
         order_type=order_type,

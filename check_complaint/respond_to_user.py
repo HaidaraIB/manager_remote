@@ -18,7 +18,7 @@ from check_complaint.check_complaint import make_conv_text, make_complaint_main_
 from common.common import (
     build_complaint_keyboard,
     parent_to_child_models_mapper,
-    send_to_photos_archive,
+    send_to_media_archive,
 )
 from common.constants import EXT_COMPLAINT_LINE
 import models
@@ -87,9 +87,9 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                 photos = media if media else []
                 if update.message.photo:
                     photos.append(update.message.photo[-1])
-                    await send_to_photos_archive(
+                    await send_to_media_archive(
                         context=context,
-                        photo=update.message.photo[-1],
+                        media=update.message.photo[-1],
                         order_type=order_type.replace("busdt", "buy_usdt"),
                         serial=serial,
                     )

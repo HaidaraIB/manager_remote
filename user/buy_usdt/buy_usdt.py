@@ -19,7 +19,7 @@ from common.common import (
     build_back_button,
     build_methods_keyboard,
     format_amount,
-    send_to_photos_archive,
+    send_to_media_archive,
 )
 
 from common.decorators import (
@@ -247,28 +247,47 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             payment_method_number=context.user_data["payment_method_number_buy_usdt"],
             bank_account_name=context.user_data["bank_account_name_buy_usdt"],
         )
-
-        message = await context.bot.send_photo(
-            chat_id=context.bot_data["data"]["buy_usdt_orders_group"],
-            photo=update.message.photo[-1],
-            caption=stringify_order(
-                context.user_data["usdt_to_buy_amount"],
-                method=method,
-                serial=serial,
-                method_info=method_info,
-            ),
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="التحقق ☑️", callback_data=f"check_buy_usdt_order_{serial}"
-                )
-            ),
-        )
-        await send_to_photos_archive(
+        if update.message.photo:
+            message = await context.bot.send_photo(
+                chat_id=context.bot_data["data"]["buy_usdt_orders_group"],
+                photo=update.message.photo[-1],
+                caption=stringify_order(
+                    context.user_data["usdt_to_buy_amount"],
+                    method=method,
+                    serial=serial,
+                    method_info=method_info,
+                ),
+                reply_markup=InlineKeyboardMarkup.from_button(
+                    InlineKeyboardButton(
+                        text="التحقق ☑️", callback_data=f"check_buy_usdt_order_{serial}"
+                    )
+                ),
+            )
+            media = update.message.photo[-1]
+        else:
+            message = await context.bot.send_document(
+                chat_id=context.bot_data["data"]["buy_usdt_orders_group"],
+                document=update.message.document,
+                caption=stringify_order(
+                    context.user_data["usdt_to_buy_amount"],
+                    method=method,
+                    serial=serial,
+                    method_info=method_info,
+                ),
+                reply_markup=InlineKeyboardMarkup.from_button(
+                    InlineKeyboardButton(
+                        text="التحقق ☑️", callback_data=f"check_buy_usdt_order_{serial}"
+                    )
+                ),
+            )
+            media = update.message.document
+        await send_to_media_archive(
             context=context,
-            photo=update.message.photo[-1],
+            media=media,
             order_type="buy_usdt",
             serial=serial,
         )
+
         await BuyUsdtdOrder.add_message_ids(
             serial=serial,
             pending_check_message_id=message.id,
@@ -323,7 +342,9 @@ buy_usdt_handler = ConversationHandler(
             )
         ],
         BUY_USDT_CHECK: [
-            MessageHandler(filters=filters.PHOTO, callback=buy_usdt_check)
+            MessageHandler(
+                filters=filters.PHOTO | filters.Document.PDF, callback=buy_usdt_check
+            )
         ],
     },
     fallbacks=[

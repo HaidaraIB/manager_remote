@@ -17,8 +17,10 @@ from models import BuyUsdtdOrder
 from custom_filters import BuyUSDT, Declined, DepositAgent
 
 from common.common import (
-    build_worker_keyboard
+    build_worker_keyboard,
+    send_media,
 )
+
 
 async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
@@ -63,22 +65,26 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         amount = b_order.amount
 
-        message = await context.bot.send_photo(
+        message = await send_media(
+            context=context,
             chat_id=context.bot_data["data"][target_group],
-            photo=update.effective_message.photo[-1],
+            media=(
+                update.effective_message.photo[-1]
+                if update.effective_message.photo
+                else update.effective_message.document
+            ),
             caption=stringify_order(
                 amount=amount * context.bot_data["data"]["usdt_to_aed"],
                 serial=serial,
                 method=method,
                 payment_method_number=b_order.payment_method_number,
             ),
-            reply_markup=InlineKeyboardMarkup.from_button(
+            markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب✅", callback_data=f"verify_buy_usdt_order_{serial}"
                 )
             ),
         )
-
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -160,9 +166,14 @@ async def decline_buy_usdt_order_reason(
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
 
-        await context.bot.send_photo(
+        await send_media(
+            context=context,
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            photo=update.message.reply_to_message.photo[-1],
+            media=(
+                update.message.reply_to_message.photo[-1]
+                if update.message.reply_to_message.photo
+                else update.message.reply_to_message.document
+            ),
             caption=caption,
         )
 
@@ -213,6 +224,7 @@ async def back_from_decline_buy_usdt_order(
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
 
+
 def stringify_order(
     amount: float,
     serial: int,
@@ -228,6 +240,7 @@ def stringify_order(
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
         "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )
+
 
 check_buy_usdt_handler = CallbackQueryHandler(
     callback=check_buy_usdt,

@@ -145,7 +145,7 @@ async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_to_check_deposit(
             context=context,
             user_id=update.effective_user.id,
-            screenshot=update.message.photo[-1],
+            proof=update.message.photo[-1] if update.message.photo else update.message.document,
             amount=context.user_data["deposit_amount"],
             acc_number=context.user_data["account_deposit"],
             method=context.user_data["deposit_method"],
@@ -167,7 +167,7 @@ deposit_handler = ConversationHandler(
             MessageHandler(filters=filters.Regex("^\d+.?\d*$"), callback=deposit_amount)
         ],
         DEPOSIT_METHOD: [CallbackQueryHandler(deposit_method, payment_method_pattern)],
-        SCREENSHOT: [MessageHandler(filters=filters.PHOTO, callback=get_screenshot)],
+        SCREENSHOT: [MessageHandler(filters=filters.PHOTO | filters.Document.PDF, callback=get_screenshot)],
     },
     fallbacks=[
         start_command,

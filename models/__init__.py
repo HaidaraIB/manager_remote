@@ -18,3 +18,5 @@ from models.Worker import Worker
 from models.BaseOrder import BaseOrder
 from models.Photo import Photo
 from models.ComplaintConv import ComplaintConv
+from models.BaseMedia import BaseMedia
+from models.Doc import Doc

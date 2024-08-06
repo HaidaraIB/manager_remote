@@ -16,7 +16,7 @@ from telegram.ext import (
 
 from common.common import (
     build_complaint_keyboard,
-    send_to_photos_archive,
+    send_to_media_archive,
     parent_to_child_models_mapper,
 )
 from models import Complaint, ComplaintConv, Photo
@@ -92,9 +92,9 @@ async def correct_returned_complaint(
             photos = media if media else []
             if update.message.photo:
                 photos.append(update.message.photo[-1])
-                await send_to_photos_archive(
+                await send_to_media_archive(
                     context=context,
-                    photo=update.message.photo[-1],
+                    media=update.message.photo[-1],
                     order_type=order_type.replace("busdt", "buy_usdt"),
                     serial=serial,
                 )

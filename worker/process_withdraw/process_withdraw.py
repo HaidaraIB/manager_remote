@@ -20,7 +20,7 @@ from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
     format_amount,
-    send_to_photos_archive,
+    send_to_media_archive,
 )
 
 
@@ -136,9 +136,9 @@ async def reply_with_payment_proof_withdraw(
             serial=serial,
             worker_id=update.effective_user.id,
         )
-        await send_to_photos_archive(
+        await send_to_media_archive(
             context=context,
-            photo=update.message.photo[-1],
+            media=update.message.photo[-1],
             order_type="withdraw",
             serial=serial,
         )
