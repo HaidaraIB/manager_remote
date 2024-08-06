@@ -25,12 +25,6 @@ from common.common import (
     format_amount,
 )
 
-(
-    DECLINE_REASON,
-    AMOUNT,
-) = range(2)
-
-
 async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
@@ -82,7 +76,6 @@ async def get_withdraw_order_amount(update: Update, context: ContextTypes.DEFAUL
                 )
             )
         )
-        return AMOUNT
 
 
 async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -186,7 +179,6 @@ async def decline_withdraw_order(update: Update, context: ContextTypes.DEFAULT_T
                 )
             )
         )
-        return DECLINE_REASON
 
 
 async def decline_withdraw_order_reason(

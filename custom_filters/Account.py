@@ -10,7 +10,7 @@ class Account(UpdateFilter):
                 3
             ].isnumeric() and bool(
                 re.search(
-                    r"^[\u0600-\u06FF ]+\n\d+\n[a-zA-Z0-9]+$",
+                    r"^\D+\n\d+\n[a-zA-Z0-9]+$",
                     update.message.text,
                 )
             )

@@ -17,11 +17,12 @@ from common.common import (
     notify_workers,
     build_worker_keyboard,
 )
+from worker.check_deposit.common import build_check_deposit_keyboard
 import models
 import os
 import asyncio
 
-from custom_filters import Declined, DepositAgent, Deposit
+from custom_filters import Declined, DepositAgent, Deposit, DepositAmount
 
 
 async def check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -40,18 +41,62 @@ async def check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             checker_id=update.effective_user.id,
         )
 
-        payment_ok_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=f"send_deposit_order_{serial}"
-                ),
-                InlineKeyboardButton(
-                    text="رفض الطلب❌", callback_data=f"decline_deposit_order_{serial}"
-                ),
-            ]
-        ]
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(payment_ok_buttons),
+            reply_markup=build_check_deposit_keyboard(serial),
+        )
+
+
+async def edit_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [
+        Chat.PRIVATE,
+    ]:
+        serial = int(update.callback_query.data.split("_")[-1])
+
+        await update.callback_query.answer(
+            text="قم بالرد على هذه الرسالة بالمبلغ الجديد",
+            show_alert=True,
+        )
+        await update.callback_query.edit_message_reply_markup(
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text="الرجوع عن تعديل المبلغ 🔙",
+                    callback_data=f"back_from_edit_deposit_amount_{serial}",
+                )
+            )
+        )
+
+
+async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [
+        Chat.PRIVATE,
+    ]:
+        serial = int(
+            update.message.reply_to_message.reply_markup.inline_keyboard[0][
+                0
+            ].callback_data.split("_")[-1]
+        )
+        d_order = models.DepositOrder.get_one_order(serial=serial)
+        await models.DepositOrder.edit_order_amount(
+            new_amount=float(update.message.text), serial=serial
+        )
+
+        await update.message.delete()
+
+        amount, _ = apply_ex_rate(
+            method=d_order.method,
+            amount=float(update.message.text),
+            order_type="deposit",
+            context=context,
+        )
+        await update.message.reply_to_message.edit_caption(
+            caption=stringify_order(
+                amount=amount,
+                serial=serial,
+                account_number=d_order.acc_number,
+                method=d_order.method,
+            )
+            + "\n\nتم تعديل المبلغ ✅",
+            reply_markup=build_check_deposit_keyboard(serial),
         )
 
 
@@ -68,16 +113,15 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             order_type="deposit",
             context=context,
         )
-        order_text = stringify_order(
-            amount=amount,
-            account_number=d_order.acc_number,
-            method=d_order.method,
-            serial=d_order.serial,
-        )
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
             photo=update.effective_message.photo[-1],
-            caption=order_text,
+            caption=stringify_order(
+                amount=amount,
+                account_number=d_order.acc_number,
+                method=d_order.method,
+                serial=d_order.serial,
+            ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب ✅", callback_data=f"verify_deposit_order_{serial}"
@@ -208,25 +252,15 @@ async def decline_deposit_order_reason(
         context.user_data["requested"] = False
 
 
-async def back_from_decline_deposit_order(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
+async def back_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [
+        Chat.PRIVATE,
+    ]:
 
         serial = int(update.callback_query.data.split("_")[-1])
 
-        payment_ok_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="إرسال الطلب ⬅️", callback_data=f"send_deposit_order_{serial}"
-                ),
-                InlineKeyboardButton(
-                    text="رفض الطلب ❌", callback_data=f"decline_deposit_order_{serial}"
-                ),
-            ]
-        ]
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
+            reply_markup=build_check_deposit_keyboard(serial)
         )
 
 
@@ -252,6 +286,15 @@ check_deposit_handler = CallbackQueryHandler(
     pattern="^check_deposit",
 )
 
+edit_deposit_amount_handler = CallbackQueryHandler(
+    callback=edit_deposit_amount,
+    pattern="^edit_deposit_amount",
+)
+get_new_amount_handler = MessageHandler(
+    filters=filters.REPLY & filters.Regex("^\d+.?\d*$") & Deposit() & DepositAmount(),
+    callback=get_new_amount,
+)
+
 send_deposit_order_handler = CallbackQueryHandler(
     callback=send_deposit_order,
     pattern="^send_deposit_order",
@@ -266,6 +309,6 @@ decline_deposit_order_reason_handler = MessageHandler(
     callback=decline_deposit_order_reason,
 )
 back_from_decline_deposit_order_handler = CallbackQueryHandler(
-    callback=back_from_decline_deposit_order,
-    pattern="^back_from_decline_deposit_order",
+    callback=back_to_check_deposit,
+    pattern="^back_from_((decline_deposit_order)|(edit_deposit_amount))",
 )

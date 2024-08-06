@@ -51,16 +51,16 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text="تحقق سحب", callback_data="request check withdraw"
                     )
                 )
-            elif c.check_what == "buy_usdt":
+            elif c.check_what == "deposit":
                 checker_keyboard.append(
                     InlineKeyboardButton(
-                        text="تحقق شراء USDT", callback_data="request check busdt"
+                        text="تحقق إيداع", callback_data="request check deposit"
                     )
                 )
             else:
                 checker_keyboard.append(
                     InlineKeyboardButton(
-                        text="تحقق إيداع", callback_data="request check deposit"
+                        text="تحقق شراء USDT", callback_data="request check busdt"
                     )
                 )
 

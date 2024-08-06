@@ -129,6 +129,8 @@ def main():
     # DEPOSIT
     app.add_handler(reply_with_payment_proof_handler)
     app.add_handler(user_deposit_verified_handler)
+    app.add_handler(edit_deposit_amount_handler)
+    app.add_handler(get_new_amount_handler)
 
     app.add_handler(return_deposit_order_handler)
     app.add_handler(return_deposit_order_reason_handler)

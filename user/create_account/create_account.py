@@ -45,7 +45,10 @@ import models
 async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(
-            text="حسناً، قم بإرسال اسمك الثلاثي الآن 👤🪪 - Ok, Send your full name now 👤🪪",
+            text=(
+                "حسناً، قم بإرسال اسمك الثلاثي الآن 👤🪪\n"
+                "Ok, Send your full name now 👤🪪"
+            ),
             reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
         )
         return FULL_NAME
@@ -59,7 +62,10 @@ async def full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_user_home_page_button[0],
         ]
         await update.message.reply_text(
-            text="جيد، الآن الرقم الوطني للهوية 2️⃣ - Good, now your national id number 2️⃣",
+            text=(
+                "جيد، الآن أدخل رقم هويتك الإماراتية أو هوية بلدك الأصلي 2️⃣\n"
+                "Good, now enter your Emirates ID number or your country of origin ID 2️⃣"
+            ),
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return NATIONAL_NUMBER

@@ -80,7 +80,7 @@ async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.callback_query.data.startswith("back"):
             context.user_data["account_deposit"] = int(update.callback_query.data)
         await update.callback_query.edit_message_text(
-            text="أدخل الملبغ - Enter the amount",
+            text="أدخل المبلغ - Enter the amount",
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return DEPOSIT_AMOUNT

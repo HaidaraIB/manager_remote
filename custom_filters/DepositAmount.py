@@ -7,6 +7,6 @@ class DepositAmount(UpdateFilter):
         try:
             return update.message.reply_to_message.reply_markup.inline_keyboard[0][
                 0
-            ].callback_data.startswith("cancel_edit_amount")
+            ].callback_data.startswith("back_from_edit_deposit_amount")
         except:
             return False

@@ -25,8 +25,11 @@ from common.force_join import check_if_user_member
 from custom_filters import Admin, Worker, DepositAgent
 from common.constants import *
 
+import os
+
 async def inits(app: Application):
-    pass  # Fill this when you need to run a code only once and then clear it.
+    await models.Admin.add_new_admin(admin_id=os.getenv("OWNER_ID"))
+    await models.PaymentMethod.init_payment_methods()
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
