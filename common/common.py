@@ -10,7 +10,6 @@ from telegram import (
     PhotoSize,
     Document,
     InputMediaPhoto,
-    InputMediaDocument,
 )
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
@@ -28,53 +27,27 @@ import models
 async def send_media_group(
     update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id, caption
 ):
-    await context.bot.send_media_group(
-        chat_id=chat_id,
-        media=[
-            InputMediaDocument(
-                media=(
-                    update.message.reply_to_message.document
-                    if update.message.reply_to_message.document
-                    else Document(
-                        file_id=update.message.reply_to_message.photo[-1].file_id,
-                        file_unique_id=update.message.reply_to_message.photo[
-                            -1
-                        ].file_unique_id,
-                        file_size=update.message.reply_to_message.photo[-1].file_size,
-                    )
+    if update.message.reply_to_message.photo:
+        await context.bot.send_media_group(
+            chat_id=chat_id,
+            media=[
+                InputMediaPhoto(
+                    media=update.message.photo[-1],
                 ),
-            ),
-            InputMediaDocument(
-                media=Document(
-                    file_id=update.message.photo[-1].file_id,
-                    file_unique_id=update.message.photo[-1].file_unique_id,
-                    file_size=update.message.photo[-1].file_size,
-                )
-            ),
-        ],
-        caption=caption,
-    )
-    # if update.message.reply_to_message.photo:
-    #     await context.bot.send_media_group(
-    #         chat_id=chat_id,
-    #         media=[
-    #             InputMediaPhoto(
-    #                 media=update.message.photo[-1],
-    #             ),
-    #             InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
-    #         ],
-    #         caption=caption,
-    #     )
-    # else:
-    #     await context.bot.send_photo(
-    #         chat_id=chat_id,
-    #         photo=update.message.photo[-1],
-    #     )
-    #     await context.bot.send_document(
-    #         chat_id=chat_id,
-    #         document=update.message.reply_to_message.document,
-    #         caption=caption,
-    #     )
+                InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
+            ],
+            caption=caption,
+        )
+    else:
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=update.message.photo[-1],
+        )
+        await context.bot.send_document(
+            chat_id=chat_id,
+            document=update.message.reply_to_message.document,
+            caption=caption,
+        )
 
 
 async def send_media(
