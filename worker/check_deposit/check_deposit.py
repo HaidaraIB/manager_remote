@@ -90,6 +90,7 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 serial=serial,
                 account_number=d_order.acc_number,
                 method=d_order.method,
+                wal=d_order.deposit_wallet,
             )
             + "\n\nتم تعديل المبلغ ✅",
             reply_markup=build_check_deposit_keyboard(serial),
@@ -118,6 +119,7 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 account_number=d_order.acc_number,
                 method=d_order.method,
                 serial=d_order.serial,
+                wal=d_order.deposit_wallet,
             ),
             markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -204,6 +206,7 @@ async def decline_deposit_order_reason(
                 account_number=d_order.acc_number,
                 method=d_order.method,
                 serial=d_order.serial,
+                wal=d_order.deposit_wallet,
             )
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
@@ -272,13 +275,15 @@ def stringify_order(
     serial: int,
     method: str,
     account_number: int,
+    wal:str,
     *args,
 ):
     return (
         "إيداع جديد:\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
         f"رقم الحساب: <code>{account_number}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n"
+        f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )

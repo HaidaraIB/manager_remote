@@ -32,39 +32,34 @@ async def send_to_check_deposit(
         agent_id=agent_id if agent_id else 0,
         group_id=target_group,
         amount=amount,
+        deposit_wallet=context.bot_data["data"][f"{method}_number"],
     )
 
+    caption = stringify_order(
+        amount=amount,
+        account_number=acc_number,
+        method=method,
+        serial=serial,
+        wal=context.bot_data["data"][f"{method}_number"],
+    )
+    markup = InlineKeyboardMarkup.from_button(
+        InlineKeyboardButton(
+            text="التحقق ☑️", callback_data=f"check_deposit_order_{serial}"
+        )
+    )
     if isinstance(proof, PhotoSize):
         message = await context.bot.send_photo(
             chat_id=target_group,
             photo=proof,
-            caption=stringify_order(
-                amount=amount,
-                account_number=acc_number,
-                method=method,
-                serial=serial,
-            ),
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="التحقق ☑️", callback_data=f"check_deposit_order_{serial}"
-                )
-            ),
+            caption=caption,
+            reply_markup=markup,
         )
     else:
         message = await context.bot.send_document(
             chat_id=target_group,
             document=proof,
-            caption=stringify_order(
-                amount=amount,
-                account_number=acc_number,
-                method=method,
-                serial=serial,
-            ),
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="التحقق ☑️", callback_data=f"check_deposit_order_{serial}"
-                )
-            ),
+            caption=caption,
+            reply_markup=markup,
         )
 
     await send_to_media_archive(

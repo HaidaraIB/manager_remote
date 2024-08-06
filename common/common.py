@@ -10,6 +10,7 @@ from telegram import (
     PhotoSize,
     Document,
     InputMediaPhoto,
+    InputMediaDocument,
 )
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
@@ -21,43 +22,59 @@ import traceback
 import json
 import logging
 from common.constants import *
-from models import (
-    WithdrawOrder,
-    DepositOrder,
-    BuyUsdtdOrder,
-    CreateAccountOrder,
-    DepositAgent,
-    PaymentAgent,
-    Checker,
-    Photo,
-    Doc,
-)
+import models
 
 
 async def send_media_group(
     update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id, caption
 ):
-    if update.message.reply_to_message.photo:
-        await context.bot.send_media_group(
-            chat_id=chat_id,
-            media=[
-                InputMediaPhoto(
-                    media=update.message.photo[-1],
+    await context.bot.send_media_group(
+        chat_id=chat_id,
+        media=[
+            InputMediaDocument(
+                media=(
+                    update.message.reply_to_message.document
+                    if update.message.reply_to_message.document
+                    else Document(
+                        file_id=update.message.reply_to_message.photo[-1].file_id,
+                        file_unique_id=update.message.reply_to_message.photo[
+                            -1
+                        ].file_unique_id,
+                        file_size=update.message.reply_to_message.photo[-1].file_size,
+                    )
                 ),
-                InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
-            ],
-            caption=caption,
-        )
-    else:
-        await context.bot.send_photo(
-            chat_id=chat_id,
-            photo=update.message.photo[-1],
-        )
-        await context.bot.send_document(
-            chat_id=chat_id,
-            document=update.message.reply_to_message.document,
-            caption=caption,
-        )
+            ),
+            InputMediaDocument(
+                media=Document(
+                    file_id=update.message.photo[-1].file_id,
+                    file_unique_id=update.message.photo[-1].file_unique_id,
+                    file_size=update.message.photo[-1].file_size,
+                )
+            ),
+        ],
+        caption=caption,
+    )
+    # if update.message.reply_to_message.photo:
+    #     await context.bot.send_media_group(
+    #         chat_id=chat_id,
+    #         media=[
+    #             InputMediaPhoto(
+    #                 media=update.message.photo[-1],
+    #             ),
+    #             InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
+    #         ],
+    #         caption=caption,
+    #     )
+    # else:
+    #     await context.bot.send_photo(
+    #         chat_id=chat_id,
+    #         photo=update.message.photo[-1],
+    #     )
+    #     await context.bot.send_document(
+    #         chat_id=chat_id,
+    #         document=update.message.reply_to_message.document,
+    #         caption=caption,
+    #     )
 
 
 async def send_media(
@@ -88,7 +105,10 @@ async def send_media(
 async def send_to_media_archive(
     context: ContextTypes.DEFAULT_TYPE, media, serial, order_type
 ):
-    media_dict: dict[str, Photo | Doc] = {"photo": Photo, "doc": Doc}
+    media_dict: dict[str, models.Photo | models.Doc] = {
+        "photo": models.Photo,
+        "doc": models.Doc,
+    }
     if isinstance(media, PhotoSize):
         p = (
             await context.bot.send_photo(
@@ -111,12 +131,16 @@ async def send_to_media_archive(
 
 
 parent_to_child_models_mapper: dict[
-    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder
+    str,
+    models.DepositOrder
+    | models.WithdrawOrder
+    | models.BuyUsdtdOrder
+    | models.CreateAccountOrder,
 ] = {
-    "withdraw": WithdrawOrder,
-    "deposit": DepositOrder,
-    "busdt": BuyUsdtdOrder,
-    "create account": CreateAccountOrder,
+    "withdraw": models.WithdrawOrder,
+    "deposit": models.DepositOrder,
+    "busdt": models.BuyUsdtdOrder,
+    "create account": models.CreateAccountOrder,
 }
 
 
@@ -191,7 +215,7 @@ def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
 
 async def notify_workers(
     context: ContextTypes.DEFAULT_TYPE,
-    workers: list[DepositAgent | PaymentAgent | Checker],
+    workers: list[models.DepositAgent | models.PaymentAgent | models.Checker],
     text: str,
 ):
     for worker in workers:
