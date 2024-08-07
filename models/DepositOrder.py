@@ -10,6 +10,7 @@ import datetime
 class DepositOrder(Order):
     __tablename__ = "deposit_orders"
     ref_number = Column(String)
+    deposit_wallet = Column(String)
     acc_number = Column(String)
     agent_id = Column(Integer, default=0)
 
@@ -33,6 +34,7 @@ class DepositOrder(Order):
         method: str,
         ref_number: str,
         acc_number: str,
+        deposit_wallet:str,
         agent_id: int = None,
         s: Session = None,
     ):
@@ -42,6 +44,7 @@ class DepositOrder(Order):
                 method=method,
                 ref_number=ref_number,
                 acc_number=acc_number,
+                deposit_wallet=deposit_wallet,
                 agent_id=agent_id if agent_id else 0,
             ),
         )

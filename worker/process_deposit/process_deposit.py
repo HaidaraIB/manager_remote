@@ -73,11 +73,11 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             await User.million_gift_user(user_id=d_order.user_id, amount=gifts_amount)
 
         caption = (
-            f"مبروك🎉، تم الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}$</b>\n"
-            f"{f'بالإضافة إلى <b>{format_amount(gifts_amount)}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000$</b>' if gifts_amount else ''}\n\n"
+            f"مبروك🎉، تم الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n"
+            f"{f'بالإضافة إلى <b>{format_amount(gifts_amount)}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000</b>' if gifts_amount else ''}\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
-            f"Congrats🎉, the deposit you made <b>{format_amount(d_order.amount)}$</b> has been approved.\n"
-            f"{f'plus <b>{format_amount(gifts_amount)}$</b> gift for reaching <b>1,000,000$</b> deposits.' if gifts_amount else ''}\n\n"
+            f"Congrats🎉, the deposit you made <b>{format_amount(d_order.amount)}</b> has been approved.\n"
+            f"{f'plus <b>{format_amount(gifts_amount)}$</b> gift for reaching <b>1,000,000</b> deposits.' if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
         await context.bot.send_photo(

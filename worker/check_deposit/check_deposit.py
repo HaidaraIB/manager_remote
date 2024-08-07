@@ -79,6 +79,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 method=d_order.method,
                 serial=d_order.serial,
                 ref_num=d_order.ref_number,
+                wal=d_order.deposit_wallet,
             )
             + f"\n\nالسبب:\n<b>{reason}</b>"
         )
@@ -109,6 +110,7 @@ async def send_order_to_process(
         method=d_order.method,
         serial=d_order.serial,
         ref_num=ref_info.number,
+        wal=d_order.deposit_wallet,
     )
 
     message = await context.bot.send_message(
@@ -145,6 +147,7 @@ def stringify_order(
     method: str,
     account_number: int,
     ref_num: str,
+    wal:str,
     *args,
 ):
     return (
@@ -152,7 +155,8 @@ def stringify_order(
         f"رقم العملية: <code>{ref_num}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
         f"رقم الحساب: <code>{account_number}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n\n"
+        f"وسيلة الدفع: <code>{method}</code>\n"
+        f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
         "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )

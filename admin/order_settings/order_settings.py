@@ -23,16 +23,16 @@ from common.back_to_home_page import (
 from start import admin_command, start_command
 from custom_filters import Admin
 from admin.order_settings.common import (
-    build_order_types_keyboard,
     order_settings_dict,
+    build_order_types_keyboard,
     stringify_order,
+    build_actions_keyboard,
 )
 
 (
     CHOOSE_ORDER_TYPE,
     SERIAL,
-    CHOOSE_ACTION,
-) = range(3)
+) = range(2)
 
 
 async def order_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -81,16 +81,17 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
             return
-        actions_keyboard = [*back_buttons]
+        actions_keyboard = build_actions_keyboard(order_type, serial)
         tg_user = await context.bot.get_chat(chat_id=order.user_id)
         await update.message.reply_text(
             text=stringify_order(
-                order,
+                serial,
                 order_type,
-                tg_user.username if tg_user.username else tg_user.full_name,
+                "@" + tg_user.username if tg_user.username else tg_user.full_name,
             ),
             reply_markup=InlineKeyboardMarkup(actions_keyboard),
         )
+        return ConversationHandler.END
 
 
 back_to_get_serial = choose_order_type

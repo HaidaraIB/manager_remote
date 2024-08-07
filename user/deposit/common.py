@@ -29,6 +29,7 @@ async def send_to_check_deposit(
         method=method,
         acc_number=acc_number,
         ref_number=ref_num,
+        deposit_wallet=context.bot_data['data'][f'{method}_number'],
         agent_id=agent_id if agent_id else 0,
     )
 
@@ -52,6 +53,7 @@ async def send_to_check_deposit(
             method=method,
             serial=serial,
             ref_num=ref_num,
+            wal=context.bot_data['data'][f'{method}_number']
         ),
     )
 
