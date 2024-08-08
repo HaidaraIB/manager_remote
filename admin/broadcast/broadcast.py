@@ -167,7 +167,7 @@ broadcast_message_handler = ConversationHandler(
         ],
         SEND_TO: [
             CallbackQueryHandler(
-                callback=send_to, pattern="^((all)|(specific))users$|^agents$"
+                callback=send_to, pattern="^((all)|(specific)) users$|^agents$"
             )
         ],
         ENTER_USERS: [
