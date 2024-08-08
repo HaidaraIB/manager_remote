@@ -1,16 +1,7 @@
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-
-from telegram.ext import (
-    ContextTypes,
-)
-
-from common.common import (
-    apply_ex_rate,
-    notify_workers,
-)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from common.common import apply_ex_rate, notify_workers
+from common.stringifies import stringify_deposit_order
 from models import RefNumber, DepositOrder, DepositAgent
 
 import os
@@ -72,7 +63,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         )
         text = (
             "تم رفض الطلب❌\n"
-            + stringify_order(
+            + stringify_deposit_order(
                 amount=0,
                 account_number=d_order.acc_number,
                 method=d_order.method,
@@ -103,7 +94,7 @@ async def send_order_to_process(
         order_type="deposit",
         context=context,
     )
-    order_text = stringify_order(
+    order_text = stringify_deposit_order(
         amount=amount,
         serial=d_order.serial,
         method=d_order.method,
@@ -137,25 +128,4 @@ async def send_order_to_process(
             workers=workers,
             text=f"انتباه تم استلام إيداع جديد رقم العملية <code>{ref_info.number}</code> 🚨",
         )
-    )
-
-
-def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    account_number: int,
-    ref_num: str,
-    wal:str,
-    *args,
-):
-    return (
-        "إيداع جديد:\n"
-        f"رقم العملية: <code>{ref_num}</code>\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        f"رقم الحساب: <code>{account_number}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n"
-        f"المحفظة: <code>{wal}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )

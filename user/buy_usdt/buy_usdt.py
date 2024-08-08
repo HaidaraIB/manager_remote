@@ -32,13 +32,12 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
+from common.stringifies import stringify_check_busdt_order
 
 from start import start_command
 
-from models import BuyUsdtdOrder, PaymentMethod, Photo
+from models import BuyUsdtdOrder, PaymentMethod
 from constants import *
-
-import os
 
 (
     USDT_TO_BUY_AMOUNT,
@@ -259,7 +258,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["buy_usdt_orders_group"],
             photo=update.message.photo[-1],
-            caption=stringify_order(
+            caption=stringify_check_busdt_order(
                 context.user_data["usdt_to_buy_amount"],
                 method=method,
                 serial=serial,
@@ -286,16 +285,6 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=build_user_keyboard(),
         )
         return ConversationHandler.END
-
-
-def stringify_order(amount, method, serial, method_info):
-    return (
-        f"طلب شراء USDT جديد:\n\n"
-        f"المبلغ💵: <code>{amount}</code> USDT\n"
-        f"وسيلة الدفع 💳: <b>{method}</b>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        f"{method_info}\n"
-    )
 
 
 buy_usdt_handler = ConversationHandler(

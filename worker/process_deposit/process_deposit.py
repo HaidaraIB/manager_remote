@@ -126,7 +126,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
-        await DepositOrder.reply_with_deposit_proof(
+        await DepositOrder.approve_deposit_order(
             amount=d_order.amount,
             serial=serial,
             user_id=d_order.user_id,

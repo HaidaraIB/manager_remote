@@ -1,13 +1,13 @@
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    Update,
     InputMediaPhoto,
 )
 
 from telegram.ext import ContextTypes
 import models
 from common.back_to_home_page import back_to_user_home_page_button
+from common.stringifies import stringify_w_with_us_order
 
 parent_to_child_mapper: dict[str, models.TrustedAgent | models.Partner] = {
     "agent": models.TrustedAgent,
@@ -69,26 +69,6 @@ def build_govs_keyboard():
         ]
         for i in range(0, len(govs), 2)
     ]
-
-
-def stringify_w_with_us_order(
-    gov: str,
-    neighborhood: str,
-    email: str,
-    phone: str,
-    amount: float,
-    ref_num: str,
-    serial: int,
-):
-    return (
-        f"المحافظة: <b>{gov}</b>\n"
-        f"الحي: <b>{neighborhood}</b>\n"
-        f"الإيميل: <b>{email}</b>\n"
-        f"رقم الهاتف: <b>{phone}</b>\n"
-        f"المبلغ: <code>{amount}</code>\n"
-        f"رقم العملية: <code>{ref_num}</code>\n"
-        f"Serial: <code>{serial}</code>"
-    )
 
 
 work_with_us_keyboard = [

@@ -34,7 +34,7 @@ class PaymentOrder(Order):
 
     @classmethod
     @lock_and_release
-    async def reply_with_payment_proof(
+    async def approve_payment_order(
         cls,
         serial: int,
         worker_id: int,
@@ -51,12 +51,46 @@ class PaymentOrder(Order):
         )
         s.query(PaymentAgent).filter_by(id=worker_id, method=method).update(
             {
-                PaymentAgent.approved_withdraws: PaymentAgent.approved_withdraws
-                + amount,
-                PaymentAgent.approved_withdraws_day: PaymentAgent.approved_withdraws_day
-                + amount,
-                PaymentAgent.approved_withdraws_num: PaymentAgent.approved_withdraws_num
-                + 1,
+                PaymentAgent.approved_withdraws: (
+                    PaymentAgent.approved_withdraws + amount
+                ),
+                PaymentAgent.approved_withdraws_day: (
+                    PaymentAgent.approved_withdraws_day + amount
+                ),
+                PaymentAgent.approved_withdraws_num: (
+                    PaymentAgent.approved_withdraws_num + 1
+                ),
                 PaymentAgent.pre_balance: PaymentAgent.pre_balance - amount,
+            }
+        )
+
+    @classmethod
+    @lock_and_release
+    async def unapprove_payment_order(
+        cls,
+        serial: int,
+        worker_id: int,
+        method: str,
+        amount: float,
+        s: Session = None,
+    ):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "sent",
+                cls.working_on_it: 0,
+            }
+        )
+        s.query(PaymentAgent).filter_by(id=worker_id, method=method).update(
+            {
+                PaymentAgent.approved_withdraws: (
+                    PaymentAgent.approved_withdraws - amount
+                ),
+                PaymentAgent.approved_withdraws_day: (
+                    PaymentAgent.approved_withdraws_day - amount
+                ),
+                PaymentAgent.approved_withdraws_num: (
+                    PaymentAgent.approved_withdraws_num - 1
+                ),
+                PaymentAgent.pre_balance: PaymentAgent.pre_balance + amount,
             }
         )

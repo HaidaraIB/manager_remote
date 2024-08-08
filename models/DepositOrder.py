@@ -34,7 +34,7 @@ class DepositOrder(Order):
         method: str,
         ref_number: str,
         acc_number: str,
-        deposit_wallet:str,
+        deposit_wallet: str,
         agent_id: int = None,
         s: Session = None,
     ):
@@ -52,7 +52,7 @@ class DepositOrder(Order):
 
     @staticmethod
     @lock_and_release
-    async def reply_with_deposit_proof(
+    async def approve_deposit_order(
         serial: int,
         worker_id: int,
         user_id: int,
@@ -78,5 +78,37 @@ class DepositOrder(Order):
         s.query(User).filter_by(id=user_id).update(
             {
                 User.deposit_balance: User.deposit_balance + amount,
+            }
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def unapprove_deposit_order(
+        serial: int,
+        worker_id: int,
+        user_id: int,
+        amount: float,
+        s: Session = None,
+    ):
+        s.query(DepositOrder).filter_by(serial=serial).update(
+            {
+                DepositOrder.state: "sent",
+                DepositOrder.working_on_it: 0,
+            }
+        )
+        s.query(DepositAgent).filter_by(id=worker_id).update(
+            {
+                DepositAgent.approved_deposits_week: (
+                    DepositAgent.approved_deposits_week - amount
+                ),
+                DepositAgent.approved_deposits_num: (
+                    DepositAgent.approved_deposits_num - 1
+                ),
+                DepositAgent.approved_deposits: DepositAgent.approved_deposits - amount,
+            }
+        )
+        s.query(User).filter_by(id=user_id).update(
+            {
+                User.deposit_balance: User.deposit_balance - amount,
             }
         )

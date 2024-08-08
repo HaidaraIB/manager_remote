@@ -20,9 +20,8 @@ from common.back_to_home_page import (
     back_to_admin_home_page_handler,
 )
 from admin.order_settings.common import (
-    stringify_order,
-    build_actions_keyboard,
     back_to_choose_action,
+    refresh_order_settings_message,
 )
 
 import models
@@ -88,21 +87,18 @@ async def get_new_amount(
         new_order = parent_to_child_models_mapper[order_type].get_one_order(
             serial=serial
         )
-
-        actions_keyboard = build_actions_keyboard(order_type, serial)
-
-        await update.message.delete()
         tg_user = await context.bot.get_chat(chat_id=new_order.user_id)
-        await context.bot.edit_message_text(
+        await update.message.delete()
+        await context.bot.delete_message(
             chat_id=update.effective_chat.id,
             message_id=context.user_data["edit_order_msg_id"],
-            text=stringify_order(
-                serial,
-                order_type,
-                "@" + tg_user.username if tg_user.username else tg_user.full_name,
-            )
-            + "\n\nتم تعديل المبلغ ✅",
-            reply_markup=InlineKeyboardMarkup(actions_keyboard),
+        )
+        await refresh_order_settings_message(
+            update=update,
+            context=context,
+            serial=serial,
+            order_type=order_type,
+            note="\n\nتم تعديل المبلغ ✅",
         )
         return ConversationHandler.END
 

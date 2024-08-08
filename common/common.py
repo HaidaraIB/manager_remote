@@ -28,6 +28,8 @@ import asyncio
 import os
 import uuid
 import logging
+from datetime import datetime
+from dateutil import tz
 
 
 async def send_to_photos_archive(
@@ -57,6 +59,10 @@ parent_to_child_models_mapper: dict[
 
 def format_amount(amount: float):
     return f"{float(amount):,.2f}".rstrip("0").rstrip(".")
+
+
+def format_datetime(d: datetime):
+    return d.replace(tzinfo=tz.gettz("Syria/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
 
 
 def pretty_time_delta(seconds):
@@ -450,7 +456,7 @@ def build_groups_keyboard(op: str):
         ],
         [
             InlineKeyboardButton(
-                text="شراء USDT",
+                text="تحقق شراء USDT",
                 callback_data=f"{op} busdt_orders_group",
             )
         ],

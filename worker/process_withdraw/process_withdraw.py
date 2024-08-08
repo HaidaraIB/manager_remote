@@ -126,7 +126,7 @@ async def reply_with_payment_proof_withdraw(
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
-        await WithdrawOrder.reply_with_payment_proof(
+        await WithdrawOrder.approve_payment_order(
             amount=amount,
             method=w_order.method,
             serial=serial,

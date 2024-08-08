@@ -25,7 +25,7 @@ from custom_filters import Admin
 from admin.order_settings.common import (
     order_settings_dict,
     build_order_types_keyboard,
-    stringify_order,
+    general_stringify_order,
     build_actions_keyboard,
 )
 
@@ -84,7 +84,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
         actions_keyboard = build_actions_keyboard(order_type, serial)
         tg_user = await context.bot.get_chat(chat_id=order.user_id)
         await update.message.reply_text(
-            text=stringify_order(
+            text=general_stringify_order(
                 serial,
                 order_type,
                 "@" + tg_user.username if tg_user.username else tg_user.full_name,

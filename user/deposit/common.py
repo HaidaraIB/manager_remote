@@ -1,7 +1,8 @@
 from telegram.ext import ContextTypes
 from models import RefNumber, DepositOrder, DepositAgent
-from worker.check_deposit.check_deposit import check_deposit, stringify_order
+from worker.check_deposit.check_deposit import check_deposit
 from common.common import notify_workers
+from common.stringifies import stringify_deposit_order
 import asyncio
 
 
@@ -47,7 +48,7 @@ async def send_to_check_deposit(
 
     await context.bot.send_message(
         chat_id=target_group,
-        text=stringify_order(
+        text=stringify_deposit_order(
             amount=0,
             account_number=acc_number,
             method=method,

@@ -175,6 +175,20 @@ class BaseOrder(Base):
 
     @classmethod
     @lock_and_release
+    async def undecline_order(
+        cls,
+        serial: int,
+        s: Session = None,
+    ):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "pending",
+                cls.reason: "",
+            }
+        )
+
+    @classmethod
+    @lock_and_release
     async def return_order(
         cls,
         reason: str,
@@ -240,6 +254,25 @@ class BaseOrder(Base):
                 cls.ex_rate: ex_rate,
                 cls.send_date: datetime.datetime.now(),
                 cls.amount: ref_info.amount if ref_info else cls.amount,
+            }
+        )
+
+    @classmethod
+    @lock_and_release
+    async def unsend_order(
+        cls,
+        serial: int,
+        group_id: int,
+        s: Session = None,
+    ):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "pending",
+                cls.pending_process_message_id: 0,
+                cls.working_on_it: 0,
+                cls.group_id: group_id,
+                cls.ex_rate: 0,
+                cls.amount: 0,
             }
         )
 

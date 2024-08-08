@@ -251,6 +251,7 @@ def main():
     app.add_handler(order_settings_handler)
     app.add_handler(edit_order_amount_handler)
     app.add_handler(request_photos_handler)
+    app.add_handler(return_order_to_worker_handler)
 
     app.add_handler(check_joined_handler)
 

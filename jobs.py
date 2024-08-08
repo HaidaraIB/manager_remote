@@ -4,80 +4,11 @@ from models import PaymentAgent, DepositAgent
 from common.common import format_amount
 from constants import *
 import asyncio
-
-worker_type_dict = {
-    "daily": {
-        "approved_work": "approved_withdraws_day",
-        "percentage": "workers_reward_withdraw_percentage",
-        "role": "withdraws",
-        "day_week": {
-            "ar": "اليوم",
-            "en": "day",
-        },
-        "model": PaymentAgent,
-    },
-    "weekly": {
-        "approved_work": "approved_deposits_week",
-        "percentage": "workers_reward_percentage",
-        "role": "deposits",
-        "day_week": {"ar": "الأسبوع", "en": "week"},
-        "model": DepositAgent,
-    },
-}
-
-
-def stringify_manager_reward_report(
-    worker: DepositAgent | PaymentAgent,
-    updated_worker: DepositAgent | PaymentAgent,
-    amount: float,
-    reward_type: str,
-):
-    manager_text = (
-        f"تم تحديث رصيد المكافآت عن مجموع مبالغ الطلبات الناجحة للموظف:\n\n"
-        f"id: <code>{worker.id}</code>\n"
-        f"name: <b>{worker.name}</b>\n"
-        f"username: {'@' + worker.username if worker.username else '<b>لا يوجد</b>'}\n\n"
-    )
-    return manager_text + stringify_reward_report(
-        worker=worker,
-        updated_worker=updated_worker,
-        amount=amount,
-        reward_type=reward_type,
-    )
-
-
-def stringify_reward_report(
-    worker: DepositAgent | PaymentAgent,
-    updated_worker: DepositAgent | PaymentAgent,
-    amount: float,
-    reward_type: str,
-):
-    role = worker_type_dict[reward_type]["role"]
-    balance = updated_worker.__getattribute__(f"approved_{role}")
-    partial_balance = worker.__getattribute__(
-        f"approved_{role}_{worker_type_dict[reward_type]['day_week']['en']}"
-    )
-    prev_rewards_balance = worker.__getattribute__(f"{reward_type}_rewards_balance")
-    rewards_balance = updated_worker.__getattribute__(f"{reward_type}_rewards_balance")
-    orders_num = updated_worker.__getattribute__(f"approved_{role}_num")
-    work_type = worker_type_dict[reward_type]["day_week"]["ar"]
-
-    worker_text = (
-        f"الوظيفة: {f'سحب {updated_worker.method}' if role == 'withdraws' else 'تنفيذ إيداع'}\n"
-        f"مجموع المكافآت السابق: <b>{format_amount(prev_rewards_balance)}</b>\n"
-        f"قيمة المكافأة: <b>{format_amount(amount)}</b>\n"
-        f"مجموع المكافآت الحالي: <b>{format_amount(rewards_balance)}</b>\n"
-        f"عدد الطلبات حتى الآن: <b>{orders_num}</b>\n"
-        f"مجموع المبالغ حتى الآن: <b>{format_amount(balance)}</b>\n"
-        f"مجموع المبالغ هذا {work_type}: <b>{format_amount(partial_balance)}</b>\n"
-    )
-    worker_text += (
-        f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"
-        if isinstance(worker, PaymentAgent)
-        else ""
-    )
-
-    return worker_text
+from common.stringifies import (
+    worker_type_dict,
+    stringify_manager_reward_report,
+    stringify_reward_report,
+)
 
 
 async def reward_worker(context: ContextTypes.DEFAULT_TYPE):

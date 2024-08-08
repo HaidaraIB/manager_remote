@@ -132,7 +132,7 @@ async def reply_with_payment_proof_buy_usdt(
                 + caption,
             )
 
-        await BuyUsdtdOrder.reply_with_payment_proof(
+        await BuyUsdtdOrder.approve_payment_order(
             amount=amount,
             method=b_order.method,
             serial=serial,

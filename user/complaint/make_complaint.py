@@ -29,6 +29,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
+from common.stringifies import complaint_stringify_order, state_dict_en_to_ar
 from user.complaint.notify import notify_operation
 from user.complaint.common import *
 from start import start_command
@@ -180,7 +181,7 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["reason"] = update.message.text
         complaint_text = (
             f"هل أنت متأكد من أنك تريد إرسال شكوى فيما يخص الطلب:\n\n"
-            f"{stringify_order(serial=context.user_data['complaint_serial'], order_type=context.user_data['complaint_about'])}\n"
+            f"{complaint_stringify_order(serial=context.user_data['complaint_serial'], order_type=context.user_data['complaint_about'])}\n"
             "سبب الشكوى:\n"
             f"<b>{update.message.text}</b>"
         )
@@ -213,13 +214,11 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
 
             complaint_text = (
                 f"شكوى جديدة:\n\n"
-                f"{stringify_order(serial=serial, order_type=order_type)}\n"
+                f"{complaint_stringify_order(serial=serial, order_type=order_type)}\n"
                 "سبب الشكوى:\n"
                 f"<b>{context.user_data['reason']}</b>\n"
             )
-            photos = Photo.get(
-                order_serial=serial, order_type=order_type
-            )
+            photos = Photo.get(order_serial=serial, order_type=order_type)
 
             if op.worker_id:
                 context.bot_data["suspended_workers"].add(op.worker_id)
@@ -264,7 +263,9 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 user_id=update.effective_user.id,
             )
             keyboard = build_operations_keyboard(
-                serials=[op.serial for op in operations if not op.complaint_took_care_of]
+                serials=[
+                    op.serial for op in operations if not op.complaint_took_care_of
+                ]
             )
             await update.callback_query.edit_message_text(
                 text=CHOOSE_OPERATIONS_TEXT,

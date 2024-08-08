@@ -2,13 +2,12 @@ from telegram import (
     Update,
     Chat,
     InputMediaPhoto,
-    InlineKeyboardMarkup,
 )
 
 from telegram.ext import ContextTypes, CallbackQueryHandler
 
 from common.common import parent_to_child_models_mapper
-from admin.order_settings.common import stringify_order, build_actions_keyboard
+from admin.order_settings.common import refresh_order_settings_message
 import models
 
 
@@ -28,19 +27,13 @@ async def request_photos(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=update.effective_user.id,
             media=[InputMediaPhoto(media=p) for p in photos],
         )
-        order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
-        tg_user = await context.bot.get_chat(chat_id=order.user_id)
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=stringify_order(
-                serial,
-                order_type,
-                "@" + tg_user.username if tg_user.username else tg_user.full_name,
-            )
-            + "\n\nتم إرسال الوثائق في الأعلى ✅",
-            reply_markup=InlineKeyboardMarkup(
-                build_actions_keyboard(order_type, serial)
-            ),
+        await update.callback_query.delete_message()
+        await refresh_order_settings_message(
+            update=update,
+            context=context,
+            serial=serial,
+            order_type=order_type,
+            note="\n\nتم إرسال الوثائق في الأعلى ✅",
         )
 
 

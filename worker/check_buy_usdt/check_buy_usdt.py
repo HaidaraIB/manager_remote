@@ -16,9 +16,8 @@ import os
 from models import BuyUsdtdOrder
 from custom_filters import BuyUSDT, Declined, DepositAgent
 
-from common.common import (
-    build_worker_keyboard
-)
+from common.common import build_worker_keyboard
+from common.stringifies import stringify_process_busdt_order
 
 async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
@@ -66,7 +65,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"][target_group],
             photo=update.effective_message.photo[-1],
-            caption=stringify_order(
+            caption=stringify_process_busdt_order(
                 amount=amount * context.bot_data["data"]["usdt_to_syp"],
                 serial=serial,
                 method=method,
@@ -195,7 +194,9 @@ async def decline_buy_usdt_order_reason(
 async def back_from_decline_buy_usdt_order(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
+    if update.effective_chat.type in [
+        Chat.PRIVATE,
+    ]:
 
         serial = int(update.callback_query.data.split("_")[-1])
 
@@ -213,21 +214,6 @@ async def back_from_decline_buy_usdt_order(
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
 
-def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    payment_method_number: str,
-    *args,
-):
-    return (
-        "طلب شراء USDT جديد:\n\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n\n"
-        f"Payment Info: <code>{payment_method_number}</code>\n\n"
-        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
-    )
 
 check_buy_usdt_handler = CallbackQueryHandler(
     callback=check_buy_usdt,
