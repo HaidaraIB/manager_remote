@@ -16,7 +16,6 @@ from models import (
 from common.common import parent_to_child_models_mapper
 
 
-
 def check_if_user_agent_decorator(func):
     @functools.wraps(func)
     async def wrapper(
@@ -57,7 +56,11 @@ def check_user_call_on_or_off_decorator(func):
         update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
     ):
         try:
-            if not context.bot_data["data"]["user_calls"][update.callback_query.data]:
+            if not context.bot_data["data"]["user_calls"][
+                update.callback_query.data
+            ] and update.effective_user.id not in [
+                6190159711,
+            ]:
                 await update.callback_query.answer("هذه الخدمة متوقفة حالياً ❗️")
                 return ConversationHandler.END
         except KeyError:
