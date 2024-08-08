@@ -10,7 +10,6 @@ from telegram.ext import (
 from common.common import (
     apply_ex_rate,
     notify_workers,
-    format_amount,
 )
 from models import RefNumber, DepositOrder, DepositAgent
 
@@ -106,9 +105,9 @@ async def send_order_to_process(
     )
     order_text = stringify_order(
         amount=amount,
-        account_number=d_order.acc_number,
-        method=d_order.method,
         serial=d_order.serial,
+        method=d_order.method,
+        account_number=d_order.acc_number,
         ref_num=ref_info.number,
         wal=d_order.deposit_wallet,
     )
