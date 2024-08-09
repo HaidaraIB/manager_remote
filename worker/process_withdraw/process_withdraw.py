@@ -14,7 +14,7 @@ from telegram.ext import (
 
 import os
 import datetime
-from custom_filters import Withdraw, Returned, DepositAgent
+from custom_filters import Withdraw, Returned, DepositAgent, Approved
 from models import WithdrawOrder
 from common.common import (
     build_worker_keyboard,
@@ -276,7 +276,7 @@ user_payment_verified_handler = CallbackQueryHandler(
 )
 
 reply_with_payment_proof_withdraw_handler = MessageHandler(
-    filters=filters.REPLY & filters.PHOTO & Withdraw(),
+    filters=filters.REPLY & filters.PHOTO & Withdraw() & Approved(),
     callback=reply_with_payment_proof_withdraw,
 )
 

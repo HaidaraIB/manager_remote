@@ -13,7 +13,7 @@ from telegram.ext import (
 
 import os
 
-from custom_filters import Deposit, Returned, DepositAgent
+from custom_filters import Deposit, Returned, DepositAgent, Approved
 from models import DepositOrder, User
 from common.common import (
     build_worker_keyboard,
@@ -45,7 +45,8 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="إعادة الطلب📥", callback_data=f"return_deposit_order_{serial}"
+                    text="إعادة الطلب📥",
+                    callback_data=f"return_deposit_order_{serial}",
                 )
             )
         )
@@ -268,7 +269,7 @@ user_deposit_verified_handler = CallbackQueryHandler(
 
 
 reply_with_payment_proof_handler = MessageHandler(
-    filters=filters.REPLY & filters.PHOTO & Deposit(),
+    filters=filters.REPLY & filters.PHOTO & Deposit() & Approved(),
     callback=reply_with_payment_proof,
 )
 
