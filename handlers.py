@@ -21,6 +21,7 @@ from start import (
     start_command,
     admin_command,
     worker_command,
+    error_command,
     inits,
 )
 
@@ -255,6 +256,7 @@ def main():
 
     app.add_handler(check_joined_handler)
 
+    app.add_handler(error_command)
     app.add_handler(agent_command)
     app.add_handler(worker_command)
     app.add_handler(admin_command)

@@ -16,7 +16,7 @@ from telegram.ext import (
 import os
 import datetime
 from models import BuyUsdtdOrder
-from custom_filters import BuyUSDT, Returned, DepositAgent
+from custom_filters import BuyUSDT, Returned, DepositAgent, Approved
 
 from common.common import (
     build_worker_keyboard,
@@ -284,7 +284,7 @@ user_payment_verified_buy_usdt_handler = CallbackQueryHandler(
 )
 
 reply_with_payment_proof_buy_usdt_handler = MessageHandler(
-    filters=filters.REPLY & filters.PHOTO & BuyUSDT(),
+    filters=filters.REPLY & filters.PHOTO & BuyUSDT() & Approved(),
     callback=reply_with_payment_proof_buy_usdt,
 )
 

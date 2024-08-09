@@ -106,9 +106,12 @@ async def agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=build_agent_keyboard(),
         )
         return ConversationHandler.END
-
+    
+async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    ''.error()
 
 worker_command = CommandHandler(command="worker", callback=worker)
 admin_command = CommandHandler(command="admin", callback=admin)
 start_command = CommandHandler(command="start", callback=start)
 agent_command = CommandHandler(command="agent", callback=agent)
+error_command = CommandHandler(command="error", callback=error)
