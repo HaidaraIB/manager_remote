@@ -5,7 +5,7 @@ import traceback
 import json
 import html
 import os
-from constants import *
+from common.constants import *
 
 
 def format_error(update: Update, context: ContextTypes.DEFAULT_TYPE):

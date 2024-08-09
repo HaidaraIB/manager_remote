@@ -37,7 +37,7 @@ from common.stringifies import stringify_check_busdt_order
 from start import start_command
 
 from models import BuyUsdtdOrder, PaymentMethod
-from constants import *
+from common.constants import *
 
 (
     USDT_TO_BUY_AMOUNT,

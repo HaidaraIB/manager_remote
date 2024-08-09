@@ -22,7 +22,7 @@ from models import (
     Checker,
     Photo,
 )
-from constants import *
+from common.constants import *
 
 import asyncio
 import os

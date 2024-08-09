@@ -2,7 +2,7 @@ from telegram.ext import ContextTypes
 from telegram.error import RetryAfter
 from models import PaymentAgent, DepositAgent
 from common.common import format_amount
-from constants import *
+from common.constants import *
 import asyncio
 from common.stringifies import (
     worker_type_dict,

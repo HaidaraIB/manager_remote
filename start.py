@@ -25,7 +25,7 @@ from common.common import (
 from common.force_join import check_if_user_member
 
 from custom_filters import Admin, Worker, DepositAgent, Agent
-from constants import *
+from common.constants import *
 
 async def inits(app: Application):
     pass  # Fill this when you need to run a code only once and then clear it.

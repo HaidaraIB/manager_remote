@@ -36,7 +36,7 @@ from common.back_to_home_page import (
 from user.withdraw.common import send_withdraw_order_to_check
 from start import start_command
 from models import PaymentMethod, Account
-from constants import *
+from common.constants import *
 import os
 
 (

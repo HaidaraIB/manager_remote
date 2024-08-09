@@ -16,7 +16,7 @@ from user.work_with_us.common import syrian_govs_en_ar
 from custom_filters import AgentOrder, Declined
 from common.common import build_agent_keyboard
 from common.stringifies import stringify_w_with_us_order
-from constants import *
+from common.constants import *
 import os
 import models
 

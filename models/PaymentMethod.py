@@ -11,7 +11,7 @@ from models.DB import (
     connect_and_close,
 )
 from sqlalchemy.orm import Session
-from constants import *
+from common.constants import *
 
 
 class PaymentMethod(Base):

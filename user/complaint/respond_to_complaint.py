@@ -22,7 +22,7 @@ from common.common import (
 from models import Complaint, ComplaintConv, Photo
 from custom_filters import UserRespondToComplaint
 from check_complaint.check_complaint import make_complaint_main_text, make_conv_text
-from constants import EXT_COMPLAINT_LINE
+from common.constants import EXT_COMPLAINT_LINE
 
 (CORRECT_RETURNED_COMPLAINT,) = range(1)
 

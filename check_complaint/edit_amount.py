@@ -15,7 +15,7 @@ from custom_filters import Complaint, ModAmountUserComplaint
 from common.common import build_complaint_keyboard, parent_to_child_models_mapper
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_conv_text
-from constants import EXT_COMPLAINT_LINE
+from common.constants import EXT_COMPLAINT_LINE
 
 import models
 

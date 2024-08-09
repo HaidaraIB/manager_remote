@@ -21,7 +21,7 @@ from common.common import (
 from custom_filters import Admin, DepositAgent
 from common.force_join import check_if_user_member_decorator
 from common.decorators import check_if_user_agent_decorator
-from constants import *
+from common.constants import *
 
 back_to_admin_home_page_button = [
     [

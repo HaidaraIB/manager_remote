@@ -28,7 +28,7 @@ from start import admin_command, start_command
 import os
 from custom_filters import Admin
 import models
-from constants import *
+from common.constants import *
 
 
 (

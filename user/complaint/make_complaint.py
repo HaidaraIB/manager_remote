@@ -34,7 +34,7 @@ from user.complaint.notify import notify_operation
 from user.complaint.common import *
 from start import start_command
 from models import Complaint, Photo
-from constants import CHOOSE_OPERATIONS_TEXT, EXT_COMPLAINT_LINE
+from common.constants import CHOOSE_OPERATIONS_TEXT, EXT_COMPLAINT_LINE
 
 (
     COMPLAINT_ABOUT,

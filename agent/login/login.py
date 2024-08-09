@@ -19,7 +19,7 @@ from common.back_to_home_page import (
     back_to_agent_home_page_handler,
     back_to_agent_home_page_button,
 )
-from constants import *
+from common.constants import *
 from start import start_command, agent_command
 import os
 

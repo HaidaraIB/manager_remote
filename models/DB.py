@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base, Session
 import traceback
 from asyncio import Lock
 from models import *
-from constants import *
+from common.constants import *
 
 lock = Lock()
 Base = declarative_base()
