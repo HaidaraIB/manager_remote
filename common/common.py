@@ -22,6 +22,8 @@ import json
 import logging
 from common.constants import *
 import models
+from datetime import datetime
+from dateutil import tz
 
 
 async def send_media_group(
@@ -119,6 +121,10 @@ parent_to_child_models_mapper: dict[
 
 def format_amount(amount: float):
     return f"{float(amount):,.2f}".rstrip("0").rstrip(".")
+
+
+def format_datetime(d: datetime):
+    return d.replace(tzinfo=tz.gettz("Syria/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
 
 
 def pretty_time_delta(seconds):
@@ -509,12 +515,6 @@ def build_groups_keyboard(op: str):
         ],
         [
             InlineKeyboardButton(
-                text="غروب أرقام العمليات",
-                callback_data=f"{op} ref_numbers_group",
-            )
-        ],
-        [
-            InlineKeyboardButton(
                 text="تنفيذ إيداع",
                 callback_data=f"{op} deposit_after_check_group",
             ),
@@ -525,7 +525,7 @@ def build_groups_keyboard(op: str):
         ],
         [
             InlineKeyboardButton(
-                text="شراء USDT",
+                text="تحقق شراء USDT",
                 callback_data=f"{op} busdt_orders_group",
             )
         ],

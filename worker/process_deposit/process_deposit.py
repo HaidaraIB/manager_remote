@@ -3,8 +3,6 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    InputMediaPhoto,
-    InputMediaDocument,
 )
 from telegram.ext import (
     ContextTypes,
@@ -15,7 +13,7 @@ from telegram.ext import (
 
 import os
 
-from custom_filters import Deposit, Returned, DepositAgent
+from custom_filters import Deposit, Returned, DepositAgent, Approved
 from models import DepositOrder, User
 from common.common import (
     build_worker_keyboard,
@@ -177,34 +175,39 @@ async def return_deposit_order_reason(
         ].callback_data.split("_")[-1]
 
         d_order = DepositOrder.get_one_order(serial=serial)
-
-        text = (
-            f"تم إعادة طلب إيداع مبلغ: <b>{d_order.amount}$</b>❗️\n\n"
+        user_caption = (
+            f"تم إعادة طلب إيداع مبلغ: <b>{d_order.amount}</b> ❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
-            "قم بالضغط على الزر أدناه وإرفاق المطلوب."
+            "قم بالضغط على الزر أدناه وإرفاق المطلوب.\n\n"
+            f"Deposit order has been returned: <b>{d_order.amount}</b> ❗️\n\n"
+            "reason:\n"
+            f"<b>{update.message.text_html}</b>\n\n"
+            "Press the button below to send the neccessary attachments\n\n"
         )
 
-        await context.bot.send_message(
+        await context.bot.send_photo(
             chat_id=d_order.user_id,
-            text=text,
+            photo=update.message.reply_to_message.photo[-1],
+            caption=user_caption,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="إرفاق المطلوب",
+                    text="إرفاق المطلوب - Send Attachments",
                     callback_data=f"handle_return_deposit_{update.effective_chat.id}_{serial}",
                 )
             ),
         )
 
-        text = (
+        caption = (
             "تمت إعادة الطلب📥\n"
             + update.message.reply_to_message.caption_html
             + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
 
-        await context.bot.send_message(
+        await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            text=text,
+            photo=update.message.reply_to_message.photo[-1],
+            caption=caption,
         )
 
         await context.bot.edit_message_reply_markup(
@@ -230,11 +233,14 @@ async def return_deposit_order_reason(
         latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
-            await context.bot.send_message(
+            await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
-                text=f"طلب متأخر بمقدار\n"
-                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
-                f"الموظف المسؤول {update.effective_user.name}\n\n" + text,
+                photo=update.message.reply_to_message.photo[-1],
+                caption=(
+                    f"طلب متأخر بمقدار\n"
+                    + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
+                    f"الموظف المسؤول {update.effective_user.name}\n\n" + caption
+                ),
             )
 
         await DepositOrder.return_order(
@@ -272,7 +278,7 @@ user_deposit_verified_handler = CallbackQueryHandler(
 
 
 reply_with_payment_proof_handler = MessageHandler(
-    filters=filters.REPLY & filters.PHOTO & Deposit(),
+    filters=filters.REPLY & filters.PHOTO & Deposit() & Approved(),
     callback=reply_with_payment_proof,
 )
 

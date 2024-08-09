@@ -71,29 +71,10 @@ class BaseOrder(Base):
     def get_one_order(
         cls,
         serial: int = None,
-        ref_num: str = None,
         method: str = None,
         s: Session = None,
     ):
-        if serial:
-            res = s.execute(select(cls).where(cls.serial == serial))
-        elif ref_num and method:
-            res = s.execute(
-                select(cls)
-                .where(
-                    and_(
-                        cls.ref_number == ref_num,
-                        cls.method == method,
-                    )
-                )
-                .order_by(desc(cls.order_date))
-            )
-        elif ref_num:
-            res = s.execute(
-                select(cls)
-                .where(and_(cls.ref_number == ref_num))
-                .order_by(desc(cls.order_date))
-            )
+        res = s.execute(select(cls).where(cls.serial == serial))
         try:
             return res.fetchone().t[0]
         except:
@@ -121,15 +102,14 @@ class BaseOrder(Base):
             if pending_process_message_id
             else cls.pending_process_message_id
         )
-        if not hasattr(cls, "ref_number"):
-            update_dict[cls.pending_check_message_id] = (
-                pending_check_message_id
-                if pending_check_message_id
-                else cls.pending_check_message_id
-            )
-            update_dict[cls.checking_message_id] = (
-                checking_message_id if checking_message_id else cls.checking_message_id
-            )
+        update_dict[cls.pending_check_message_id] = (
+            pending_check_message_id
+            if pending_check_message_id
+            else cls.pending_check_message_id
+        )
+        update_dict[cls.checking_message_id] = (
+            checking_message_id if checking_message_id else cls.checking_message_id
+        )
 
         s.query(cls).filter_by(serial=serial).update(update_dict)
 

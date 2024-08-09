@@ -125,7 +125,6 @@ def main():
         )
     )
 
-
     # DEPOSIT
     app.add_handler(reply_with_payment_proof_handler)
     app.add_handler(user_deposit_verified_handler)
@@ -175,7 +174,6 @@ def main():
     # RETURN
     app.add_handler(handle_returned_order_handler)
 
-
     # ADMIN SETTINGS
     app.add_handler(admin_settings_handler)
     app.add_handler(show_admins_handler)
@@ -201,7 +199,6 @@ def main():
     app.add_handler(reply_to_returned_complaint_handler)
     app.add_handler(correct_returned_complaint_handler)
     app.add_handler(back_from_reply_to_returned_complaint_handler)
-
 
     app.add_handler(reply_to_create_account_order_handler)
     app.add_handler(create_account_handler)

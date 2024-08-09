@@ -32,14 +32,7 @@ def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):
     return [usdt, syr, banks, payeer]
 
 
-async def send_requested_order(
-    serial: int,
-    message_id: int,
-    group_id: int,
-    worker_id: int,
-    order_type: str,
-    operation: str,
-):
+async def get_order_message(group_id: int, message_id: int, worker_id: int):
     cpyro = PyroClientSingleton()
     old_message = await cpyro.get_messages(chat_id=group_id, message_ids=message_id)
     message = await cpyro.copy_message(
@@ -48,6 +41,18 @@ async def send_requested_order(
         message_id=message_id,
         reply_markup=old_message.reply_markup,
     )
+    return message
+
+
+async def send_requested_order(
+    serial: int,
+    message_id: int,
+    group_id: int,
+    worker_id: int,
+    order_type: str,
+    operation: str,
+):
+    message = await get_order_message(group_id, message_id, worker_id)
     if order_type.startswith("check"):
         await parent_to_child_models_mapper[operation].add_message_ids(
             serial=serial,

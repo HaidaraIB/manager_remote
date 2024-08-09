@@ -2,16 +2,12 @@ from telegram.ext import ContextTypes
 from telegram.error import RetryAfter
 from models import PaymentAgent, DepositAgent
 from common.constants import *
-from common.stringifies import worker_type_dict, stringify_manager_reward_report, stringify_reward_report
+from common.stringifies import (
+    worker_type_dict,
+    stringify_manager_reward_report,
+    stringify_reward_report,
+)
 import asyncio
-
-
-
-
-
-
-
-
 
 
 async def reward_worker(context: ContextTypes.DEFAULT_TYPE):

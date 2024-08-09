@@ -116,7 +116,10 @@ back_to_usdt_to_buy_amount = buy_usdt
 async def yes_no_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if update.callback_query.data.startswith("no"):
-            await update.callback_query.answer("Canceled - تم الإلغاء")
+            await update.callback_query.answer(
+                "Canceled - تم الإلغاء",
+                show_alert=True,
+            )
             await update.callback_query.edit_message_text(
                 text=HOME_PAGE_TEXT,
                 reply_markup=build_user_keyboard(),
@@ -347,9 +350,7 @@ buy_usdt_handler = ConversationHandler(
         CallbackQueryHandler(
             back_to_bank_account_name_buy_usdt, "^back_to_bank_account_name_busdt$"
         ),
-        CallbackQueryHandler(
-            back_to_cash_code_buy_usdt, "^back_to_cash_code_busdt$"
-        ),
+        CallbackQueryHandler(back_to_cash_code_buy_usdt, "^back_to_cash_code_busdt$"),
         CallbackQueryHandler(
             back_to_usdt_to_buy_amount, "^back_to_usdt_to_buy_amount$"
         ),

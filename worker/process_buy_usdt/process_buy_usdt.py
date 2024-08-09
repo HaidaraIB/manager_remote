@@ -16,7 +16,7 @@ from telegram.ext import (
 import os
 import datetime
 from models import BuyUsdtdOrder
-from custom_filters import BuyUSDT, Returned, DepositAgent
+from custom_filters import BuyUSDT, Returned, DepositAgent, Approved
 
 from common.common import (
     build_worker_keyboard,
@@ -100,8 +100,7 @@ async def reply_with_payment_proof_buy_usdt(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             caption=caption,
             context=context,
-            update=update
-
+            update=update,
         )
 
         await context.bot.edit_message_reply_markup(
@@ -192,19 +191,22 @@ async def return_buy_usdt_order_reason(
         amount = b_order.amount
 
         text = (
-            f"تم إعادة طلب شراء: <b>{amount} USDT</b>❗️\n\n"
+            f"تم إعادة طلب شراء: <b>{amount} USDT</b> ❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
-            "قم بالضغط على الزر أدناه وإرفاق المطلوب."
+            "قم بالضغط على الزر أدناه وإرفاق المطلوب.\n\n"
+            f"Buy USDT order has been returned: <b>{amount} USDT</b> ❗️\n\n"
+            "reason:\n"
+            f"<b>{update.message.text_html}</b>\n\n"
+            "Press the button below to send the neccessary attachments\n\n"
         )
-
         await context.bot.send_photo(
             chat_id=b_order.user_id,
             photo=update.message.reply_to_message.photo[-1],
             caption=text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="إرفاق المطلوب",
+                    text="إرفاق المطلوب - Send Attachments",
                     callback_data=f"handle_return_busdt_{update.effective_chat.id}_{serial}",
                 )
             ),
@@ -249,7 +251,7 @@ async def return_buy_usdt_order_reason(
         if minutes > 10:
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
-                photo=update.message.photo[-1],
+                photo=update.message.reply_to_message.photo[-1],
                 caption=f"طلب متأخر بمقدار\n"
                 + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
@@ -257,12 +259,6 @@ async def return_buy_usdt_order_reason(
 
         await BuyUsdtdOrder.return_order(
             reason=update.message.text,
-            serial=serial,
-        )
-        await send_to_media_archive(
-            context=context,
-            media=update.message.photo[-1],
-            order_type="busdt",
             serial=serial,
         )
         context.user_data["requested"] = False
@@ -295,7 +291,7 @@ user_payment_verified_buy_usdt_handler = CallbackQueryHandler(
 )
 
 reply_with_payment_proof_buy_usdt_handler = MessageHandler(
-    filters=filters.REPLY & filters.PHOTO & BuyUSDT(),
+    filters=filters.REPLY & filters.PHOTO & BuyUSDT() & Approved(),
     callback=reply_with_payment_proof_buy_usdt,
 )
 

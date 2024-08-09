@@ -82,24 +82,16 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 order_type=order_type,
                 context=context,
             )
+        if order_type == "withdraw":
             await context.bot.send_message(
                 chat_id=int(data[-2]),
                 text=stringify_returned_order(
                     update.message.text,
-                    (
-                        stringify_deposit_order
-                        if order_type == "deposit"
-                        else stringify_process_withdraw_order
-                    ),
+                    stringify_process_withdraw_order,
                     amount,
                     order.serial,
                     order.method,
-                    (
-                        order.acc_number
-                        if order_type == "deposit"
-                        else order.payment_method_number
-                    ),
-                    order.deposit_wallet if order_type == "deposit" else None,
+                    order.payment_method_number,
                 ),
                 reply_markup=reply_markup,
             )
@@ -109,11 +101,20 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 photo=context.user_data["effective_photo"],
                 caption=stringify_returned_order(
                     update.message.text,
-                    stringify_process_busdt_order,
-                    order.amount,
+                    (
+                        stringify_deposit_order
+                        if order_type == "deposit"
+                        else stringify_process_busdt_order
+                    ),
+                    amount if order_type == "deposit" else order.amount,
                     order.serial,
                     order.method,
-                    order.payment_method_number,
+                    (
+                        order.acc_number
+                        if order_type == "deposit"
+                        else order.payment_method_number
+                    ),
+                    order.deposit_wallet if order_type == "deposit" else None,
                 ),
                 reply_markup=reply_markup,
             )

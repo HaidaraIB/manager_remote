@@ -14,7 +14,7 @@ from telegram.ext import (
 
 import os
 import datetime
-from custom_filters import Withdraw, Returned, DepositAgent
+from custom_filters import Withdraw, Returned, DepositAgent, Approved
 from models import WithdrawOrder
 from common.common import (
     build_worker_keyboard,
@@ -184,10 +184,14 @@ async def return_withdraw_order_reason(
         user_id = w_order.user_id
 
         text = (
-            f"تمت إعادة طلب السحب صاحب الكود: <b>{withdraw_code}</b>❗️\n\n"
+            f"تمت إعادة طلب السحب صاحب الكود: <b>{withdraw_code}</b> ❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
-            "قم بالضغط على الزر أدناه وإرفاق المطلوب."
+            "قم بالضغط على الزر أدناه وإرفاق المطلوب.\n\n"
+            f"The order with the withdraw code has been returned: <b>{withdraw_code}</b> ❗️\n\n"
+            "reason:\n"
+            f"<b>{update.message.text_html}</b>\n\n"
+            "Press the button below to send the neccessary attachments\n\n"
         )
 
         await context.bot.send_message(
@@ -195,7 +199,7 @@ async def return_withdraw_order_reason(
             text=text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="إرفاق المطلوب",
+                    text="إرفاق المطلوب - Send Attachments",
                     callback_data=f"handle_return_withdraw_{update.effective_chat.id}_{serial}",
                 )
             ),
@@ -280,7 +284,7 @@ user_payment_verified_handler = CallbackQueryHandler(
 )
 
 reply_with_payment_proof_withdraw_handler = MessageHandler(
-    filters=filters.REPLY & filters.PHOTO & Withdraw(),
+    filters=filters.REPLY & filters.PHOTO & Withdraw() & Approved(),
     callback=reply_with_payment_proof_withdraw,
 )
 
