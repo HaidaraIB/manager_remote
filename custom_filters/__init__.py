@@ -18,4 +18,4 @@ from custom_filters.PromoCode import PromoCode
 from custom_filters.TeamCash import TeamCash
 from custom_filters.UserRespondToComplaint import UserRespondToComplaint
 from custom_filters.Agent import Agent
-from custom_filters.Account import Account
+from custom_filters.Approved import Approved
