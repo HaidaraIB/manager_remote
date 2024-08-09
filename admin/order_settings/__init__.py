@@ -1,3 +1,4 @@
-from admin.order_settings.order_settings import (
-    order_settings_handler
-)
+from admin.order_settings.order_settings import order_settings_handler
+from admin.order_settings.edit_amount import edit_order_amount_handler
+from admin.order_settings.request_photos import request_photos_handler
+from admin.order_settings.return_to_worker import return_order_to_worker_handler

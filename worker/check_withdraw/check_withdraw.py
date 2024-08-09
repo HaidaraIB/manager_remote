@@ -22,7 +22,9 @@ from common.common import (
     build_worker_keyboard,
     apply_ex_rate,
     notify_workers,
-    format_amount,
+)
+from common.stringifies import (
+    stringify_process_withdraw_order
 )
 
 async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -105,7 +107,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             context=context,
         )
 
-        order_text = stringify_order(
+        order_text = stringify_process_withdraw_order(
             amount=amount,
             serial=serial,
             method=method,
@@ -273,22 +275,6 @@ async def back_to_withdraw_check(update: Update, context: ContextTypes.DEFAULT_T
             reply_markup=InlineKeyboardMarkup(payment_ok_buttons)
         )
 
-
-def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    payment_method_number: str,
-    *args,
-):
-    return (
-        "تفاصيل طلب سحب :\n\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n\n"
-        f"Payment Info: <code>{payment_method_number}</code>\n\n"
-        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
-    )
 
 
 check_payment_handler = CallbackQueryHandler(

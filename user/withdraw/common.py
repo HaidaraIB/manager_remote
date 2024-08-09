@@ -1,8 +1,9 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from common.common import notify_workers
-from models import WithdrawOrder, Account, Checker, PaymentAgent
+from models import WithdrawOrder, Checker, PaymentAgent
 from common.constants import *
+from common.stringifies import stringify_check_withdraw_order
 import asyncio
 
 
@@ -17,28 +18,6 @@ DUPLICATE_CODE_TEXT = (
     "لقد تم إرسال هذا الكود إلى البوت من قبل ❗️\n\n"
     "Duplicate code ❗️"
 )
-
-def stringify_order(
-    w_type: str,
-    acc_number: int,
-    password: str,
-    withdraw_code: str,
-    method: str,
-    serial: int,
-    method_info: str,
-):
-    g_b_dict = {"gift": "مكافأة", "balance": "رصيد"}
-    return (
-        f"تفاصيل طلب سحب {g_b_dict[w_type]}:\n\n"
-        f"رقم الحساب 🔢: <code>{acc_number}</code>\n"
-        f"كلمة المرور 🈴: <code>{password}</code>\n"
-        f"كود السحب: <code>{withdraw_code}</code>\n"
-        f"وسيلة الدفع 💳: <b>{method}</b>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        f"{method_info}\n\n"
-        f"تحقق من توفر المبلغ وقم بقبول/رفض الطلب بناء على ذلك.\n"
-    )
-
 
 async def send_withdraw_order_to_check(
     context: ContextTypes.DEFAULT_TYPE,
@@ -77,7 +56,7 @@ async def send_withdraw_order_to_check(
     )
     message = await context.bot.send_message(
         chat_id=target_group,
-        text=stringify_order(
+        text=stringify_check_withdraw_order(
             w_type=w_type,
             acc_number=acc_number,
             password=password,

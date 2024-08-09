@@ -28,7 +28,7 @@ from models import DepositAgent, PaymentAgent, Checker
 op_dict_en_to_ar = {
     "withdraw": "سحب",
     "deposit": "إيداع",
-    "buy_usdt": "شراء USDT",
+    "busdt": "شراء USDT",
 }
 
 
@@ -108,7 +108,7 @@ def build_positions_keyboard(op: str):
                 text="تحقق سحب", callback_data=f"{op}_withdraw_checker"
             ),
             InlineKeyboardButton(
-                text="تحقق شراء USDT", callback_data=f"{op}_buy_usdt_checker"
+                text="تحقق شراء USDT", callback_data=f"{op}_busdt_checker"
             ),
         ],
         *build_payment_positions_keyboard(op),
@@ -238,7 +238,7 @@ def create_worker_info_text(
             f"رصيد المكافآت: {format_amount(worker.weekly_rewards_balance)}\n"
         )
 
-    elif pos in ["deposit", "withdraw", "buy_usdt"]:
+    elif pos in ["deposit", "withdraw", "busdt"]:
         text += f"نوع التحقق: {worker.check_what}\n"
 
     else:

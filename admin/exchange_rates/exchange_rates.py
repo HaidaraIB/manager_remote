@@ -32,7 +32,7 @@ async def choose_exchange_rate_to_update(
         exchange_rates_keyboard = [
             [
                 InlineKeyboardButton(
-                    text="شراء USDT", callback_data="buy_usdt/usdt_to_aed"
+                    text="شراء USDT", callback_data="busdt/usdt_to_aed"
                 )
             ],
             [InlineKeyboardButton(text="USDT", callback_data="USDT/usdt_to_aed")],
@@ -61,7 +61,7 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_admin_home_page_button[0],
         ]
         shared_text = f"أرسل السعر الجديد، السعر الحالي:\n\n"
-        if data[0] == "buy_usdt":
+        if data[0] == "busdt":
             try:
                 context.bot_data['data']['usdt_to_aed']
             except KeyError:
@@ -105,7 +105,7 @@ async def buy_or_sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_admin_home_page_button[0],
         ]
         data = context.user_data["exchange_rates_data"]
-        if data[0] == "buy_usdt":
+        if data[0] == "busdt":
             context.bot_data["data"][data[1]] = float(update.message.text)
             await update.message.reply_text(
                 text=f"تم تعديل السعر بنجاح ✅",

@@ -1,8 +1,8 @@
 from telegram import PhotoSize, InlineKeyboardButton, InlineKeyboardMarkup, Document
 from telegram.ext import ContextTypes
 from models import DepositOrder, DepositAgent
-from worker.check_deposit.check_deposit import check_deposit, stringify_order
 from common.common import notify_workers, send_to_media_archive
+from common.stringifies import stringify_deposit_order
 import asyncio
 
 SEND_MONEY_TEXT = (
@@ -35,7 +35,7 @@ async def send_to_check_deposit(
         deposit_wallet=context.bot_data["data"][f"{method}_number"],
     )
 
-    caption = stringify_order(
+    caption = stringify_deposit_order(
         amount=amount,
         account_number=acc_number,
         method=method,

@@ -70,7 +70,7 @@ async def correct_returned_complaint(
             order_serial=serial, order_type=order_type, reason=complaint.reason
         )
         media = Photo.get(
-            order_serial=serial, order_type=order_type.replace("busdt", "buy_usdt")
+            order_serial=serial, order_type=order_type
         )
 
         op = parent_to_child_models_mapper[order_type].get_one_order(
@@ -95,7 +95,7 @@ async def correct_returned_complaint(
                 await send_to_media_archive(
                     context=context,
                     media=update.message.photo[-1],
-                    order_type=order_type.replace("busdt", "buy_usdt"),
+                    order_type=order_type,
                     serial=serial,
                 )
 

@@ -5,7 +5,7 @@ from models.DB import lock_and_release
 
 
 class BuyUsdtdOrder(PaymentOrder):
-    __tablename__ = "buy_usdt_orders"
+    __tablename__ = "busdt_orders"
 
     @staticmethod
     @lock_and_release

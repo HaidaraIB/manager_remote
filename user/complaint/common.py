@@ -50,32 +50,6 @@ complaints_keyboard = [
 ]
 
 
-def stringify_order(serial: int, order_type: str):
-    op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
-    payment_method_number = bank_account_name = NONE_TEXT
-    if order_type != "deposit":
-        payment_method_number = (
-            op.payment_method_number if op.payment_method_number else NONE_TEXT
-        )
-        bank_account_name = op.bank_account_name if op.bank_account_name else NONE_TEXT
-
-    return (
-        f"الرقم التسلسلي: <code>{op.serial}</code>\n"
-        f"المبلغ: <b>{format_amount(op.amount)}</b>\n"
-        f"وسيلة الدفع: <b>{op.method}</b>\n"
-        f"عنوان الدفع: <code>{payment_method_number}</code>\n"
-        f"اسم صاحب الحساب البنكي: <code>{bank_account_name}</code>\n"
-        f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
-        f"سبب إعادة/رفض: <b>{op.reason if op.reason else NONE_TEXT}</b>\n\n"
-        f"Serial: <code>{op.serial}</code>\n"
-        f"Amount: <b>{format_amount(op.amount)}</b>\n"
-        f"Payment Method: <b>{op.method}</b>\n"
-        f"Payment Info: <code>{payment_method_number}</code>\n"
-        f"Bank Account Name: <code>{bank_account_name}</code>\n"
-        f"State: <b>{state_dict_en_to_ar[op.state]}</b>\n"
-        f"Decline/Return Reason: <b>{op.reason if op.reason else NONE_TEXT}</b>\n\n"
-    )
-
 
 def build_operations_keyboard(serials: list[int]):
     if len(serials) % 3 == 0:

@@ -20,6 +20,9 @@ from common.common import (
     build_worker_keyboard,
     send_media,
 )
+from common.stringifies import (
+    stringify_process_busdt_order
+)
 
 
 async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -41,10 +44,10 @@ async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=f"send_buy_usdt_order_{serial}"
+                    text="إرسال الطلب⬅️", callback_data=f"send_busdt_order_{serial}"
                 ),
                 InlineKeyboardButton(
-                    text="رفض الطلب❌", callback_data=f"decline_buy_usdt_order_{serial}"
+                    text="رفض الطلب❌", callback_data=f"decline_busdt_order_{serial}"
                 ),
             ]
         ]
@@ -73,7 +76,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
                 if update.effective_message.photo
                 else update.effective_message.document
             ),
-            caption=stringify_order(
+            caption=stringify_process_busdt_order(
                 amount=amount * context.bot_data["data"]["usdt_to_aed"],
                 serial=serial,
                 method=method,
@@ -81,7 +84,7 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             ),
             markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="قبول الطلب✅", callback_data=f"verify_buy_usdt_order_{serial}"
+                    text="قبول الطلب✅", callback_data=f"verify_busdt_order_{serial}"
                 )
             ),
         )
@@ -126,7 +129,7 @@ async def decline_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="الرجوع عن الرفض🔙",
-                    callback_data=f"back_from_decline_buy_usdt_order_{serial}",
+                    callback_data=f"back_from_decline_busdt_order_{serial}",
                 )
             )
         )
@@ -213,10 +216,10 @@ async def back_from_decline_buy_usdt_order(
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
-                    text="إرسال الطلب⬅️", callback_data=f"send_buy_usdt_order_{serial}"
+                    text="إرسال الطلب⬅️", callback_data=f"send_busdt_order_{serial}"
                 ),
                 InlineKeyboardButton(
-                    text="رفض الطلب❌", callback_data=f"decline_buy_usdt_order_{serial}"
+                    text="رفض الطلب❌", callback_data=f"decline_busdt_order_{serial}"
                 ),
             ]
         ]
@@ -225,36 +228,21 @@ async def back_from_decline_buy_usdt_order(
         )
 
 
-def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    payment_method_number: str,
-    *args,
-):
-    return (
-        "طلب شراء USDT جديد:\n\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n\n"
-        f"Payment Info: <code>{payment_method_number}</code>\n\n"
-        "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
-    )
 
 
 check_buy_usdt_handler = CallbackQueryHandler(
     callback=check_buy_usdt,
-    pattern="^check_buy_usdt",
+    pattern="^check_busdt",
 )
 
 send_buy_usdt_order_handler = CallbackQueryHandler(
     callback=send_buy_usdt_order,
-    pattern="^send_buy_usdt_order",
+    pattern="^send_busdt_order",
 )
 
 decline_buy_usdt_order_handler = CallbackQueryHandler(
     callback=decline_buy_usdt_order,
-    pattern="^decline_buy_usdt_order",
+    pattern="^decline_busdt_order",
 )
 decline_buy_usdt_order_reason_handler = MessageHandler(
     filters=filters.REPLY & filters.TEXT & BuyUSDT() & Declined(),
@@ -262,5 +250,5 @@ decline_buy_usdt_order_reason_handler = MessageHandler(
 )
 back_from_decline_buy_usdt_order_handler = CallbackQueryHandler(
     callback=back_from_decline_buy_usdt_order,
-    pattern="^back_from_decline_buy_usdt_order",
+    pattern="^back_from_decline_busdt_order",
 )

@@ -18,6 +18,7 @@ from common.common import (
     build_worker_keyboard,
     send_media,
 )
+from common.stringifies import stringify_deposit_order
 from worker.check_deposit.common import build_check_deposit_keyboard
 import models
 import os
@@ -85,7 +86,7 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.delete()
 
         await update.message.reply_to_message.edit_caption(
-            caption=stringify_order(
+            caption=stringify_deposit_order(
                 amount=new_amount,
                 serial=serial,
                 account_number=d_order.acc_number,
@@ -114,7 +115,7 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             context=context,
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
             media=update.effective_message.photo[-1] if update.effective_message.photo else update.effective_message.document,
-            caption=stringify_order(
+            caption=stringify_deposit_order(
                 amount=amount,
                 account_number=d_order.acc_number,
                 method=d_order.method,
@@ -201,7 +202,7 @@ async def decline_deposit_order_reason(
 
         text = (
             "تم رفض الطلب❌\n"
-            + stringify_order(
+            + stringify_deposit_order(
                 amount=d_order.amount,
                 account_number=d_order.acc_number,
                 method=d_order.method,
@@ -270,23 +271,7 @@ async def back_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
 
-def stringify_order(
-    amount: float,
-    serial: int,
-    method: str,
-    account_number: int,
-    wal:str,
-    *args,
-):
-    return (
-        "إيداع جديد:\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        f"رقم الحساب: <code>{account_number}</code>\n\n"
-        f"وسيلة الدفع: <code>{method}</code>\n"
-        f"المحفظة: <code>{wal}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
-        "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
-    )
+
 
 
 check_deposit_handler = CallbackQueryHandler(

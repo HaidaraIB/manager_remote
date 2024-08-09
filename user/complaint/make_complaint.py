@@ -31,6 +31,7 @@ from common.back_to_home_page import (
 )
 from user.complaint.notify import notify_operation
 from user.complaint.common import *
+from common.stringifies import complaint_stringify_order
 from start import start_command
 from models import Complaint, Photo
 from common.constants import CHOOSE_OPERATIONS_TEXT, EXT_COMPLAINT_LINE
@@ -103,7 +104,7 @@ async def choose_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             serial = context.user_data["complaint_serial"]
 
-        op_text = stringify_order(
+        op_text = complaint_stringify_order(
             serial=serial, order_type=context.user_data["complaint_about"]
         )
 
@@ -161,7 +162,7 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["reason"] = update.message.text
         complaint_text = (
             f"هل أنت متأكد من أنك تريد إرسال شكوى فيما يخص الطلب - Are you sure you want to complaint about the order:\n\n"
-            f"{stringify_order(serial=context.user_data['complaint_serial'], order_type=context.user_data['complaint_about'])}\n"
+            f"{complaint_stringify_order(serial=context.user_data['complaint_serial'], order_type=context.user_data['complaint_about'])}\n"
             "سبب الشكوى - Because:\n"
             f"<b>{update.message.text}</b>"
         )
@@ -198,12 +199,12 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
 
             complaint_text = (
                 f"شكوى جديدة:\n\n"
-                f"{stringify_order(serial=serial, order_type=order_type)}\n"
+                f"{complaint_stringify_order(serial=serial, order_type=order_type)}\n"
                 "سبب الشكوى:\n"
                 f"<b>{context.user_data['reason']}</b>\n"
             )
             photos = Photo.get(
-                order_serial=serial, order_type=order_type.replace("busdt", "buy_usdt")
+                order_serial=serial, order_type=order_type
             )
 
             if op.worker_id:

@@ -22,17 +22,20 @@ from common.common import (
 from common.back_to_home_page import back_to_user_home_page_handler
 
 from models import WithdrawOrder
-
-from worker.check_buy_usdt import check_buy_usdt
-from worker.check_deposit import check_deposit
-from worker.check_withdraw import check_withdraw
+from common.stringifies import (
+    stringify_deposit_order,
+    stringify_process_busdt_order,
+    stringify_process_withdraw_order,
+    stringify_returned_order,
+)
 from common.constants import *
+
 (SEND_ATTACHMENTS,) = range(1)
 
 
 async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        
+
         await update.callback_query.edit_message_reply_markup()
         data = update.callback_query.data.split("_")
         order_type = data[2]
@@ -50,7 +53,8 @@ async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TY
                 return ConversationHandler.END
 
         await update.callback_query.answer(
-            "قم بإرفاق المطلوب في السبب - Send the requested attachments", show_alert=True
+            "قم بإرفاق المطلوب في السبب - Send the requested attachments",
+            show_alert=True,
         )
         context.user_data["returned_data"] = data
         if update.effective_message.photo:
@@ -83,9 +87,9 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=stringify_returned_order(
                     update.message.text,
                     (
-                        check_deposit.stringify_order
+                        stringify_deposit_order
                         if order_type == "deposit"
-                        else check_withdraw.stringify_order
+                        else stringify_process_withdraw_order
                     ),
                     amount,
                     order.serial,
@@ -95,7 +99,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if order_type == "deposit"
                         else order.payment_method_number
                     ),
-                    order.deposit_wallet if order_type == "deposit" else None
+                    order.deposit_wallet if order_type == "deposit" else None,
                 ),
                 reply_markup=reply_markup,
             )
@@ -105,7 +109,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 photo=context.user_data["effective_photo"],
                 caption=stringify_returned_order(
                     update.message.text,
-                    check_buy_usdt.stringify_order,
+                    stringify_process_busdt_order,
                     order.amount,
                     order.serial,
                     order.method,
@@ -122,12 +126,6 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=build_user_keyboard(),
         )
         return ConversationHandler.END
-
-
-def stringify_returned_order(attachments: str, stringify_order, *args):
-    order = stringify_order(*args)
-    order += "<b>" + "\n\nطلب معاد، المرفقات:\n\n" + attachments + "</b>"
-    return order
 
 
 handle_returned_order_handler = ConversationHandler(
