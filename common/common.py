@@ -222,6 +222,7 @@ def build_user_keyboard():
     keyboard = [
         [InlineKeyboardButton(text=WITHDRAW_BUTTON_TEXT, callback_data="withdraw")],
         [InlineKeyboardButton(text=DEPOSIT_BUTTON_TEXT, callback_data="deposit")],
+        [InlineKeyboardButton(text=DEPOSIT_WITHOUT_ACCOUNT_BUTTON_TEXT, callback_data="deposit_without_acc")],
         [
             InlineKeyboardButton(
                 text=CREATE_ACCOUNT_BUTTON_TEXT, callback_data="create account"

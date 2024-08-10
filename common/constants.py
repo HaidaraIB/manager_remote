@@ -62,6 +62,7 @@ HOME_PAGE_TEXT = "القائمة الرئيسية 🔝 - Home page 🔝"
 EXT_COMPLAINT_LINE = "<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {}</b>\n\n"
 
 DEPOSIT_BUTTON_TEXT = "إيداع 📥 - Deposit 📥"
+DEPOSIT_WITHOUT_ACCOUNT_BUTTON_TEXT = "إيداع لحساب خارجي 📥 - External Deposit 📥"
 CREATE_ACCOUNT_BUTTON_TEXT = "إنشاء حساب موثق ™️ - Create account ™️"
 WITHDRAW_BUTTON_TEXT = "سحب 💳 - Withdraw 💳"
 BUY_USDT_BUTTON_TEXT = "شراء USDT 💰 - Buy USDT 💰"

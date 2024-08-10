@@ -44,7 +44,7 @@ from common.back_to_home_page import (
 from common.force_join import check_joined_handler
 
 from user.withdraw import withdraw_handler
-from user.deposit import deposit_handler
+from user.deposit import *
 from user.buy_usdt import buy_usdt_handler
 from user.complaint import complaint_handler
 from user.return_order import *
@@ -212,6 +212,7 @@ def main():
     app.add_handler(buy_usdt_handler)
 
     app.add_handler(deposit_handler)
+    app.add_handler(deposit_without_acc_handler)
 
     app.add_handler(complaint_handler)
 

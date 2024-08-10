@@ -1,3 +1,2 @@
-from user.deposit.deposit import (
-    deposit_handler
-)
+from user.deposit.deposit import deposit_handler
+from user.deposit.deposit_without_acc import deposit_without_acc_handler
