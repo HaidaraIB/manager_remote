@@ -13,7 +13,6 @@ orders_dict = {
 
 def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):
     usdt = []
-    syr = []
     banks = []
     payeer = []
     for m in agent:
@@ -23,13 +22,11 @@ def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):
         )
         if m.method == USDT:
             usdt.append(button)
-        elif m.method in [BARAKAH, BEMO]:
+        elif m.method in []:
             banks.append(button)
-        elif m.method in [SYRCASH, MTNCASH]:
-            syr.append(button)
         else:
             payeer.append(button)
-    return [usdt, syr, banks, payeer]
+    return [usdt, banks, payeer]
 
 
 async def get_order_message(group_id: int, message_id: int, worker_id: int):

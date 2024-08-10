@@ -15,9 +15,9 @@ SEND_WITHDRAW_CODE_TEXT = (
 )
 
 DUPLICATE_CODE_TEXT = (
-    "لقد تم إرسال هذا الكود إلى البوت من قبل ❗️\n\n"
-    "Duplicate code ❗️"
+    "لقد تم إرسال هذا الكود إلى البوت من قبل ❗️\n\n" "Duplicate code ❗️"
 )
+
 
 async def send_withdraw_order_to_check(
     context: ContextTypes.DEFAULT_TYPE,
@@ -50,9 +50,7 @@ async def send_withdraw_order_to_check(
     )
 
     method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (
-        f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
-        if method in [BARAKAH, BARAKAH]
-        else ""
+        f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>" if method in [] else ""
     )
     message = await context.bot.send_message(
         chat_id=target_group,

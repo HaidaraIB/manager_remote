@@ -6,11 +6,7 @@ from telegram import (
     User,
 )
 
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    ConversationHandler
-)
+from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler
 from common.common import build_back_button, format_amount
 from common.back_to_home_page import back_to_admin_home_page_button
 
@@ -123,40 +119,25 @@ def build_positions_keyboard(op: str):
 
 
 def build_payment_positions_keyboard(op: str):
-    keyaboard = [
-        [
+    keyboard = []
+    for i in range(0, len(PAYMENT_METHODS_LIST), 2):
+        row = []
+        row.append(
             InlineKeyboardButton(
-                text=f"دفع {USDT}", callback_data=f"{op}_{USDT}_worker"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"دفع {BARAKAH}", callback_data=f"{op}_{BARAKAH}_worker"
-            ),
-            InlineKeyboardButton(
-                text=f"دفع {BEMO}", callback_data=f"{op}_{BEMO}_worker"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"دفع {SYRCASH}",
-                callback_data=f"{op}_{SYRCASH}_worker",
-            ),
-            InlineKeyboardButton(
-                text=f"دفع {MTNCASH}", callback_data=f"{op}_{MTNCASH}_worker"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"دفع {PAYEER}", callback_data=f"{op}_{PAYEER}_worker"
-            ),
-            InlineKeyboardButton(
-                text=f"دفع {PERFECT_MONEY}",
-                callback_data=f"{op}_{PERFECT_MONEY}_worker",
-            ),
-        ],
-    ]
-    return keyaboard
+                text=PAYMENT_METHODS_LIST[i],
+                callback_data=f"{op}_{PAYMENT_METHODS_LIST[i]}_worker",
+            )
+        )
+        if i + 1 < len(PAYMENT_METHODS_LIST):
+            row.append(
+                InlineKeyboardButton(
+                    text=PAYMENT_METHODS_LIST[i + 1],
+                    callback_data=f"{op}_{PAYMENT_METHODS_LIST[i+1]}_worker",
+                )
+            )
+        keyboard.append(row)
+
+    return keyboard
 
 
 def build_workers_keyboard(
@@ -243,7 +224,7 @@ def create_worker_info_text(
 
     else:
         text += (
-            f"الوظيفة: {"سحب " + worker.method}\n"
+            f"الوظيفة: {'سحب ' + worker.method}\n"
             f"السحوبات حتى الآن: {format_amount(worker.approved_withdraws)}\n"
             f"عددها: {worker.approved_withdraws_num}\n"
             f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"

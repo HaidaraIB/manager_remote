@@ -160,7 +160,7 @@ async def buy_usdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=SEND_PAYMENT_INFO_TEXT.format(data, data),
             reply_markup=InlineKeyboardMarkup(back_keyboard),
         )
-        if context.user_data["payment_method_buy_usdt"] in [BEMO, BARAKAH]:
+        if context.user_data["payment_method_buy_usdt"] in []:
             return BANK_NUMBER_BUY_USDT
         return CASH_CODE
 
@@ -197,10 +197,7 @@ async def cash_code_bank_account_name_buy_usdt(
 ):
     if update.effective_chat.type == Chat.PRIVATE:
 
-        if context.user_data["payment_method_buy_usdt"] not in (
-            BARAKAH,
-            BEMO,
-        ):
+        if context.user_data["payment_method_buy_usdt"] not in []:
             context.user_data["payment_method_number_buy_usdt"] = update.message.text
             context.user_data["bank_account_name_buy_usdt"] = ""
 
@@ -210,7 +207,7 @@ async def cash_code_bank_account_name_buy_usdt(
         back_keyboard = [
             build_back_button(
                 "back_to_cash_code_busdt"
-                if context.user_data["payment_method_buy_usdt"] not in [BEMO, BARAKAH]
+                if context.user_data["payment_method_buy_usdt"] not in []
                 else "back_to_bank_account_name_busdt"
             ),
             back_to_user_home_page_button[0],
@@ -239,7 +236,7 @@ async def buy_usdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         method_info = f"<b>Payment info</b>: <code>{context.user_data['payment_method_number_buy_usdt']}</code>"
         method_info += (
             f"\nاسم صاحب الحساب: <b>{context.user_data['bank_account_name_buy_usdt']}</b>"
-            if method in [BARAKAH, BEMO]
+            if method in []
             else ""
         )
 

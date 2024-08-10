@@ -161,7 +161,7 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 text=f"انتباه تم استلام إيداع جديد 🚨",
             )
         )
-        context.user_data["requested"] = False
+        
 
 
 async def decline_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -256,7 +256,7 @@ async def decline_deposit_order_reason(
             serial=serial,
         )
 
-        context.user_data["requested"] = False
+        
 
 
 async def back_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):

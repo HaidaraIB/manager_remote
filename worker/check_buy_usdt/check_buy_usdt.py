@@ -111,7 +111,6 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             group_id=context.bot_data["data"][target_group],
             ex_rate=context.bot_data["data"]["usdt_to_aed"],
         )
-        context.user_data["requested"] = False
 
 
 async def decline_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -203,7 +202,7 @@ async def decline_buy_usdt_order_reason(
             serial=serial,
         )
 
-        context.user_data["requested"] = False
+        
 
 
 async def back_from_decline_buy_usdt_order(

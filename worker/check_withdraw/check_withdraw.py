@@ -159,7 +159,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
                 text=f"انتباه تم استلام سحب {method} جديد 🚨",
             )
         )
-        context.user_data["requested"] = False
+        
 
 
 async def decline_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -249,7 +249,7 @@ async def decline_withdraw_order_reason(
             reason=update.message.text,
             serial=serial,
         )
-        context.user_data["requested"] = False
+        
 
 
 async def back_to_withdraw_check(update: Update, context: ContextTypes.DEFAULT_TYPE):

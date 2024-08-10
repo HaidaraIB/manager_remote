@@ -142,7 +142,7 @@ async def reply_with_payment_proof_withdraw(
             order_type="withdraw",
             serial=serial,
         )
-        context.user_data["requested"] = False
+        
 
 
 async def return_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -252,7 +252,7 @@ async def return_withdraw_order_reason(
             reason=update.message.text,
             serial=serial,
         )
-        context.user_data["requested"] = False
+        
 
 
 async def back_from_return_withdraw_order(

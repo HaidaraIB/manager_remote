@@ -157,26 +157,17 @@ def apply_ex_rate(
         "deposit": "buy_rate",
         "withdraw": "sell_rate",
     }
-    ex_rate = 0
-    if method in [PAYEER, PERFECT_MONEY, USDT]:
-        if method == PAYEER:
-            ex_rate = context.bot_data["data"][
-                f"payeer_to_aed_{buy_or_sell_dict[order_type]}"
-            ]
-        elif method == PERFECT_MONEY:
-            ex_rate = context.bot_data["data"][
-                f"perfect_money_to_aed_{buy_or_sell_dict[order_type]}"
-            ]
-        elif method == USDT:
-            ex_rate = context.bot_data["data"][
-                f"usdt_to_aed_{buy_or_sell_dict[order_type]}"
-            ]
-
+    try:
+        ex_rate = context.bot_data["data"][
+            f"{method}_to_aed_{buy_or_sell_dict[order_type]}"
+        ]
         if order_type == "deposit":
             amount = amount * 0.97 * ex_rate
         else:
             amount = amount * 0.97 / ex_rate
-    return amount, ex_rate
+        return amount, ex_rate
+    except:
+        return amount, 0
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
@@ -222,7 +213,12 @@ def build_user_keyboard():
     keyboard = [
         [InlineKeyboardButton(text=WITHDRAW_BUTTON_TEXT, callback_data="withdraw")],
         [InlineKeyboardButton(text=DEPOSIT_BUTTON_TEXT, callback_data="deposit")],
-        [InlineKeyboardButton(text=DEPOSIT_WITHOUT_ACCOUNT_BUTTON_TEXT, callback_data="deposit_without_acc")],
+        [
+            InlineKeyboardButton(
+                text=DEPOSIT_WITHOUT_ACCOUNT_BUTTON_TEXT,
+                callback_data="deposit_without_acc",
+            )
+        ],
         [
             InlineKeyboardButton(
                 text=CREATE_ACCOUNT_BUTTON_TEXT, callback_data="create account"
@@ -536,41 +532,14 @@ def build_groups_keyboard(op: str):
                 callback_data=f"{op} withdraw_orders_group",
             )
         ],
-        [
-            InlineKeyboardButton(
-                text=f"سحب {USDT}",
-                callback_data=f"{op} {USDT}_group",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"سحب {BEMO}",
-                callback_data=f"{op} {BEMO}_group",
-            ),
-            InlineKeyboardButton(
-                text=f"سحب {BARAKAH}",
-                callback_data=f"{op} {BARAKAH}_group",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"سحب {SYRCASH}",
-                callback_data=f"{op} {SYRCASH}_group",
-            ),
-            InlineKeyboardButton(
-                text=f"سحب {MTNCASH}",
-                callback_data=f"{op} {MTNCASH}_group",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=f"سحب {PAYEER}",
-                callback_data=f"{op} {PAYEER}_group",
-            ),
-            InlineKeyboardButton(
-                text=f"سحب {PERFECT_MONEY}",
-                callback_data=f"{op} {PERFECT_MONEY}_group",
-            ),
+        *[
+            [
+                InlineKeyboardButton(
+                    text=f"سحب {i}",
+                    callback_data=f"{op} {i}_group",
+                )
+            ]
+            for i in PAYMENT_METHODS_LIST
         ],
         [
             InlineKeyboardButton(

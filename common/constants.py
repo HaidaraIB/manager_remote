@@ -1,18 +1,16 @@
 USDT = "USDT"
-BEMO = "بيمو🇸🇦🇫🇷"
-BARAKAH = "بركة🇧🇭"
-SYRCASH = "Syriatel Cash🇸🇾"
-MTNCASH = "MTN Cash🇸🇾"
 PAYEER = "PAYEER"
 PERFECT_MONEY = "PERFECT MONEY"
 
 
+CRYPTO_LIST = [
+    USDT,
+    PAYEER,
+    PERFECT_MONEY,
+]
+
 PAYMENT_METHODS_LIST = [
     USDT,
-    BEMO,
-    BARAKAH,
-    SYRCASH,
-    MTNCASH,
     PAYEER,
     PERFECT_MONEY,
 ]
@@ -61,8 +59,10 @@ HOME_PAGE_TEXT = "القائمة الرئيسية 🔝 - Home page 🔝"
 
 EXT_COMPLAINT_LINE = "<b>ملحق بالشكوى على الطلب ذي الرقم التسلسلي {}</b>\n\n"
 
-DEPOSIT_BUTTON_TEXT = "إيداع 📥 - Deposit 📥"
-DEPOSIT_WITHOUT_ACCOUNT_BUTTON_TEXT = "إيداع لحساب خارجي 📥 - External Deposit 📥"
+DEPOSIT_BUTTON_TEXT = "إيداع لحساب من إنشاء البوت 📥 - Bot Account Deposit 📥"
+DEPOSIT_WITHOUT_ACCOUNT_BUTTON_TEXT = (
+    "إيداع لحساب ليس من إنشاء البوت 📥 - Out Of Bot Account Deposit 📥"
+)
 CREATE_ACCOUNT_BUTTON_TEXT = "إنشاء حساب موثق ™️ - Create account ™️"
 WITHDRAW_BUTTON_TEXT = "سحب 💳 - Withdraw 💳"
 BUY_USDT_BUTTON_TEXT = "شراء USDT 💰 - Buy USDT 💰"

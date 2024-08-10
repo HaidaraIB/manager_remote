@@ -139,7 +139,7 @@ async def get_withdraw_code_bank_account_name(
             build_back_button("back_to_get_payment_info"),
             back_to_user_home_page_button[0],
         ]
-        if context.user_data["payment_method"] in (BARAKAH, BEMO):
+        if context.user_data["payment_method"] in []:
             if update.message:
                 await update.message.reply_text(
                     text=SEND_BANK_ACCOUNT_NAME_TEXT,
