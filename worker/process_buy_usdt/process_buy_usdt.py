@@ -144,7 +144,6 @@ async def reply_with_payment_proof_buy_usdt(
             order_type="busdt",
             serial=serial,
         )
-        context.user_data["requested"] = False
 
 
 async def return_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -254,7 +253,6 @@ async def return_buy_usdt_order_reason(
             reason=update.message.text,
             serial=serial,
         )
-        context.user_data["requested"] = False
 
 
 async def back_from_return_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):

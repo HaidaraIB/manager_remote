@@ -65,6 +65,7 @@ async def send_requested_order(
         )
     await parent_to_child_models_mapper[operation].set_working_on_it(
         serial=serial,
-        working_on_it=1,
+        checker_id=worker_id if order_type.startswith("check") else 0,
         worker_id=worker_id,
+        state="checking" if order_type.startswith("check") else "processing",
     )

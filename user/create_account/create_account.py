@@ -240,8 +240,8 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await models.CreateAccountOrder.change_order_state(
-            state="declined",
             serial=serial,
+            state="declined",
         )
 
 

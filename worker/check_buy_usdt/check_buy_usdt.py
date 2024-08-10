@@ -30,11 +30,6 @@ async def check_buy_usdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         serial = int(update.callback_query.data.split("_")[-1])
 
-        await BuyUsdtdOrder.add_checker_id(
-            serial=serial,
-            checker_id=update.effective_user.id,
-        )
-
         payment_ok_buttons = [
             [
                 InlineKeyboardButton(
@@ -101,7 +96,6 @@ async def send_buy_usdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             group_id=context.bot_data["data"][target_group],
             ex_rate=context.bot_data["data"]["usdt_to_syp"],
         )
-        context.user_data["requested"] = False
 
 
 async def decline_buy_usdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -188,7 +182,6 @@ async def decline_buy_usdt_order_reason(
             serial=serial,
         )
 
-        context.user_data["requested"] = False
 
 
 async def back_from_decline_buy_usdt_order(

@@ -39,15 +39,32 @@ class BaseOrder(Base):
     @lock_and_release
     async def set_working_on_it(
         cls,
-        working_on_it: int,
         worker_id: int,
+        checker_id: int,
+        state: str,
+        serial: int,
+        s: Session = None,
+    ):
+        values = {
+            cls.working_on_it: 1,
+            cls.worker_id: worker_id,
+            cls.state: state,
+        }
+        if checker_id:
+            values[cls.checker_id] = checker_id
+        s.query(cls).filter_by(serial=serial).update(values)
+
+    @classmethod
+    @lock_and_release
+    async def unset_working_on_it(
+        cls,
         serial: int,
         s: Session = None,
     ):
         s.query(cls).filter_by(serial=serial).update(
             {
-                cls.working_on_it: working_on_it,
-                cls.worker_id: worker_id,
+                cls.working_on_it: 0,
+                cls.worker_id: 0,
             }
         )
 
@@ -140,15 +157,6 @@ class BaseOrder(Base):
 
     @classmethod
     @lock_and_release
-    async def add_checker_id(cls, checker_id: int, serial: int, s: Session = None):
-        s.query(cls).filter_by(serial=serial).update(
-            {
-                cls.checker_id: checker_id,
-            }
-        )
-
-    @classmethod
-    @lock_and_release
     async def edit_order_amount(cls, new_amount: float, serial: int, s: Session = None):
         s.query(cls).filter_by(serial=serial).update(
             {
@@ -199,7 +207,6 @@ class BaseOrder(Base):
             {
                 cls.state: "returned",
                 cls.reason: reason,
-                cls.working_on_it: 0,
             }
         )
 

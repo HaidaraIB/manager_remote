@@ -8,6 +8,8 @@ state_dict_en_to_ar = {
     "returned": "طلب معاد",
     "pending": "بانتظار التحقق",
     "sent": "بانتظار التنفيذ",
+    "checking": "قيد التحقق",
+    "prcessing": "قيد التنفيذ",
 }
 
 worker_type_dict = {

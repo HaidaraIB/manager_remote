@@ -57,6 +57,12 @@ def build_actions_keyboard(order_type: str, serial: int):
             ),
         ],
     ]
+    unset_working_on_it_button = InlineKeyboardButton(
+        text="السماح بإعادة الطلب",
+        callback_data=f"unset_working_on_it_{order_type}_order_{serial}",
+    )
+    if order.working_on_it:
+        actions_keyboard.append([unset_working_on_it_button])
     # send_order_button = InlineKeyboardButton(
     #     text="إرسال الطلب",
     #     callback_data=f"admin_send_{order_type}_order_{serial}",

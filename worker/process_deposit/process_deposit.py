@@ -139,7 +139,6 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             order_type="deposit",
             serial=serial,
         )
-        context.user_data["requested"] = False
 
 
 async def return_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -239,7 +238,6 @@ async def return_deposit_order_reason(
             serial=serial,
         )
 
-        context.user_data["requested"] = False
 
 
 async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):

@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 
 from common.common import build_admin_keyboard, build_back_button
-
+from common.constants import *
 from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
@@ -29,20 +29,13 @@ async def choose_exchange_rate_to_update(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        crypto_keyboard = [
+            [InlineKeyboardButton(text=i, callback_data=f"{i}/{i}_to_aed")]
+            for i in CRYPTO_LIST
+        ]
         exchange_rates_keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="شراء USDT", callback_data="busdt/usdt_to_syp"
-                )
-            ],
-            [InlineKeyboardButton(text="USDT", callback_data="USDT/usdt_to_syp")],
-            [
-                InlineKeyboardButton(
-                    text="Perfect Money",
-                    callback_data="Perfect Money/perfect_money_to_syp",
-                )
-            ],
-            [InlineKeyboardButton(text="Payeer", callback_data="Payeer/payeer_to_syp")],
+            [InlineKeyboardButton(text="شراء USDT", callback_data="busdt/usdt_to_aed")],
+            *crypto_keyboard,
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -63,7 +56,7 @@ async def get_new_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         shared_text = f"أرسل السعر الجديد، السعر الحالي:\n\n"
         if data[0] == "busdt":
             text = shared_text + (
-                f"Buy USDT: <b>{context.bot_data['data']['usdt_to_syp']}</b>"
+                f"Buy USDT: <b>{context.bot_data['data'][data[1]]}</b>"
             )
             await update.callback_query.edit_message_text(
                 text=text,
@@ -164,6 +157,6 @@ update_exchange_rates_handler = ConversationHandler(
         ),
         back_to_admin_home_page_handler,
         admin_command,
-        start_command
+        start_command,
     ],
 )

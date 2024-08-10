@@ -25,11 +25,6 @@ REQUEST_WHAT = 0
 
 async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        context.user_data["requested"] = False
-        if context.user_data.get("requested", False):
-            await update.callback_query.answer("يمكنك معالجة طلب واحد في المرة❗️")
-            return ConversationHandler.END
-
         deposit_agent = models.DepositAgent.get_workers(
             worker_id=update.effective_user.id,
             deposit=True,
@@ -144,7 +139,6 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.callback_query.delete_message()
 
-        context.user_data["requested"] = True
         return ConversationHandler.END
 
 
