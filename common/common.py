@@ -323,51 +323,23 @@ def build_admin_keyboard():
 
 
 def build_methods_keyboard(buy_usdt: bool = False):
-    if len(PAYMENT_METHODS_LIST) == 1:
-        payment_methods = [
-            [
-                InlineKeyboardButton(
-                    text=PAYMENT_METHODS_LIST[0],
-                    callback_data=PAYMENT_METHODS_LIST[0],
-                )
-            ]
-        ]
-    elif len(PAYMENT_METHODS_LIST) % 2 == 0:
-        payment_methods = [
-            [
-                InlineKeyboardButton(
-                    text=PAYMENT_METHODS_LIST[i],
-                    callback_data=PAYMENT_METHODS_LIST[i],
-                ),
-                InlineKeyboardButton(
-                    text=PAYMENT_METHODS_LIST[i + 1],
-                    callback_data=PAYMENT_METHODS_LIST[i + 1],
-                ),
-            ]
-            for i in range(0, len(PAYMENT_METHODS_LIST), 2)
-        ]
-    else:
-        payment_methods = [
-            [
-                InlineKeyboardButton(
-                    text=PAYMENT_METHODS_LIST[i],
-                    callback_data=PAYMENT_METHODS_LIST[i],
-                ),
-                InlineKeyboardButton(
-                    text=PAYMENT_METHODS_LIST[i + 1],
-                    callback_data=PAYMENT_METHODS_LIST[i + 1],
-                ),
-            ]
-            for i in range(0, len(PAYMENT_METHODS_LIST) - 1, 2)
-        ]
-        payment_methods.append(
-            [
-                InlineKeyboardButton(
-                    text=PAYMENT_METHODS_LIST[-1],
-                    callback_data=PAYMENT_METHODS_LIST[-1],
-                )
-            ]
+    payment_methods: list[list] = []
+    for i in range(0, len(PAYMENT_METHODS_LIST), 2):
+        row = []
+        row.append(
+            InlineKeyboardButton(
+                text=PAYMENT_METHODS_LIST[i],
+                callback_data=PAYMENT_METHODS_LIST[i],
+            )
         )
+        if i + 1 < len(PAYMENT_METHODS_LIST):
+            row.append(
+                InlineKeyboardButton(
+                    text=PAYMENT_METHODS_LIST[i + 1],
+                    callback_data=PAYMENT_METHODS_LIST[i + 1],
+                )
+            )
+        payment_methods.append(row)
     if buy_usdt:
         payment_methods[0].pop(0)
     return payment_methods
