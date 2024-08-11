@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 from common.common import notify_workers
 from common.stringifies import stringify_check_withdraw_order
@@ -17,7 +17,7 @@ async def send_withdraw_order_to_check(
     bank_account_name: str,
     payment_method_number: str,
     w_type: str,
-    password:str = None,
+    password: str = None,
     agent_id: int = None,
 ):
 
@@ -83,3 +83,16 @@ async def send_withdraw_order_to_check(
         )
     )
     return True
+
+
+async def request_bank_account_name(update: Update, back_keyboard):
+    if update.message:
+        await update.message.reply_text(
+            text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
+    else:
+        await update.callback_query.edit_message_text(
+            text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )

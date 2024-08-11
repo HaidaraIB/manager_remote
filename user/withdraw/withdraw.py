@@ -33,7 +33,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-from user.withdraw.common import send_withdraw_order_to_check
+from user.withdraw.common import send_withdraw_order_to_check, request_bank_account_name
 from start import start_command
 from models import PaymentMethod, Account
 from common.constants import *
@@ -137,16 +137,7 @@ async def get_withdraw_code_bank_account_name(
             back_to_user_home_page_button[0],
         ]
         if context.user_data["payment_method"] in (BARAKAH, BEMO):
-            if update.message:
-                await update.message.reply_text(
-                    text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-                    reply_markup=InlineKeyboardMarkup(back_keyboard),
-                )
-            else:
-                await update.callback_query.edit_message_text(
-                    text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-                    reply_markup=InlineKeyboardMarkup(back_keyboard),
-                )
+            await request_bank_account_name(update, context)
             return BANK_ACCOUNT_NAME
 
         context.user_data["payment_method_number"] = update.message.text

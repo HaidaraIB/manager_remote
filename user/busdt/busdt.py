@@ -19,7 +19,6 @@ from common.common import (
     build_back_button,
     build_methods_keyboard,
     format_amount,
-    send_to_photos_archive,
 )
 
 from common.decorators import (
@@ -32,22 +31,20 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-from common.stringifies import stringify_check_busdt_order
-
+from user.withdraw.common import request_bank_account_name
 from start import start_command
-
-from models import BuyUsdtdOrder, PaymentMethod
+from user.busdt.common import *
+from models import PaymentMethod
 from common.constants import *
 
 (
     USDT_TO_BUY_AMOUNT,
-    YES_NO_BUY_USDT,
-    BUY_USDT_METHOD,
-    BANK_NUMBER_BUY_USDT,
+    YES_NO_BUSDT,
+    BUSDT_METHOD,
     CASH_CODE,
-    BANK_ACCOUNT_NAME_BUY_USDT,
-    BUY_USDT_CHECK,
-) = range(7)
+    BANK_ACCOUNT_NAME_BUSDT,
+    BUSDT_CHECK,
+) = range(6)
 
 
 @check_user_pending_orders_decorator
@@ -56,12 +53,11 @@ from common.constants import *
 @check_if_user_member_decorator
 async def busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        text = (
-            f"<b>1 USDT = {context.bot_data['data']['usdt_to_syp']} SYP</b>\n\n"
-            "كم تريد أن تبيع؟💵"
-        )
         await update.callback_query.edit_message_text(
-            text=text,
+            text=(
+                f"<b>1 USDT = {context.bot_data['data']['usdt_to_syp']} SYP</b>\n\n"
+                "كم تريد أن تبيع؟ 💵\n\n"
+            ),
             reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
         )
         return USDT_TO_BUY_AMOUNT
@@ -90,12 +86,11 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
         keyboard = [
             [
                 InlineKeyboardButton(text="موافق 👍", callback_data="yes busdt"),
-                InlineKeyboardButton(text="غير موافق 👎", callback_data="no busdt"),
+                InlineKeyboardButton(text="غير موافق 👍", callback_data="no busdt"),
             ],
             *back_buttons,
         ]
         text = (
-            f"الكمية المرسلة تساوي:\n\n"
             f"<b>{amount} USDT = {format_amount(amount * context.bot_data['data']['usdt_to_syp'])} SYP</b>\n\n"
             "هل أنت موافق؟"
         )
@@ -110,7 +105,7 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
 
-        return YES_NO_BUY_USDT
+        return YES_NO_BUSDT
 
 
 back_to_usdt_to_buy_amount = busdt
@@ -119,7 +114,10 @@ back_to_usdt_to_buy_amount = busdt
 async def yes_no_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if update.callback_query.data.startswith("no"):
-            await update.callback_query.answer("حسناً، تم الإلغاء")
+            await update.callback_query.answer(
+                "تم الإلغاء",
+                show_alert=True,
+            )
             await update.callback_query.edit_message_text(
                 text=HOME_PAGE_TEXT,
                 reply_markup=build_user_keyboard(),
@@ -133,7 +131,7 @@ async def yes_no_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="اختر وسيلة الدفع لاستلام أموالك 💳",
                 reply_markup=InlineKeyboardMarkup(busdt_methods),
             )
-            return BUY_USDT_METHOD
+            return BUSDT_METHOD
 
 
 back_to_yes_no_busdt = usdt_to_buy_amount
@@ -146,140 +144,94 @@ async def busdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not data.startswith("back"):
             method = PaymentMethod.get_payment_method(name=data)
 
-            if method.on_off == 0:
+            if not method.on_off:
                 await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً ❗️")
                 return
-
-            context.user_data["payment_method_busdt"] = data
+            method = data
+            context.user_data["payment_method_busdt"] = method
+        else:
+            method = context.user_data["payment_method_busdt"]
 
         back_keyboard = [
             build_back_button("back_to_busdt_method"),
             back_to_user_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
-            text=f"أرسل رقم حساب {data}",
+            text=f"أرسل رقم حساب {method}",
             reply_markup=InlineKeyboardMarkup(back_keyboard),
         )
-        if context.user_data["payment_method_busdt"] in [BEMO, BARAKAH]:
-            return BANK_NUMBER_BUY_USDT
         return CASH_CODE
 
 
 back_to_busdt_method = yes_no_busdt
 
 
-async def bank_number_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_cash_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+
         back_keyboard = [
-            build_back_button("back_to_bank_number_busdt"),
+            build_back_button("back_to_get_cash_code_busdt"),
             back_to_user_home_page_button[0],
         ]
         if update.message:
             context.user_data["payment_method_number_busdt"] = update.message.text
+        method = context.user_data["payment_method_busdt"]
+
+        if method in [BEMO, BARAKAH]:
+            await request_bank_account_name(update, back_keyboard)
+            return BANK_ACCOUNT_NAME_BUSDT
+
+        await update.message.reply_text(
+            text=(
+                "أرسل الآن العملات إلى المحفظة:\n\n"
+                f"<code>{context.bot_data['data']['USDT_number']}</code>\n\n"
+                "ثم أرسل لقطة شاشة أو ملف pdf لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+                "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
+            ),
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
+
+        return BUSDT_CHECK
+
+
+back_to_get_cash_code_busdt = busdt_method
+
+
+async def get_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        back_keyboard = [
+            build_back_button("back_to_get_bank_account_name_busdt"),
+            back_to_user_home_page_button[0],
+        ]
+        text = (
+            "أرسل الآن العملات إلى المحفظة:\n\n"
+            f"<code>{context.bot_data['data']['USDT_number']}</code>\n\n"
+            "ثم أرسل لقطة شاشة أو ملف pdf لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+            "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
+        )
+        if update.message:
+            context.user_data["bank_account_name_busdt"] = update.message.text
             await update.message.reply_text(
-                text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+                text=text,
                 reply_markup=InlineKeyboardMarkup(back_keyboard),
             )
         else:
             await update.callback_query.edit_message_text(
-                text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
+                text=text,
                 reply_markup=InlineKeyboardMarkup(back_keyboard),
             )
 
-        return BANK_ACCOUNT_NAME_BUY_USDT
+        return BUSDT_CHECK
 
 
-back_to_bank_number_busdt = busdt_method
-
-
-async def cash_code_bank_account_name_busdt(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type == Chat.PRIVATE:
-
-        if context.user_data["payment_method_busdt"] not in (
-            BARAKAH,
-            BEMO,
-        ):
-            context.user_data["payment_method_number_busdt"] = update.message.text
-            context.user_data["bank_account_name_busdt"] = ""
-
-        else:
-            context.user_data["bank_account_name_busdt"] = update.message.text
-
-        back_keyboard = [
-            build_back_button(
-                "back_to_cash_code_busdt"
-                if context.user_data["payment_method_busdt"] not in [BEMO, BARAKAH]
-                else "back_to_bank_account_name_busdt"
-            ),
-            back_to_user_home_page_button[0],
-        ]
-        text = (
-            f"أرسل الآن العملات إلى المحفظة:\n\n"
-            f"<code>{context.bot_data['data']['USDT_number']}</code>\n\n"
-            "ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-            "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
-        )
-        await update.message.reply_text(
-            text=text,
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
-
-        return BUY_USDT_CHECK
-
-
-back_to_cash_code_busdt = busdt_method
-back_to_bank_account_name_busdt = bank_number_busdt
+back_to_get_bank_account_name_busdt = get_cash_code
 
 
 async def busdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
-        method = context.user_data["payment_method_busdt"]
-        method_info = ""
+        await send_busdt_order_to_check(update, context)
 
-        method_info = f"<b>Payment info</b>: <code>{context.user_data['payment_method_number_busdt']}</code>"
-        method_info += (
-            f"\nاسم صاحب الحساب: <b>{context.user_data['bank_account_name_busdt']}</b>"
-            if method in [BARAKAH, BEMO]
-            else ""
-        )
-
-        serial = await BuyUsdtdOrder.add_busdt_order(
-            group_id=context.bot_data["data"]["busdt_orders_group"],
-            user_id=update.effective_user.id,
-            method=method,
-            amount=context.user_data["usdt_to_buy_amount"],
-            payment_method_number=context.user_data["payment_method_number_busdt"],
-            bank_account_name=context.user_data["bank_account_name_busdt"],
-        )
-
-        message = await context.bot.send_photo(
-            chat_id=context.bot_data["data"]["busdt_orders_group"],
-            photo=update.message.photo[-1],
-            caption=stringify_check_busdt_order(
-                context.user_data["usdt_to_buy_amount"],
-                method=method,
-                serial=serial,
-                method_info=method_info,
-            ),
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="التحقق ☑️", callback_data=f"check_busdt_order_{serial}"
-                )
-            ),
-        )
-        await send_to_photos_archive(
-            context=context,
-            photo=update.message.photo[-1],
-            order_type="busdt",
-            serial=serial,
-        )
-        await BuyUsdtdOrder.add_message_ids(
-            serial=serial,
-            pending_check_message_id=message.id,
-        )
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
             reply_markup=build_user_keyboard(),
@@ -295,48 +247,37 @@ busdt_handler = ConversationHandler(
                 filters=filters.Regex("^[1-9]+\.?\d*$"), callback=usdt_to_buy_amount
             )
         ],
-        YES_NO_BUY_USDT: [
-            CallbackQueryHandler(yes_no_busdt, "^yes busdt$|^no busdt$")
-        ],
-        BUY_USDT_METHOD: [
-            CallbackQueryHandler(busdt_method, payment_method_pattern)
-        ],
-        BANK_NUMBER_BUY_USDT: [
-            MessageHandler(
-                filters=filters.Regex(".*") & ~filters.COMMAND,
-                callback=bank_number_busdt,
-            )
-        ],
+        YES_NO_BUSDT: [CallbackQueryHandler(yes_no_busdt, "^yes busdt$|^no busdt$")],
+        BUSDT_METHOD: [CallbackQueryHandler(busdt_method, payment_method_pattern)],
         CASH_CODE: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=cash_code_bank_account_name_busdt,
+                callback=get_cash_code,
             )
         ],
-        BANK_ACCOUNT_NAME_BUY_USDT: [
+        BANK_ACCOUNT_NAME_BUSDT: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=cash_code_bank_account_name_busdt,
+                callback=get_bank_account_name,
             )
         ],
-        BUY_USDT_CHECK: [
-            MessageHandler(filters=filters.PHOTO, callback=busdt_check)
+        BUSDT_CHECK: [
+            MessageHandler(
+                filters=filters.PHOTO | filters.Document.PDF, callback=busdt_check
+            )
         ],
     },
     fallbacks=[
-        CallbackQueryHandler(back_to_busdt_method, "^back_to_busdt_method$"),
-        CallbackQueryHandler(back_to_yes_no_busdt, "^back_to_yes_no_busdt$"),
-        CallbackQueryHandler(
-            back_to_bank_number_busdt, "^back_to_bank_number_busdt$"
-        ),
-        CallbackQueryHandler(
-            back_to_bank_account_name_busdt, "^back_to_bank_account_name_busdt$"
-        ),
-        CallbackQueryHandler(
-            back_to_cash_code_busdt, "^back_to_cash_code_busdt$"
-        ),
         CallbackQueryHandler(
             back_to_usdt_to_buy_amount, "^back_to_usdt_to_buy_amount$"
+        ),
+        CallbackQueryHandler(back_to_yes_no_busdt, "^back_to_yes_no_busdt$"),
+        CallbackQueryHandler(back_to_busdt_method, "^back_to_busdt_method$"),
+        CallbackQueryHandler(
+            back_to_get_cash_code_busdt, "^back_to_get_cash_code_busdt$"
+        ),
+        CallbackQueryHandler(
+            back_to_get_bank_account_name_busdt, "^back_to_get_bank_account_name_busdt$"
         ),
         back_to_user_home_page_handler,
         start_command,
