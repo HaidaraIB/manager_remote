@@ -31,6 +31,8 @@ import os
 async def inits(app: Application):
     await models.Admin.add_new_admin(admin_id=os.getenv("OWNER_ID"))
     await models.PaymentMethod.init_payment_methods()
+    if not app.bot_data.get("data", None):
+        app.bot_data['data'] = {}
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):

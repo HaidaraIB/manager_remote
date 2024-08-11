@@ -44,7 +44,6 @@ turn_user_calls_on_or_off_keyboard = [
     [InlineKeyboardButton(text="إنشاء حساب موثق™️", callback_data="acreate account")],
     [InlineKeyboardButton(text="شراء USDT", callback_data="abuy usdt")],
     [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="amake complaint")],
-    [InlineKeyboardButton(text="عملك معنا 💼", callback_data="awork with us")],
     back_to_admin_home_page_button[0],
 ]
 

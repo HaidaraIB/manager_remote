@@ -19,7 +19,7 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
 )
 
-from start import admin_command, start_command
+from start import admin_command
 
 from custom_filters import Admin
 
@@ -56,7 +56,6 @@ async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return ConversationHandler.END
 
 
-
 reward_percentages_dict = {
     "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية الجديدة",
     "workers_reward_percentage": "مكافأة الموظفين الأسبوعية الجديدة",
@@ -65,7 +64,6 @@ reward_percentages_dict = {
     "workers_reward_percentage": "مكافأة الموظفين الأسبوعية الجديدة",
     "deposit_gift_percentage": "مكافأة الإيداع الجديدة",
 }
-
 
 
 async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -108,7 +106,12 @@ update_percentages_handler = CallbackQueryHandler(
 
 
 update_percentage_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(update_percentage, "^update.*_percentage$")],
+    entry_points=[
+        CallbackQueryHandler(
+            update_percentage,
+            "^update.*_percentage$",
+        )
+    ],
     states={
         NEW_PERCENTAGE: [
             MessageHandler(
@@ -117,6 +120,11 @@ update_percentage_handler = ConversationHandler(
             )
         ]
     },
-    fallbacks=[back_to_admin_home_page_handler, admin_command],
+    fallbacks=[
+        CallbackQueryHandler(
+            back_to_update_percentages, "^back_to_update_percentages$"
+        ),
+        back_to_admin_home_page_handler,
+        admin_command,
+    ],
 )
-

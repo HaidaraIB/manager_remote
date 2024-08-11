@@ -202,7 +202,7 @@ def disable_httpx():
 
 
 def payment_method_pattern(callback_data: str):
-    return callback_data in PAYMENT_METHODS_LIST or callback_data == "طلبات الوكيل"
+    return callback_data in PAYMENT_METHODS_LIST
 
 
 def build_back_button(data: str):

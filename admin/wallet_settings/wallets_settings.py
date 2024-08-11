@@ -39,14 +39,6 @@ async def wallets_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         Admin().filter(update) or DepositAgent().filter(update)
     ):
         methods = build_methods_keyboard()
-        methods.append(
-            [
-                InlineKeyboardButton(
-                    text="محفظة طلبات الوكيل",
-                    callback_data="طلبات الوكيل",
-                )
-            ]
-        )
         methods.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر وسيلة الدفع💳.",
