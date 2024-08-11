@@ -284,7 +284,7 @@ def build_agent_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-def build_methods_keyboard(buy_usdt: bool = False):
+def build_methods_keyboard(busdt: bool = False):
     payment_methods: list[list] = []
     for i in range(0, len(PAYMENT_METHODS_LIST), 2):
         row = []
@@ -302,7 +302,7 @@ def build_methods_keyboard(buy_usdt: bool = False):
                 )
             )
         payment_methods.append(row)
-    if buy_usdt:
+    if busdt:
         payment_methods[0].pop(0)
     return payment_methods
 

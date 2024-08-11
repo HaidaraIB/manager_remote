@@ -9,7 +9,7 @@ class BuyUsdtdOrder(PaymentOrder):
 
     @staticmethod
     @lock_and_release
-    async def add_buy_usdt_order(
+    async def add_busdt_order(
         user_id: int,
         group_id: int,
         method: str,
