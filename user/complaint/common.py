@@ -45,7 +45,7 @@ complaints_keyboard = [
             text=WITHDRAW_BUTTON_TEXT, callback_data="withdraw complaint"
         )
     ],
-    [InlineKeyboardButton(text=BUY_USDT_BUTTON_TEXT, callback_data="busdt complaint")],
+    [InlineKeyboardButton(text=BUSDT_BUTTON_TEXT, callback_data="busdt complaint")],
     back_to_user_home_page_button[0],
 ]
 

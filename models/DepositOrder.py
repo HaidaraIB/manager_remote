@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, select, insert, and_
+from sqlalchemy import Column, String, Integer, Boolean, select, insert, and_
 from models.Order import Order
 from models.DB import connect_and_close, lock_and_release
 from models.DepositAgent import DepositAgent
@@ -10,6 +10,7 @@ import datetime
 class DepositOrder(Order):
     __tablename__ = "deposit_orders"
     acc_number = Column(String)
+    acc_from_bot = Column(Boolean)
     deposit_wallet = Column(String)
 
     @staticmethod
@@ -31,6 +32,7 @@ class DepositOrder(Order):
         user_id: int,
         method: str,
         acc_number: str,
+        acc_from_bot:bool,
         group_id: int,
         amount: float,
         deposit_wallet:str,
@@ -41,6 +43,7 @@ class DepositOrder(Order):
                 user_id=user_id,
                 method=method,
                 acc_number=acc_number,
+                acc_from_bot=acc_from_bot,
                 group_id=group_id,
                 amount=amount,
                 deposit_wallet=deposit_wallet,

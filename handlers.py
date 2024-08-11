@@ -45,7 +45,7 @@ from common.force_join import check_joined_handler
 
 from user.withdraw import withdraw_handler
 from user.deposit import *
-from user.buy_usdt import buy_usdt_handler
+from user.busdt import busdt_handler
 from user.complaint import complaint_handler
 from user.return_order import *
 from user.create_account import *
@@ -65,8 +65,8 @@ from worker.request_order import request_order_handler
 from worker.process_deposit import *
 from worker.check_withdraw import *
 from worker.process_withdraw import *
-from worker.check_buy_usdt import *
-from worker.process_buy_usdt import *
+from worker.check_busdt import *
+from worker.process_busdt import *
 from worker.check_deposit import *
 
 
@@ -157,19 +157,19 @@ def main():
     app.add_handler(return_withdraw_order_reason_handler)
     app.add_handler(back_from_return_withdraw_order_handler)
 
-    # BUY_USDT
-    app.add_handler(check_buy_usdt_handler)
-    app.add_handler(send_buy_usdt_order_handler)
-    app.add_handler(decline_buy_usdt_order_handler)
-    app.add_handler(decline_buy_usdt_order_reason_handler)
-    app.add_handler(back_from_decline_buy_usdt_order_handler)
+    # BUSDT
+    app.add_handler(check_busdt_handler)
+    app.add_handler(send_busdt_order_handler)
+    app.add_handler(decline_busdt_order_handler)
+    app.add_handler(decline_busdt_order_reason_handler)
+    app.add_handler(back_from_decline_busdt_order_handler)
 
-    app.add_handler(reply_with_payment_proof_buy_usdt_handler)
-    app.add_handler(user_payment_verified_buy_usdt_handler)
+    app.add_handler(reply_with_payment_proof_busdt_handler)
+    app.add_handler(user_payment_verified_busdt_handler)
 
-    app.add_handler(return_buy_usdt_order_handler)
-    app.add_handler(return_buy_usdt_order_reason_handler)
-    app.add_handler(back_from_return_buy_usdt_order_handler)
+    app.add_handler(return_busdt_order_handler)
+    app.add_handler(return_busdt_order_reason_handler)
+    app.add_handler(back_from_return_busdt_order_handler)
 
     # RETURN
     app.add_handler(handle_returned_order_handler)
@@ -209,7 +209,7 @@ def main():
 
     app.add_handler(withdraw_handler)
 
-    app.add_handler(buy_usdt_handler)
+    app.add_handler(busdt_handler)
 
     app.add_handler(deposit_handler)
     app.add_handler(deposit_without_acc_handler)

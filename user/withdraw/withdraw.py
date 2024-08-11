@@ -114,7 +114,7 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
 
         if context.user_data["payment_method"] == USDT:
             text = (
-                "أرسل كود محفظتك 👝\n\n<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n\n"
+                "أرسل عنوان محفظتك 👝\n\n<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n\n"
                 "Send your wallet address 👝\n\n<b>Note that the network is TRC20</b>"
             )
         else:
@@ -136,26 +136,23 @@ async def get_withdraw_code_aeban_number(
     context: ContextTypes.DEFAULT_TYPE,
 ):
     if update.effective_chat.type == Chat.PRIVATE:
+
+        if update.message:
+            context.user_data["payment_method_number"] = update.message.text
+
+        method = context.user_data["payment_method"]
+
         back_keyboard = [
             build_back_button("back_to_get_payment_info"),
             back_to_user_home_page_button[0],
         ]
-        if context.user_data["payment_method"] in AEBAN_LIST:
-            if update.message:
-                context.user_data["payment_method_number"] = update.message.text
-                await update.message.reply_text(
-                    text=SEND_AEBAN_NUMBER_TEXT,
-                    reply_markup=InlineKeyboardMarkup(back_keyboard),
-                )
-            else:
-                await update.callback_query.edit_message_text(
-                    text=SEND_AEBAN_NUMBER_TEXT,
-                    reply_markup=InlineKeyboardMarkup(back_keyboard),
-                )
+        if method in AEBAN_LIST:
+            await request_aeban_number(update, back_keyboard)
             return AEBAN_NUMBER
 
-        context.user_data["payment_method_number"] = update.message.text
-        context.user_data["bank_account_name"] = ""
+        elif method not in CRYPTO_LIST:
+            await request_bank_account_name(update, back_keyboard)
+            return BANK_ACCOUNT_NAME
 
         await update.message.reply_video(
             video=os.getenv("VIDEO_ID"),
@@ -171,20 +168,13 @@ back_to_get_payment_info = choose_payment_method
 
 async def get_aeban_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        if update.message:
+            context.user_data["aeban_number"] = update.message.text
         back_keyboard = [
             build_back_button("back_to_get_aeban_number"),
             back_to_user_home_page_button[0],
         ]
-        if update.message:
-            await update.message.reply_text(
-                text=SEND_BANK_ACCOUNT_NAME_TEXT,
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
-        else:
-            await update.callback_query.edit_message_text(
-                text=SEND_BANK_ACCOUNT_NAME_TEXT,
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
+        await request_bank_account_name(update, back_keyboard)
         return BANK_ACCOUNT_NAME
 
 
@@ -194,7 +184,7 @@ back_to_get_aeban_number = get_withdraw_code_aeban_number
 async def get_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if update.message:
-            context.user_data["aeban_number"] = update.message.text
+            context.user_data["bank_account_name"] = update.message.text
         back_keyboard = [
             build_back_button("back_to_bank_account_name"),
             back_to_user_home_page_button[0],
@@ -215,17 +205,9 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         account = Account.get_account(acc_num=context.user_data["withdraw_account"])
         res = await send_withdraw_order_to_check(
-            acc_number=context.user_data["withdraw_account"],
-            aeban_number = context.user_data.get("aeban_number", ''),
-            bank_account_name=context.user_data["bank_account_name"],
             context=context,
-            method=context.user_data["payment_method"],
-            payment_method_number=context.user_data["payment_method_number"],
-            target_group=context.bot_data["data"]["withdraw_orders_group"],
-            user_id=update.effective_user.id,
-            w_type=context.user_data.get("withdraw_type", "balance"),
+            update=update,
             password=account.password,
-            withdraw_code=update.message.text,
         )
         if not res:
             await update.message.reply_text(

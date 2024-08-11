@@ -11,7 +11,8 @@ SEND_MONEY_TEXT = (
     "<code>{}</code>"
     "ثم أرسل لقطة شاشة أو ملف pdf لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
     "Send the money to:\n\n"
-    "<code>{}</code>\n\n"
+    "<code>{}</code>\n"
+    "<code>{}</code>"
     "And send a screenshot or a pdf in order to confirm it."
 )
 
@@ -23,12 +24,14 @@ async def send_to_check_deposit(
     proof: PhotoSize | Document,
     method: str,
     acc_number: str,
+    acc_from_bot:bool,
     target_group: int,
 ):
     serial = await DepositOrder.add_deposit_order(
         user_id=user_id,
         method=method,
         acc_number=acc_number,
+        acc_from_bot=acc_from_bot,
         group_id=target_group,
         amount=amount,
         deposit_wallet=context.bot_data["data"][f"{method}_number"],
@@ -40,6 +43,7 @@ async def send_to_check_deposit(
         method=method,
         serial=serial,
         wal=context.bot_data["data"][f"{method}_number"],
+        acc_from_bot=acc_from_bot,
     )
     markup = InlineKeyboardMarkup.from_button(
         InlineKeyboardButton(

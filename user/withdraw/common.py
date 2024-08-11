@@ -1,6 +1,7 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
-from common.common import notify_workers
+from common.common import notify_workers, build_back_button
+from common.back_to_home_page import back_to_user_home_page_button
 from models import WithdrawOrder, Checker, PaymentAgent
 from common.constants import *
 from common.stringifies import stringify_check_withdraw_order
@@ -21,22 +22,22 @@ DUPLICATE_CODE_TEXT = (
 
 async def send_withdraw_order_to_check(
     context: ContextTypes.DEFAULT_TYPE,
-    withdraw_code: str,
-    method: str,
-    target_group: int,
-    user_id: int,
-    acc_number: str,
-    aeban_number:str,
-    bank_account_name: str,
-    payment_method_number: str,
-    w_type: str,
-    password: str = None,
+    update: Update,
+    password: str,
 ):
-
+    withdraw_code = update.message.text
     code_present = WithdrawOrder.check_withdraw_code(withdraw_code=withdraw_code)
-
     if code_present and code_present.state == "approved":
         return False
+    
+    acc_number = context.user_data["withdraw_account"]
+    aeban_number = context.user_data.get("aeban_number", "")
+    bank_account_name = context.user_data.get("bank_account_name", "")
+    method = context.user_data["payment_method"]
+    payment_method_number = context.user_data["payment_method_number"]
+    target_group = context.bot_data["data"]["withdraw_orders_group"]
+    w_type = context.user_data.get("withdraw_type", "balance")
+    user_id = update.effective_user.id
 
     serial = await WithdrawOrder.add_withdraw_order(
         group_id=target_group,
@@ -49,9 +50,15 @@ async def send_withdraw_order_to_check(
         payment_method_number=payment_method_number,
     )
 
-    method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (
-        f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>" if method in [] else ""
-    )
+    method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>"
+    if method in AEBAN_LIST:
+        method_info += (
+            f"\nرقم الآيبان: <b>{aeban_number}</b>"
+            + f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
+        )
+    elif method not in CRYPTO_LIST:
+        method_info += +f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
+
     message = await context.bot.send_message(
         chat_id=target_group,
         text=stringify_check_withdraw_order(
@@ -93,3 +100,29 @@ async def send_withdraw_order_to_check(
         )
     )
     return True
+
+
+async def request_bank_account_name(update: Update, back_keyboard):
+    if update.message:
+        await update.message.reply_text(
+            text=SEND_BANK_ACCOUNT_NAME_TEXT,
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
+    else:
+        await update.callback_query.edit_message_text(
+            text=SEND_BANK_ACCOUNT_NAME_TEXT,
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
+
+
+async def request_aeban_number(update: Update, back_keyboard):
+    if update.message:
+        await update.message.reply_text(
+            text=SEND_AEBAN_NUMBER_TEXT,
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )
+    else:
+        await update.callback_query.edit_message_text(
+            text=SEND_AEBAN_NUMBER_TEXT,
+            reply_markup=InlineKeyboardMarkup(back_keyboard),
+        )

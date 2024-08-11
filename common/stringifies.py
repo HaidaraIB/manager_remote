@@ -103,7 +103,8 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"اسمه: <b>{name}</b>\n\n"
         f"نوع الطلب: <b>{order_settings_dict[order_type]['t']}</b>\n"
         f"المبلغ: <code>{format_amount(order.amount)}</code>\n"
-        f"رقم الحساب: <code>{getattr(order, 'acc_number', 'لا يوجد')}</code>\n\n"
+        f"رقم الحساب: <code>{getattr(order, 'acc_number', 'لا يوجد')}</code>\n"
+        f"حساب منشأ من البوت: <code>{'نعم' if getattr(order,'acc_from_bot', 'ليس طلب إيداع') else 'لا'}</code>\n\n"
         f"وسيلة الدفع: <code>{order.method}</code>\n"
         f"محفظة الإيداع: <code>{getattr(order, 'deposit_wallet', 'لا يوجد')}</code>\n\n"
         f"الحالة: <b>{state_dict_en_to_ar[order.state]}</b>\n"
@@ -120,26 +121,19 @@ def general_stringify_order(serial: int, order_type: str, name: str):
 
 def complaint_stringify_order(serial: int, order_type: str):
     op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
-    payment_method_number = bank_account_name = NONE_TEXT
-    if order_type != "deposit":
-        payment_method_number = (
-            op.payment_method_number if op.payment_method_number else NONE_TEXT
-        )
-        bank_account_name = op.bank_account_name if op.bank_account_name else NONE_TEXT
-
     return (
         f"الرقم التسلسلي: <code>{op.serial}</code>\n"
         f"المبلغ: <b>{format_amount(op.amount)}</b>\n"
         f"وسيلة الدفع: <b>{op.method}</b>\n"
-        f"عنوان الدفع: <code>{payment_method_number}</code>\n"
-        f"اسم صاحب الحساب البنكي: <code>{bank_account_name}</code>\n"
+        f"عنوان الدفع: <code>{getattr(op, 'payment_method_number', NONE_TEXT)}</code>\n"
+        f"اسم صاحب الحساب البنكي: <code>{getattr(op, 'bank_account_name', NONE_TEXT)}</code>\n"
         f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
         f"سبب إعادة/رفض: <b>{op.reason if op.reason else NONE_TEXT}</b>\n\n"
         f"Serial: <code>{op.serial}</code>\n"
         f"Amount: <b>{format_amount(op.amount)}</b>\n"
         f"Payment Method: <b>{op.method}</b>\n"
-        f"Payment Info: <code>{payment_method_number}</code>\n"
-        f"Bank Account Name: <code>{bank_account_name}</code>\n"
+        f"Payment Info: <code>{getattr(op, 'payment_method_number', NONE_TEXT)}</code>\n"
+        f"Bank Account Name: <code>{getattr(op, 'bank_account_name', NONE_TEXT)}</code>\n"
         f"State: <b>{state_dict_en_to_ar[op.state]}</b>\n"
         f"Decline/Return Reason: <b>{op.reason if op.reason else NONE_TEXT}</b>\n\n"
     )
@@ -150,13 +144,15 @@ def stringify_deposit_order(
     serial: int,
     method: str,
     account_number: int,
-    wal:str,
+    wal: str,
+    acc_from_bot: bool,
     *args,
 ):
     return (
         "إيداع جديد:\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        f"رقم الحساب: <code>{account_number}</code>\n\n"
+        f"رقم الحساب: <code>{account_number}</code>\n"
+        f"حساب منشأ من البوت: <code>{'نعم' if acc_from_bot else 'لا'}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
         f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"

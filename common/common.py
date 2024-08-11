@@ -224,7 +224,7 @@ def build_user_keyboard():
                 text=CREATE_ACCOUNT_BUTTON_TEXT, callback_data="create account"
             )
         ],
-        [InlineKeyboardButton(text=BUY_USDT_BUTTON_TEXT, callback_data="busdt")],
+        [InlineKeyboardButton(text=BUSDT_BUTTON_TEXT, callback_data="busdt")],
         [
             InlineKeyboardButton(
                 text=MAKE_COMPLAINT_BUTTON_TEXT, callback_data="make complaint"
@@ -322,7 +322,7 @@ def build_admin_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-def build_methods_keyboard(buy_usdt: bool = False):
+def build_methods_keyboard(busdt: bool = False):
     payment_methods: list[list] = []
     for i in range(0, len(PAYMENT_METHODS_LIST), 2):
         row = []
@@ -340,7 +340,7 @@ def build_methods_keyboard(buy_usdt: bool = False):
                 )
             )
         payment_methods.append(row)
-    if buy_usdt:
+    if busdt:
         payment_methods[0].pop(0)
     return payment_methods
 

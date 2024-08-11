@@ -6,7 +6,7 @@ MBANK = "Mbank"
 FAB = "First Abu Dhabi Bank"
 ANNI = "Anni"
 PAYBY = "Payby"
-PAYING = "Paying"
+PAYIT = "Payit"
 EMONEY = "E & MONEY"
 
 AEBAN_LIST = [
@@ -30,7 +30,7 @@ PAYMENT_METHODS_LIST = [
     FAB,
     ANNI,
     PAYBY,
-    PAYING,
+    PAYIT,
     EMONEY,
 ]
 
@@ -84,7 +84,7 @@ DEPOSIT_WITHOUT_ACCOUNT_BUTTON_TEXT = (
 )
 CREATE_ACCOUNT_BUTTON_TEXT = "إنشاء حساب موثق ™️ - Create account ™️"
 WITHDRAW_BUTTON_TEXT = "سحب 💳 - Withdraw 💳"
-BUY_USDT_BUTTON_TEXT = "شراء USDT 💰 - Buy USDT 💰"
+BUSDT_BUTTON_TEXT = "شراء USDT 💰 - Buy USDT 💰"
 MAKE_COMPLAINT_BUTTON_TEXT = "إنشاء شكوى 🗳 - Make complaint 🗳"
 NONE_TEXT = "لا يوجد - None"
 METHOD_IS_OFF_TEXT = (

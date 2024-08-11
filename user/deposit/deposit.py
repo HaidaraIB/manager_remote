@@ -52,6 +52,7 @@ from user.deposit.common import SEND_MONEY_TEXT
 @check_if_user_created_account_from_bot_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
+        context.user_data['acc_from_bot'] = True
         accounts = Account.get_user_accounts(user_id=update.effective_user.id)
         accounts_keyboard = [
             InlineKeyboardButton(
@@ -128,14 +129,16 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.bot_data["data"][f"{data}_number"],
                 "\n",
                 context.bot_data["data"][f"{data}_number"],
+                "\n",
             )
             if data == USDT:
                 text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20 - Note that the network is TRC20</b>\n"
         else:
             text = SEND_MONEY_TEXT.format(
                 context.bot_data["data"][f"{data}_number"],
-                context.bot_data["data"][f"{data}_aeban"] + "\n\n",
+                str(context.bot_data["data"][f"{data}_aeban"]) + "\n\n",
                 context.bot_data["data"][f"{data}_number"],
+                str(context.bot_data["data"][f"{data}_aeban"]) + "\n\n",
             )
 
         await update.callback_query.edit_message_text(
@@ -160,6 +163,7 @@ async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
             amount=context.user_data["deposit_amount"],
             acc_number=context.user_data["account_deposit"],
+            acc_from_bot=context.user_data['acc_from_bot'],
             method=context.user_data["deposit_method"],
             target_group=context.bot_data["data"]["deposit_orders_group"],
         )

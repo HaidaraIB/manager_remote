@@ -115,6 +115,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         else order.payment_method_number
                     ),
                     order.deposit_wallet if order_type == "deposit" else None,
+                    order.acc_from_bot if order_type == "deposit" else None,
                 ),
                 reply_markup=reply_markup,
             )

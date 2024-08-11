@@ -120,7 +120,7 @@ async def choose_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             context.bot_data["data"][f"{method}_{aeban_or_number}"]
         except KeyError:
-            context.bot_data["data"][f"{method}_{aeban_or_number}"] = 123456
+            context.bot_data["data"][f"{method}_{aeban_or_number}"] = "123456"
 
         await update.callback_query.edit_message_text(
             text=(

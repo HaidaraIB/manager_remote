@@ -92,6 +92,7 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 account_number=d_order.acc_number,
                 method=d_order.method,
                 wal=d_order.deposit_wallet,
+                acc_from_bot=d_order.acc_from_bot,
             )
             + "\n\nتم تعديل المبلغ ✅",
             reply_markup=build_check_deposit_keyboard(serial),
@@ -114,20 +115,24 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
         message = await send_media(
             context=context,
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
-            media=update.effective_message.photo[-1] if update.effective_message.photo else update.effective_message.document,
+            media=(
+                update.effective_message.photo[-1]
+                if update.effective_message.photo
+                else update.effective_message.document
+            ),
             caption=stringify_deposit_order(
                 amount=amount,
                 account_number=d_order.acc_number,
                 method=d_order.method,
                 serial=d_order.serial,
                 wal=d_order.deposit_wallet,
+                acc_from_bot=d_order.acc_from_bot,
             ),
             markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="قبول الطلب ✅", callback_data=f"verify_deposit_order_{serial}"
                 )
             ),
-
         )
 
         await update.callback_query.edit_message_reply_markup(
@@ -161,7 +166,6 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 text=f"انتباه تم استلام إيداع جديد 🚨",
             )
         )
-        
 
 
 async def decline_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -208,6 +212,7 @@ async def decline_deposit_order_reason(
                 method=d_order.method,
                 serial=d_order.serial,
                 wal=d_order.deposit_wallet,
+                acc_from_bot=d_order.acc_from_bot,
             )
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
@@ -230,7 +235,7 @@ async def decline_deposit_order_reason(
                 else update.message.reply_to_message.document
             ),
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            caption=caption
+            caption=caption,
         )
 
         await context.bot.edit_message_reply_markup(
@@ -256,8 +261,6 @@ async def decline_deposit_order_reason(
             serial=serial,
         )
 
-        
-
 
 async def back_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
@@ -269,9 +272,6 @@ async def back_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TY
         await update.callback_query.edit_message_reply_markup(
             reply_markup=build_check_deposit_keyboard(serial)
         )
-
-
-
 
 
 check_deposit_handler = CallbackQueryHandler(
