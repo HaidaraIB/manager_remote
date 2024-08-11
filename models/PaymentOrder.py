@@ -8,6 +8,7 @@ import datetime
 
 class PaymentOrder(Order):
     __abstract__ = True
+    aeban_number = Column(String)
     bank_account_name = Column(String)
     payment_method_number = Column(String)
 

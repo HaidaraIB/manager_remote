@@ -8,7 +8,6 @@ class WithdrawOrder(PaymentOrder):
     __tablename__ = "withdraw_orders"
     acc_number = Column(String)
     withdraw_code = Column(String)
-    agent_id = Column(Integer, default=0)
 
     @staticmethod
     @lock_and_release
@@ -17,10 +16,10 @@ class WithdrawOrder(PaymentOrder):
         group_id: int,
         method: str,
         withdraw_code: str,
+        aeban_number:str,
         bank_account_name: str,
         payment_method_number: int,
         acc_number: str,
-        agent_id:int = None,
         s: Session = None,
     ):
         res = s.execute(
@@ -29,10 +28,10 @@ class WithdrawOrder(PaymentOrder):
                 group_id=group_id,
                 method=method,
                 withdraw_code=withdraw_code,
+                aeban_number=aeban_number,
                 bank_account_name=bank_account_name,
                 payment_method_number=payment_method_number,
                 acc_number=acc_number,
-                agent_id = agent_id if agent_id else 0,
             )
         )
         return res.lastrowid

@@ -1,7 +1,19 @@
 USDT = "USDT"
 PAYEER = "PAYEER"
 PERFECT_MONEY = "PERFECT MONEY"
+ADIB = "ADIB"
+MBANK = "Mbank"
+FAB = "First Abu Dhabi Bank"
+ANNI = "Anni"
+PAYBY = "Payby"
+PAYING = "Paying"
+EMONEY = "E & MONEY"
 
+AEBAN_LIST = [
+    ADIB,
+    MBANK,
+    FAB,
+]
 
 CRYPTO_LIST = [
     USDT,
@@ -13,6 +25,13 @@ PAYMENT_METHODS_LIST = [
     USDT,
     PAYEER,
     PERFECT_MONEY,
+    ADIB,
+    MBANK,
+    FAB,
+    ANNI,
+    PAYBY,
+    PAYING,
+    EMONEY,
 ]
 
 TEAM_CASH_TEXT = (
@@ -74,6 +93,10 @@ METHOD_IS_OFF_TEXT = (
 THANK_YOU_TEXT = (
     "شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.\n\n"
     "Thank you, your order is being checked, you'll receive a message from us when it's done."
+)
+SEND_AEBAN_NUMBER_TEXT = (
+    "أرسل رقم الآيبان.\n\n"
+    "Send the AEBAN number.\n\n"
 )
 SEND_BANK_ACCOUNT_NAME_TEXT = (
     "أرسل اسم صاحب الحساب كما هو مسجل بالبنك.\n\n"

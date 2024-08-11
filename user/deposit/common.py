@@ -7,7 +7,8 @@ import asyncio
 
 SEND_MONEY_TEXT = (
     "قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
-    "<code>{}</code>\n\n"
+    "<code>{}</code>\n"
+    "<code>{}</code>"
     "ثم أرسل لقطة شاشة أو ملف pdf لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
     "Send the money to:\n\n"
     "<code>{}</code>\n\n"
@@ -23,13 +24,11 @@ async def send_to_check_deposit(
     method: str,
     acc_number: str,
     target_group: int,
-    agent_id: int = None,
 ):
     serial = await DepositOrder.add_deposit_order(
         user_id=user_id,
         method=method,
         acc_number=acc_number,
-        agent_id=agent_id if agent_id else 0,
         group_id=target_group,
         amount=amount,
         deposit_wallet=context.bot_data["data"][f"{method}_number"],

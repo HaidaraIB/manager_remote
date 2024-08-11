@@ -12,21 +12,24 @@ orders_dict = {
 
 
 def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):
-    usdt = []
-    banks = []
-    payeer = []
-    for m in agent:
-        button = InlineKeyboardButton(
-            text=f"دفع {m.method}",
-            callback_data=f"request {m.method}",
+    keyboard: list[list] = []
+    for i in range(0, len(agent), 2):
+        row = []
+        row.append(
+            InlineKeyboardButton(
+                text=f"دفع {agent[i].method}",
+                callback_data=f"request {agent[i].method}",
+            )
         )
-        if m.method == USDT:
-            usdt.append(button)
-        elif m.method in []:
-            banks.append(button)
-        else:
-            payeer.append(button)
-    return [usdt, banks, payeer]
+        if i + 1 < len(agent):
+            row.append(
+                InlineKeyboardButton(
+                    text=f"دفع {agent[i + 1].method}",
+                    callback_data=f"request {agent[i + 1].method}",
+                )
+            )
+        keyboard.append(row)
+    return keyboard
 
 
 async def get_order_message(group_id: int, message_id: int, worker_id: int):

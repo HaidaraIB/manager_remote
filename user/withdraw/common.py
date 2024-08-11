@@ -26,11 +26,11 @@ async def send_withdraw_order_to_check(
     target_group: int,
     user_id: int,
     acc_number: str,
+    aeban_number:str,
     bank_account_name: str,
     payment_method_number: str,
     w_type: str,
     password: str = None,
-    agent_id: int = None,
 ):
 
     code_present = WithdrawOrder.check_withdraw_code(withdraw_code=withdraw_code)
@@ -44,9 +44,9 @@ async def send_withdraw_order_to_check(
         method=method,
         acc_number=acc_number,
         withdraw_code=withdraw_code,
+        aeban_number=aeban_number,
         bank_account_name=bank_account_name,
         payment_method_number=payment_method_number,
-        agent_id=agent_id,
     )
 
     method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (

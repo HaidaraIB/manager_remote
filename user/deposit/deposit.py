@@ -123,15 +123,23 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back_to_deposit_method"),
             back_to_user_home_page_button[0],
         ]
-        text = SEND_MONEY_TEXT
-        if data == "USDT":
-            text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20 - Note that the network is TRC20</b>\n"
+        if data not in AEBAN_LIST:
+            text = SEND_MONEY_TEXT.format(
+                context.bot_data["data"][f"{data}_number"],
+                "\n",
+                context.bot_data["data"][f"{data}_number"],
+            )
+            if data == USDT:
+                text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20 - Note that the network is TRC20</b>\n"
+        else:
+            text = SEND_MONEY_TEXT.format(
+                context.bot_data["data"][f"{data}_number"],
+                context.bot_data["data"][f"{data}_aeban"] + "\n\n",
+                context.bot_data["data"][f"{data}_number"],
+            )
 
         await update.callback_query.edit_message_text(
-            text=SEND_MONEY_TEXT.format(
-                context.bot_data["data"][f"{data}_number"],
-                context.bot_data["data"][f"{data}_number"],
-            ),
+            text=text,
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return SCREENSHOT
@@ -145,7 +153,11 @@ async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_to_check_deposit(
             context=context,
             user_id=update.effective_user.id,
-            proof=update.message.photo[-1] if update.message.photo else update.message.document,
+            proof=(
+                update.message.photo[-1]
+                if update.message.photo
+                else update.message.document
+            ),
             amount=context.user_data["deposit_amount"],
             acc_number=context.user_data["account_deposit"],
             method=context.user_data["deposit_method"],
@@ -167,7 +179,11 @@ deposit_handler = ConversationHandler(
             MessageHandler(filters=filters.Regex("^\d+.?\d*$"), callback=deposit_amount)
         ],
         DEPOSIT_METHOD: [CallbackQueryHandler(deposit_method, payment_method_pattern)],
-        SCREENSHOT: [MessageHandler(filters=filters.PHOTO | filters.Document.PDF, callback=get_screenshot)],
+        SCREENSHOT: [
+            MessageHandler(
+                filters=filters.PHOTO | filters.Document.PDF, callback=get_screenshot
+            )
+        ],
     },
     fallbacks=[
         start_command,

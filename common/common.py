@@ -458,6 +458,27 @@ request_buttons = [
 ]
 
 
+def build_methods_groups_keyboard(op: str):
+    payment_methods: list[list] = []
+    for i in range(0, len(PAYMENT_METHODS_LIST), 2):
+        row = []
+        row.append(
+            InlineKeyboardButton(
+                text=f"سحب {PAYMENT_METHODS_LIST[i]}",
+                callback_data=f"{op} {PAYMENT_METHODS_LIST[i]}_group",
+            )
+        )
+        if i + 1 < len(PAYMENT_METHODS_LIST):
+            row.append(
+                InlineKeyboardButton(
+                    text=f"سحب {PAYMENT_METHODS_LIST[i + 1]}",
+                    callback_data=f"{op} {PAYMENT_METHODS_LIST[i + 1]}_group",
+                )
+            )
+        payment_methods.append(row)
+    return payment_methods
+
+
 def build_groups_keyboard(op: str):
     return [
         [
@@ -496,31 +517,11 @@ def build_groups_keyboard(op: str):
             InlineKeyboardButton(
                 text="تحقق شراء USDT",
                 callback_data=f"{op} busdt_orders_group",
-            )
-        ],
-        [
+            ),
             InlineKeyboardButton(
                 text="تحقق سحب",
                 callback_data=f"{op} withdraw_orders_group",
-            )
-        ],
-        *[
-            [
-                InlineKeyboardButton(
-                    text=f"سحب {i}",
-                    callback_data=f"{op} {i}_group",
-                )
-            ]
-            for i in PAYMENT_METHODS_LIST
-        ],
-        [
-            InlineKeyboardButton(
-                text="طلبات الانضمام (وكيل)",
-                callback_data=f"{op} agent_orders_group",
-            ),
-            InlineKeyboardButton(
-                text="طلبات الانضمام (شريك)",
-                callback_data=f"{op} partner_orders_group",
             ),
         ],
+        *build_methods_groups_keyboard(op),
     ]

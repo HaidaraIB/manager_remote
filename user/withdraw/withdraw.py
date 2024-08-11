@@ -44,8 +44,9 @@ import os
     PAYMENT_METHOD,
     PAYMENT_INFO,
     BANK_ACCOUNT_NAME,
+    AEBAN_NUMBER,
     WITHDRAW_CODE,
-) = range(5)
+) = range(6)
 
 
 @check_user_pending_orders_decorator
@@ -130,7 +131,7 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
 back_to_choose_payment_method = choose_withdraw_account
 
 
-async def get_withdraw_code_bank_account_name(
+async def get_withdraw_code_aeban_number(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
@@ -139,18 +140,19 @@ async def get_withdraw_code_bank_account_name(
             build_back_button("back_to_get_payment_info"),
             back_to_user_home_page_button[0],
         ]
-        if context.user_data["payment_method"] in []:
+        if context.user_data["payment_method"] in AEBAN_LIST:
             if update.message:
+                context.user_data["payment_method_number"] = update.message.text
                 await update.message.reply_text(
-                    text=SEND_BANK_ACCOUNT_NAME_TEXT,
+                    text=SEND_AEBAN_NUMBER_TEXT,
                     reply_markup=InlineKeyboardMarkup(back_keyboard),
                 )
             else:
                 await update.callback_query.edit_message_text(
-                    text=SEND_BANK_ACCOUNT_NAME_TEXT,
+                    text=SEND_AEBAN_NUMBER_TEXT,
                     reply_markup=InlineKeyboardMarkup(back_keyboard),
                 )
-            return BANK_ACCOUNT_NAME
+            return AEBAN_NUMBER
 
         context.user_data["payment_method_number"] = update.message.text
         context.user_data["bank_account_name"] = ""
@@ -167,10 +169,32 @@ async def get_withdraw_code_bank_account_name(
 back_to_get_payment_info = choose_payment_method
 
 
+async def get_aeban_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        back_keyboard = [
+            build_back_button("back_to_get_aeban_number"),
+            back_to_user_home_page_button[0],
+        ]
+        if update.message:
+            await update.message.reply_text(
+                text=SEND_BANK_ACCOUNT_NAME_TEXT,
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text=SEND_BANK_ACCOUNT_NAME_TEXT,
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
+        return BANK_ACCOUNT_NAME
+
+
+back_to_get_aeban_number = get_withdraw_code_aeban_number
+
+
 async def get_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if update.message:
-            context.user_data["bank_account_name"] = update.message.text
+            context.user_data["aeban_number"] = update.message.text
         back_keyboard = [
             build_back_button("back_to_bank_account_name"),
             back_to_user_home_page_button[0],
@@ -184,7 +208,7 @@ async def get_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TY
         return WITHDRAW_CODE
 
 
-back_to_bank_account_name = get_withdraw_code_bank_account_name
+back_to_bank_account_name = get_aeban_number
 
 
 async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -192,6 +216,7 @@ async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         account = Account.get_account(acc_num=context.user_data["withdraw_account"])
         res = await send_withdraw_order_to_check(
             acc_number=context.user_data["withdraw_account"],
+            aeban_number = context.user_data.get("aeban_number", ''),
             bank_account_name=context.user_data["bank_account_name"],
             context=context,
             method=context.user_data["payment_method"],
@@ -239,7 +264,13 @@ withdraw_handler = ConversationHandler(
         PAYMENT_INFO: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_withdraw_code_bank_account_name,
+                callback=get_withdraw_code_aeban_number,
+            )
+        ],
+        AEBAN_NUMBER: [
+            MessageHandler(
+                filters=filters.TEXT & ~filters.COMMAND,
+                callback=get_aeban_number,
             )
         ],
         BANK_ACCOUNT_NAME: [

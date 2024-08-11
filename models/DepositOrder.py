@@ -11,7 +11,6 @@ class DepositOrder(Order):
     __tablename__ = "deposit_orders"
     acc_number = Column(String)
     deposit_wallet = Column(String)
-    agent_id = Column(Integer, default=0)
 
     @staticmethod
     @connect_and_close
@@ -35,7 +34,6 @@ class DepositOrder(Order):
         group_id: int,
         amount: float,
         deposit_wallet:str,
-        agent_id: int = None,
         s: Session = None,
     ):
         res = s.execute(
@@ -46,7 +44,6 @@ class DepositOrder(Order):
                 group_id=group_id,
                 amount=amount,
                 deposit_wallet=deposit_wallet,
-                agent_id=agent_id if agent_id else 0,
             ),
         )
         return res.lastrowid
