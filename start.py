@@ -27,6 +27,7 @@ from common.constants import *
 
 import os
 
+
 async def inits(app: Application):
     await models.Admin.add_new_admin(admin_id=os.getenv("OWNER_ID"))
     await models.PaymentMethod.init_payment_methods()
@@ -41,6 +42,27 @@ async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
         commands.append(("admin", "admin command"))
     await context.bot.set_my_commands(
         commands=commands, scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
+    )
+
+
+async def send_ads(update: Update):
+    await update.message.reply_text(
+        text=(
+            "عند استخدامك زر إنشاء حساب موثق تستفيد من استرداد أسبوعي 20%.\n"
+            "By using the Verified Account Creation button, you benefit from a 20% weekly cashback."
+        ),
+    )
+    await update.message.reply_text(
+        text=(
+            "عند استخدامك المزايا التي يقدمها البوت لايوجد رسوم على عمليات الإيداع والسحب.\n"
+            "When you use the features provided by the bot, there are no fees for deposit and withdrawal transactions."
+        ),
+    )
+    await update.message.reply_text(
+        text=(
+            "تمتع بالمرونة في عمليات السحب حيث يمكنك استخدام وسيلة مختلفة عن تلك التي استخدمتها في الإيداع.\n"
+            "Enjoy flexibility in withdrawal transactions; you can use a different method than the one used for deposits."
+        ),
     )
 
 
@@ -59,7 +81,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         member = await check_if_user_member(update=update, context=context)
         if not member:
             return
-
+        await send_ads(update)
         await update.message.reply_text(
             text="أهلاً بك... - Welcome...",
             reply_markup=ReplyKeyboardRemove(),
@@ -93,7 +115,6 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=build_admin_keyboard(),
         )
         return ConversationHandler.END
-
 
 
 worker_command = CommandHandler(command="worker", callback=worker)
