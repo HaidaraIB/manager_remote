@@ -31,8 +31,8 @@ async def send_withdraw_order_to_check(
         return False
     
     acc_number = context.user_data["withdraw_account"]
-    aeban_number = context.user_data.get("aeban_number", "")
-    bank_account_name = context.user_data.get("bank_account_name", "")
+    aeban_number = context.user_data["aeban_number"]
+    bank_account_name = context.user_data["bank_account_name"]
     method = context.user_data["payment_method"]
     payment_method_number = context.user_data["payment_method_number"]
     target_group = context.bot_data["data"]["withdraw_orders_group"]

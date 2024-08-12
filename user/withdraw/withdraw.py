@@ -151,8 +151,12 @@ async def get_withdraw_code_aeban_number(
             return AEBAN_NUMBER
 
         elif method not in CRYPTO_LIST:
+            context.user_data["aeban_number"] = ""
             await request_bank_account_name(update, back_keyboard)
             return BANK_ACCOUNT_NAME
+
+        context.user_data["aeban_number"] = ""
+        context.user_data["bank_account_name"] = ""
 
         await update.message.reply_video(
             video=os.getenv("VIDEO_ID"),

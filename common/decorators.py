@@ -26,7 +26,9 @@ def check_user_pending_orders_decorator(func):
             ].check_user_pending_orders(
                 user_id=update.effective_user.id,
             ):
-                await update.callback_query.answer("لديك طلب قيد التنفيذ بالفعل ❗️ - You have an order under process ❗️")
+                await update.callback_query.answer(
+                    "لديك طلب قيد التنفيذ بالفعل ❗️ - You have an order under process ❗️"
+                )
                 return ConversationHandler.END
         except KeyError:
             pass
@@ -42,7 +44,9 @@ def check_user_call_on_or_off_decorator(func):
     ):
         try:
             if not context.bot_data["data"]["user_calls"][update.callback_query.data]:
-                await update.callback_query.answer("هذه الخدمة متوقفة حالياً ❗️ - This freature is off ❗️")
+                await update.callback_query.answer(
+                    "هذه الخدمة متوقفة حالياً ❗️ - This freature is off ❗️"
+                )
                 return ConversationHandler.END
         except KeyError:
             pass
@@ -57,7 +61,7 @@ def check_if_user_created_account_from_bot_decorator(func):
         update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
     ):
         accounts = Account.get_user_accounts(user_id=update.effective_user.id)
-        if not accounts:
+        if not accounts and update.callback_query.data != "deposit_without_acc":
             await update.callback_query.answer(
                 "قم بإنشاء حساب موثق عن طريق البوت أولاً  ❗️ - Create an account via the bot first ❗️",
                 show_alert=True,
