@@ -22,8 +22,8 @@ def build_checker_keyboard(checker: list[models.Checker]):
     payeer = []
     for c in checker:
         button = InlineKeyboardButton(
-            text=f"تحقق {orders_dict[c.check_what]} {c.method}",
-            callback_data=f"request check {c.check_what} {c.method}",
+            text=f"تحقق {c.method}",
+            callback_data=f"request_check_{c.check_what}_{c.method}",
         )
         if c.method == USDT:
             usdt.append(button)
@@ -44,7 +44,7 @@ def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):
     for m in agent:
         button = InlineKeyboardButton(
             text=f"دفع {m.method}",
-            callback_data=f"request {m.method}",
+            callback_data=f"request_{m.method}",
         )
         if m.method == USDT:
             usdt.append(button)

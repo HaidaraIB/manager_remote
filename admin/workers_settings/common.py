@@ -22,20 +22,21 @@ from models import DepositAgent, PaymentAgent, Checker
     CHOOSE_WORKER,
 ) = range(3)
 
+
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         worker_settings_keyboard = [
             [
-                InlineKeyboardButton(text="إضافة موظف➕", callback_data="add worker"),
-                InlineKeyboardButton(text="حذف موظف✖️", callback_data="remove worker"),
+                InlineKeyboardButton(text="إضافة موظف➕", callback_data="add_worker"),
+                InlineKeyboardButton(text="حذف موظف✖️", callback_data="remove_worker"),
             ],
             [
                 InlineKeyboardButton(
-                    text="عرض الموظفين🔍", callback_data="show worker"
+                    text="عرض الموظفين🔍", callback_data="show_worker"
                 ),
             ],
             [
-                InlineKeyboardButton(text="رصيد 💰", callback_data="balance worker"),
+                InlineKeyboardButton(text="رصيد 💰", callback_data="balance_worker"),
             ],
             back_to_admin_home_page_button[0],
         ]
@@ -46,15 +47,15 @@ async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
 
-back_to_worker_settings = worker_settings
+back_to_choose_option = worker_settings
 
 
-async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def choose_option(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         if update.callback_query.data.startswith("back"):
             op = update.callback_query.data.split("_")[-1]
         else:
-            op = update.callback_query.data.split(" ")[0]
+            op = update.callback_query.data.split("_")[0]
             context.user_data["worker_settings_option"] = op
         await update.callback_query.edit_message_text(
             text="اختر الوظيفة:",
@@ -63,11 +64,11 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return CHOOSE_POSITION
 
 
-back_to_choose_position = choose_position
+back_to_choose_position = choose_option
 
-back_to_worker_settings_handler = CallbackQueryHandler(
-    back_to_worker_settings,
-    "^back_to_worker_settings$",
+back_to_choose_option_handler = CallbackQueryHandler(
+    back_to_choose_option,
+    "^back_to_choose_option$",
 )
 
 worker_settings_handler = CallbackQueryHandler(
@@ -77,15 +78,20 @@ worker_settings_handler = CallbackQueryHandler(
 
 
 def build_checker_positions_keyboard(check_what: str, op: str):
+    pos_method_list_dict = {
+        "deposit": CHECK_DEPOSIT_LIST,
+        "withdraw": PAYMENT_METHODS_LIST,
+        "busdt": PAYMENT_METHODS_LIST,
+    }
     usdt = []
     syr = []
     banks = []
     payeer = []
-    for m in PAYMENT_METHODS_LIST:
+    for m in pos_method_list_dict[check_what]:
         if check_what == "busdt" and m == USDT:
             continue
         button = InlineKeyboardButton(
-            text=f"تحقق {op_dict_en_to_ar[check_what]} {m}",
+            text=f"تحقق {m}",
             callback_data=f"{op}_{m}_checker",
         )
         if m == USDT:
@@ -102,7 +108,7 @@ def build_checker_positions_keyboard(check_what: str, op: str):
 def build_positions_keyboard(op: str):
     if op == "balance":
         keyboard = build_payment_positions_keyboard("balance")
-        keyboard.append(build_back_button("back_to_worker_settings"))
+        keyboard.append(build_back_button("back_to_choose_option"))
         keyboard.append(back_to_admin_home_page_button[0])
         return InlineKeyboardMarkup(keyboard)
     add_worker_keyboard = [
@@ -127,7 +133,7 @@ def build_positions_keyboard(op: str):
         (
             build_back_button("back_to_worker_id")
             if op == "add"
-            else build_back_button("back_to_worker_settings")
+            else build_back_button("back_to_choose_option")
         ),
         back_to_admin_home_page_button[0],
     ]
@@ -165,14 +171,14 @@ def build_workers_keyboard(
         row.append(
             InlineKeyboardButton(
                 text=workers[i].name,
-                callback_data=(f"{t} " + str(workers[i].id)),
+                callback_data=f"{t}_{workers[i].id}",
             )
         )
         if i + 1 < len(workers):
             row.append(
                 InlineKeyboardButton(
                     text=workers[i + 1].name,
-                    callback_data=(f"{t} " + str(workers[i + 1].id)),
+                    callback_data=f"{t}_{workers[i + 1].id}",
                 )
             )
         keyboard.append(row)

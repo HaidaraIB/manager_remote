@@ -40,7 +40,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if deposit_agent:
             deposit_agent_button.append(
                 InlineKeyboardButton(
-                    text="تنفيذ إيداع", callback_data="request deposit after check"
+                    text="تنفيذ إيداع", callback_data="request_deposit after check"
                 )
             )
 
@@ -54,7 +54,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             checker_keyboard.append(
                 InlineKeyboardButton(
                     text=f"تحقق {orders_dict[c.check_what]}",
-                    callback_data=f"request check {c.check_what}",
+                    callback_data=f"request_check_{c.check_what}",
                 )
             )
 
@@ -84,7 +84,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        role = update.callback_query.data.replace("request ", "")
+        role = update.callback_query.data.replace("request_", "")
         message_id, group_id, serial = 0, 0, 0
         if role == "deposit after check":
             dac_order = models.DepositOrder.get_deposit_after_check_order()
@@ -98,7 +98,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif role.startswith("check"):
             checkers = models.Checker.get_workers(
-                worker_id=update.effective_user.id, check_what=role.split(" ")[1]
+                worker_id=update.effective_user.id, check_what=role.split("_")[1]
             )
             keyboard = build_checker_keyboard(checkers)
             keyboard.append(build_back_button("back_to_request_what"))
@@ -149,10 +149,10 @@ async def choose_check_position_request_order(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type == Chat.PRIVATE:
-        role = update.callback_query.data.replace("request ", "")
+        role = update.callback_query.data.replace("request_", "")
 
-        check_what = role.split(" ")[1]
-        method = role.split(" ")[2]
+        check_what = role.split("_")[1]
+        method = role.split("_")[2]
 
         c_order = parent_to_child_models_mapper[check_what].get_check_order(
             method=method
@@ -199,13 +199,13 @@ request_order_handler = ConversationHandler(
         REQUEST_WHAT: [
             CallbackQueryHandler(
                 request_what,
-                "^request.*",
+                "^request_.*",
             ),
         ],
         CHECK_POSITION_REQUEST_ORDER: [
             CallbackQueryHandler(
                 choose_check_position_request_order,
-                "^request check .*",
+                "^request_check_.*",
             ),
         ],
     },

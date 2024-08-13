@@ -39,28 +39,6 @@ from common.common import build_back_button
 ) = range(3)
 
 
-async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        worker_settings_keyboard = [
-            [
-                InlineKeyboardButton(text="إضافة موظف➕", callback_data="add worker"),
-                InlineKeyboardButton(text="حذف موظف✖️", callback_data="remove worker"),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="عرض الموظفين🔍", callback_data="show worker"
-                ),
-            ],
-            [
-                InlineKeyboardButton(text="رصيد 💰", callback_data="balance worker"),
-            ],
-            back_to_admin_home_page_button[0],
-        ]
-        await update.callback_query.edit_message_text(
-            text="هل تريد:", reply_markup=InlineKeyboardMarkup(worker_settings_keyboard)
-        )
-
-
 async def add_worker_cp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         await update.callback_query.answer()
@@ -194,7 +172,7 @@ async def back_to_choose_position(update: Update, context: ContextTypes.DEFAULT_
 
 
 add_worker_cp_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(add_worker_cp, "^add worker$")],
+    entry_points=[CallbackQueryHandler(add_worker_cp, "^add_worker$")],
     states={
         WORKER_ID: [
             MessageHandler(

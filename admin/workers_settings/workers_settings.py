@@ -24,11 +24,11 @@ from admin.workers_settings.common import (
     CHECK_POSITION_SHOW_REMOVE,
     build_positions_keyboard,
     build_workers_keyboard,
-    choose_position,
+    choose_option,
     create_worker_info_text,
     build_checker_positions_keyboard,
     back_to_choose_position,
-    back_to_worker_settings_handler,
+    back_to_choose_option_handler,
 )
 from common.common import build_back_button, op_dict_en_to_ar
 from common.back_to_home_page import back_to_admin_home_page_button
@@ -62,11 +62,11 @@ async def position_to_show_remove_from(
 
         elif pos == "deposit after check":
             workers = DepositAgent.get_workers()
-            ans_text = "ليس لديك موظفي تنفيذ إيداعات بعد❗️"
+            ans_text = "ليس لديك موظفي تنفيذ إيداعات بعد ❗️"
 
         else:
             workers = PaymentAgent.get_workers(method=pos)
-            ans_text = f"ليس لديك وكلاء {pos} بعد❗️"
+            ans_text = f"ليس لديك وكلاء {pos} بعد ❗️"
 
         if not workers:
             await update.callback_query.answer(
@@ -121,7 +121,7 @@ async def choose_check_position_show_remove(
 async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         option = context.user_data["worker_settings_option"]
-        w_id = int(update.callback_query.data.split(" ")[1])
+        w_id = int(update.callback_query.data.split("_")[1])
         t_worker = await context.bot.get_chat(chat_id=w_id)
         pos: str = context.user_data[f"pos_to_{option}"]
         if pos == "deposit after check":
@@ -154,7 +154,7 @@ async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        worker_to_remove_id = int(update.callback_query.data.split(" ")[1])
+        worker_to_remove_id = int(update.callback_query.data.split("_")[1])
         option = context.user_data["worker_settings_option"]
         pos: str = context.user_data[f"pos_to_{option}"]
 
@@ -203,8 +203,8 @@ async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_
 remove_worker_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            choose_position,
-            "^remove worker$",
+            choose_option,
+            "^remove_worker$",
         ),
     ],
     states={
@@ -223,7 +223,7 @@ remove_worker_handler = ConversationHandler(
         CHOOSE_WORKER: [
             CallbackQueryHandler(
                 choose_worker_to_remove,
-                "^remove \d+$",
+                "^remove_\d+$",
             ),
         ],
     },
@@ -231,7 +231,7 @@ remove_worker_handler = ConversationHandler(
         back_to_admin_home_page_handler,
         admin_command,
         start_command,
-        back_to_worker_settings_handler,
+        back_to_choose_option_handler,
         CallbackQueryHandler(
             back_to_choose_position,
             "^back_to_remove$",
@@ -243,8 +243,8 @@ remove_worker_handler = ConversationHandler(
 show_worker_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            choose_position,
-            "^show worker$",
+            choose_option,
+            "^show_worker$",
         ),
     ],
     states={
@@ -263,7 +263,7 @@ show_worker_handler = ConversationHandler(
         CHOOSE_WORKER: [
             CallbackQueryHandler(
                 choose_worker_to_show,
-                "^show \d+$",
+                "^show_\d+$",
             )
         ],
     },
@@ -271,7 +271,7 @@ show_worker_handler = ConversationHandler(
         back_to_admin_home_page_handler,
         admin_command,
         start_command,
-        back_to_worker_settings_handler,
+        back_to_choose_option_handler,
         CallbackQueryHandler(
             back_to_choose_position,
             "^back_to_show$",

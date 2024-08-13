@@ -83,9 +83,11 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             f"Serial: <code>{serial}</code>"
         )
         media = [
-            InputMediaPhoto(update.message.reply_to_message.photo[-1]),
             InputMediaPhoto(update.message.photo[-1]),
         ]
+        if update.message.reply_to_message.photo:
+            media.append(InputMediaPhoto(update.message.reply_to_message.photo[-1]))
+
         await context.bot.send_media_group(
             chat_id=d_order.user_id,
             media=media,

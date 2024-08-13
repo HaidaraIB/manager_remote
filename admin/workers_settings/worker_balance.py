@@ -30,17 +30,17 @@ from admin.workers_settings.common import (
     CHOOSE_POSITION,
     CHOOSE_WORKER,
     build_workers_keyboard,
-    choose_position,
+    choose_option,
     create_worker_info_text,
     back_to_choose_position,
-    back_to_worker_settings_handler,
+    back_to_choose_option_handler,
 )
 from common.constants import *
 
 (
     CHOOSE_WORKER_BALANCE,
     GET_PRE_BALANCE_AMOUNT,
-) = range(2, 4)
+) = range(3, 5)
 
 
 async def position_for_worker_balance(
@@ -72,7 +72,7 @@ async def position_for_worker_balance(
 async def worker_for_worker_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         if not update.callback_query.data.startswith("back"):
-            w_id = int(update.callback_query.data.split(" ")[1])
+            w_id = int(update.callback_query.data.split("_")[1])
             context.user_data["worker_balance_id"] = w_id
 
         t_worker = await context.bot.get_chat(
@@ -132,7 +132,7 @@ async def get_pre_balance_amount(update: Update, context: ContextTypes.DEFAULT_T
         )
         await context.bot.send_message(
             chat_id=context.user_data["worker_balance_id"],
-            text=f"تمت إضافة دفعة مسبقة بمبلغ: <b>{format(update.message.text)}</b> إلى رصيد دفع <code>{context.user_data["balance_pos"]}</code> الخاص بك.",
+            text=f"تمت إضافة دفعة مسبقة بمبلغ: <b>{format(update.message.text)}</b> إلى رصيد دفع <code>{context.user_data['balance_pos']}</code> الخاص بك.",
         )
         await update.message.reply_text(
             text="تمت إضافة الدفعة المسبقة بنجاح ✅",
@@ -143,7 +143,10 @@ async def get_pre_balance_amount(update: Update, context: ContextTypes.DEFAULT_T
 
 worker_balance_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(choose_position, "^balance worker$"),
+        CallbackQueryHandler(
+            choose_option,
+            "^balance_worker$",
+        ),
     ],
     states={
         CHOOSE_POSITION: [
@@ -155,7 +158,7 @@ worker_balance_handler = ConversationHandler(
         CHOOSE_WORKER: [
             CallbackQueryHandler(
                 worker_for_worker_balance,
-                "^balance \d+$",
+                "^balance_\d+$",
             )
         ],
         CHOOSE_WORKER_BALANCE: [
@@ -184,7 +187,7 @@ worker_balance_handler = ConversationHandler(
             back_to_choose_worker_balance,
             "^back_to_choose_worker_balance$",
         ),
-        back_to_worker_settings_handler,
+        back_to_choose_option_handler,
         back_to_admin_home_page_handler,
         admin_command,
         start_command,
