@@ -33,59 +33,12 @@ class Worker(BaseUser):
     def get_workers(
         cls,
         worker_id: int = None,
-        method: str = None,
-        check_what: str = None,
-        deposit: str = None,
         s: Session = None,
     ):
         if worker_id:
-            if method and not check_what:
-                res = s.execute(
-                    select(cls).where(
-                        and_(
-                            cls.id == worker_id,
-                            cls.method == method,
-                        )
-                    )
-                )  # get payment agent
-            elif check_what:
-                res = s.execute(
-                    select(cls).where(
-                        and_(
-                            cls.id == worker_id,
-                            cls.check_what == check_what,
-                            cls.method == method,
-                        )
-                    )
-                )  # get checker
-            elif deposit:
-                res = s.execute(
-                    select(cls).where(cls.id == worker_id)
-                )  # get deposit agent
-            else:
-                res = s.execute(
-                    select(cls).where(cls.id == worker_id)
-                )  # get list of workers by id
-
-            if method or check_what or deposit:
-                try:
-                    return res.fetchone().t[0]
-                except:
-                    pass
-
-        elif method and not check_what:
             res = s.execute(
-                select(cls).where(cls.method == method)
-            )  # get all payment agents with same method
-        elif check_what:
-            res = s.execute(
-                select(cls).where(
-                    and_(
-                        cls.check_what == check_what,
-                        cls.method == method,
-                    )
-                )
-            )  # get all checker with same role
+                select(cls).where(cls.id == worker_id)
+            )  # get list of workers by id
         else:
             res = s.execute(select(cls))  # get all agents
         try:

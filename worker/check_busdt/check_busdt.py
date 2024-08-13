@@ -68,7 +68,7 @@ async def send_busdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="قبول الطلب✅", callback_data=f"verify_busdt_order_{serial}"
+                    text="قبول الطلب ✅", callback_data=f"verify_busdt_order_{serial}"
                 )
             ),
         )

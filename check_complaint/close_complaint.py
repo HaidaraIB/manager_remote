@@ -213,6 +213,6 @@ reply_on_close_complaint_handler = MessageHandler(
     filters=filters.REPLY
     & Complaint()
     & ResponseToUserComplaint(name="close complaint")
-    & (filters.CAPTION | filters.PHOTO | filters.TEXT),
+    & (filters.CAPTION | filters.PHOTO | (filters.TEXT & ~filters.COMMAND)),
     callback=reply_on_close_complaint,
 )

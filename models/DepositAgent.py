@@ -1,11 +1,7 @@
-from sqlalchemy import (
-    Column,
-    Float,
-    PrimaryKeyConstraint,
-)
+from sqlalchemy import Column, Float, PrimaryKeyConstraint, select, and_
 from sqlalchemy.orm import Session
 from models.Worker import Worker
-from models.DB import lock_and_release
+from models.DB import lock_and_release, connect_and_close
 
 
 class DepositAgent(Worker):
@@ -38,3 +34,22 @@ class DepositAgent(Worker):
                 DepositAgent.approved_deposits_week: 0,
             }
         )
+
+    @classmethod
+    @connect_and_close
+    def get_workers(
+        cls,
+        worker_id: int = None,
+        deposit: str = None,
+        s: Session = None,
+    ):
+        if worker_id and deposit:
+            res = s.execute(select(cls).where(cls.id == worker_id))  # get deposit agent
+            try:
+                return res.fetchone().t[0]
+            except:
+                pass
+        elif worker_id:
+            return super().get_workers(worker_id=worker_id)
+        else:
+            return super().get_workers()

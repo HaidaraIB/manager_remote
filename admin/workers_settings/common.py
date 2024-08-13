@@ -7,7 +7,7 @@ from telegram import (
 )
 
 from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler
-from common.common import build_back_button, format_amount
+from common.common import build_back_button, format_amount, op_dict_en_to_ar
 from common.back_to_home_page import back_to_admin_home_page_button
 
 from common.constants import *
@@ -21,13 +21,6 @@ from models import DepositAgent, PaymentAgent, Checker
     CHECK_POSITION_SHOW_REMOVE,
     CHOOSE_WORKER,
 ) = range(3)
-
-op_dict_en_to_ar = {
-    "withdraw": "سحب",
-    "deposit": "إيداع",
-    "busdt": "شراء USDT",
-}
-
 
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):

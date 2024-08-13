@@ -29,9 +29,8 @@ from admin.workers_settings.common import (
     build_checker_positions_keyboard,
     back_to_choose_position,
     back_to_worker_settings_handler,
-    op_dict_en_to_ar,
 )
-from common.common import build_back_button
+from common.common import build_back_button, op_dict_en_to_ar
 from common.back_to_home_page import back_to_admin_home_page_button
 from common.constants import *
 

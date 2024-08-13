@@ -38,7 +38,7 @@ async def edit_order_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["edit_order_amount_type"] = order_type
         context.user_data["edit_order_msg_id"] = update.effective_message.id
         back_buttons = [
-            build_back_button(f"back_from_edit_order_amount"),
+            build_back_button(f"back_from_edit_order_amount__{order_type}_order_{serial}"),
             back_to_admin_home_page_button[0],
         ]
 
@@ -87,7 +87,6 @@ async def get_new_amount(
         new_order = parent_to_child_models_mapper[order_type].get_one_order(
             serial=serial
         )
-        tg_user = await context.bot.get_chat(chat_id=new_order.user_id)
         await update.message.delete()
         await context.bot.delete_message(
             chat_id=update.effective_chat.id,
@@ -120,8 +119,7 @@ edit_order_amount_handler = ConversationHandler(
     fallbacks=[
         CallbackQueryHandler(
             back_to_choose_action,
-            "back_from_edit_order_amount",
+            "^back_from_edit_order_amount",
         ),
-        back_to_admin_home_page_handler,
     ],
 )

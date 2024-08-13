@@ -72,7 +72,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
         order_type = context.user_data["order_type_setting"]
         order = order_settings_dict[order_type]["cls"].get_one_order(serial=serial)
         back_buttons = [
-            build_back_button("back_to_get_serial"),
+            build_back_button("back_to_get_order_serial"),
             back_to_admin_home_page_button[0],
         ]
         if not order:
@@ -94,7 +94,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
 
-back_to_get_serial = choose_order_type
+back_to_get_order_serial = choose_order_type
 
 
 order_settings_handler = ConversationHandler(
@@ -120,7 +120,7 @@ order_settings_handler = ConversationHandler(
     },
     fallbacks=[
         CallbackQueryHandler(back_to_choose_order_type, "^back_to_choose_order_type$"),
-        CallbackQueryHandler(back_to_get_serial, "^back_to_get_serial$"),
+        CallbackQueryHandler(back_to_get_order_serial, "^back_to_get_order_serial$"),
         admin_command,
         start_command,
         back_to_admin_home_page_handler,

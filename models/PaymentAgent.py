@@ -4,10 +4,12 @@ from sqlalchemy import (
     String,
     Float,
     PrimaryKeyConstraint,
+    select,
+    and_,
 )
 from sqlalchemy.orm import Session
 from models.Worker import Worker
-from models.DB import lock_and_release
+from models.DB import lock_and_release, connect_and_close
 
 
 class PaymentAgent(Worker):
@@ -64,3 +66,37 @@ class PaymentAgent(Worker):
                 PaymentAgent.pre_balance: PaymentAgent.pre_balance - amount,
             }
         )
+
+    @classmethod
+    @connect_and_close
+    def get_workers(
+        cls,
+        worker_id: int = None,
+        method: str = None,
+        s: Session = None,
+    ):
+        if worker_id and method:
+            res = s.execute(
+                select(cls).where(
+                    and_(
+                        cls.id == worker_id,
+                        cls.method == method,
+                    )
+                )
+            )
+            try:
+                return res.fetchone().t[0]
+            except:
+                pass
+
+        elif method:
+            res = s.execute(select(cls).where(cls.method == method))
+            try:
+                return list(map(lambda x: x[0], res.tuples().all()))
+            except:
+                pass
+        elif worker_id:
+            return super().get_workers(worker_id=worker_id)
+        else:
+            return super().get_workers()
+

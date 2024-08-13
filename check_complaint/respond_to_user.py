@@ -157,7 +157,7 @@ respond_to_user_complaint_handler = MessageHandler(
     filters=filters.REPLY
     & Complaint()
     & ResponseToUserComplaint()
-    & (filters.CAPTION | filters.PHOTO | filters.TEXT),
+    & (filters.CAPTION | filters.PHOTO | (filters.TEXT & ~filters.COMMAND)),
     callback=respond_to_user_complaint,
 )
 

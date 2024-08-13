@@ -108,7 +108,7 @@ async def send_order_to_process(
         text=order_text,
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
-                text="قبول الطلب✅",
+                text="قبول الطلب ✅",
                 callback_data=f"verify_deposit_order_{d_order.serial}",
             )
         ),

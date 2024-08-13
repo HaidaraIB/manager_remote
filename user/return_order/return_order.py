@@ -93,7 +93,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         reply_markup = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
-                text="قبول الطلب✅",
+                text="قبول الطلب ✅",
                 callback_data=f"verify_{order_type}_order_{order.serial}",
             )
         )

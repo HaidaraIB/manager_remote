@@ -31,6 +31,11 @@ import logging
 from datetime import datetime
 from dateutil import tz
 
+op_dict_en_to_ar = {
+    "withdraw": "سحب",
+    "deposit": "إيداع",
+    "busdt": "شراء USDT",
+}
 
 async def send_to_photos_archive(
     context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type

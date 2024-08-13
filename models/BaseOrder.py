@@ -59,12 +59,14 @@ class BaseOrder(Base):
     async def unset_working_on_it(
         cls,
         serial: int,
+        state: str,
         s: Session = None,
     ):
         s.query(cls).filter_by(serial=serial).update(
             {
                 cls.working_on_it: 0,
                 cls.worker_id: 0,
+                cls.state: state,
             }
         )
 

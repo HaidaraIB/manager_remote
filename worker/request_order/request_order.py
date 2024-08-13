@@ -107,7 +107,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="اختر الوظفية",
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
-            CHECK_POSITION_REQUEST_ORDER
+            return CHECK_POSITION_REQUEST_ORDER
 
         else:
             w_order = models.WithdrawOrder.get_payment_order(method=role)

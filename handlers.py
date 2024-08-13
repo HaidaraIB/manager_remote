@@ -46,6 +46,7 @@ from user.create_account import *
 from user.work_with_us import *
 from user.show_trusted_agents import *
 from user.complaint import *
+from user.respond_to_contact_msg import *
 
 from admin.admin_calls import *
 from admin.admin_settings import *
@@ -262,6 +263,9 @@ def main():
     app.add_handler(request_photos_handler)
     app.add_handler(return_order_to_worker_handler)
     app.add_handler(unset_working_on_it_handler)
+
+    app.add_handler(contact_user_handler)
+    app.add_handler(respond_to_contact_msg_handler)
 
     app.add_handler(check_joined_handler)
 

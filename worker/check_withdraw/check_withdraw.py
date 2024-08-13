@@ -115,7 +115,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
             text=order_text,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="قبول الطلب✅",
+                    text="قبول الطلب ✅",
                     callback_data=f"verify_withdraw_order_{serial}",
                 )
             ),

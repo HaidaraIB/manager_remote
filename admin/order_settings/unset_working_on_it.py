@@ -14,13 +14,16 @@ async def unset_working_on_it(update: Update, context: ContextTypes.DEFAULT_TYPE
         serial = int(data[-1])
         order_type = data[-3]
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
-        await parent_to_child_models_mapper[order_type].unset_working_on_it(
-            serial=serial
-        )
         if order.state == "checking" and order_type in ["withdraw", "busdt"]:
             msg_id = order.checking_message_id
+            state = "pending"
         elif order.state == "processing":
             msg_id = order.processing_message_id
+            state = "sent"
+        await parent_to_child_models_mapper[order_type].unset_working_on_it(
+            serial=serial,
+            state=state,
+        )
         try:
             await PyroClientSingleton().delete_messages(
                 chat_id=order.checker_id,
