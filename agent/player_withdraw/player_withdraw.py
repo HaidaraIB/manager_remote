@@ -77,7 +77,10 @@ async def choose_payment_method_player_withdraw(
             data = update.callback_query.data
             method = PaymentMethod.get_payment_method(name=data)
             if not method.on_off:
-                await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
+                await update.callback_query.answer(
+                    "هذه الوسيلة متوقفة مؤقتاً❗️",
+                    show_alert=True,
+                )
                 return
 
             context.user_data["payment_method"] = data

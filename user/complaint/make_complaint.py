@@ -80,7 +80,10 @@ async def complaint_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serials=[op.serial for op in operations if not op.complaint_took_care_of]
         )
         if not operations or len(keyboard) == 2:
-            await update.callback_query.answer(f"لم تقم بأي عملية {ar_texts[0]} بعد ❗️")
+            await update.callback_query.answer(
+                f"لم تقم بأي عملية {ar_texts[0]} بعد ❗️",
+                show_alert=True,
+            )
             return
 
         await update.callback_query.edit_message_text(

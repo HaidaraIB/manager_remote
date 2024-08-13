@@ -23,7 +23,10 @@ def check_if_user_agent_decorator(func):
     ):
         agent = TrustedAgent.get_workers(user_id=update.effective_user.id)
         if not agent:
-            await update.callback_query.answer("قم بتسجيل الدخول أولاً", show_alert=True)
+            await update.callback_query.answer(
+                "قم بتسجيل الدخول أولاً",
+                show_alert=True,
+            )
             return
         return await func(update, context, *args, **kwargs)
 
@@ -66,7 +69,10 @@ def check_user_call_on_or_off_decorator(func):
             ] and update.effective_user.id not in [
                 6190159711,
             ]:
-                await update.callback_query.answer("هذه الخدمة متوقفة حالياً ❗️")
+                await update.callback_query.answer(
+                    "هذه الخدمة متوقفة حالياً ❗️",
+                    show_alert=True,
+                )
                 return ConversationHandler.END
         except KeyError:
             pass

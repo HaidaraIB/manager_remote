@@ -28,7 +28,8 @@ async def handle_edit_amount_user_complaint(
         order_type = data[-2]
 
         await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بقيمة المبلغ الجديدة.", show_alert=True
+            text="قم بالرد على هذه الرسالة بقيمة المبلغ الجديدة.",
+            show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
@@ -56,7 +57,7 @@ async def edit_order_amount_user_complaint(
         complaint = models.Complaint.get_complaint(
             order_serial=serial, order_type=order_type
         )
-        
+
         new_amount = float(update.message.text)
         old_amount = op.amount
 
@@ -81,8 +82,8 @@ async def edit_order_amount_user_complaint(
 
         conv_text = (
             EXT_COMPLAINT_LINE.format(serial)
-            +"تم تعديل المبلغ بنجاح ✅\n"
-            +f"المبلغ: <b>{new_amount}</b>\n\n"
+            + "تم تعديل المبلغ بنجاح ✅\n"
+            + f"المبلغ: <b>{new_amount}</b>\n\n"
         )
         conv_text += make_conv_text(complaint_id=complaint.id)
         await update.message.delete()

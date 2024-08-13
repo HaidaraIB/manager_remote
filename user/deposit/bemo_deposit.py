@@ -20,6 +20,13 @@ import asyncio
 DEPOSIT_AMOUNT, SCREENSHOT = range(3, 5)
 
 
+def find_available_checker(method:str, amount:float):
+    checkers = Checker.get_workers(check_what="deposit", method=method)
+    for c in checkers:
+        if amount <= c.pre_balance:
+            return True
+    return False
+
 async def bemo_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         back_buttons = [
@@ -30,7 +37,7 @@ async def bemo_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["deposit_method"] = update.callback_query.data
 
         await update.callback_query.edit_message_text(
-            text="أدخل المبلغ",
+            text="أدخل المبلغ بين 50 و500 ألف ليرة",
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return DEPOSIT_AMOUNT
@@ -49,7 +56,26 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
         )
         if update.message:
-            context.user_data["deposit_amount"] = float(update.message.text)
+            amount = float(update.message.text)
+            back_to_deposit_method_buttons = [
+                build_back_button("back_to_deposit_method"),
+                back_to_user_home_page_button[0],
+            ]
+            if 50000 > amount > 500000:
+                await update.message.reply_text(
+                    text="أدخل المبلغ بين 50 و500 ألف ليرة",
+                    reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
+                )
+                return
+            checker_available = find_available_checker(method, amount)
+            if not checker_available:
+                await update.message.reply_text(
+                    text="هذه الخدمة متوقفة حالياً ❗️",
+                    reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
+                )
+                context.bot_data["bemo_deposit_off"] = True
+                return
+            context.user_data["deposit_amount"] = amount
             await update.message.reply_text(
                 text=text,
                 reply_markup=InlineKeyboardMarkup(back_buttons),

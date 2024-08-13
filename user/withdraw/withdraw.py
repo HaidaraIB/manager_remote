@@ -98,8 +98,11 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
         if not update.callback_query.data.startswith("back"):
             data = update.callback_query.data
             method = PaymentMethod.get_payment_method(name=data)
-            if not method.on_off:
-                await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
+            if not method.on_off or context.bot_data.get("bemo_deposit_off", False):
+                await update.callback_query.answer(
+                    "هذه الوسيلة متوقفة مؤقتاً❗️",
+                    show_alert=True,
+                )
                 return
 
             context.user_data["payment_method"] = data

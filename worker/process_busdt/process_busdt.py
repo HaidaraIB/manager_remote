@@ -154,7 +154,7 @@ async def return_busdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
         serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بسبب الإعادة", show_alert=True
+            text="قم بالرد على هذه الرسالة بسبب الإعادة", show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(

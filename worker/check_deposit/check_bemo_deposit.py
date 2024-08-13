@@ -72,9 +72,38 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ].callback_data.split("_")[-1]
         )
         d_order = models.DepositOrder.get_one_order(serial=serial)
+        checker = models.Checker.get_workers(
+            worker_id=update.effective_user.id,
+            method=d_order.method,
+            check_what="deposit",
+        )
         new_amount = float(update.message.text)
+        if (
+            d_order.amount < new_amount
+            and (new_amount - d_order.amount) > checker.pre_balance
+        ):
+            await update.message.delete()
+            await update.message.reply_to_message.edit_caption(
+                caption=stringify_deposit_order(
+                    amount=new_amount,
+                    serial=serial,
+                    method=d_order.method,
+                    account_number=d_order.acc_number,
+                    wal=d_order.deposit_wallet,
+                )
+                + "\n\ليس لديك رصيد كافي ✅",
+                reply_markup=build_check_deposit_keyboard(serial),
+            )
+            return
+
         await models.DepositOrder.edit_order_amount(
             new_amount=new_amount, serial=serial
+        )
+        await models.Checker.update_pre_balance(
+            check_what="deposit",
+            method=d_order.method,
+            worker_id=update.effective_user.id,
+            amount=d_order.amount - new_amount,
         )
 
         await update.message.delete()
@@ -237,9 +266,16 @@ async def decline_deposit_order_reason(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
+        await models.Checker.update_pre_balance(
+            check_what="deposit",
+            method=d_order.method,
+            worker_id=update.effective_user.id,
+            amount=-d_order.amount,
+        )
         await models.DepositOrder.decline_order(
             reason=update.message.text,
             serial=serial,
+            amount=d_order.amount,
         )
 
 

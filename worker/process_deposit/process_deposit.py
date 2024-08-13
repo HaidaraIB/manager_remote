@@ -158,7 +158,8 @@ async def return_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYP
         serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بسبب الإعادة", show_alert=True
+            text="قم بالرد على هذه الرسالة بسبب الإعادة",
+            show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(

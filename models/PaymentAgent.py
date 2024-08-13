@@ -39,7 +39,7 @@ class PaymentAgent(Worker):
 
     @staticmethod
     @lock_and_release
-    async def add_pre_balance(
+    async def update_pre_balance(
         amount: float,
         worker_id: int,
         method: str,

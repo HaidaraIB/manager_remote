@@ -145,7 +145,10 @@ async def busdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             method = PaymentMethod.get_payment_method(name=data)
 
             if not method.on_off:
-                await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً ❗️")
+                await update.callback_query.answer(
+                    "هذه الوسيلة متوقفة مؤقتاً ❗️",
+                    show_alert=True,
+                )
                 return
             method = data
             context.user_data["payment_method_busdt"] = method

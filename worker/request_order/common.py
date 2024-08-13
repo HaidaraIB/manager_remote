@@ -76,6 +76,7 @@ async def send_requested_order(
     worker_id: int,
     order_type: str,
     role: str,
+    amount: float = None,
 ):
     message = await get_order_message(group_id, message_id, worker_id)
     if role.startswith("check"):
@@ -93,4 +94,5 @@ async def send_requested_order(
         checker_id=worker_id if role.startswith("check") else 0,
         worker_id=worker_id,
         state="checking" if role.startswith("check") else "processing",
+        amount=amount if role.startswith("check") else None,
     )

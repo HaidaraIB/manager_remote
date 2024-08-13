@@ -178,10 +178,7 @@ async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_
             await PaymentAgent.remove_worker(worker_id=worker_to_remove_id, method=pos)
             workers = PaymentAgent.get_workers(method=pos)
 
-        await update.callback_query.answer(
-            text="تمت إزالة الموظف بنجاح✅",
-            show_alert=True,
-        )
+        await update.callback_query.answer(text="تمت إزالة الموظف بنجاح✅")
 
         if not workers:
             await update.callback_query.edit_message_text(

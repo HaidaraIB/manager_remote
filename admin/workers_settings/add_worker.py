@@ -41,7 +41,6 @@ from common.common import build_back_button
 
 async def add_worker_cp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        await update.callback_query.answer()
         text = "اختر حساب الموظف الذي تريد إضافته بالضغط على الزر أدناه، يمكنك إلغاء العملية بالضغط على /admin."
 
         await update.callback_query.delete_message()

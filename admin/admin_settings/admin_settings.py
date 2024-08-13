@@ -60,7 +60,6 @@ async def admin_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def add_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        await update.callback_query.answer()
         await update.callback_query.delete_message()
         await context.bot.send_message(
             chat_id=update.effective_user.id,
@@ -106,7 +105,6 @@ async def new_admin_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def remove_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        await update.callback_query.answer()
         admins = models.Admin.get_admin_ids()
         admin_ids_keyboard = [
             [InlineKeyboardButton(text=str(admin.id), callback_data=str(admin.id))]

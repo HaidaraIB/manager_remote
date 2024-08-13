@@ -38,12 +38,15 @@ async def edit_order_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["edit_order_amount_type"] = order_type
         context.user_data["edit_order_msg_id"] = update.effective_message.id
         back_buttons = [
-            build_back_button(f"back_from_edit_order_amount__{order_type}_order_{serial}"),
+            build_back_button(
+                f"back_from_edit_order_amount__{order_type}_order_{serial}"
+            ),
             back_to_admin_home_page_button[0],
         ]
 
         await update.callback_query.answer(
-            text="أرسل قيمة المبلغ الجديدة", show_alert=True
+            text="أرسل قيمة المبلغ الجديدة",
+            show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(back_buttons)

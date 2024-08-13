@@ -50,7 +50,10 @@ async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = update.callback_query.data
         method = PaymentMethod.get_payment_method(name=data)
         if method.on_off == 0:
-            await update.callback_query.answer("هذه الوسيلة متوقفة مؤقتاً❗️")
+            await update.callback_query.answer(
+                "هذه الوسيلة متوقفة مؤقتاً❗️",
+                show_alert=True,
+            )
             return
         context.user_data["deposit_method"] = data
         back_buttons = [

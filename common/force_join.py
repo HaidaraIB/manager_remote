@@ -64,7 +64,8 @@ async def check_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     if chat_memeber.status == ChatMemberStatus.LEFT:
         await update.callback_query.answer(
-            text="قم بالاشتراك بالقناة أولاً", show_alert=True
+            text="قم بالاشتراك في الغروب أولاً",
+            show_alert=True,
         )
         return
 

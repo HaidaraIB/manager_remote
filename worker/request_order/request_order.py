@@ -71,7 +71,10 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         if len(keyboard) == 1:
-            await update.callback_query.answer("ما من مهام موكلة إليك الآن")
+            await update.callback_query.answer(
+                "ما من مهام موكلة إليك الآن",
+                show_alert=True,
+            )
             return ConversationHandler.END
 
         await update.callback_query.edit_message_text(
@@ -89,7 +92,10 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if role == "deposit after check":
             dac_order = models.DepositOrder.get_deposit_after_check_order()
             if not dac_order:
-                await update.callback_query.answer("ليس هناك طلبات تنفيذ إيداع حالياً.")
+                await update.callback_query.answer(
+                    "ليس هناك طلبات تنفيذ إيداع حالياً.",
+                    show_alert=True,
+                )
                 return
             serial = dac_order.serial
             order_type = "deposit"
@@ -115,7 +121,8 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 bu_order = models.BuyUsdtdOrder.get_payment_order(method=role)
                 if not bu_order:
                     await update.callback_query.answer(
-                        f"ليس هناك طلبات دفع {role} حالياً."
+                        f"ليس هناك طلبات دفع {role} حالياً.",
+                        show_alert=True,
                     )
                     return
                 serial = bu_order.serial
@@ -154,12 +161,25 @@ async def choose_check_position_request_order(
         check_what = role.split("_")[1]
         method = role.split("_")[2]
 
+        checker = models.Checker.get_workers(
+            worker_id=update.effective_user.id,
+            check_what=role.split("_")[1],
+            method=method,
+        )
+
         c_order = parent_to_child_models_mapper[check_what].get_check_order(
             method=method
         )
         if not c_order:
             await update.callback_query.answer(
-                f"ليس هناك طلبات تحقق {orders_dict[check_what]} {method} حالياً."
+                f"ليس هناك طلبات تحقق {orders_dict[check_what]} {method} حالياً.",
+                show_alert=True,
+            )
+            return
+        elif c_order.amount > checker.pre_balance:
+            await update.callback_query.answer(
+                f"ليس لديك رصيد كافِ",
+                show_alert=True,
             )
             return
 

@@ -55,7 +55,7 @@ async def position_for_worker_balance(
             pos = context.user_data["balance_pos"]
         workers = PaymentAgent.get_workers(method=pos)
         if not workers:
-            await update.callback_query.answer(f"لا يوجد موظفين سحب {pos} بعد!")
+            await update.callback_query.answer(f"لا يوجد موظفين سحب {pos} بعد ❗️")
             return
         await update.callback_query.edit_message_text(
             text="اختر الموظف",
@@ -125,7 +125,7 @@ back_to_choose_worker_balance = worker_for_worker_balance
 
 async def get_pre_balance_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        await PaymentAgent.add_pre_balance(
+        await PaymentAgent.update_pre_balance(
             amount=float(update.message.text),
             worker_id=context.user_data["worker_balance_id"],
             method=context.user_data["balance_pos"],
