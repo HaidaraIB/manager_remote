@@ -65,7 +65,7 @@ async def send_withdraw_order_to_check(
         pending_check_message_id=message.id,
     )
 
-    workers = Checker.get_workers(check_what="withdraw")
+    workers = Checker.get_workers(check_what="withdraw", method=method)
     asyncio.create_task(
         notify_workers(
             context=context,
