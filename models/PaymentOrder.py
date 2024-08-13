@@ -10,8 +10,6 @@ class PaymentOrder(Order):
     __abstract__ = True
     bank_account_name = Column(String)
     payment_method_number = Column(String)
-    pending_check_message_id = Column(Integer)
-    checking_message_id = Column(Integer, default=0)
 
     @classmethod
     @connect_and_close

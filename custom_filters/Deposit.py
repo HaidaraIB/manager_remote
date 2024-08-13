@@ -7,9 +7,14 @@ class Deposit(UpdateFilter):
         try:
             return (
                 update.message.reply_to_message.text.startswith("إيداع جديد:")
-                and update.message.reply_to_message.reply_markup.inline_keyboard[0][0]
-                .callback_data.split("_")[-1]
-                .isnumeric()
-            )
+                if update.message.reply_to_message.text
+                else update.message.reply_to_message.caption.startswith("إيداع جديد:")
+            ) and update.message.reply_to_message.reply_markup.inline_keyboard[0][
+                0
+            ].callback_data.split(
+                "_"
+            )[
+                -1
+            ].isnumeric()
         except:
             return False

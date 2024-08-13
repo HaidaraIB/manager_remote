@@ -3,6 +3,7 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputMediaPhoto,
 )
 from telegram.ext import (
     ContextTypes,
@@ -75,23 +76,29 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
 
         caption = (
             f"مبروك🎉، تم الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n"
-            f"{f'بالإضافة إلى <b>{format_amount(gifts_amount)}$</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000</b>' if gifts_amount else ''}\n\n"
+            f"{f'بالإضافة إلى <b>{format_amount(gifts_amount)}</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000</b>' if gifts_amount else ''}\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
             f"Congrats🎉, the deposit you made <b>{format_amount(d_order.amount)}</b> has been approved.\n"
-            f"{f'plus <b>{format_amount(gifts_amount)}$</b> gift for reaching <b>1,000,000</b> deposits.' if gifts_amount else ''}\n\n"
+            f"{f'plus <b>{format_amount(gifts_amount)}</b> gift for reaching <b>1,000,000</b> deposits.' if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
-        await context.bot.send_photo(
+        media = [
+            InputMediaPhoto(update.message.reply_to_message.photo[-1]),
+            InputMediaPhoto(update.message.photo[-1]),
+        ]
+        await context.bot.send_media_group(
             chat_id=d_order.user_id,
-            photo=update.message.photo[-1],
+            media=media,
             caption=caption,
         )
+        if update.message.reply_to_message.text_html:
+            caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
+        else:
+            caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
 
-        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
-
-        await context.bot.send_photo(
+        await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            photo=update.message.photo[-1],
+            media=media,
             caption=caption,
         )
 
@@ -119,9 +126,9 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
-            await context.bot.send_photo(
+            await context.bot.send_media_group(
                 chat_id=context.bot_data["data"]["latency_group"],
-                photo=update.message.photo[-1],
+                media=media,
                 caption=f"طلب متأخر بمقدار\n"
                 + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
@@ -174,34 +181,50 @@ async def return_deposit_order_reason(
 
         d_order = DepositOrder.get_one_order(serial=serial)
 
-        text = (
-            f"تم إعادة طلب إيداع مبلغ: <b>{d_order.amount}$</b>❗️\n\n"
+        user_text = (
+            f"تم إعادة طلب إيداع مبلغ: <b>{d_order.amount}</b>❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
-        await context.bot.send_message(
-            chat_id=d_order.user_id,
-            text=text,
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="إرفاق المطلوب",
-                    callback_data=f"handle_return_deposit_{update.effective_chat.id}_{serial}",
-                )
-            ),
-        )
-
-        text = (
+        ar_text = (
             "تمت إعادة الطلب📥\n"
-            + update.message.reply_to_message.text_html
+            + (
+                update.message.reply_to_message.text_html
+                if update.message.reply_to_message.text_html
+                else update.message.reply_to_message.caption
+            )
             + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
 
-        await context.bot.send_message(
-            chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            text=text,
+        return_button = InlineKeyboardButton(
+            text="إرفاق المطلوب",
+            callback_data=f"handle_return_deposit_{update.effective_chat.id}_{serial}",
         )
+
+        if update.message.reply_to_message.photo:
+            await context.bot.send_photo(
+                chat_id=d_order.user_id,
+                photo=update.message.reply_to_message.photo[-1],
+                caption=user_text,
+                reply_markup=InlineKeyboardMarkup.from_button(return_button),
+            )
+            await context.bot.send_photo(
+                chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
+                photo=update.message.reply_to_message.photo[-1],
+                caption=ar_text,
+            )
+        else:
+            await context.bot.send_message(
+                chat_id=d_order.user_id,
+                text=user_text,
+                reply_markup=InlineKeyboardMarkup.from_button(return_button),
+            )
+            await context.bot.send_message(
+                chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
+                text=ar_text,
+            )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
@@ -226,18 +249,26 @@ async def return_deposit_order_reason(
         latency = datetime.datetime.now() - prev_date
         minutes, _ = divmod(latency.total_seconds(), 60)
         if minutes > 10:
-            await context.bot.send_message(
-                chat_id=context.bot_data["data"]["latency_group"],
-                text=f"طلب متأخر بمقدار\n"
-                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
-                f"الموظف المسؤول {update.effective_user.name}\n\n" + text,
-            )
+            if update.message.reply_to_message.text_html:
+                await context.bot.send_message(
+                    chat_id=context.bot_data["data"]["latency_group"],
+                    text=f"طلب متأخر بمقدار\n"
+                    + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
+                    f"الموظف المسؤول {update.effective_user.name}\n\n" + ar_text,
+                )
+            else:
+                await context.bot.send_photo(
+                    chat_id=context.bot_data["data"]["latency_group"],
+                    photo=update.message.reply_to_message.photo[-1],
+                    caption=f"طلب متأخر بمقدار\n"
+                    + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
+                    f"الموظف المسؤول {update.effective_user.name}\n\n" + ar_text,
+                )
 
         await DepositOrder.return_order(
             reason=update.message.text,
             serial=serial,
         )
-
 
 
 async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):

@@ -25,7 +25,7 @@ from common.back_to_home_page import (
     back_to_agent_home_page_handler,
 )
 from agent.player_deposit.player_deposit import player_deposit
-from user.withdraw.common import send_withdraw_order_to_check
+from user.withdraw.common import send_withdraw_order_to_check, request_bank_account_name
 from start import agent_command, start_command
 from models import PaymentMethod
 from common.constants import *
@@ -114,20 +114,12 @@ async def get_withdraw_code_bank_account_name_player_withdraw(
             build_back_button("back_to_get_payment_info_player_withdraw"),
             back_to_agent_home_page_button[0],
         ]
+        if update.message:
+            context.user_data["payment_method_number"] = update.message.text
         if context.user_data["payment_method"] in (BARAKAH, BEMO):
-            if update.message:
-                await update.message.reply_text(
-                    text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-                    reply_markup=InlineKeyboardMarkup(back_keyboard),
-                )
-            else:
-                await update.callback_query.edit_message_text(
-                    text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-                    reply_markup=InlineKeyboardMarkup(back_keyboard),
-                )
+            await request_bank_account_name(update, context)
             return BANK_ACCOUNT_NAME
 
-        context.user_data["payment_method_number"] = update.message.text
         context.user_data["bank_account_name"] = ""
 
         await update.message.reply_video(

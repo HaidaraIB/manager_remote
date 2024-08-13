@@ -6,11 +6,7 @@ from telegram import (
     User,
 )
 
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    ConversationHandler
-)
+from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler
 from common.common import build_back_button, format_amount
 from common.back_to_home_page import back_to_admin_home_page_button
 
@@ -22,8 +18,9 @@ from models import DepositAgent, PaymentAgent, Checker
 
 (
     CHOOSE_POSITION,
+    CHECK_POSITION_SHOW_REMOVE,
     CHOOSE_WORKER,
-) = range(2)
+) = range(3)
 
 op_dict_en_to_ar = {
     "withdraw": "سحب",
@@ -86,6 +83,29 @@ worker_settings_handler = CallbackQueryHandler(
 )
 
 
+def build_checker_positions_keyboard(check_what: str, op: str):
+    usdt = []
+    syr = []
+    banks = []
+    payeer = []
+    for m in PAYMENT_METHODS_LIST:
+        if check_what == "busdt" and m == USDT:
+            continue
+        button = InlineKeyboardButton(
+            text=f"تحقق {op_dict_en_to_ar[check_what]} {m}",
+            callback_data=f"{op}_{m}_checker",
+        )
+        if m == USDT:
+            usdt.append(button)
+        elif m in [BARAKAH, BEMO]:
+            banks.append(button)
+        elif m in [SYRCASH, MTNCASH]:
+            syr.append(button)
+        else:
+            payeer.append(button)
+    return [usdt, banks, syr, payeer]
+
+
 def build_positions_keyboard(op: str):
     if op == "balance":
         keyboard = build_payment_positions_keyboard("balance")
@@ -104,6 +124,9 @@ def build_positions_keyboard(op: str):
                 text="تحقق سحب", callback_data=f"{op}_withdraw_checker"
             ),
             InlineKeyboardButton(
+                text="تحقق إيداع", callback_data=f"{op}_deposit_checker"
+            ),
+            InlineKeyboardButton(
                 text="تحقق شراء USDT", callback_data=f"{op}_busdt_checker"
             ),
         ],
@@ -117,85 +140,50 @@ def build_positions_keyboard(op: str):
     ]
     return InlineKeyboardMarkup(add_worker_keyboard)
 
-def build_payment_positions_keyboard(op: str):
-    keyboard = []
-    for i in range(0, len(PAYMENT_METHODS_LIST), 2):
-        row = []
-        row.append(
-            InlineKeyboardButton(
-                text=PAYMENT_METHODS_LIST[i],
-                callback_data=f"{op}_{PAYMENT_METHODS_LIST[i]}_worker",
-            )
-        )
-        if i + 1 < len(PAYMENT_METHODS_LIST):
-            row.append(
-                InlineKeyboardButton(
-                    text=PAYMENT_METHODS_LIST[i + 1],
-                    callback_data=f"{op}_{PAYMENT_METHODS_LIST[i+1]}_worker",
-                )
-            )
-        keyboard.append(row)
 
-    return keyboard
+def build_payment_positions_keyboard(op: str):
+    usdt = []
+    syr = []
+    banks = []
+    payeer = []
+    for m in PAYMENT_METHODS_LIST:
+        button = InlineKeyboardButton(
+            text=f"دفع {m}",
+            callback_data=f"{op}_{m}_worker",
+        )
+        if m == USDT:
+            usdt.append(button)
+        elif m in [BARAKAH, BEMO]:
+            banks.append(button)
+        elif m in [SYRCASH, MTNCASH]:
+            syr.append(button)
+        else:
+            payeer.append(button)
+    return [usdt, syr, banks, payeer]
 
 
 def build_workers_keyboard(
     workers: list[DepositAgent | PaymentAgent | Checker],
     t: str,
 ) -> list[list[InlineKeyboardButton]]:
-    if len(workers) == 1:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=workers[0].name,
-                    callback_data=(f"{t} " + str(workers[0].id)),
-                )
-            ]
-        ]
-    elif len(workers) % 2 == 0:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=workers[i].name,
-                    callback_data=(f"{t} " + str(workers[i].id)),
-                ),
-                InlineKeyboardButton(
-                    text=workers[i + 1].name,
-                    callback_data=(f"{t} " + str(workers[i + 1].id)),
-                ),
-            ]
-            for i in range(0, len(workers), 2)
-        ]
-    else:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=workers[i].name,
-                    callback_data=(f"{t} " + str(workers[i].id)),
-                ),
-                InlineKeyboardButton(
-                    text=workers[i + 1].name,
-                    callback_data=(f"{t} " + str(workers[i + 1].id)),
-                ),
-            ]
-            for i in range(0, len(workers) - 1, 2)
-        ]
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text=workers[-1].name,
-                    callback_data=(f"{t} " + str(workers[-1].id)),
-                )
-            ],
-        )
-    keyboard.append(
-        [
+    keyboard: list[list] = []
+    for i in range(0, len(workers), 2):
+        row = []
+        row.append(
             InlineKeyboardButton(
-                text="الرجوع🔙",
-                callback_data=(f"back_to_{t}"),
+                text=workers[i].name,
+                callback_data=(f"{t} " + str(workers[i].id)),
             )
-        ]
-    )
+        )
+        if i + 1 < len(workers):
+            row.append(
+                InlineKeyboardButton(
+                    text=workers[i + 1].name,
+                    callback_data=(f"{t} " + str(workers[i + 1].id)),
+                )
+            )
+        keyboard.append(row)
+    keyboard.append(build_back_button(f"back_to_{t}"))
     keyboard.append(back_to_admin_home_page_button[0])
     return keyboard
 
@@ -219,11 +207,14 @@ def create_worker_info_text(
         )
 
     elif pos in ["deposit", "withdraw", "busdt"]:
-        text += f"نوع التحقق: {worker.check_what}\n"
+        text += (
+            f"نوع التحقق: {op_dict_en_to_ar[worker.check_what]}\n"
+            f"وسيلة الدفع: {worker.method}\n"
+        )
 
     else:
         text += (
-            f"الوظيفة: {"سحب " + worker.method}\n"
+            f"الوظيفة: {'سحب ' + worker.method}\n"
             f"السحوبات حتى الآن: {format_amount(worker.approved_withdraws)}\n"
             f"عددها: {worker.approved_withdraws_num}\n"
             f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"

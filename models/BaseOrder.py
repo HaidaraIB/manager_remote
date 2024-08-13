@@ -133,25 +133,14 @@ class BaseOrder(Base):
         s: Session = None,
     ):
         update_dict = {}
-        update_dict[cls.processing_message_id] = (
-            processing_message_id
-            if processing_message_id
-            else cls.processing_message_id
-        )
-        update_dict[cls.pending_process_message_id] = (
-            pending_process_message_id
-            if pending_process_message_id
-            else cls.pending_process_message_id
-        )
-        if not hasattr(cls, "ref_number"):
-            update_dict[cls.pending_check_message_id] = (
-                pending_check_message_id
-                if pending_check_message_id
-                else cls.pending_check_message_id
-            )
-            update_dict[cls.checking_message_id] = (
-                checking_message_id if checking_message_id else cls.checking_message_id
-            )
+        if processing_message_id:
+            update_dict[cls.processing_message_id] = processing_message_id
+        if pending_process_message_id:
+            update_dict[cls.pending_process_message_id] = pending_process_message_id
+        if pending_check_message_id:
+            update_dict[cls.pending_check_message_id] = pending_check_message_id
+        if checking_message_id:
+            update_dict[cls.checking_message_id] = checking_message_id
 
         s.query(cls).filter_by(serial=serial).update(update_dict)
 
@@ -285,12 +274,25 @@ class BaseOrder(Base):
 
     @classmethod
     @connect_and_close
-    def get_check_order(cls, s: Session = None):
-        res = s.execute(
-            select(cls)
-            .where(and_(cls.working_on_it == 0, cls.state == "pending"))
-            .limit(1)
-        )
+    def get_check_order(cls, method: str = None, s: Session = None):
+        if method:
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.working_on_it == 0,
+                        cls.state == "pending",
+                        cls.method == method,
+                    )
+                )
+                .limit(1)
+            )
+        else:
+            res = s.execute(
+                select(cls)
+                .where(and_(cls.working_on_it == 0, cls.state == "pending"))
+                .limit(1)
+            )
         try:
             return res.fetchone().t[0]
         except:
@@ -303,7 +305,12 @@ class BaseOrder(Base):
             select(cls)
             .where(
                 and_(
-                    or_(cls.state == "pending", cls.state == "sent"),
+                    or_(
+                        cls.state == "pending",
+                        cls.state == "sent",
+                        cls.state == "checking",
+                        cls.state == "processing",
+                    ),
                     cls.user_id == user_id,
                 )
             )

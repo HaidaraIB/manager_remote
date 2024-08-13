@@ -10,6 +10,31 @@ orders_dict = {
     "busdt": "شراء usdt",
 }
 
+CANCEL_BUTTON = [
+    InlineKeyboardButton(text="إلغاء❌", callback_data="cancel request order")
+]
+
+
+def build_checker_keyboard(checker: list[models.Checker]):
+    usdt = []
+    syr = []
+    banks = []
+    payeer = []
+    for c in checker:
+        button = InlineKeyboardButton(
+            text=f"تحقق {orders_dict[c.check_what]} {c.method}",
+            callback_data=f"request check {c.check_what} {c.method}",
+        )
+        if c.method == USDT:
+            usdt.append(button)
+        elif c.method in [BARAKAH, BEMO]:
+            banks.append(button)
+        elif c.method in [SYRCASH, MTNCASH]:
+            syr.append(button)
+        else:
+            payeer.append(button)
+    return [usdt, syr, banks, payeer]
+
 
 def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):
     usdt = []
@@ -50,22 +75,22 @@ async def send_requested_order(
     group_id: int,
     worker_id: int,
     order_type: str,
-    operation: str,
+    role: str,
 ):
     message = await get_order_message(group_id, message_id, worker_id)
-    if order_type.startswith("check"):
-        await parent_to_child_models_mapper[operation].add_message_ids(
+    if role.startswith("check"):
+        await parent_to_child_models_mapper[order_type].add_message_ids(
             serial=serial,
             checking_message_id=message.id,
         )
     else:
-        await parent_to_child_models_mapper[operation].add_message_ids(
+        await parent_to_child_models_mapper[order_type].add_message_ids(
             serial=serial,
             processing_message_id=message.id,
         )
-    await parent_to_child_models_mapper[operation].set_working_on_it(
+    await parent_to_child_models_mapper[order_type].set_working_on_it(
         serial=serial,
-        checker_id=worker_id if order_type.startswith("check") else 0,
+        checker_id=worker_id if role.startswith("check") else 0,
         worker_id=worker_id,
-        state="checking" if order_type.startswith("check") else "processing",
+        state="checking" if role.startswith("check") else "processing",
     )

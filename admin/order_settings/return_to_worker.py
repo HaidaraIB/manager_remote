@@ -1,10 +1,12 @@
 from telegram import Update, Chat
 from telegram.ext import ContextTypes, CallbackQueryHandler
 
+from common.constants import *
 from common.common import parent_to_child_models_mapper
 from worker.request_order.common import get_order_message
 
 from admin.order_settings.common import refresh_order_settings_message
+
 
 async def return_order_to_worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
@@ -12,19 +14,7 @@ async def return_order_to_worker(update: Update, context: ContextTypes.DEFAULT_T
         serial = int(data[-1])
         order_type = data[-3]
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
-        if order.state == "pending":
-            await update.callback_query.answer(
-                text="هذا الطلب لا يزال قيد انتظار التحقق ❗️",
-                show_alert=True,
-            )
-            return
-        elif order.state == "returned":
-            await update.callback_query.answer(
-                text="لا يمكنك إعادة إرسال طلب معاد إلى الموظف المسؤول ❗️",
-                show_alert=True,
-            )
-            return
-        elif order.state == "approved":
+        if order.state == "approved":
             message = await get_order_message(
                 group_id=order.group_id,
                 message_id=order.pending_process_message_id,
@@ -48,7 +38,13 @@ async def return_order_to_worker(update: Update, context: ContextTypes.DEFAULT_T
                 serial=serial,
                 processing_message_id=message.id,
             )
-        elif order_type != "deposit":
+        else:
+            if order_type == "deposit" and order.method not in CHECK_DEPOSIT_LIST:
+                await update.callback_query.answer(
+                    text="البوت هو من يقوم بمهام تحقق الإيداع ❗️",
+                    show_alert=True,
+                )
+                return
             message = await get_order_message(
                 group_id=order.group_id,
                 message_id=order.pending_check_message_id,
@@ -67,12 +63,6 @@ async def return_order_to_worker(update: Update, context: ContextTypes.DEFAULT_T
                 serial=serial,
                 checking_message_id=message.id,
             )
-        else:
-            await update.callback_query.answer(
-                text="البوت هو من يقوم بمهام تحقق الإيداع ❗️",
-                show_alert=True,
-            )
-            return
 
         await context.bot.send_message(
             chat_id=order.worker_id,

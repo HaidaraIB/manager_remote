@@ -42,27 +42,32 @@ def build_actions_keyboard(order_type: str, serial: int):
     actions_keyboard = [
         [
             InlineKeyboardButton(
-                text="تعديل المبلغ",
-                callback_data=f"edit_{order_type}_order_amount_{serial}",
-            ),
-            InlineKeyboardButton(
                 text="طلب الوثائق",
                 callback_data=f"request_{order_type}_order_photos_{serial}",
             ),
         ],
-        [
-            InlineKeyboardButton(
-                text="إعادة إلى الموظف المسؤول",
-                callback_data=f"admin_return_{order_type}_order_{serial}",
-            ),
-        ],
     ]
+    edit_amount_button = InlineKeyboardButton(
+        text="تعديل المبلغ",
+        callback_data=f"edit_{order_type}_order_amount_{serial}",
+    )
+    if order.state in ["approved", "sent"]:
+        actions_keyboard[0].append(edit_amount_button)
+
+    return_to_worker_button = InlineKeyboardButton(
+        text="إعادة إلى الموظف المسؤول",
+        callback_data=f"admin_return_{order_type}_order_{serial}",
+    )
+    if order.state in ["approved", "declined", "sent"]:
+        actions_keyboard.append([return_to_worker_button])
+
     unset_working_on_it_button = InlineKeyboardButton(
         text="السماح بإعادة الطلب",
         callback_data=f"unset_working_on_it_{order_type}_order_{serial}",
     )
-    if order.working_on_it:
+    if order.working_on_it and order.state in ["checking", "processing"]:
         actions_keyboard.append([unset_working_on_it_button])
+
     # send_order_button = InlineKeyboardButton(
     #     text="إرسال الطلب",
     #     callback_data=f"admin_send_{order_type}_order_{serial}",

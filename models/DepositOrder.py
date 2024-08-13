@@ -31,21 +31,25 @@ class DepositOrder(Order):
     @lock_and_release
     async def add_deposit_order(
         user_id: int,
+        group_id: int,
         method: str,
-        ref_number: str,
         acc_number: str,
         deposit_wallet: str,
-        agent_id: int = None,
+        amount: float,
+        ref_number: str = "",
+        agent_id: int = 0,
         s: Session = None,
     ):
         res = s.execute(
             insert(DepositOrder).values(
                 user_id=user_id,
                 method=method,
+                amount=amount,
                 ref_number=ref_number,
                 acc_number=acc_number,
+                group_id=group_id,
                 deposit_wallet=deposit_wallet,
-                agent_id=agent_id if agent_id else 0,
+                agent_id=agent_id,
             ),
         )
         return res.lastrowid

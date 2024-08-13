@@ -22,10 +22,11 @@ class Worker(BaseUser):
 
         if check_what:
             values.update({"check_what": check_what})
-        elif method:
+        if method:
             values.update({"method": method})
 
-        s.execute(insert(cls).values(values).prefix_with("OR IGNORE"))
+        res = s.execute(insert(cls).values(values).prefix_with("OR IGNORE"))
+        print(res.lastrowid)
 
     @classmethod
     @connect_and_close
@@ -38,14 +39,23 @@ class Worker(BaseUser):
         s: Session = None,
     ):
         if worker_id:
-            if method:
+            if method and not check_what:
                 res = s.execute(
-                    select(cls).where(and_(cls.id == worker_id, cls.method == method))
+                    select(cls).where(
+                        and_(
+                            cls.id == worker_id,
+                            cls.method == method,
+                        )
+                    )
                 )  # get payment agent
             elif check_what:
                 res = s.execute(
                     select(cls).where(
-                        and_(cls.id == worker_id, cls.check_what == check_what)
+                        and_(
+                            cls.id == worker_id,
+                            cls.check_what == check_what,
+                            cls.method == method,
+                        )
                     )
                 )  # get checker
             elif deposit:
@@ -63,13 +73,18 @@ class Worker(BaseUser):
                 except:
                     pass
 
-        elif method:
+        elif method and not check_what:
             res = s.execute(
                 select(cls).where(cls.method == method)
             )  # get all payment agents with same method
         elif check_what:
             res = s.execute(
-                select(cls).where(cls.check_what == check_what)
+                select(cls).where(
+                    and_(
+                        cls.check_what == check_what,
+                        cls.method == method,
+                    )
+                )
             )  # get all checker with same role
         else:
             res = s.execute(select(cls))  # get all agents
@@ -87,10 +102,13 @@ class Worker(BaseUser):
         check_what: str = None,
         s: Session = None,
     ):
-        delete_cond = True
+        method_cond = True
+        check_what_cond = True
         if method:
-            delete_cond = cls.method == method
-        elif check_what:
-            delete_cond = cls.check_what == check_what
+            method_cond = cls.method == method
+        if check_what:
+            check_what_cond = cls.check_what == check_what
 
-        s.execute(delete(cls).where(and_(cls.id == worker_id, delete_cond)))
+        s.execute(
+            delete(cls).where(and_(cls.id == worker_id, method_cond, check_what_cond))
+        )

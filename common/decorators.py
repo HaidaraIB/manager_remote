@@ -36,12 +36,17 @@ def check_user_pending_orders_decorator(func):
         update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
     ):
         try:
-            if parent_to_child_models_mapper[
+            order = parent_to_child_models_mapper[
                 update.callback_query.data
             ].check_user_pending_orders(
                 user_id=update.effective_user.id,
-            ):
-                await update.callback_query.answer("لديك طلب قيد التنفيذ بالفعل ❗️")
+            )
+            if order:
+                await update.callback_query.answer(
+                    text="لديك طلب قيد التنفيذ بالفعل ❗️\n"
+                    f"رقم الطلب: {order.serial}",
+                    show_alert=True,
+                )
                 return ConversationHandler.END
         except KeyError:
             pass

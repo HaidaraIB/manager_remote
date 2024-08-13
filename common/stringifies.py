@@ -165,13 +165,13 @@ def stringify_deposit_order(
     serial: int,
     method: str,
     account_number: int,
-    ref_num: str,
     wal: str,
+    ref_num: str = None,
     *args,
 ):
     return (
         "إيداع جديد:\n"
-        f"رقم العملية: <code>{ref_num}</code>\n"
+        f"رقم العملية: <code>{ref_num if ref_num else "لا يوجد"}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
         f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"

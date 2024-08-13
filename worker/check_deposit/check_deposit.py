@@ -65,11 +65,11 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             "تم رفض الطلب❌\n"
             + stringify_deposit_order(
                 amount=0,
-                account_number=d_order.acc_number,
-                method=d_order.method,
                 serial=d_order.serial,
-                ref_num=d_order.ref_number,
+                method=d_order.method,
+                account_number=d_order.acc_number,
                 wal=d_order.deposit_wallet,
+                ref_num=d_order.ref_number,
             )
             + f"\n\nالسبب:\n<b>{reason}</b>"
         )
@@ -99,8 +99,8 @@ async def send_order_to_process(
         serial=d_order.serial,
         method=d_order.method,
         account_number=d_order.acc_number,
-        ref_num=ref_info.number,
         wal=d_order.deposit_wallet,
+        ref_num=ref_info.number,
     )
 
     message = await context.bot.send_message(
