@@ -35,6 +35,7 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
             )
             updated_worker = model.get_workers(
                 worker_id=worker.id,
+                method=worker.method,
             )
         else:
             await model.weekly_reward_worker(
@@ -43,7 +44,6 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
             )
             updated_worker = model.get_workers(
                 worker_id=worker.id,
-                method=worker.method,
             )
 
         worker_text = (
