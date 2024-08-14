@@ -40,16 +40,13 @@ class DepositAgent(Worker):
     def get_workers(
         cls,
         worker_id: int = None,
-        deposit: str = None,
         s: Session = None,
     ):
-        if worker_id and deposit:
+        if worker_id:
             res = s.execute(select(cls).where(cls.id == worker_id))  # get deposit agent
             try:
                 return res.fetchone().t[0]
             except:
                 pass
-        elif worker_id:
-            return super().get_workers(worker_id=worker_id)
         else:
             return super().get_workers()

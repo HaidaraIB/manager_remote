@@ -33,17 +33,18 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
                 amount=amount,
                 method=worker.method,
             )
+            updated_worker = model.get_workers(
+                worker_id=worker.id,
+            )
         else:
             await model.weekly_reward_worker(
                 worker_id=worker.id,
                 amount=amount,
             )
-
-        updated_worker = model.get_workers(
-            worker_id=worker.id,
-            method=worker.method if worker_type == "daily" else None,
-            deposit=worker_type != "daily",
-        )
+            updated_worker = model.get_workers(
+                worker_id=worker.id,
+                method=worker.method,
+            )
 
         worker_text = (
             "تم تحديث رصيد مكافآتك عن مجموع قيم الطلبات التي تمت الموافقة عليها\n"

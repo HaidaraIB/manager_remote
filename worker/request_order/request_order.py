@@ -34,7 +34,6 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         deposit_agent = models.DepositAgent.get_workers(
             worker_id=update.effective_user.id,
-            deposit=True,
         )
         deposit_agent_button = []
         if deposit_agent:
