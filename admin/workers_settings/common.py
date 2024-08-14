@@ -107,7 +107,8 @@ def build_checker_positions_keyboard(check_what: str, op: str):
 
 def build_positions_keyboard(op: str):
     if op == "balance":
-        keyboard = build_payment_positions_keyboard("balance")
+        keyboard = build_checker_positions_keyboard(check_what="deposit", op="balance")
+        keyboard += build_payment_positions_keyboard("balance")
         keyboard.append(build_back_button("back_to_choose_option"))
         keyboard.append(back_to_admin_home_page_button[0])
         return InlineKeyboardMarkup(keyboard)
@@ -209,6 +210,7 @@ def create_worker_info_text(
         text += (
             f"نوع التحقق: {op_dict_en_to_ar[worker.check_what]}\n"
             f"وسيلة الدفع: {worker.method}\n"
+            f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"
         )
 
     else:
