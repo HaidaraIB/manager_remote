@@ -19,7 +19,7 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
 )
 
-from start import admin_command, start_command
+from start import admin_command
 
 from custom_filters import Admin
 
@@ -31,22 +31,22 @@ async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE)
         keyboard = [
             [
                 InlineKeyboardButton(
-                    text="تعديل نسبة مكافأة الموظفين الأسبوعية🧑🏻‍💻",
+                    text="تعديل نسبة مكافأة الموظفين الأسبوعية 🧑🏻‍💻",
                     callback_data="update workers_reward_percentage",
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    text="تعديل نسبة مكافأة الموظفين اليومية🧑🏻‍💻",
+                    text="تعديل نسبة مكافأة الموظفين اليومية 🧑🏻‍💻",
                     callback_data="update workers_reward_withdraw_percentage",
                 ),
             ],
-            [
-                InlineKeyboardButton(
-                    text="تعديل نسبة مكافأة الإيداع🏆",
-                    callback_data="update deposit_gift_percentage",
-                )
-            ],
+            # [
+            #     InlineKeyboardButton(
+            #         text="تعديل نسبة مكافأة الإيداع 🏆",
+            #         callback_data="update deposit_gift_percentage",
+            #     )
+            # ],
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -56,16 +56,14 @@ async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return ConversationHandler.END
 
 
-
 reward_percentages_dict = {
-    "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية الجديدة",
-    "workers_reward_percentage": "مكافأة الموظفين الأسبوعية الجديدة",
-    "deposit_gift_percentage": "مكافأة الإيداع الجديدة",
-    "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية الجديدة",
-    "workers_reward_percentage": "مكافأة الموظفين الأسبوعية الجديدة",
-    "deposit_gift_percentage": "مكافأة الإيداع الجديدة",
+    "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية",
+    "workers_reward_percentage": "مكافأة الموظفين الأسبوعية",
+    "deposit_gift_percentage": "مكافأة الإيداع",
+    "workers_reward_withdraw_percentage": "مكافأة الموظفين اليومية",
+    "workers_reward_percentage": "مكافأة الموظفين الأسبوعية",
+    "deposit_gift_percentage": "مكافأة الإيداع",
 }
-
 
 
 async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -81,7 +79,10 @@ async def update_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
-            text=f"أرسل نسبة {reward_percentages_dict[target_percentage]}، النسبة الحالية هي: <b>{context.bot_data['data'][target_percentage]}%</b>",
+            text=(
+                f"أرسل نسبة {reward_percentages_dict[target_percentage]} الجديدة\n"
+                f"النسبة الحالية هي: <b>{context.bot_data['data'][target_percentage]}%</b>"
+            ),
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
         return NEW_PERCENTAGE
@@ -92,11 +93,10 @@ back_to_update_percentages = update_percentages
 
 async def new_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        context.bot_data["data"][context.user_data["target_percentage"]] = float(
-            update.message.text
-        )
+        target_percentage = context.user_data["target_percentage"]
+        context.bot_data["data"][target_percentage] = float(update.message.text)
         await update.message.reply_text(
-            text="تم تعديل نسبة مكافأة الموظفين اليومية بنجاح✅",
+            text=f"تم تعديل نسبة {reward_percentages_dict[target_percentage]} بنجاح✅",
             reply_markup=build_admin_keyboard(),
         )
         return ConversationHandler.END
@@ -108,7 +108,12 @@ update_percentages_handler = CallbackQueryHandler(
 
 
 update_percentage_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(update_percentage, "^update.*_percentage$")],
+    entry_points=[
+        CallbackQueryHandler(
+            update_percentage,
+            "^update.*_percentage$",
+        ),
+    ],
     states={
         NEW_PERCENTAGE: [
             MessageHandler(
@@ -117,6 +122,12 @@ update_percentage_handler = ConversationHandler(
             )
         ]
     },
-    fallbacks=[back_to_admin_home_page_handler, admin_command],
+    fallbacks=[
+        CallbackQueryHandler(
+            back_to_update_percentages,
+            "^back_to_update_percentages$",
+        ),
+        back_to_admin_home_page_handler,
+        admin_command,
+    ],
 )
-
