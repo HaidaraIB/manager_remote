@@ -12,7 +12,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from common.common import parent_to_child_models_mapper, send_to_photos_archive
+from common.common import parent_to_child_models_mapper, send_to_photos_archive, send_message_to_user
 from custom_filters import Complaint, ResponseToUserComplaint
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_complaint_main_text, make_conv_text
@@ -82,9 +82,11 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
                 text=final_text,
             )
-            await context.bot.send_message(
-                chat_id=op.user_id,
-                text=final_text,
+            await send_message_to_user(
+                update=update,
+                context=context,
+                user_id=op.user_id,
+                msg=final_text,
             )
 
         await context.bot.edit_message_reply_markup(
@@ -144,9 +146,11 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
                 text=final_text,
             )
-            await context.bot.send_message(
-                chat_id=op.user_id,
-                text=final_text,
+            await send_message_to_user(
+                update=update,
+                context=context,
+                user_id=op.user_id,
+                msg=final_text,
             )
         else:
             photos = media if media else []

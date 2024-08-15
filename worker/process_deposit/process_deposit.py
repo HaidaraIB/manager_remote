@@ -4,6 +4,7 @@ from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMediaPhoto,
+    error,
 )
 from telegram.ext import (
     ContextTypes,
@@ -21,6 +22,9 @@ from common.common import (
     pretty_time_delta,
     format_amount,
     send_to_photos_archive,
+    send_message_to_user,
+    send_photo_to_user,
+    send_media_to_user,
 )
 
 import datetime
@@ -82,17 +86,21 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             f"{f'plus <b>{format_amount(gifts_amount)}</b> gift for reaching <b>1,000,000</b> deposits.' if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
+        
         media = [
             InputMediaPhoto(update.message.photo[-1]),
         ]
         if update.message.reply_to_message.photo:
             media.append(InputMediaPhoto(update.message.reply_to_message.photo[-1]))
 
-        await context.bot.send_media_group(
-            chat_id=d_order.user_id,
+        await send_media_to_user(
+            update=update,
+            context=context,
+            user_id=d_order.user_id,
             media=media,
-            caption=caption,
+            msg=caption,
         )
+
         if update.message.reply_to_message.text_html:
             caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
         else:
@@ -207,10 +215,12 @@ async def return_deposit_order_reason(
         )
 
         if update.message.reply_to_message.photo:
-            await context.bot.send_photo(
-                chat_id=d_order.user_id,
+            await send_photo_to_user(
+                update=update,
+                context=context,
+                user_id=d_order.user_id,
                 photo=update.message.reply_to_message.photo[-1],
-                caption=user_text,
+                msg=user_text,
                 reply_markup=InlineKeyboardMarkup.from_button(return_button),
             )
             await context.bot.send_photo(
@@ -219,10 +229,12 @@ async def return_deposit_order_reason(
                 caption=ar_text,
             )
         else:
-            await context.bot.send_message(
-                chat_id=d_order.user_id,
-                text=user_text,
-                reply_markup=InlineKeyboardMarkup.from_button(return_button),
+            await send_message_to_user(
+                update=update,
+                context=context,
+                user_id=d_order.user_id,
+                msg=user_text,
+                keyboard=InlineKeyboardMarkup.from_button(return_button),
             )
             await context.bot.send_message(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),

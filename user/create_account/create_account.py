@@ -13,10 +13,7 @@ from telegram.ext import (
     filters,
 )
 
-from common.common import (
-    build_user_keyboard,
-    build_back_button,
-)
+from common.common import build_user_keyboard, build_back_button, send_message_to_user
 from common.decorators import (
     check_if_user_present_decorator,
     check_user_call_on_or_off_decorator,
@@ -32,7 +29,10 @@ from custom_filters import Account, Declined
 from start import start_command
 import models
 
-(FULL_NAME, NATIONAL_NUMBER,) = range(2)
+(
+    FULL_NAME,
+    NATIONAL_NUMBER,
+) = range(2)
 
 
 @check_user_pending_orders_decorator
@@ -167,17 +167,12 @@ async def reply_to_create_account_order(
             f"رقم الحساب: <code>{account[1]}</code>\n"
             f"كلمة المرور: <code>{account[2]}</code>"
         )
-        try:
-
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=text,
-            )
-        except Exception as e:
-            await update.message.reply_text(
-                text="لقد قام هذا المستخدم بحظر البوت، قم برفض الطلب وحسب."
-            )
-            return
+        await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=user_id,
+            msg=text,
+        )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
@@ -219,14 +214,13 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ][0].callback_data.split("_")
         user_id = int(data[-2])
         serial = int(data[-1])
-        try:
-            await context.bot.send_message(
-                chat_id=user_id,
-                text="تم رفض طلبك لإنشاء حساب، السبب:\n\n"
-                + update.effective_message.text_html,
-            )
-        except:
-            pass
+        await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=user_id,
+            msg="تم رفض طلبك لإنشاء حساب، السبب:\n\n"
+            + update.effective_message.text_html,
+        )
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
@@ -243,7 +237,6 @@ async def decline_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serial=serial,
             state="declined",
         )
-
 
 
 async def back_from_decline_create_account(

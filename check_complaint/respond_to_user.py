@@ -16,9 +16,10 @@ from telegram.ext import (
 from custom_filters import Complaint, ResponseToUserComplaint
 from check_complaint.check_complaint import make_conv_text, make_complaint_main_text
 from common.common import (
-    build_complaint_keyboard,
     parent_to_child_models_mapper,
+    build_complaint_keyboard,
     send_to_photos_archive,
+    send_message_to_user,
 )
 from common.constants import EXT_COMPLAINT_LINE
 import models
@@ -67,12 +68,13 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
         main_text = make_complaint_main_text(
             order_serial=serial, order_type=order_type, reason=complaint.reason
         )
-
-        try:
-            await context.bot.send_message(
-                chat_id=op.user_id,
-                text=f"تمت الإجابة الشكوى الخاصة بطلبك ذي الرقم التسلسلي <b>{op.serial}</b>\n\nإليك الطلب⬇️⬇️⬇️",
-            )
+        res = await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=op.user_id,
+            msg=f"تمت الإجابة الشكوى الخاصة بطلبك ذي الرقم التسلسلي <b>{op.serial}</b>\n\nإليك الطلب⬇️⬇️⬇️",
+        )
+        if res:
             respond_button = InlineKeyboardButton(
                 text="إرسال رد⬅️",
                 callback_data=f"user_reply_to_complaint_{1 if update.effective_chat.type == Chat.PRIVATE else 0}_{order_type}_{serial}",
@@ -111,18 +113,14 @@ async def respond_to_user_complaint(update: Update, context: ContextTypes.DEFAUL
                     from_user=False,
                 )
 
-            conv_text = (
-                EXT_COMPLAINT_LINE.format(serial)
-                + make_conv_text(complaint_id=complaint.id)
+            conv_text = EXT_COMPLAINT_LINE.format(serial) + make_conv_text(
+                complaint_id=complaint.id
             )
             await context.bot.send_message(
                 chat_id=op.user_id,
                 text=conv_text,
                 reply_markup=InlineKeyboardMarkup.from_button(respond_button),
             )
-
-        except:
-            pass
 
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,

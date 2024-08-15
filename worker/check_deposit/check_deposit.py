@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, error
 from telegram.ext import ContextTypes
 from common.common import apply_ex_rate, notify_workers
 from common.stringifies import stringify_deposit_order
@@ -52,15 +52,20 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         )
     else:
         reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
-        await context.bot.send_message(
-            chat_id=context.job.user_id,
-            text=(
-                f"{reason}\n\n"
-                f"الرقم التسلسلي للطلب: {serial}\n"
-                f"نوع الطلب: إيداع\n\n"
-                "عليك التحقق وإعادة الطلب مرة أخرى، سيتم التحقق بشكل دوري."
-            ),
-        )
+        try:
+            await context.bot.send_message(
+                chat_id=context.job.user_id,
+                text=(
+                    f"{reason}\n\n"
+                    f"الرقم التسلسلي للطلب: {serial}\n"
+                    f"نوع الطلب: إيداع\n\n"
+                    "عليك التحقق وإعادة الطلب مرة أخرى، سيتم التحقق بشكل دوري."
+                ),
+            )
+        except error.Forbidden as f:
+            if "bot was blocked by the user" in f.message:
+                pass
+            
         text = (
             "تم رفض الطلب❌\n"
             + stringify_deposit_order(

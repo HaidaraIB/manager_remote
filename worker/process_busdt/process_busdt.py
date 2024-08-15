@@ -4,6 +4,7 @@ from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMediaPhoto,
+    error,
 )
 
 from telegram.ext import (
@@ -23,6 +24,8 @@ from common.common import (
     pretty_time_delta,
     format_amount,
     send_to_photos_archive,
+    send_photo_to_user,
+    send_media_to_user,
 )
 
 
@@ -78,19 +81,18 @@ async def reply_with_payment_proof_busdt(
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
 
-        try:
-            await context.bot.send_photo(
-                chat_id=b_order.user_id,
-                photo=update.message.photo[-1],
-                caption=user_caption,
-            )
-        except:
-            pass
-
         media = [
             InputMediaPhoto(media=update.message.reply_to_message.photo[-1]),
             InputMediaPhoto(media=update.message.photo[-1]),
         ]
+
+        await send_media_to_user(
+            update=update,
+            context=context,
+            user_id=b_order.user_id,
+            media=media,
+            msg=user_caption,
+        )
 
         caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
 
@@ -154,7 +156,8 @@ async def return_busdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
         serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بسبب الإعادة", show_alert=True,
+            text="قم بالرد على هذه الرسالة بسبب الإعادة",
+            show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
@@ -166,9 +169,7 @@ async def return_busdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def return_busdt_order_reason(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
+async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
@@ -191,12 +192,13 @@ async def return_busdt_order_reason(
             f"<b>{update.message.text_html}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
-
-        await context.bot.send_photo(
-            chat_id=b_order.user_id,
+        await send_photo_to_user(
+            update=update,
+            context=context,
+            user_id=b_order.user_id,
             photo=update.message.reply_to_message.photo[-1],
-            caption=text,
-            reply_markup=InlineKeyboardMarkup.from_button(
+            msg=text,
+            keyboard=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرفاق المطلوب",
                     callback_data=f"handle_return_busdt_{update.effective_chat.id}_{serial}",

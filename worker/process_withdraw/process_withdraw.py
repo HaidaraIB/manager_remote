@@ -3,6 +3,7 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    error,
 )
 
 from telegram.ext import (
@@ -21,6 +22,8 @@ from common.common import (
     pretty_time_delta,
     format_amount,
     send_to_photos_archive,
+    send_message_to_user,
+    send_photo_to_user,
 )
 
 
@@ -76,14 +79,13 @@ async def reply_with_payment_proof_withdraw(
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
 
-        try:
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=update.message.photo[-1],
-                caption=caption,
-            )
-        except:
-            pass
+        await send_photo_to_user(
+            update=update,
+            context=context,
+            user_id=user_id,
+            photo=update.message.photo[-1],
+            msg=caption,
+        )
 
         caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
 
@@ -185,10 +187,12 @@ async def return_withdraw_order_reason(
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
-        await context.bot.send_message(
-            chat_id=user_id,
-            text=text,
-            reply_markup=InlineKeyboardMarkup.from_button(
+        await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=user_id,
+            msg=text,
+            keyboard=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرفاق المطلوب",
                     callback_data=f"handle_return_withdraw_{update.effective_chat.id}_{serial}",

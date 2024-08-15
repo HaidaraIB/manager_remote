@@ -3,6 +3,7 @@ from telegram import (
     Chat,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    error,
 )
 from telegram.ext import (
     ContextTypes,
@@ -16,8 +17,8 @@ from custom_filters import Admin
 
 from common.common import (
     parent_to_child_models_mapper,
-    send_to_photos_archive,
     op_dict_en_to_ar,
+    send_message_to_user,
 )
 from admin.order_settings.common import (
     refresh_order_settings_message,
@@ -68,20 +69,20 @@ async def get_contact_user_message(update: Update, context: ContextTypes.DEFAULT
             make_conv_text(serial=serial, order_type=order_type)
             + f"هذه الرسالة من الدعم عن طلب <b>{op_dict_en_to_ar[order_type]}</b> ذي الرقم التسلسلي <code>{serial}</code>"
         )
-        await context.bot.send_message(
-            chat_id=order.user_id,
-            text=msg,
-            reply_markup=InlineKeyboardMarkup.from_button(
+        res = await send_message_to_user(
+            update,
+            context,
+            order.user_id,
+            msg,
+            InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرسال رد",
                     callback_data=f"respond_to_contact_user_{update.effective_user.id}_{order_type}_{serial}",
                 )
             ),
         )
-
-        await update.message.reply_text(
-            text="تم إرسال الرد ✅"
-        )
+        if res:
+            await update.message.reply_text(text="تم إرسال الرد ✅")
         return ConversationHandler.END
 
 

@@ -18,7 +18,7 @@ from common.constants import *
 import os
 import asyncio
 
-from common.common import build_worker_keyboard, apply_ex_rate, notify_workers
+from common.common import build_worker_keyboard, apply_ex_rate, notify_workers, send_message_to_user
 from common.stringifies import stringify_process_withdraw_order
 
 (
@@ -203,13 +203,12 @@ async def decline_withdraw_order_reason(
             f"<b>{update.message.text_html}</b>\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
         )
-        try:
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=text,
-            )
-        except:
-            pass
+        await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=user_id,
+            msg=text,
+        )
 
         text = (
             "تم رفض الطلب❌\n"

@@ -14,7 +14,7 @@ from telegram.ext import (
 
 from user.work_with_us.common import syrian_govs_en_ar
 from custom_filters import AgentOrder, Declined
-from common.common import build_agent_keyboard
+from common.common import build_agent_keyboard, send_message_to_user
 from common.stringifies import stringify_w_with_us_order
 from common.constants import *
 import os
@@ -39,9 +39,11 @@ async def notify_w_with_us_order(update: Update, context: ContextTypes.DEFAULT_T
             return
 
         order = models.WorkWithUsOrder.get_one_order(serial=serial)
-        await context.bot.send_message(
-            chat_id=order.user_id,
-            text=(
+        res = await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=order.user_id,
+            msg=(
                 f"تم استلام الدفعة الخاصة بطلب {role_en_to_ar_dict[role]} المقدم من قبلك وسيتم تنفيذ طلبك خلال 5 أيام عمل\n\n"
                 + "تفاصيل الطلب:\n\n"
                 + stringify_w_with_us_order(
@@ -55,10 +57,11 @@ async def notify_w_with_us_order(update: Update, context: ContextTypes.DEFAULT_T
                 )
             ),
         )
-        await update.callback_query.answer(
-            "تم ✅",
-            show_alert=True,
-        )
+        if res:
+            await update.callback_query.answer(
+                "تم ✅",
+                show_alert=True,
+            )
         context.bot_data[f"notified_{role}_{serial}"] = True
 
 
@@ -116,51 +119,57 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await models.WorkWithUsOrder.approve_order(order_serial=serial)
 
-                await context.bot.send_message(
-                    chat_id=order.user_id,
-                    text=(
+                res = await send_message_to_user(
+                    update=update,
+                    context=context,
+                    user_id=order.user_id,
+                    msg=(
                         f"مبروك، تمت الموافقة على طلبك للعمل معنا كوكيل لمحافظة <b>{syrian_govs_en_ar[order.gov]}</b>\n\n"
                         f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
                     ),
                 )
-                await context.bot.send_document(
-                    chat_id=order.user_id,
-                    document=os.getenv("TEAM_CASH_ID"),
-                    caption="تطبيق شحن وسحب أرصدة اللاعبين:\n\n"
-                    + "معلومات تسجيل الدخول:\n\n"
-                    + team_cash_caption,
-                )
+                if res:
+                    await context.bot.send_document(
+                        chat_id=order.user_id,
+                        document=os.getenv("TEAM_CASH_ID"),
+                        caption="تطبيق شحن وسحب أرصدة اللاعبين:\n\n"
+                        + "معلومات تسجيل الدخول:\n\n"
+                        + team_cash_caption,
+                    )
 
+                    await context.bot.send_document(
+                        chat_id=order.user_id,
+                        document=os.getenv("PROMO_CODE_ID"),
+                        caption="تطبيق استلام الأرباح من خسائر اللاعبين:\n\n"
+                        + "معلومات تسجيل الدخول:\n\n"
+                        + promo_code_caption,
+                    )
+
+                    await context.bot.send_message(
+                        chat_id=order.user_id,
+                        text=AGENT_COMMAND_TEXT,
+                        reply_markup=build_agent_keyboard(),
+                    )
+        else:
+            await models.WorkWithUsOrder.approve_order(order_serial=serial)
+
+            res = await send_message_to_user(
+                update=update,
+                context=context,
+                user_id=order.user_id,
+                msg=(
+                    f"مبروك، تمت الموافقة على طلبك للعمل معنا كشريك في محافظة <b>{syrian_govs_en_ar[order.gov]}</b>\n\n"
+                    f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
+                ),
+            )
+            if res:
                 await context.bot.send_document(
                     chat_id=order.user_id,
                     document=os.getenv("PROMO_CODE_ID"),
                     caption="تطبيق استلام الأرباح من خسائر اللاعبين:\n\n"
                     + "معلومات تسجيل الدخول:\n\n"
-                    + promo_code_caption,
+                    + update.message.text_html,
                 )
-
-                await context.bot.send_message(
-                    chat_id=order.user_id,
-                    text=AGENT_COMMAND_TEXT,
-                    reply_markup=build_agent_keyboard(),
-                )
-        else:
-            await models.WorkWithUsOrder.approve_order(order_serial=serial)
-
-            await context.bot.send_message(
-                chat_id=order.user_id,
-                text=(
-                    f"مبروك، تمت الموافقة على طلبك للعمل معنا كشريك في محافظة <b>{syrian_govs_en_ar[order.gov]}</b>\n\n"
-                    f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
-                ),
-            )
-            await context.bot.send_document(
-                chat_id=order.user_id,
-                document=os.getenv("PROMO_CODE_ID"),
-                caption="تطبيق استلام الأرباح من خسائر اللاعبين:\n\n"
-                + "معلومات تسجيل الدخول:\n\n"
-                + update.message.text_html,
-            )
 
         await update.message.reply_to_message.edit_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(

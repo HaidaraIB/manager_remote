@@ -7,6 +7,9 @@ from telegram import (
     KeyboardButton,
     ReplyKeyboardRemove,
     ReplyKeyboardMarkup,
+    error,
+    PhotoSize,
+    InputMedia
 )
 
 from telegram.ext import ContextTypes
@@ -36,6 +39,7 @@ op_dict_en_to_ar = {
     "deposit": "إيداع",
     "busdt": "شراء USDT",
 }
+
 
 async def send_to_photos_archive(
     context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type
@@ -124,6 +128,76 @@ def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
     else:
         reply_markup = ReplyKeyboardRemove()
     return reply_markup
+
+
+async def send_message_to_user(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user_id: int,
+    msg: str,
+    keyboard: InlineKeyboardMarkup = None,
+):
+    try:
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=msg,
+            reply_markup=keyboard,
+        )
+        return True
+    except error.Forbidden as f:
+        if "bot was blocked by the user" in f.message:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=("خطأ ❌\n" "لقد قام هذا المستخدم بحظر البوت"),
+            )
+        return False
+
+
+async def send_photo_to_user(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user_id: int,
+    msg: str,
+    photo: PhotoSize,
+    keyboard: InlineKeyboardMarkup = None,
+):
+    try:
+        await context.bot.send_photo(
+            chat_id=user_id,
+            photo=photo,
+            caption=msg,
+            reply_markup=keyboard,
+        )
+        return True
+    except error.Forbidden as f:
+        if "bot was blocked by the user" in f.message:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=("خطأ ❌\n" "لقد قام هذا المستخدم بحظر البوت"),
+            )
+        return False
+
+async def send_media_to_user(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user_id: int,
+    msg: str,
+    media: list[InputMedia],
+):
+    try:
+        await context.bot.send_media_group(
+            chat_id=user_id,
+            media=media,
+            caption=msg,
+        )
+        return True
+    except error.Forbidden as f:
+        if "bot was blocked by the user" in f.message:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=("خطأ ❌\n" "لقد قام هذا المستخدم بحظر البوت"),
+            )
+        return False
 
 
 async def notify_workers(

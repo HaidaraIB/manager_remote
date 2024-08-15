@@ -16,8 +16,9 @@ import os
 from models import BuyUsdtdOrder
 from custom_filters import BuyUSDT, Declined, DepositAgent
 
-from common.common import build_worker_keyboard
+from common.common import build_worker_keyboard, send_message_to_user
 from common.stringifies import stringify_process_busdt_order
+
 
 async def check_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
@@ -142,10 +143,12 @@ async def decline_busdt_order_reason(
             f"<b>{update.message.text_html}</b>\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
-        try:
-            await context.bot.send_message(chat_id=b_order.user_id, text=text)
-        except:
-            pass
+        await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=b_order.user_id,
+            msg=text,
+        )
 
         caption = (
             "تم رفض الطلب❌\n"
@@ -181,7 +184,6 @@ async def decline_busdt_order_reason(
             reason=update.message.text,
             serial=serial,
         )
-
 
 
 async def back_from_decline_busdt_order(

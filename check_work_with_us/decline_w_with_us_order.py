@@ -12,6 +12,7 @@ from telegram.ext import (
     filters,
 )
 
+from common.common import send_message_to_user
 from user.work_with_us.common import syrian_govs_en_ar
 from custom_filters import Declined, AgentOrder
 import models
@@ -50,9 +51,11 @@ async def get_decline_agent_order_reason(
         await models.WorkWithUsOrder.decline_work_with_us_order(
             serial=serial, reason=update.message.text
         )
-        await context.bot.send_message(
-            chat_id=order.user_id,
-            text=(
+        await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=order.user_id,
+            msg=(
                 f"عذراً، تم رفض طلبك للعمل معنا كوكيل لمحافظة <b>{syrian_govs_en_ar[order.gov]}</b>\n\n"
                 "السبب:\n"
                 f"{update.message.text_html}\n\n"

@@ -16,6 +16,7 @@ from common.common import (
     apply_ex_rate,
     notify_workers,
     build_worker_keyboard,
+    send_message_to_user,
 )
 from common.stringifies import stringify_deposit_order
 from worker.check_deposit.common import build_check_deposit_keyboard
@@ -231,10 +232,12 @@ async def decline_deposit_order_reason(
             )
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
-        try:
-            await context.bot.send_message(chat_id=d_order.user_id, text=text)
-        except:
-            pass
+        await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=d_order.user_id,
+            msg=text,
+        )
 
         caption = (
             "تم رفض الطلب❌\n"
