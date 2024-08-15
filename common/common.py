@@ -106,7 +106,7 @@ def apply_ex_rate(
     }
     try:
         ex_rate = context.bot_data["data"][
-            f"{method}_to_aed_{buy_or_sell_dict[order_type]}"
+            f"{method}_to_syr_{buy_or_sell_dict[order_type]}"
         ]
         if order_type == "deposit":
             amount = amount * 0.97 * ex_rate

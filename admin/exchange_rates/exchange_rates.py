@@ -30,11 +30,11 @@ async def choose_exchange_rate_to_update(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         crypto_keyboard = [
-            [InlineKeyboardButton(text=i, callback_data=f"{i}/{i}_to_aed")]
+            [InlineKeyboardButton(text=i, callback_data=f"{i}/{i}_to_syr")]
             for i in CRYPTO_LIST
         ]
         exchange_rates_keyboard = [
-            [InlineKeyboardButton(text="شراء USDT", callback_data="busdt/usdt_to_aed")],
+            [InlineKeyboardButton(text="شراء USDT", callback_data="busdt/usdt_to_syr")],
             *crypto_keyboard,
             back_to_admin_home_page_button[0],
         ]
