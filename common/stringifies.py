@@ -9,7 +9,7 @@ state_dict_en_to_ar = {
     "pending": "بانتظار التحقق",
     "sent": "بانتظار التنفيذ",
     "checking": "قيد التحقق",
-    "prcessing": "قيد التنفيذ",
+    "processing": "قيد التنفيذ",
 }
 
 worker_type_dict = {
