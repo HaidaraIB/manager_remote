@@ -279,25 +279,18 @@ class BaseOrder(Base):
 
     @classmethod
     @connect_and_close
-    def get_check_order(cls, method: str = None, s: Session = None):
-        if method:
-            res = s.execute(
-                select(cls)
-                .where(
-                    and_(
-                        cls.working_on_it == 0,
-                        cls.state == "pending",
-                        cls.method == method,
-                    )
+    def get_check_order(cls, method: str, s: Session = None):
+        res = s.execute(
+            select(cls)
+            .where(
+                and_(
+                    cls.working_on_it == 0,
+                    cls.state == "pending",
+                    cls.method == method,
                 )
-                .limit(1)
             )
-        else:
-            res = s.execute(
-                select(cls)
-                .where(and_(cls.working_on_it == 0, cls.state == "pending"))
-                .limit(1)
-            )
+            .limit(1)
+        )
         try:
             return res.fetchone().t[0]
         except:
