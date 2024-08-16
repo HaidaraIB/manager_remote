@@ -150,10 +150,6 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ),
                 reply_markup=reply_markup,
             )
-        await parent_to_child_models_mapper[order_type].add_date(
-            serial=int(data[-1]),
-            date_type="return",
-        )
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             message_id=context.user_data["effective_return_message_id"],

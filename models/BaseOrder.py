@@ -199,33 +199,21 @@ class BaseOrder(Base):
             {
                 cls.state: "returned",
                 cls.reason: reason,
+                cls.return_date: datetime.datetime.now(),
             }
         )
 
     @classmethod
     @lock_and_release
     async def add_date(cls, serial: int, date_type: str, s: Session = None):
+        date_type_dict = {
+            "return": cls.return_date,
+            "send": cls.send_date,
+            "approve": cls.approve_date,
+            "decline": cls.decline_date,
+        }
         s.query(cls).filter_by(serial=serial).update(
-            {
-                cls.send_date: (
-                    datetime.datetime.now() if date_type == "send" else cls.send_date
-                ),
-                cls.return_date: (
-                    datetime.datetime.now()
-                    if date_type == "return"
-                    else cls.return_date
-                ),
-                cls.approve_date: (
-                    datetime.datetime.now()
-                    if date_type == "approve"
-                    else cls.approve_date
-                ),
-                cls.decline_date: (
-                    datetime.datetime.now()
-                    if date_type == "decline"
-                    else cls.decline_date
-                ),
-            }
+            {date_type_dict[date_type]: datetime.datetime.now()}
         )
 
     @classmethod
