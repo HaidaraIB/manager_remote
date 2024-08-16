@@ -137,16 +137,14 @@ class BaseOrder(Base):
         pending_process_message_id: int = 0,
         s: Session = None,
     ):
-        update_dict = {}
-        if processing_message_id:
-            update_dict[cls.processing_message_id] = processing_message_id
-        if pending_process_message_id:
-            update_dict[cls.pending_process_message_id] = pending_process_message_id
-        if pending_check_message_id:
-            update_dict[cls.pending_check_message_id] = pending_check_message_id
-        if checking_message_id:
-            update_dict[cls.checking_message_id] = checking_message_id
-
+        update_dict = {
+            cls.processing_message_id: processing_message_id,
+            cls.pending_process_message_id: pending_process_message_id,
+            cls.pending_check_message_id: pending_check_message_id,
+            cls.checking_message_id: checking_message_id,
+        }
+        # Remove keys with zero values
+        update_dict = {k: v for k, v in update_dict.items() if v}
         s.query(cls).filter_by(serial=serial).update(update_dict)
 
     @classmethod

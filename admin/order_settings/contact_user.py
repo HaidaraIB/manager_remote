@@ -17,7 +17,7 @@ from custom_filters import Admin
 
 from common.common import (
     parent_to_child_models_mapper,
-    op_dict_en_to_ar,
+    order_dict_en_to_ar,
     send_message_to_user,
 )
 from admin.order_settings.common import (
@@ -67,7 +67,7 @@ async def get_contact_user_message(update: Update, context: ContextTypes.DEFAULT
         )
         msg = (
             make_conv_text(serial=serial, order_type=order_type)
-            + f"هذه الرسالة من الدعم عن طلب <b>{op_dict_en_to_ar[order_type]}</b> ذي الرقم التسلسلي <code>{serial}</code>"
+            + f"هذه الرسالة من الدعم عن طلب <b>{order_dict_en_to_ar[order_type]}</b> ذي الرقم التسلسلي <code>{serial}</code>"
         )
         res = await send_message_to_user(
             update,

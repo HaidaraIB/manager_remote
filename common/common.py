@@ -34,7 +34,7 @@ import logging
 from datetime import datetime
 from dateutil import tz
 
-op_dict_en_to_ar = {
+order_dict_en_to_ar = {
     "withdraw": "سحب",
     "deposit": "إيداع",
     "busdt": "شراء USDT",

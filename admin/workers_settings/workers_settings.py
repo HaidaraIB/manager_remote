@@ -30,7 +30,7 @@ from admin.workers_settings.common import (
     back_to_choose_position,
     back_to_choose_option_handler,
 )
-from common.common import build_back_button, op_dict_en_to_ar
+from common.common import build_back_button, order_dict_en_to_ar
 from common.back_to_home_page import back_to_admin_home_page_button
 from common.constants import *
 
@@ -98,7 +98,7 @@ async def choose_check_position_show_remove(
         context.user_data[f"method_to_{option}"] = method
 
         workers = Checker.get_workers(check_what=pos, method=method)
-        ans_text = f"ليس لديك موظفي تحقق {op_dict_en_to_ar[pos]} {method} بعد ❗️"
+        ans_text = f"ليس لديك موظفي تحقق {order_dict_en_to_ar[pos]} {method} بعد ❗️"
 
         if not workers:
             await update.callback_query.answer(

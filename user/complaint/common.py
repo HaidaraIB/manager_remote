@@ -15,69 +15,28 @@ complaints_keyboard = [
 ]
 
 
-def build_operations_keyboard(serials: list[int]):
-    if len(serials) % 3 == 0:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=str(serials[i]), callback_data=f"serial {serials[i]}"
-                ),
-                InlineKeyboardButton(
-                    text=str(serials[i + 1]), callback_data=f"serial {serials[i+1]}"
-                ),
-                InlineKeyboardButton(
-                    text=str(serials[i + 2]), callback_data=f"serial {serials[i+2]}"
-                ),
-            ]
-            for i in range(0, len(serials), 3)
-        ]
-    elif len(serials) % 3 == 1:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=str(serials[i]), callback_data=f"serial {serials[i]}"
-                ),
+def build_orders_keyboard(serials: list[int]):
+    keyboard = []
+    for i in range(0, len(serials), 3):
+        row = []
+        row.append(
+            InlineKeyboardButton(
+                text=str(serials[i]), callback_data=f"serial {serials[i]}"
+            )
+        )
+        if i + 1 < len(serials) - 1:
+            row.append(
                 InlineKeyboardButton(
                     text=str(serials[i + 1]), callback_data=f"serial {serials[i+1]}"
-                ),
-                InlineKeyboardButton(
-                    text=str(serials[i + 2]), callback_data=f"serial {serials[i+2]}"
-                ),
-            ]
-            for i in range(0, len(serials) - 1, 3)
-        ]
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text=str(serials[-1]), callback_data=f"serial {serials[-1]}"
                 )
-            ]
-        )
-    else:
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=str(serials[i]), callback_data=f"serial {serials[i]}"
-                ),
-                InlineKeyboardButton(
-                    text=str(serials[i + 1]), callback_data=f"serial {serials[i+1]}"
-                ),
+            )
+            row.append(
                 InlineKeyboardButton(
                     text=str(serials[i + 2]), callback_data=f"serial {serials[i+2]}"
-                ),
-            ]
-            for i in range(0, len(serials) - 2, 3)
-        ]
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text=str(serials[-2]), callback_data=f"serial {serials[-2]}"
-                ),
-                InlineKeyboardButton(
-                    text=str(serials[-1]), callback_data=f"serial {serials[-1]}"
-                ),
-            ]
-        )
-    keyboard.append(build_back_button(f"back_to_complaint_about"))
+                )
+            )
+        keyboard.append(row)
+
+    keyboard.append(build_back_button("back_to_choose_order_type"))
     keyboard.append(back_to_user_home_page_button[0])
     return keyboard

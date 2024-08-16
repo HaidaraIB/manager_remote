@@ -1,16 +1,7 @@
-from telegram import (
-    Update,
-    Chat,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    ConversationHandler,
-)
-
-
+from telegram import Update, Chat
+from telegram.ext import ContextTypes, ConversationHandler
 from common.common import build_user_keyboard, parent_to_child_models_mapper
-
+from models import DepositOrder, WithdrawOrder, BuyUsdtdOrder, CreateAccountOrder
 from PyroClientSingleton import PyroClientSingleton
 import datetime
 
@@ -20,8 +11,8 @@ async def check_complaint_date(
     serial: int,
     order_type: str,
 ):
-    if not context.user_data.get(f"notified_{order_type}_operations", False):
-        context.user_data[f"notified_{order_type}_operations"] = {
+    if not context.user_data.get(f"notified_{order_type}_orders", False):
+        context.user_data[f"notified_{order_type}_orders"] = {
             serial: {
                 "serial": serial,
                 "date": datetime.datetime.now(),
@@ -29,38 +20,104 @@ async def check_complaint_date(
         }
         return True
 
-    elif not context.user_data[f"notified_{order_type}_operations"].get(serial, False):
-        context.user_data[f"notified_{order_type}_operations"][serial] = {
+    elif not context.user_data[f"notified_{order_type}_orders"].get(serial, False):
+        context.user_data[f"notified_{order_type}_orders"][serial] = {
             "serial": serial,
             "date": datetime.datetime.now(),
         }
         return True
 
-    date: datetime.datetime = context.user_data[f"notified_{order_type}_operations"][
+    date: datetime.datetime = context.user_data[f"notified_{order_type}_orders"][
         serial
     ]["date"]
 
     if (datetime.datetime.now() - date).days < 1:
-
         return False
 
     return True
 
 
-async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def get_chat_id(
+    order: DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder,
+):
+    group_id = (
+        order.group_id
+        if order.state in ["sent", "pending"]
+        else order.worker_id if order.state == "processing" else order.checker_id
+    )
+
+    return group_id
+
+
+def get_message_id(
+    order: DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder,
+):
+    message_id = (
+        order.processing_message_id
+        if order.state == "processing"
+        else (
+            order.pending_process_message_id
+            if order.state == "sent"
+            else (
+                order.checking_message_id
+                if order.state == "checking"
+                else order.pending_check_message_id
+            )
+        )
+    )
+    return message_id
+
+
+async def send_notification(order_type: str, serial: int):
+    order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
+    cpyro = PyroClientSingleton()
+
+    chat_id = get_chat_id(order)
+    message_id = get_message_id(order)
+
+    old_message = await cpyro.get_messages(
+        chat_id=chat_id,
+        message_ids=message_id,
+    )
+    message = await cpyro.copy_message(
+        chat_id=chat_id,
+        from_chat_id=chat_id,
+        message_id=old_message.id,
+        reply_markup=old_message.reply_markup,
+    )
+
+    await cpyro.send_message(
+        chat_id=chat_id,
+        text="وصلتنا شكوى تأخير بشأن الطلب أعلاه⬆️",
+    )
+    await cpyro.delete_messages(
+        chat_id=chat_id,
+        message_ids=old_message.id,
+    )
+
+    message_id_fields = {
+        "sent": "pending_process_message_id",
+        "pending": "pending_check_message_id",
+        "checking": "checking_message_id",
+        "processing": "processing_message_id",
+    }
+
+    message_id_field = message_id_fields[order.state]
+    if message_id_field:
+        await parent_to_child_models_mapper[order_type].add_message_ids(
+            serial=serial, **{message_id_field: message.id}
+        )
+
+
+async def notify_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
 
         serial = int(update.callback_query.data.split("_")[-1])
-
-        op = parent_to_child_models_mapper[
-            context.user_data["complaint_about"]
-        ].get_one_order(
-            serial=serial,
-        )
+        order_type = context.user_data["complaint_order_type"]
         res = await check_complaint_date(
             context=context,
             serial=serial,
-            order_type=context.user_data["complaint_about"],
+            order_type=order_type,
         )
 
         if not res:
@@ -70,67 +127,16 @@ async def notify_operation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        cpyro = PyroClientSingleton()
+        try:
+            await send_notification(order_type=order_type, serial=serial)
+        except:
+            import traceback
 
-        chat_id = (
-            op.group_id
-            if not op.working_on_it
-            else (op.worker_id if op.state == "sent" else op.checker_id)
-        )
-
-        message_id = (
-            op.pending_process_message_id
-            if not op.working_on_it and op.state == "sent"
-            else (
-                op.pending_check_message_id
-                if not op.working_on_it
-                else (
-                    op.processing_message_id
-                    if op.state == "sent"
-                    else op.checking_message_id
-                )
-            )
-        )
-
-        old_message = await cpyro.get_messages(
-            chat_id=chat_id,
-            message_ids=message_id,
-        )
-        message = await cpyro.copy_message(
-            chat_id=chat_id,
-            from_chat_id=chat_id,
-            message_id=old_message.id,
-            reply_markup=old_message.reply_markup,
-        )
-
-        await cpyro.send_message(
-            chat_id=chat_id,
-            text="وصلتنا شكوى تأخير بشأن الطلب أعلاه⬆️",
-        )
-        await cpyro.delete_messages(
-            chat_id=chat_id,
-            message_ids=old_message.id,
-        )
-
-        if op.state == "sent":
-            await parent_to_child_models_mapper[
-                context.user_data["complaint_about"]
-            ].add_message_ids(
-                serial=serial,
-                processing_message_id=message.id if op.working_on_it else 0,
-                pending_process_message_id=message.id if not op.working_on_it else 0,
-            )
-        else:
-            await parent_to_child_models_mapper[
-                context.user_data["complaint_about"]
-            ].add_message_ids(
-                serial=serial,
-                checking_message_id=message.id if op.working_on_it else 0,
-                pending_check_message_id=message.id if not op.working_on_it else 0,
-            )
+            traceback.print_exc()
+            pass
 
         context.user_data[
-            f"notified_{context.user_data['complaint_about']}_operations"
+            f"notified_{context.user_data['complaint_order_type']}_orders"
         ][serial]["date"] = datetime.datetime.now()
 
         await update.callback_query.edit_message_text(

@@ -15,7 +15,7 @@ from telegram.ext import (
 
 import models
 from admin.order_settings.common import make_conv_text
-from common.common import build_back_button, op_dict_en_to_ar
+from common.common import build_back_button, order_dict_en_to_ar
 
 RESPONSE = range(1)
 
@@ -78,7 +78,7 @@ async def get_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         msg = (
             make_conv_text(serial=serial, order_type=order_type)
-            + f"هذه الرسالة من المستخدم عن طلب <b>{op_dict_en_to_ar[order_type]}</b> ذي الرقم التسلسلي <code>{serial}</code>"
+            + f"هذه الرسالة من المستخدم عن طلب <b>{order_dict_en_to_ar[order_type]}</b> ذي الرقم التسلسلي <code>{serial}</code>"
         )
         await context.bot.send_message(
             chat_id=admin_id,

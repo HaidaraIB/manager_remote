@@ -104,7 +104,7 @@ async def send_to_check_deposit(
         },
     )
 
-    await context.bot.send_message(
+    message = await context.bot.send_message(
         chat_id=target_group,
         text=stringify_deposit_order(
             amount=0,
@@ -114,6 +114,11 @@ async def send_to_check_deposit(
             wal=context.bot_data["data"][f"{method}_number"],
             ref_num=ref_num,
         ),
+    )
+
+    await DepositOrder.add_message_ids(
+        serial=serial,
+        pending_check_message_id=message.id,
     )
 
     workers = DepositAgent.get_workers()

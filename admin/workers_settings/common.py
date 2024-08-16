@@ -7,7 +7,7 @@ from telegram import (
 )
 
 from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler
-from common.common import build_back_button, format_amount, op_dict_en_to_ar
+from common.common import build_back_button, format_amount, order_dict_en_to_ar
 from common.back_to_home_page import back_to_admin_home_page_button
 
 from common.constants import *
@@ -208,7 +208,7 @@ def create_worker_info_text(
 
     elif pos in ["deposit", "withdraw", "busdt"]:
         text += (
-            f"نوع التحقق: {op_dict_en_to_ar[worker.check_what]}\n"
+            f"نوع التحقق: {order_dict_en_to_ar[worker.check_what]}\n"
             f"وسيلة الدفع: {worker.method}\n"
             f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"
         )
