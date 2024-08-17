@@ -22,7 +22,7 @@ from common.common import (
 
 from common.back_to_home_page import back_to_user_home_page_handler
 
-from models import WithdrawOrder
+import models
 
 from common.stringifies import (
     stringify_deposit_order,
@@ -43,7 +43,7 @@ async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TY
             serial=int(data[-1])
         )
         if order_type == "withdraw":
-            code_present = WithdrawOrder.check_withdraw_code(
+            code_present = models.WithdrawOrder.check_withdraw_code(
                 withdraw_code=order.withdraw_code
             )
             if code_present and code_present.state == "approved":
@@ -102,53 +102,71 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order_type=order_type,
             context=context,
         )
-        if order_type == "withdraw" or (order_type == "deposit" and order.ref_number):
-            await context.bot.send_message(
-                chat_id=int(data[-2]),
-                text=stringify_returned_order(
-                    update.message.text,
-                    (
-                        stringify_deposit_order
-                        if order_type == "deposit"
-                        else stringify_process_withdraw_order
-                    ),
-                    amount,
-                    order.serial,
-                    order.method,
-                    (
-                        order.acc_number
-                        if order_type == "deposit"
-                        else order.payment_method_number
-                    ),
-                    order.deposit_wallet if order_type == "deposit" else None,
-                    order.ref_number if order_type == "deposit" else None,
+        if order_type in ["withdraw", "busdt"]:
+            stringify_returned_payment_order_args = (
+                update.message.text,
+                (
+                    stringify_process_withdraw_order
+                    if order_type == "withdraw"
+                    else stringify_process_busdt_order
                 ),
-                reply_markup=reply_markup,
+                amount,
+                order.serial,
+                order.method,
+                order.payment_method_number,
             )
+            if order_type == "withdraw":
+                await context.bot.send_message(
+                    chat_id=int(data[-2]),
+                    text=stringify_returned_order(
+                        *stringify_returned_payment_order_args
+                    ),
+                    reply_markup=reply_markup,
+                )
+            else:
+                await context.bot.send_photo(
+                    chat_id=int(data[-2]),
+                    photo=context.user_data["effective_photo"],
+                    caption=stringify_returned_order(
+                        *stringify_returned_payment_order_args
+                    ),
+                    reply_markup=reply_markup,
+                )
         else:
-            await context.bot.send_photo(
-                chat_id=int(data[-2]),
-                photo=context.user_data["effective_photo"],
-                caption=stringify_returned_order(
-                    update.message.text,
-                    (
-                        stringify_deposit_order
-                        if order_type == "deposit"
-                        else stringify_process_busdt_order
-                    ),
-                    amount if order_type == "deposit" else order.amount,
-                    order.serial,
-                    order.method,
-                    (
-                        order.acc_number
-                        if order_type == "deposit"
-                        else order.payment_method_number
-                    ),
-                    order.deposit_wallet if order_type == "deposit" else None,
-                    order.ref_number if order_type == "deposit" else None,
-                ),
-                reply_markup=reply_markup,
+            workplace_id = None
+            if not order.acc_number:
+                workplace_id = models.TrustedAgent.get_workers(
+                    gov=order.gov, user_id=order.agent_id
+                ).team_cash_workplace_id
+            stringify_returned_deposit_order_args = (
+                update.message.text,
+                stringify_deposit_order,
+                amount,
+                order.serial,
+                order.method,
+                order.acc_number,
+                order.deposit_wallet,
+                order.ref_number,
+                workplace_id
             )
+            if order.ref_number:
+                await context.bot.send_message(
+                    chat_id=int(data[-2]),
+                    text=stringify_returned_order(
+                        *stringify_returned_deposit_order_args
+                    ),
+                    reply_markup=reply_markup,
+                )
+            else:
+                await context.bot.send_photo(
+                    chat_id=int(data[-2]),
+                    photo=context.user_data["effective_photo"],
+                    caption=stringify_returned_order(
+                        *stringify_returned_deposit_order_args
+                    ),
+                    reply_markup=reply_markup,
+                )
+
         await parent_to_child_models_mapper[order_type].add_date(
             serial=serial, date_type="return"
         )

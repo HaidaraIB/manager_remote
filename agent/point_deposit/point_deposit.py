@@ -18,27 +18,15 @@ from agent.point_deposit.common import govs_pattern, send_to_check_deposit
 from start import agent_command
 import models
 from custom_filters import Agent
+from agent.common import agent_option, POINT
 
-POINT, AMOUNT, REF_NUM, SCREEN_SHOT = range(4)
-
-
-async def point_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
-        agent = models.TrustedAgent.get_workers(user_id=update.effective_user.id)
-        points = [
-            [InlineKeyboardButton(text=a.gov, callback_data=a.gov)] for a in agent
-        ] + back_to_agent_home_page_button
-        await update.callback_query.edit_message_text(
-            text="اختر النقطة",
-            reply_markup=InlineKeyboardMarkup(points),
-        )
-        return POINT
+AMOUNT, REF_NUM, SCREEN_SHOT = range(1, 4)
 
 
 async def choose_point(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         back_buttons = [
-            build_back_button("back_to_get_choose_point"),
+            build_back_button("back_to_choose_point"),
             back_to_agent_home_page_button[0],
         ]
         if not update.callback_query.data.startswith("back"):
@@ -50,7 +38,7 @@ async def choose_point(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return AMOUNT
 
 
-back_to_get_choose_point = point_deposit
+back_to_choose_point = agent_option
 
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -79,7 +67,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return REF_NUM
 
 
-back_to_get_amount = point_deposit
+back_to_get_amount = choose_point
 
 
 async def get_ref_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -128,7 +116,7 @@ async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 point_deposit_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            point_deposit,
+            choose_point,
             "^point_deposit$",
         ),
     ],
@@ -161,7 +149,7 @@ point_deposit_handler = ConversationHandler(
     fallbacks=[
         CallbackQueryHandler(back_to_get_ref_num, "^back_to_get_ref_num$"),
         CallbackQueryHandler(back_to_get_amount, "^back_to_get_amount$"),
-        CallbackQueryHandler(back_to_get_choose_point, "^back_to_get_choose_point$"),
+        CallbackQueryHandler(back_to_choose_point, "^back_to_choose_point$"),
         agent_command,
         back_to_agent_home_page_handler,
     ],

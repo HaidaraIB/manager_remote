@@ -17,8 +17,9 @@ async def send_withdraw_order_to_check(
     bank_account_name: str,
     payment_method_number: str,
     w_type: str,
-    password: str = None,
-    agent_id: int = None,
+    password: str = "",
+    agent_id: int = 0,
+    gov: str = "",
 ):
 
     code_present = WithdrawOrder.check_withdraw_code(withdraw_code=withdraw_code)
@@ -35,11 +36,12 @@ async def send_withdraw_order_to_check(
         bank_account_name=bank_account_name,
         payment_method_number=payment_method_number,
         agent_id=agent_id,
+        gov=gov,
     )
 
     method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (
         f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
-        if method in [BARAKAH, BARAKAH]
+        if method in [BARAKAH, BEMO]
         else ""
     )
     message = await context.bot.send_message(

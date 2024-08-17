@@ -169,22 +169,25 @@ def stringify_deposit_order(
     method: str,
     account_number: int = None,
     wal: str = None,
-    ref_num: str = None,
-    workplace_id:int = None,
+    ref_num: str = "لا يوجد",
+    workplace_id: int = None,
     *args,
 ):
     deposit_order_text = (
         "إيداع جديد:\n"
-        f"رقم العملية: <code>{ref_num if ref_num else "لا يوجد"}</code>\n"
+        f"رقم العملية: <code>{ref_num}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        f"رقم الحساب: <code>{account_number}</code>\n\n"
+        f"رقم الحساب: <code>{account_number if account_number else 'لا يوجد'}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
         f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
     )
     if workplace_id:
         deposit_order_text += f"Workplace id: <code>{workplace_id}</code>\n\n"
-    return deposit_order_text + "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
+    return (
+        deposit_order_text
+        + "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
+    )
 
 
 def stringify_check_withdraw_order(

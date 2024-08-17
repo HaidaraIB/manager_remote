@@ -20,7 +20,8 @@ class WithdrawOrder(PaymentOrder):
         bank_account_name: str,
         payment_method_number: int,
         acc_number: str,
-        agent_id:int = None,
+        agent_id: int = 0,
+        gov: str = "",
         s: Session = None,
     ):
         res = s.execute(
@@ -32,7 +33,8 @@ class WithdrawOrder(PaymentOrder):
                 bank_account_name=bank_account_name,
                 payment_method_number=payment_method_number,
                 acc_number=acc_number,
-                agent_id = agent_id if agent_id else 0,
+                agent_id=agent_id,
+                gov=gov
             )
         )
         return res.lastrowid

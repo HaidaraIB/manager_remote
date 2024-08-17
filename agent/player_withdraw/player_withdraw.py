@@ -24,8 +24,15 @@ from common.back_to_home_page import (
     back_to_agent_home_page_button,
     back_to_agent_home_page_handler,
 )
-from agent.player_deposit.player_deposit import player_deposit
+from agent.common import (
+    POINT,
+    PLAYER_NUMBER,
+    choose_point,
+    agent_option,
+    back_to_choose_point,
+)
 from user.withdraw.common import send_withdraw_order_to_check, request_bank_account_name
+from agent.point_deposit.common import govs_pattern
 from start import agent_command, start_command
 from models import PaymentMethod
 from common.constants import *
@@ -33,15 +40,11 @@ from custom_filters import Agent
 import os
 
 (
-    WITHDRAW_ACCOUNT,
     PAYMENT_METHOD,
     PAYMENT_INFO,
     BANK_ACCOUNT_NAME,
     WITHDRAW_CODE,
-) = range(5)
-
-
-player_withdraw = player_deposit
+) = range(1, 5)
 
 
 async def get_player_number_withdraw(
@@ -66,7 +69,7 @@ async def get_player_number_withdraw(
         return PAYMENT_METHOD
 
 
-back_to_get_player_number_withdraw = player_withdraw
+back_to_get_player_number_withdraw = choose_point
 
 
 async def choose_payment_method_player_withdraw(
@@ -181,6 +184,7 @@ async def get_withdraw_code_player_withdraw(
             w_type="balance",
             withdraw_code=update.message.text,
             agent_id=update.effective_user.id,
+            gov=context.user_data[f"{context.user_data['agent_option']}_point"],
         )
         if not res:
             await update.message.reply_text(
@@ -199,14 +203,21 @@ async def get_withdraw_code_player_withdraw(
 player_withdraw_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            player_withdraw,
+            agent_option,
             "^player_withdraw$",
         ),
     ],
     states={
-        WITHDRAW_ACCOUNT: [
+        POINT: [
+            CallbackQueryHandler(
+                choose_point,
+                govs_pattern,
+            )
+        ],
+        PLAYER_NUMBER: [
             MessageHandler(
-                filters=filters.Regex("^\d+$"), callback=get_player_number_withdraw
+                filters=filters.Regex("^\d+$"),
+                callback=get_player_number_withdraw,
             ),
         ],
         PAYMENT_METHOD: [
@@ -235,6 +246,10 @@ player_withdraw_handler = ConversationHandler(
         ],
     },
     fallbacks=[
+        CallbackQueryHandler(
+            back_to_choose_point,
+            "^back_to_choose_point$",
+        ),
         CallbackQueryHandler(
             back_to_get_player_number_withdraw,
             "^back_to_get_player_number_withdraw$",

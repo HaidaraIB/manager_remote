@@ -68,8 +68,9 @@ async def send_to_check_deposit(
     method: str,
     acc_number: str,
     target_group: int,
-    ref_num: str = None,
-    agent_id: int = None,
+    ref_num: str = "",
+    agent_id: int = 0,
+    gov: str = "",
 ):
     ref_present = RefNumber.get_ref_number(
         number=ref_num,
@@ -89,7 +90,8 @@ async def send_to_check_deposit(
         deposit_wallet=context.bot_data["data"][f"{method}_number"],
         amount=0,
         ref_number=ref_num,
-        agent_id=agent_id if agent_id else 0,
+        agent_id=agent_id,
+        gov=gov,
     )
 
     context.job_queue.run_once(

@@ -70,23 +70,13 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
 
         d_order = DepositOrder.get_one_order(serial=serial)
 
-        user = User.get_user(user_id=d_order.user_id)
-
-        gifts_amount = 0
-
-        if user.deposit_balance >= 1_000_000:
-            gifts_amount = 10_000 * context.bot_data["data"]["deposit_gift_percentage"]
-            await User.million_gift_user(user_id=d_order.user_id, amount=gifts_amount)
-
         caption = (
             f"مبروك🎉، تم الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n"
-            f"{f'بالإضافة إلى <b>{format_amount(gifts_amount)}</b> مكافأة لوصول مجموع مبالغ إيداعاتك إلى\n<b>1,000,000</b>' if gifts_amount else ''}\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
             f"Congrats🎉, the deposit you made <b>{format_amount(d_order.amount)}</b> has been approved.\n"
-            f"{f'plus <b>{format_amount(gifts_amount)}</b> gift for reaching <b>1,000,000</b> deposits.' if gifts_amount else ''}\n\n"
             f"Serial: <code>{serial}</code>"
         )
-        
+
         media = [
             InputMediaPhoto(update.message.photo[-1]),
         ]
@@ -101,10 +91,11 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             msg=caption,
         )
 
-        if update.message.reply_to_message.text_html:
-            caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
-        else:
-            caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
+        caption = "تمت الموافقة✅\n" + (
+            update.message.reply_to_message.text_html
+            if update.message.reply_to_message.text_html
+            else update.message.reply_to_message.caption_html
+        )
 
         await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),

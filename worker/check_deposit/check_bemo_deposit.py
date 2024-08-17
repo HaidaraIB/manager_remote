@@ -19,6 +19,7 @@ from common.common import (
     send_message_to_user,
 )
 from common.stringifies import stringify_deposit_order
+from common.constants import *
 from worker.check_deposit.common import build_check_deposit_keyboard
 import models
 import os
@@ -79,32 +80,34 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             check_what="deposit",
         )
         new_amount = float(update.message.text)
-        if (
-            d_order.amount < new_amount
-            and (new_amount - d_order.amount) > checker.pre_balance
-        ):
-            await update.message.delete()
-            await update.message.reply_to_message.edit_caption(
-                caption=stringify_deposit_order(
-                    amount=new_amount,
-                    serial=serial,
-                    method=d_order.method,
-                    account_number=d_order.acc_number,
-                    wal=d_order.deposit_wallet,
+        if d_order.method in CHECK_DEPOSIT_LIST:
+            if (
+                d_order.amount < new_amount
+                and (new_amount - d_order.amount) > checker.pre_balance
+            ):
+                await update.message.delete()
+                await update.message.reply_to_message.edit_caption(
+                    caption=stringify_deposit_order(
+                        amount=new_amount,
+                        serial=serial,
+                        method=d_order.method,
+                        account_number=d_order.acc_number,
+                        wal=d_order.deposit_wallet,
+                    )
+                    + "\n\ليس لديك رصيد كافي ❗️",
+                    reply_markup=build_check_deposit_keyboard(serial),
                 )
-                + "\n\ليس لديك رصيد كافي ✅",
-                reply_markup=build_check_deposit_keyboard(serial),
-            )
-            return
+                return
+            else:
+                await models.Checker.update_pre_balance(
+                    check_what="deposit",
+                    method=d_order.method,
+                    worker_id=update.effective_user.id,
+                    amount=d_order.amount - new_amount,
+                )
 
         await models.DepositOrder.edit_order_amount(
             new_amount=new_amount, serial=serial
-        )
-        await models.Checker.update_pre_balance(
-            check_what="deposit",
-            method=d_order.method,
-            worker_id=update.effective_user.id,
-            amount=d_order.amount - new_amount,
         )
 
         await update.message.delete()
@@ -135,6 +138,12 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             order_type="deposit",
             context=context,
         )
+        workplace_id = None
+        if not d_order.acc_number:
+            agent = models.TrustedAgent.get_workers(
+                gov=d_order.gov, user_id=d_order.agent_id
+            )
+            workplace_id = agent.team_cash_workplace_id
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
             photo=update.effective_message.photo[-1],
@@ -144,6 +153,7 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 method=d_order.method,
                 account_number=d_order.acc_number,
                 wal=d_order.deposit_wallet,
+                workplace_id=workplace_id,
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -172,10 +182,14 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await models.DepositOrder.send_order(
             pending_process_message_id=message.id,
             serial=serial,
-            group_id=context.bot_data["data"]["deposit_after_check_group"],
+            group_id=(
+                context.bot_data["data"]["deposit_after_check_group"]
+                if d_order.acc_number
+                else context.bot_data["data"]["agents_deposit_after_check_group"]
+            ),
             ex_rate=ex_rate,
         )
-        workers = models.DepositAgent.get_workers()
+        workers = models.DepositAgent.get_workers(is_point=(workplace_id is not None))
         asyncio.create_task(
             notify_workers(
                 context=context,
@@ -220,7 +234,12 @@ async def decline_deposit_order_reason(
         )
 
         d_order = models.DepositOrder.get_one_order(serial=serial)
-
+        workplace_id = None
+        if not d_order.acc_number:
+            agent = models.TrustedAgent.get_workers(
+                gov=d_order.gov, user_id=d_order.agent_id
+            )
+            workplace_id = agent.team_cash_workplace_id
         text = (
             "تم رفض الطلب❌\n"
             + stringify_deposit_order(
@@ -229,6 +248,7 @@ async def decline_deposit_order_reason(
                 method=d_order.method,
                 account_number=d_order.acc_number,
                 wal=d_order.deposit_wallet,
+                workplace_id=workplace_id
             )
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
@@ -269,12 +289,13 @@ async def decline_deposit_order_reason(
                 deposit_agent=DepositAgent().filter(update)
             ),
         )
-        await models.Checker.update_pre_balance(
-            check_what="deposit",
-            method=d_order.method,
-            worker_id=update.effective_user.id,
-            amount=-d_order.amount,
-        )
+        if not workplace_id:
+            await models.Checker.update_pre_balance(
+                check_what="deposit",
+                method=d_order.method,
+                worker_id=update.effective_user.id,
+                amount=-d_order.amount,
+            )
         await models.DepositOrder.decline_order(
             reason=update.message.text,
             serial=serial,

@@ -21,6 +21,9 @@ async def send_to_check_deposit(
     amount = context.user_data["point_deposit_amount"]
     target_group = context.bot_data["data"]["deposit_orders_group"]
 
+    agent = models.TrustedAgent.get_workers(
+        user_id=user_id, gov=context.user_data["point_deposit_point"]
+    )
     serial = await models.DepositOrder.add_deposit_order(
         user_id=user_id,
         group_id=target_group,
@@ -29,9 +32,7 @@ async def send_to_check_deposit(
         amount=amount,
         ref_number=ref_number,
         agent_id=user_id,
-    )
-    agent = models.TrustedAgent.get_workers(
-        user_id=user_id, gov=context.user_data["point_deposit_point"]
+        gov=agent.gov,
     )
     caption = stringify_deposit_order(
         amount=amount,
@@ -81,6 +82,7 @@ async def send_to_check_deposit(
             text=f"انتباه يوجد طلب تحقق إيداع جديد 🚨",
         )
     )
+
 
 def govs_pattern(callback_data: str):
     return callback_data in syrian_govs_en_ar

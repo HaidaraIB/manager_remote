@@ -13,6 +13,7 @@ class DepositOrder(Order):
     deposit_wallet = Column(String)
     acc_number = Column(String)
     agent_id = Column(Integer, default=0)
+    gov = Column(String, default="")
 
     @staticmethod
     @connect_and_close
@@ -53,6 +54,7 @@ class DepositOrder(Order):
         acc_number: str = "",
         ref_number: str = "",
         agent_id: int = 0,
+        gov: str = "",
         s: Session = None,
     ):
         res = s.execute(
@@ -65,6 +67,7 @@ class DepositOrder(Order):
                 group_id=group_id,
                 deposit_wallet=deposit_wallet,
                 agent_id=agent_id,
+                gov=gov,
             ),
         )
         return res.lastrowid

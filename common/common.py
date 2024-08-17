@@ -513,6 +513,10 @@ def build_groups_keyboard(op: str):
                 callback_data=f"{op} deposit_after_check_group",
             ),
             InlineKeyboardButton(
+                text="تنفيذ إيداع وكلاء",
+                callback_data=f"{op} agents_deposit_after_check_group",
+            ),
+            InlineKeyboardButton(
                 text="تحقق إيداع",
                 callback_data=f"{op} deposit_orders_group",
             ),
