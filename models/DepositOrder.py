@@ -16,12 +16,27 @@ class DepositOrder(Order):
 
     @staticmethod
     @connect_and_close
-    def get_deposit_after_check_order(s: Session = None):
-        res = s.execute(
-            select(DepositOrder)
-            .where(and_(DepositOrder.working_on_it == 0, DepositOrder.state == "sent"))
-            .limit(1)
-        )
+    def get_deposit_after_check_order(is_point_deposit: bool, s: Session = None):
+        if is_point_deposit:
+            res = s.execute(
+                select(DepositOrder)
+                .where(
+                    and_(
+                        DepositOrder.working_on_it == 0,
+                        DepositOrder.state == "sent",
+                        DepositOrder.acc_number == "",
+                    )
+                )
+                .limit(1)
+            )
+        else:
+            res = s.execute(
+                select(DepositOrder)
+                .where(
+                    and_(DepositOrder.working_on_it == 0, DepositOrder.state == "sent")
+                )
+                .limit(1)
+            )
         try:
             return res.fetchone().t[0]
         except:
@@ -33,9 +48,9 @@ class DepositOrder(Order):
         user_id: int,
         group_id: int,
         method: str,
-        acc_number: str,
         deposit_wallet: str,
         amount: float,
+        acc_number: str = "",
         ref_number: str = "",
         agent_id: int = 0,
         s: Session = None,

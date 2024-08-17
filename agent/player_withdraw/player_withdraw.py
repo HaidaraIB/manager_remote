@@ -29,6 +29,7 @@ from user.withdraw.common import send_withdraw_order_to_check, request_bank_acco
 from start import agent_command, start_command
 from models import PaymentMethod
 from common.constants import *
+from custom_filters import Agent
 import os
 
 (
@@ -46,7 +47,7 @@ player_withdraw = player_deposit
 async def get_player_number_withdraw(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         payment_methods = build_methods_keyboard()
         payment_methods.append(build_back_button("back_to_get_player_number_withdraw"))
         payment_methods.append(back_to_agent_home_page_button[0])
@@ -71,7 +72,7 @@ back_to_get_player_number_withdraw = player_withdraw
 async def choose_payment_method_player_withdraw(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
 
         if not update.callback_query.data.startswith("back"):
             data = update.callback_query.data
@@ -112,7 +113,7 @@ async def get_withdraw_code_bank_account_name_player_withdraw(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         back_keyboard = [
             build_back_button("back_to_get_payment_info_player_withdraw"),
             back_to_agent_home_page_button[0],
@@ -142,7 +143,7 @@ back_to_get_payment_info_player_withdraw = choose_payment_method_player_withdraw
 async def get_bank_accuont_name_player_withdraw(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         if update.message:
             context.user_data["bank_account_name"] = update.message.text
         back_keyboard = [
@@ -168,7 +169,7 @@ back_to_get_bank_account_name_player_withdraw = (
 async def get_withdraw_code_player_withdraw(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         res = await send_withdraw_order_to_check(
             acc_number=context.user_data["withdraw_account"],
             bank_account_name=context.user_data["bank_account_name"],

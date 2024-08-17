@@ -36,7 +36,8 @@ from common.common import build_back_button
     WORKER_ID,
     POSITION,
     CHECK_POSITION,
-) = range(3)
+    DEPOSIT_AFTER_CHECK_POSITION,
+) = range(4)
 
 
 async def add_worker_cp(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -103,11 +104,25 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pos = context.user_data["add_worker_pos"]
 
         if pos == "deposit after check":
-            await DepositAgent.add_worker(
-                worker_id=worker_to_add.id,
-                name=worker_to_add.full_name,
-                username=worker_to_add.username,
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="لاعبين",
+                        callback_data="players_deposit_after_check",
+                    ),
+                    InlineKeyboardButton(
+                        text="وكلاء",
+                        callback_data="agents_deposit_after_check",
+                    ),
+                ],
+            ]
+            keyboard.append(build_back_button("back_to_choose_position"))
+            keyboard.append(back_to_admin_home_page_button[0])
+            await update.callback_query.edit_message_text(
+                text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
+            return DEPOSIT_AFTER_CHECK_POSITION
         elif pos in ["withdraw", "busdt", "deposit"]:
             keyboard = build_checker_positions_keyboard(
                 op="add",
@@ -135,6 +150,39 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 back_to_worker_id = add_worker_cp
+
+
+async def choose_deposit_after_check_position(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        worker_to_add: Chat = context.user_data["worker_to_add"]
+        await DepositAgent.add_worker(
+            worker_id=worker_to_add.id,
+            name=worker_to_add.full_name,
+            username=worker_to_add.username,
+            is_point=update.callback_query.data.startswith("agents"),
+        )
+        await update.callback_query.answer("تمت إضافة الموظف بنجاح✅")
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text="لاعبين",
+                    callback_data="players_deposit_after_check",
+                ),
+                InlineKeyboardButton(
+                    text="وكلاء",
+                    callback_data="agents_deposit_after_check",
+                ),
+            ],
+        ]
+        keyboard.append(build_back_button("back_to_choose_position"))
+        keyboard.append(back_to_admin_home_page_button[0])
+        await update.callback_query.edit_message_text(
+            text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+        return DEPOSIT_AFTER_CHECK_POSITION
 
 
 async def choose_check_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -195,6 +243,12 @@ add_worker_cp_handler = ConversationHandler(
                 "^add.+checker",
             ),
         ],
+        DEPOSIT_AFTER_CHECK_POSITION: [
+            CallbackQueryHandler(
+                choose_deposit_after_check_position,
+                "^((agents)|(players))_deposit_after_check$"
+            )
+        ]
     },
     fallbacks=[
         back_to_admin_home_page_handler,

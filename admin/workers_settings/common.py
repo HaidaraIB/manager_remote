@@ -19,8 +19,9 @@ from models import DepositAgent, PaymentAgent, Checker
 (
     CHOOSE_POSITION,
     CHECK_POSITION_SHOW_REMOVE,
+    DEPOSIT_AFTER_CHECK_POSITION_SHOW_REMOVE,
     CHOOSE_WORKER,
-) = range(3)
+) = range(4)
 
 
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):

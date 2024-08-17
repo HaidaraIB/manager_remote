@@ -1,6 +1,7 @@
 from telegram import (
     Chat,
     Update,
+    InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
 from telegram.ext import (
@@ -22,6 +23,7 @@ from admin.workers_settings.common import (
     CHOOSE_POSITION,
     CHOOSE_WORKER,
     CHECK_POSITION_SHOW_REMOVE,
+    DEPOSIT_AFTER_CHECK_POSITION_SHOW_REMOVE,
     build_positions_keyboard,
     build_workers_keyboard,
     choose_option,
@@ -55,15 +57,31 @@ async def position_to_show_remove_from(
             keyboard.append(build_back_button(f"back_to_{option}"))
             keyboard.append(back_to_admin_home_page_button[0])
             await update.callback_query.edit_message_text(
-                text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
+                text="اختر الوظيفة:",
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
             return CHECK_POSITION_SHOW_REMOVE
 
         elif pos == "deposit after check":
-            workers = DepositAgent.get_workers()
-            ans_text = "ليس لديك موظفي تنفيذ إيداعات بعد ❗️"
-
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="لاعبين",
+                        callback_data=f"{option}_players_deposit_after_check",
+                    ),
+                    InlineKeyboardButton(
+                        text="وكلاء",
+                        callback_data=f"{option}_agents_deposit_after_check",
+                    ),
+                ],
+            ]
+            keyboard.append(build_back_button("back_to_choose_position"))
+            keyboard.append(back_to_admin_home_page_button[0])
+            await update.callback_query.edit_message_text(
+                text="اختر الوظيفة:",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+            return DEPOSIT_AFTER_CHECK_POSITION_SHOW_REMOVE
         else:
             workers = PaymentAgent.get_workers(method=pos)
             ans_text = f"ليس لديك وكلاء {pos} بعد ❗️"
@@ -87,6 +105,33 @@ async def position_to_show_remove_from(
         return CHOOSE_WORKER
 
 
+async def choose_deposit_after_check_position_show_remove(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        option = context.user_data["worker_settings_option"]
+        is_point = update.callback_query.data.startswith("agents")
+        context.user_data[f"is_point_deposit_agent_to_{option}"] = is_point
+        workers = DepositAgent.get_workers(is_point=is_point)
+
+        if not workers:
+            await update.callback_query.answer(
+                text="ليس لديك موظفي تنفيذ إيداعات بعد ❗️",
+                show_alert=True,
+            )
+            return
+        keyboard = build_workers_keyboard(
+            workers,
+            option,
+        )
+
+        await update.callback_query.edit_message_text(
+            text="اختر الموظف.",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+        return CHOOSE_WORKER
+
+
 async def choose_check_position_show_remove(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
@@ -98,11 +143,10 @@ async def choose_check_position_show_remove(
         context.user_data[f"method_to_{option}"] = method
 
         workers = Checker.get_workers(check_what=pos, method=method)
-        ans_text = f"ليس لديك موظفي تحقق {order_dict_en_to_ar[pos]} {method} بعد ❗️"
 
         if not workers:
             await update.callback_query.answer(
-                text=ans_text,
+                text=f"ليس لديك موظفي تحقق {order_dict_en_to_ar[pos]} {method} بعد ❗️",
                 show_alert=True,
             )
             return
@@ -125,8 +169,9 @@ async def choose_worker_to_show(update: Update, context: ContextTypes.DEFAULT_TY
         t_worker = await context.bot.get_chat(chat_id=w_id)
         pos: str = context.user_data[f"pos_to_{option}"]
         if pos == "deposit after check":
-            worker = DepositAgent.get_workers(worker_id=w_id)
-            workers = DepositAgent.get_workers()
+            is_point = context.user_data[f"is_point_deposit_agent_to_{option}"]
+            worker = DepositAgent.get_workers(worker_id=w_id, is_point=is_point)
+            workers = DepositAgent.get_workers(is_point=is_point)
 
         elif pos in ["withdraw", "busdt", "deposit"]:
             method = context.user_data[f"method_to_{option}"]
@@ -159,8 +204,11 @@ async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_
         pos: str = context.user_data[f"pos_to_{option}"]
 
         if pos == "deposit after check":
-            await DepositAgent.remove_worker(worker_id=worker_to_remove_id)
-            workers = DepositAgent.get_workers()
+            is_point = context.user_data[f"is_point_deposit_agent_to_{option}"]
+            await DepositAgent.remove_worker(
+                worker_id=worker_to_remove_id, is_point=is_point
+            )
+            workers = DepositAgent.get_workers(is_point=is_point)
 
         elif pos in ["withdraw", "busdt", "deposit"]:
             method = context.user_data[f"method_to_{option}"]
@@ -217,6 +265,12 @@ remove_worker_handler = ConversationHandler(
                 "^remove.+checker",
             )
         ],
+        DEPOSIT_AFTER_CHECK_POSITION_SHOW_REMOVE: [
+            CallbackQueryHandler(
+                choose_deposit_after_check_position_show_remove,
+                "^remove_((agents)|(players))_deposit_after_check$",
+            )
+        ],
         CHOOSE_WORKER: [
             CallbackQueryHandler(
                 choose_worker_to_remove,
@@ -255,6 +309,12 @@ show_worker_handler = ConversationHandler(
             CallbackQueryHandler(
                 choose_check_position_show_remove,
                 "^show.+checker",
+            )
+        ],
+        DEPOSIT_AFTER_CHECK_POSITION_SHOW_REMOVE: [
+            CallbackQueryHandler(
+                choose_deposit_after_check_position_show_remove,
+                "^show_((agents)|(players))_deposit_after_check$",
             )
         ],
         CHOOSE_WORKER: [

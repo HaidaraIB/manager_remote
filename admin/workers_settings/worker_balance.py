@@ -48,6 +48,7 @@ async def position_for_worker_balance(
     context: ContextTypes.DEFAULT_TYPE,
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        checker_or_worker_en_to_ar_dict = {"checker": "تحقق", "worker": "سحب"}
         if not update.callback_query.data.startswith("back"):
             data = update.callback_query.data
             pos = data.split("_")[1]
@@ -58,14 +59,16 @@ async def position_for_worker_balance(
                 context.user_data["checker_or_worker_balance"] = "checker"
         else:
             pos = context.user_data["balance_pos"]
-
-        if context.user_data["checker_or_worker_balance"] == "worker":
+        checker_or_worker = context.user_data["checker_or_worker_balance"]
+        if checker_or_worker == "worker":
             workers = PaymentAgent.get_workers(method=pos)
         else:
             workers = Checker.get_workers(check_what="deposit", method=pos)
 
         if not workers:
-            await update.callback_query.answer(f"لا يوجد موظفين سحب {pos} بعد ❗️")
+            await update.callback_query.answer(
+                f"لا يوجد موظفين {checker_or_worker_en_to_ar_dict[checker_or_worker]} {pos} بعد ❗️"
+            )
             return
         await update.callback_query.edit_message_text(
             text="اختر الموظف",

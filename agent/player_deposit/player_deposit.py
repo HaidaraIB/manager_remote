@@ -20,7 +20,7 @@ from common.decorators import check_if_user_agent_decorator
 from common.constants import *
 from start import agent_command
 from user.deposit.common import send_to_check_deposit
-
+from custom_filters import Agent
 
 (
     PLAYER_NUMBER,
@@ -30,7 +30,7 @@ from user.deposit.common import send_to_check_deposit
 
 @check_if_user_agent_decorator
 async def player_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         await update.callback_query.edit_message_text(
             text="أرسل رقم حساب اللاعب",
             reply_markup=InlineKeyboardMarkup(back_to_agent_home_page_button),
@@ -39,7 +39,7 @@ async def player_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_player_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         text = (
             f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
             f"<code>{context.bot_data['data'][f'{SYRCASH}_number']}</code>\n\n"
@@ -67,7 +67,7 @@ back_to_send_to_check_deposit = player_deposit
 
 
 async def get_ref_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         res = await send_to_check_deposit(
             context=context,
             user_id=update.effective_user.id,

@@ -103,6 +103,9 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"الرقم التسلسلي: <code>{order.serial}</code>\n\n"
         f"آيدي المستخدم صاحب الطلب: <code>{order.user_id}</code>\n"
         f"اسمه: <b>{name}</b>\n\n"
+        f"آيدي الوكيل: <code>{getattr(order, 'agent_id', 'لا يوجد')}</code>\n"
+        f"آيدي موظف التحقق: <code>{order.checker_id}</code>\n"
+        f"آيدي موظف الدفع: <code>{order.worker_id}</code>\n\n"
         f"نوع الطلب: <b>{order_settings_dict[order_type]['t']}</b>\n"
         f"المبلغ: <code>{format_amount(order.amount)}</code>\n"
         f"رقم الحساب: <code>{getattr(order, 'acc_number', 'لا يوجد')}</code>\n\n"
@@ -164,12 +167,13 @@ def stringify_deposit_order(
     amount: float,
     serial: int,
     method: str,
-    account_number: int,
-    wal: str,
+    account_number: int = None,
+    wal: str = None,
     ref_num: str = None,
+    workplace_id:int = None,
     *args,
 ):
-    return (
+    deposit_order_text = (
         "إيداع جديد:\n"
         f"رقم العملية: <code>{ref_num if ref_num else "لا يوجد"}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
@@ -177,8 +181,10 @@ def stringify_deposit_order(
         f"وسيلة الدفع: <code>{method}</code>\n"
         f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
-        "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )
+    if workplace_id:
+        deposit_order_text += f"Workplace id: <code>{workplace_id}</code>\n\n"
+    return deposit_order_text + "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
 
 
 def stringify_check_withdraw_order(

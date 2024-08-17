@@ -16,6 +16,7 @@ class Worker(BaseUser):
         username: str,
         method: str = None,
         check_what: str = None,
+        is_point: bool = False,
         s: Session = None,
     ):
         values = {"id": worker_id, "name": name, "username": username}
@@ -24,6 +25,8 @@ class Worker(BaseUser):
             values.update({"check_what": check_what})
         if method:
             values.update({"method": method})
+        if is_point:
+            values.update({"is_point": is_point})
 
         res = s.execute(insert(cls).values(values).prefix_with("OR IGNORE"))
         print(res.lastrowid)
@@ -53,15 +56,29 @@ class Worker(BaseUser):
         worker_id: int,
         method: str = None,
         check_what: str = None,
+        is_point: bool = None,
         s: Session = None,
     ):
-        method_cond = True
-        check_what_cond = True
-        if method:
-            method_cond = cls.method == method
-        if check_what:
-            check_what_cond = cls.check_what == check_what
-
-        s.execute(
-            delete(cls).where(and_(cls.id == worker_id, method_cond, check_what_cond))
-        )
+        if is_point:
+            s.execute(
+                delete(cls).where(
+                    and_(
+                        cls.id == worker_id,
+                        cls.is_point == is_point,
+                    )
+                )
+            )
+        elif check_what: # if check_what is not None then method is not None too.
+            s.execute(
+                delete(cls).where(
+                    and_(
+                        cls.id == worker_id,
+                        cls.check_what == check_what,
+                        cls.method == method,
+                    )
+                )
+            )
+        elif method:
+            s.execute(
+                delete(cls).where(and_(cls.id == worker_id, cls.method == method))
+            )

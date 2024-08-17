@@ -32,15 +32,15 @@ class WorkerWithUs(Base):
     ):
         try:
             if order_serial:
-                where_clause = cls.order_serial == order_serial
+                res = s.execute(select(cls).where(cls.order_serial == order_serial))
             elif user_id and gov:
-                where_clause = and_(cls.gov == gov, cls.user_id == user_id)
+                res = s.execute(
+                    select(cls).where(and_(cls.gov == gov, cls.user_id == user_id))
+                )
             elif user_id:
-                where_clause = cls.user_id == user_id
+                res = s.execute(select(cls).where(cls.user_id == user_id))
             else:
-                where_clause = cls.gov == gov
-
-            res = s.execute(select(cls).where(where_clause))
+                res = s.execute(select(cls).where(cls.gov == gov))
 
             if gov and not user_id:
                 return list(map(lambda x: x[0], res.tuples().all()))

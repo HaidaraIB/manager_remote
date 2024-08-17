@@ -35,13 +35,22 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         deposit_agent = models.DepositAgent.get_workers(
             worker_id=update.effective_user.id,
         )
-        deposit_agent_button = []
-        if deposit_agent:
-            deposit_agent_button.append(
-                InlineKeyboardButton(
-                    text="تنفيذ إيداع", callback_data="request_deposit after check"
+        deposit_agent_keyboard = []
+        for d in deposit_agent:
+            if d.is_point:
+                deposit_agent_keyboard.append(
+                    InlineKeyboardButton(
+                        text="تنفيذ إيداع وكلاء",
+                        callback_data="request_agents deposit after check",
+                    )
                 )
-            )
+            else:
+                deposit_agent_keyboard.append(
+                    InlineKeyboardButton(
+                        text="تنفيذ إيداع لاعبين",
+                        callback_data="request_players deposit after check",
+                    )
+                )
 
         checker = models.Checker.get_workers(worker_id=update.effective_user.id)
         checker_keyboard = []
@@ -63,7 +72,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         payment_agent_keyboard = build_payment_agent_keyboard(payment_agent)
 
         keyboard = [
-            deposit_agent_button,
+            deposit_agent_keyboard,
             checker_keyboard,
             *payment_agent_keyboard,
             CANCEL_BUTTON,
@@ -88,8 +97,13 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         role = update.callback_query.data.replace("request_", "")
         message_id, group_id, serial = 0, 0, 0
-        if role == "deposit after check":
-            dac_order = models.DepositOrder.get_deposit_after_check_order()
+        if "deposit after check" in role:
+            is_point_deposit = False
+            if role.startswith("agents"):
+                is_point_deposit = True
+            dac_order = models.DepositOrder.get_deposit_after_check_order(
+                is_point_deposit=is_point_deposit
+            )
             if not dac_order:
                 await update.callback_query.answer(
                     "ليس هناك طلبات تنفيذ إيداع حالياً.",

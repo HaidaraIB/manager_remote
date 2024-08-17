@@ -68,6 +68,7 @@ from worker.check_deposit import *
 
 from agent.player_deposit import *
 from agent.player_withdraw import *
+from agent.point_deposit import *
 
 from check_complaint import *
 
@@ -129,6 +130,7 @@ def main():
     # AGENT
     app.add_handler(player_deposit_handler)
     app.add_handler(player_withdraw_handler)
+    app.add_handler(point_deposit_handler)
 
     app.add_handler(show_trusted_agents_handler)
 
