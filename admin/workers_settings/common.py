@@ -80,7 +80,7 @@ worker_settings_handler = CallbackQueryHandler(
 
 def build_checker_positions_keyboard(check_what: str, op: str):
     pos_method_list_dict = {
-        "deposit": CHECK_DEPOSIT_LIST,
+        "deposit": CHECK_DEPOSIT_LIST + [POINT_DEPOSIT],
         "withdraw": PAYMENT_METHODS_LIST,
         "busdt": PAYMENT_METHODS_LIST,
     }
@@ -88,6 +88,7 @@ def build_checker_positions_keyboard(check_what: str, op: str):
     syr = []
     banks = []
     payeer = []
+    point_deposit = []
     for m in pos_method_list_dict[check_what]:
         if check_what == "busdt" and m == USDT:
             continue
@@ -101,9 +102,11 @@ def build_checker_positions_keyboard(check_what: str, op: str):
             banks.append(button)
         elif m in [SYRCASH, MTNCASH]:
             syr.append(button)
+        elif m == POINT_DEPOSIT:
+            point_deposit.append(button)
         else:
             payeer.append(button)
-    return [usdt, banks, syr, payeer]
+    return [usdt, banks, syr, payeer, point_deposit]
 
 
 def build_positions_keyboard(op: str):

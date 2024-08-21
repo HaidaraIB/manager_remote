@@ -246,9 +246,9 @@ add_worker_cp_handler = ConversationHandler(
         DEPOSIT_AFTER_CHECK_POSITION: [
             CallbackQueryHandler(
                 choose_deposit_after_check_position,
-                "^((agents)|(players))_deposit_after_check$"
+                "^((agents)|(players))_deposit_after_check$",
             )
-        ]
+        ],
     },
     fallbacks=[
         back_to_admin_home_page_handler,

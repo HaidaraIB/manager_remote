@@ -10,9 +10,6 @@ orders_dict = {
     "busdt": "شراء usdt",
 }
 
-CANCEL_BUTTON = [
-    InlineKeyboardButton(text="إلغاء❌", callback_data="cancel request order")
-]
 
 
 def build_checker_keyboard(checker: list[models.Checker]):
@@ -20,6 +17,7 @@ def build_checker_keyboard(checker: list[models.Checker]):
     syr = []
     banks = []
     payeer = []
+    point_deposit = []
     for c in checker:
         button = InlineKeyboardButton(
             text=f"تحقق {c.method}",
@@ -31,9 +29,11 @@ def build_checker_keyboard(checker: list[models.Checker]):
             banks.append(button)
         elif c.method in [SYRCASH, MTNCASH]:
             syr.append(button)
+        elif c.method == POINT_DEPOSIT:
+            point_deposit.append(button)
         else:
             payeer.append(button)
-    return [usdt, syr, banks, payeer]
+    return [usdt, syr, banks, payeer, point_deposit]
 
 
 def build_payment_agent_keyboard(agent: list[models.PaymentAgent]):

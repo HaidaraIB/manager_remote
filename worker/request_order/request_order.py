@@ -11,7 +11,6 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 from worker.request_order.common import (
-    CANCEL_BUTTON,
     build_payment_agent_keyboard,
     build_checker_keyboard,
     send_requested_order,
@@ -19,12 +18,14 @@ from worker.request_order.common import (
 )
 from common.constants import *
 from common.common import (
-    build_worker_keyboard,
     build_back_button,
     parent_to_child_models_mapper,
 )
+from common.back_to_home_page import (
+    back_to_worker_home_page_button,
+    back_to_worker_home_page_handler,
+)
 from start import worker_command
-from custom_filters import DepositAgent
 import models
 
 REQUEST_WHAT, CHECK_POSITION_REQUEST_ORDER = range(2)
@@ -75,7 +76,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             deposit_agent_keyboard,
             checker_keyboard,
             *payment_agent_keyboard,
-            CANCEL_BUTTON,
+            back_to_worker_home_page_button[0],
         ]
 
         if len(keyboard) == 1:
@@ -121,7 +122,7 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             keyboard = build_checker_keyboard(checkers)
             keyboard.append(build_back_button("back_to_request_what"))
-            keyboard.append(CANCEL_BUTTON)
+            keyboard.append(back_to_worker_home_page_button[0])
             await update.callback_query.edit_message_text(
                 text="اختر الوظفية",
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -181,7 +182,7 @@ async def choose_check_position_request_order(
         )
 
         c_order = parent_to_child_models_mapper[check_what].get_check_order(
-            method=method
+            method=method,
         )
         if not c_order:
             await update.callback_query.answer(
@@ -214,17 +215,6 @@ async def choose_check_position_request_order(
         return ConversationHandler.END
 
 
-async def cancel_request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        await update.callback_query.edit_message_text(
-            text="تم الإلغاء👍",
-            reply_markup=build_worker_keyboard(
-                deposit_agent=DepositAgent().filter(update),
-            ),
-        )
-        return ConversationHandler.END
-
-
 request_order_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
@@ -251,10 +241,7 @@ request_order_handler = ConversationHandler(
             back_to_request_what,
             "^back_to_request_what$",
         ),
-        CallbackQueryHandler(
-            cancel_request_order,
-            "^cancel request order$",
-        ),
+        back_to_worker_home_page_handler,
         worker_command,
     ],
 )

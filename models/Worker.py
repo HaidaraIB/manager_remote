@@ -29,7 +29,7 @@ class Worker(BaseUser):
             values.update({"is_point": is_point})
 
         res = s.execute(insert(cls).values(values).prefix_with("OR IGNORE"))
-        print(res.lastrowid)
+        return res.lastrowid
 
     @classmethod
     @connect_and_close

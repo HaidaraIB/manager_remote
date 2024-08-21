@@ -8,6 +8,8 @@ from models.RefNumber import RefNumber
 from sqlalchemy.orm import Session
 import datetime
 
+from common.constants import *
+
 
 class BaseOrder(Base):
     __abstract__ = True
@@ -266,17 +268,31 @@ class BaseOrder(Base):
     @classmethod
     @connect_and_close
     def get_check_order(cls, method: str, s: Session = None):
-        res = s.execute(
-            select(cls)
-            .where(
-                and_(
-                    cls.working_on_it == 0,
-                    cls.state == "pending",
-                    cls.method == method,
+        if method == POINT_DEPOSIT:
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.working_on_it == 0,
+                        cls.state == "pending",
+                        cls.method == SYRCASH,
+                        cls.acc_number == "",
+                    )
                 )
+                .limit(1)
             )
-            .limit(1)
-        )
+        else:
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.working_on_it == 0,
+                        cls.state == "pending",
+                        cls.method == method,
+                    )
+                )
+                .limit(1)
+            )
         try:
             return res.fetchone().t[0]
         except:

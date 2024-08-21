@@ -6,6 +6,8 @@ MTNCASH = "MTN Cash🇸🇾"
 PAYEER = "PAYEER"
 PERFECT_MONEY = "PERFECT MONEY"
 
+POINT_DEPOSIT = "نقاط وكلاء"
+
 CHECK_DEPOSIT_LIST = [
     BEMO
 ]

@@ -50,6 +50,15 @@ back_to_agent_home_page_button = [
     ],
 ]
 
+back_to_worker_home_page_button = [
+    [
+        InlineKeyboardButton(
+            text=BACK_TO_HOME_PAGE_TEXT,
+            callback_data="back_to_worker_home_page",
+        )
+    ],
+]
+
 
 @check_if_user_agent_decorator
 async def back_to_agent_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -114,8 +123,22 @@ async def back_to_admin_home_page(update: Update, context: ContextTypes.DEFAULT_
         return ConversationHandler.END
 
 
+async def back_to_worker_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        await update.callback_query.edit_message_text(
+            text=HOME_PAGE_TEXT,
+            reply_markup=build_worker_keyboard(
+                deposit_agent=DepositAgent().filter(update),
+            ),
+        )
+        return ConversationHandler.END
+
+
 back_to_user_home_page_handler = CallbackQueryHandler(
     back_to_user_home_page, "^back_to_user_home_page$"
+)
+back_to_worker_home_page_handler = CallbackQueryHandler(
+    back_to_worker_home_page, "^back_to_worker_home_page$"
 )
 back_to_admin_home_page_handler = CallbackQueryHandler(
     back_to_admin_home_page, "^back_to_admin_home_page$"

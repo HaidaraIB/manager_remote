@@ -42,9 +42,9 @@ class WorkerWithUs(Base):
             else:
                 res = s.execute(select(cls).where(cls.gov == gov))
 
-            if gov and not user_id:
-                return list(map(lambda x: x[0], res.tuples().all()))
-            else:
+            if order_serial or (user_id and gov):
                 return res.fetchone().t[0]
+            else:
+                return list(map(lambda x: x[0], res.tuples().all()))
         except:
             pass

@@ -40,7 +40,7 @@ from common.constants import *
 (
     CHOOSE_WORKER_BALANCE,
     GET_PRE_BALANCE_AMOUNT,
-) = range(3, 5)
+) = range(4, 6)
 
 
 async def position_for_worker_balance(

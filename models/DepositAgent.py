@@ -10,7 +10,7 @@ class DepositAgent(Worker):
     approved_deposits_num = Column(Float, default=0)
     approved_deposits_week = Column(Float, default=0)
     weekly_rewards_balance = Column(Float, default=0)
-    is_point = Column(Boolean)
+    is_point = Column(Boolean, default=False)
     __table_args__ = (PrimaryKeyConstraint("id", "is_point", name="_id_is_point_uc"),)
 
     @staticmethod
@@ -49,7 +49,7 @@ class DepositAgent(Worker):
                 select(cls).where(and_(cls.is_point == is_point, cls.id == worker_id))
             )  # get deposit agent
             try:
-                return res.fetchone().t[0] 
+                return res.fetchone().t[0]
             except:
                 pass
         elif worker_id:
@@ -69,5 +69,5 @@ class DepositAgent(Worker):
             except:
                 pass
 
-        else:                
+        else:
             return super().get_workers()

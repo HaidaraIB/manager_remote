@@ -116,7 +116,7 @@ async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 point_deposit_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            choose_point,
+            agent_option,
             "^point_deposit$",
         ),
     ],
@@ -153,4 +153,6 @@ point_deposit_handler = ConversationHandler(
         agent_command,
         back_to_agent_home_page_handler,
     ],
+    name="point_deposit_conv",
+    persistent=True,
 )
