@@ -34,7 +34,7 @@ class Photo(Base):
                 "order_type": order_type,
             }
             values.append(p_dict)
-        s.execute(insert(Photo).values(values))
+        s.execute(insert(Photo).values(values).prefix_with("OR IGNORE"))
 
     @staticmethod
     @connect_and_close
