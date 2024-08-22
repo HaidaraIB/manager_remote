@@ -276,7 +276,7 @@ class BaseOrder(Base):
                         cls.working_on_it == 0,
                         cls.state == "pending",
                         cls.method == SYRCASH,
-                        cls.acc_number == "",
+                        cls.acc_number == None,
                     )
                 )
                 .limit(1)

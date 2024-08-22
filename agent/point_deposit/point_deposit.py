@@ -1,4 +1,4 @@
-from telegram import Update, Chat, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, Chat, InlineKeyboardMarkup
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -10,11 +10,9 @@ from common.back_to_home_page import (
     back_to_agent_home_page_button,
     back_to_agent_home_page_handler,
 )
-from common.common import (
-    build_back_button,
-    build_agent_keyboard,
-)
-from agent.point_deposit.common import govs_pattern, send_to_check_deposit
+from common.common import build_back_button, build_agent_keyboard
+from user.deposit.common import send_to_check_bemo_deposit
+from agent.point_deposit.common import govs_pattern
 from start import agent_command
 import models
 from custom_filters import Agent
@@ -103,7 +101,9 @@ back_to_get_ref_num = get_amount
 async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
 
-        await send_to_check_deposit(update, context)
+        await send_to_check_bemo_deposit(
+            update=update, context=context, is_point_deposit=True
+        )
 
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",

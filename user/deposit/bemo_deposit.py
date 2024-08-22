@@ -1,31 +1,21 @@
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Update,
-    Chat,
-)
+from telegram import InlineKeyboardMarkup, Update, Chat
 from telegram.ext import ContextTypes, ConversationHandler
-from models import DepositOrder, DepositAgent, Checker
-from common.common import (
-    notify_workers,
-    build_user_keyboard,
-    build_back_button,
-    send_to_photos_archive,
-)
-from common.stringifies import stringify_deposit_order
+from common.common import build_user_keyboard, build_back_button
 from common.constants import *
 from common.back_to_home_page import back_to_user_home_page_button
-import asyncio
+from user.deposit.common import send_to_check_bemo_deposit
+from models import Checker
 
 DEPOSIT_AMOUNT, SCREENSHOT = range(3, 5)
 
 
-def find_available_checker(method:str, amount:float):
+def find_available_checker(method: str, amount: float):
     checkers = Checker.get_workers(check_what="deposit", method=method)
     for c in checkers:
         if amount <= c.pre_balance:
             return True
     return False
+
 
 async def bemo_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
@@ -91,80 +81,19 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
 back_to_deposit_amount = bemo_deposit
 
 
-async def send_to_check_deposit(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-):
-    user_id = update.effective_user.id
-    photo = update.message.photo[-1]
-
-    amount = context.user_data["deposit_amount"]
-    acc_number = context.user_data["account_deposit"]
-    method = context.user_data["deposit_method"]
-    target_group = context.bot_data["data"]["deposit_orders_group"]
-
-    serial = await DepositOrder.add_deposit_order(
-        user_id=user_id,
-        group_id=target_group,
-        method=method,
-        acc_number=acc_number,
-        deposit_wallet=context.bot_data["data"][f"{method}_number"],
-        amount=amount,
-    )
-
-    caption = stringify_deposit_order(
-        amount=amount,
-        serial=serial,
-        method=method,
-        account_number=acc_number,
-        wal=context.bot_data["data"][f"{method}_number"],
-    )
-    markup = InlineKeyboardMarkup.from_button(
-        InlineKeyboardButton(
-            text="التحقق ☑️", callback_data=f"check_deposit_order_{serial}"
-        )
-    )
-    message = await context.bot.send_photo(
-        chat_id=target_group,
-        photo=photo,
-        caption=caption,
-        reply_markup=markup,
-    )
-
-    await send_to_photos_archive(
-        context,
-        photo=photo,
-        serial=serial,
-        order_type="deposit",
-    )
-
-    await DepositOrder.add_message_ids(
-        serial=serial,
-        pending_check_message_id=message.id,
-    )
-
-    workers = DepositAgent.get_workers()
-    asyncio.create_task(
-        notify_workers(
-            context=context,
-            workers=workers,
-            text=f"انتباه يوجد طلب تحقق إيداع جديد 🚨",
-        )
-    )
-    workers = Checker.get_workers(check_what="deposit", method=method)
-    asyncio.create_task(
-        notify_workers(
-            context=context,
-            workers=workers,
-            text=f"انتباه يوجد طلب تحقق إيداع جديد 🚨",
-        )
-    )
-
-
 async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-
-        await send_to_check_deposit(update, context)
+        method = context.user_data["deposit_method"]
+        await send_to_check_bemo_deposit(
+            context=context,
+            user_id=update.effective_user.id,
+            photo=update.message.photo[-1],
+            amount=context.user_data["deposit_amount"],
+            acc_number=context.user_data["account_deposit"],
+            method=method,
+            target_group=context.bot_data["data"]["deposit_orders_group"],
+            deposit_wallet=context.bot_data["data"][f"{method}_number"],
+        )
 
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",

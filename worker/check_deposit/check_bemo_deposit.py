@@ -241,16 +241,9 @@ async def decline_deposit_order_reason(
             )
             workplace_id = agent.team_cash_workplace_id
         text = (
-            "تم رفض الطلب❌\n"
-            + stringify_deposit_order(
-                amount=d_order.amount,
-                serial=d_order.serial,
-                method=d_order.method,
-                account_number=d_order.acc_number,
-                wal=d_order.deposit_wallet,
-                workplace_id=workplace_id
-            )
-            + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
+            "تم رفض طلب الإيداع الخاص بك ❌\n\n"
+            f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
+            f"السبب: {update.message.text_html}"
         )
         await send_message_to_user(
             update=update,
@@ -260,7 +253,7 @@ async def decline_deposit_order_reason(
         )
 
         caption = (
-            "تم رفض الطلب❌\n"
+            "تم رفض الطلب ❌\n"
             + update.message.reply_to_message.caption_html
             + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
         )
@@ -299,7 +292,6 @@ async def decline_deposit_order_reason(
         await models.DepositOrder.decline_order(
             reason=update.message.text,
             serial=serial,
-            amount=d_order.amount,
         )
 
 
