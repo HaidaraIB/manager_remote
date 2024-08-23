@@ -276,7 +276,7 @@ reply_with_payment_proof_withdraw_handler = MessageHandler(
 
 return_withdraw_order_handler = CallbackQueryHandler(
     callback=return_withdraw_order,
-    pattern="^return_withdraw_order",
+    pattern="^return(_to_checker)?_withdraw_order",
 )
 return_withdraw_order_reason_handler = MessageHandler(
     filters=filters.REPLY & filters.TEXT & Withdraw() & Returned(),

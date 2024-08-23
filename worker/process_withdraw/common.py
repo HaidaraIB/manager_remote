@@ -56,7 +56,7 @@ async def return_order_to_checker(
     )
     await context.bot.send_message(
         chat_id=w_order.checker_id,
-        text="تمت إعادة الطلب أعلاه من قبل موظف الدفع، السبب:\n" + reason,
+        text="تمت إعادة الطلب أعلاه من قبل موظف الدفع، السبب:\n" + f"<b>{reason}</b>",
     )
     await WithdrawOrder.return_order_to_checker(
         serial=w_order.serial,
