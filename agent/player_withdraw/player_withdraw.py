@@ -44,7 +44,7 @@ import os
     PAYMENT_INFO,
     BANK_ACCOUNT_NAME,
     WITHDRAW_CODE,
-) = range(1, 5)
+) = range(2, 6)
 
 
 async def get_player_number_withdraw(

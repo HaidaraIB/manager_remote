@@ -18,7 +18,11 @@ import models
 from custom_filters import Agent
 from agent.common import agent_option, POINT
 
-AMOUNT, REF_NUM, SCREEN_SHOT = range(1, 4)
+(
+    AMOUNT,
+    REF_NUM,
+    SCREEN_SHOT,
+) = range(1, 4)
 
 
 async def choose_point(update: Update, context: ContextTypes.DEFAULT_TYPE):
