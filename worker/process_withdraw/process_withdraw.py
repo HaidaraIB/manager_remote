@@ -256,7 +256,10 @@ async def back_from_return_withdraw_order(
         serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
+            text=(
+                "قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة في المبلغ قم بالإعادة إلى الموظف المسؤول، "
+                "أو يمكنك الإعادة إلى المستخدم في حال وجود مشكلة في معلومات الدفع الخاصة به."
+            ),
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(

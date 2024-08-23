@@ -180,7 +180,7 @@ class BaseOrder(Base):
     ):
         s.query(cls).filter_by(serial=serial).update(
             {
-                cls.state: "pending",
+                cls.state: "checking",
                 cls.reason: "",
             }
         )
@@ -267,7 +267,7 @@ class BaseOrder(Base):
     ):
         s.query(cls).filter_by(serial=serial).update(
             {
-                cls.state: "pending",
+                cls.state: "checking",
                 cls.pending_process_message_id: 0,
                 cls.working_on_it: 0,
                 cls.group_id: group_id,

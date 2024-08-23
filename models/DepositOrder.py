@@ -114,7 +114,7 @@ class DepositOrder(Order):
     ):
         s.query(DepositOrder).filter_by(serial=serial).update(
             {
-                DepositOrder.state: "sent",
+                DepositOrder.state: "processing",
                 DepositOrder.working_on_it: 0,
             }
         )

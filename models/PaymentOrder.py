@@ -74,7 +74,7 @@ class PaymentOrder(Order):
     ):
         s.query(cls).filter_by(serial=serial).update(
             {
-                cls.state: "sent",
+                cls.state: "processing",
                 cls.working_on_it: 0,
             }
         )
