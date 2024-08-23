@@ -20,19 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("trusted_agents_orders") as batch_op:
-        batch_op.drop_column("front_id")
-        batch_op.drop_column("front_unique_id")
-        batch_op.drop_column("front_width")
-        batch_op.drop_column("front_height")
-        batch_op.drop_column("front_size")
-
-        batch_op.drop_column("back_id")
-        batch_op.drop_column("back_unique_id")
-        batch_op.drop_column("back_width")
-        batch_op.drop_column("back_height")
-        batch_op.drop_column("back_size")
-
+    pass
 
 def downgrade() -> None:
     pass

@@ -9,6 +9,7 @@ class WithdrawOrder(PaymentOrder):
     acc_number = Column(String)
     withdraw_code = Column(String)
     agent_id = Column(Integer, default=0)
+    gov = Column(String, default="")
 
     @staticmethod
     @lock_and_release
@@ -34,7 +35,7 @@ class WithdrawOrder(PaymentOrder):
                 payment_method_number=payment_method_number,
                 acc_number=acc_number,
                 agent_id=agent_id,
-                gov=gov
+                gov=gov,
             )
         )
         return res.lastrowid

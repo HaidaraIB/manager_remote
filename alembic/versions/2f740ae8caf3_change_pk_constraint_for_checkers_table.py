@@ -19,10 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("checkers") as batch_op:
-        pass
+    pass
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("checkers") as batch_op:
-        pass
+    pass

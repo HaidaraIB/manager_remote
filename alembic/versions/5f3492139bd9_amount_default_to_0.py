@@ -20,24 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("withdraw_orders") as batch_op:
-        batch_op.alter_column(
-            "amount",
-            type_=sa.Float,
-            server_default='0',
-        )
-    with op.batch_alter_table("deposit_orders") as batch_op:
-        batch_op.alter_column(
-            "amount",
-            type_=sa.Float,
-            server_default='0',
-        )
-    with op.batch_alter_table("buy_usdt_orders") as batch_op:
-        batch_op.alter_column(
-            "amount",
-            type_=sa.Float,
-            server_default='0',
-        )
+    pass
 
 
 def downgrade() -> None:

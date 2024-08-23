@@ -19,8 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.rename_table("buy_usdt_orders", "busdt_orders")
-
+    pass
 
 def downgrade() -> None:
     pass

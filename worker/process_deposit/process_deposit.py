@@ -271,7 +271,7 @@ async def return_deposit_order_reason(
                     f"الموظف المسؤول {update.effective_user.name}\n\n" + ar_text,
                 )
 
-        await DepositOrder.return_order(
+        await DepositOrder.return_order_to_user(
             reason=update.message.text,
             serial=serial,
         )

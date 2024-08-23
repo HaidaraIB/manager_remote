@@ -20,13 +20,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("trusted_agents") as batch_op:
-        batch_op.add_column(
-            column=sa.Column(
-                name="neighborhood",
-                type_=sa.String,
-            ),
-        )
+    try:
+        with op.batch_alter_table("trusted_agents") as batch_op:
+            batch_op.add_column(
+                column=sa.Column(
+                    name="neighborhood",
+                    type_=sa.String,
+                ),
+            )
+    except:
+        pass
 
 
 def downgrade() -> None:

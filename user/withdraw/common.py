@@ -7,6 +7,14 @@ from common.constants import *
 import asyncio
 
 
+def make_payment_method_info(payment_method_number, bank_account_name, method):
+    return f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (
+        f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
+        if method in [BARAKAH, BEMO]
+        else ""
+    )
+
+
 async def send_withdraw_order_to_check(
     context: ContextTypes.DEFAULT_TYPE,
     withdraw_code: str,
@@ -39,11 +47,6 @@ async def send_withdraw_order_to_check(
         gov=gov,
     )
 
-    method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (
-        f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
-        if method in [BARAKAH, BEMO]
-        else ""
-    )
     message = await context.bot.send_message(
         chat_id=target_group,
         text=stringify_check_withdraw_order(
@@ -53,7 +56,11 @@ async def send_withdraw_order_to_check(
             withdraw_code=withdraw_code,
             method=method,
             serial=serial,
-            method_info=method_info,
+            method_info=make_payment_method_info(
+                payment_method_number=payment_method_number,
+                bank_account_name=bank_account_name,
+                method=method,
+            ),
         ),
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(

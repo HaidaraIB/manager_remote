@@ -3,7 +3,6 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    error,
 )
 
 from telegram.ext import (
@@ -22,8 +21,12 @@ from common.common import (
     pretty_time_delta,
     format_amount,
     send_to_photos_archive,
-    send_message_to_user,
     send_photo_to_user,
+)
+from worker.process_withdraw.common import (
+    return_order_to_user,
+    return_order_to_checker,
+    build_process_withdraw_keyboard,
 )
 
 
@@ -41,17 +44,15 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
         serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
+            text=(
+                "قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة في المبلغ قم بالإعادة إلى الموظف المسؤول، "
+                "أو يمكنك الإعادة إلى المستخدم في حال وجود مشكلة في معلومات الدفع الخاصة به."
+            ),
             show_alert=True,
         )
 
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="إعادة الطلب📥",
-                    callback_data=f"return_withdraw_order_{serial}",
-                )
-            )
+            reply_markup=InlineKeyboardMarkup(build_process_withdraw_keyboard(serial))
         )
 
 
@@ -156,8 +157,16 @@ async def return_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TY
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="الرجوع عن الإعادة🔙",
-                    callback_data=f"back_from_return_withdraw_order_{serial}",
+                    text=(
+                        "الرجوع عن الإعادة إلى المستخدم 🔙"
+                        if "return_to_checker" not in update.callback_query.data
+                        else "الرجوع عن الإعادة إلى الموظف 🔙"
+                    ),
+                    callback_data=(
+                        f"back_from_return_withdraw_order_{serial}"
+                        if "return_to_checker" not in update.callback_query.data
+                        else f"back_from_return_to_checker_withdraw_order_{serial}"
+                    ),
                 )
             )
         )
@@ -169,41 +178,32 @@ async def return_withdraw_order_reason(
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
-
-        serial = int(
-            update.message.reply_to_message.reply_markup.inline_keyboard[0][
-                0
-            ].callback_data.split("_")[-1]
-        )
+        data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
+            0
+        ].callback_data
+        serial = int(data.split("_")[-1])
         w_order = WithdrawOrder.get_one_order(serial=serial)
+        reason = update.message.text_html
 
-        withdraw_code = w_order.withdraw_code
-        user_id = w_order.user_id
-
-        text = (
-            f"تمت إعادة طلب السحب صاحب الكود: <b>{withdraw_code}</b>❗️\n\n"
-            "السبب:\n"
-            f"<b>{update.message.text_html}</b>\n\n"
-            "قم بالضغط على الزر أدناه وإرفاق المطلوب."
-        )
-
-        await send_message_to_user(
-            update=update,
-            context=context,
-            user_id=user_id,
-            msg=text,
-            keyboard=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="إرفاق المطلوب",
-                    callback_data=f"handle_return_withdraw_{update.effective_chat.id}_{serial}",
-                )
-            ),
-        )
+        if "return_to_checker" in data:
+            await return_order_to_checker(
+                context=context,
+                w_order=w_order,
+                reason=reason,
+            )
+            return_to_who_line = "تمت إعادة الطلب إلى الموظف 📥\n"
+        else:
+            await return_order_to_user(
+                update=update,
+                context=context,
+                w_order=w_order,
+            )
+            return_to_who_line = "تمت إعادة الطلب إلى المستخدم 📥\n"
 
         text = (
-            "تمت إعادة الطلب📥\n"
+            return_to_who_line
             + update.message.reply_to_message.text_html
-            + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+            + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
         )
 
         await context.bot.send_message(
@@ -216,7 +216,7 @@ async def return_withdraw_order_reason(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت إعادة الطلب📥",
+                    text=return_to_who_line,
                     callback_data="📥📥📥📥📥📥📥📥",
                 ),
             ),
@@ -224,7 +224,7 @@ async def return_withdraw_order_reason(
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت إعادة الطلب📥",
+            text=return_to_who_line,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -238,15 +238,12 @@ async def return_withdraw_order_reason(
         if minutes > 10:
             await context.bot.send_message(
                 chat_id=context.bot_data["data"]["latency_group"],
-                text=f"طلب متأخر بمقدار\n"
-                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
-                f"الموظف المسؤول {update.effective_user.name}\n\n" + text,
+                text=(
+                    f"طلب متأخر بمقدار\n"
+                    + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
+                    f"الموظف المسؤول {update.effective_user.name}\n\n" + text
+                ),
             )
-
-        await WithdrawOrder.return_order(
-            reason=update.message.text,
-            serial=serial,
-        )
 
 
 async def back_from_return_withdraw_order(
@@ -263,12 +260,7 @@ async def back_from_return_withdraw_order(
             show_alert=True,
         )
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="إعادة الطلب📥",
-                    callback_data=f"return_withdraw_order_{serial}",
-                )
-            )
+            reply_markup=InlineKeyboardMarkup(build_process_withdraw_keyboard(serial))
         )
 
 
@@ -284,7 +276,7 @@ reply_with_payment_proof_withdraw_handler = MessageHandler(
 
 return_withdraw_order_handler = CallbackQueryHandler(
     callback=return_withdraw_order,
-    pattern="^return_withdraw_order",
+    pattern="^return(_to_checker)?_withdraw_order",
 )
 return_withdraw_order_reason_handler = MessageHandler(
     filters=filters.REPLY & filters.TEXT & Withdraw() & Returned(),

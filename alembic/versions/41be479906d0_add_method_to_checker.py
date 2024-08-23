@@ -20,14 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("checkers") as batch_op:
-        batch_op.add_column(
-            column=sa.Column(
-                name="method",
-                type_=sa.String,
-                default="",
-            ),
-        )
+    pass
 
 
 def downgrade() -> None:

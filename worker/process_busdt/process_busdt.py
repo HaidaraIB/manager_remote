@@ -251,7 +251,7 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
                 f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
             )
 
-        await BuyUsdtdOrder.return_order(
+        await BuyUsdtdOrder.return_order_to_user(
             reason=update.message.text,
             serial=serial,
         )

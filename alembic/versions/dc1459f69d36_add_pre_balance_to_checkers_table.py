@@ -20,14 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("checkers") as batch_op:
-        batch_op.add_column(
-            sa.Column(
-                name="pre_balance",
-                type_=sa.Float,
-                default=0,
-            )
-        )
+    pass
 
 
 def downgrade() -> None:

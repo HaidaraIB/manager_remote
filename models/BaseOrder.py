@@ -1,9 +1,5 @@
 from sqlalchemy import select, and_, or_, desc
-from models.DB import (
-    Base,
-    lock_and_release,
-    connect_and_close,
-)
+from models.DB import Base, lock_and_release, connect_and_close
 from models.RefNumber import RefNumber
 from sqlalchemy.orm import Session
 import datetime
@@ -191,7 +187,7 @@ class BaseOrder(Base):
 
     @classmethod
     @lock_and_release
-    async def return_order(
+    async def return_order_to_user(
         cls,
         reason: str,
         serial: int,
@@ -202,6 +198,21 @@ class BaseOrder(Base):
                 cls.state: "returned",
                 cls.reason: reason,
                 cls.return_date: datetime.datetime.now(),
+            }
+        )
+
+    @classmethod
+    @lock_and_release
+    async def return_order_to_checker(
+        cls,
+        reason: str,
+        serial: int,
+        s: Session = None,
+    ):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "pending",
+                cls.reason: reason,
             }
         )
 

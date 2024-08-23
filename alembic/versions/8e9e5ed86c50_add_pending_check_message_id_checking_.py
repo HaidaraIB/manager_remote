@@ -20,21 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("deposit_orders") as batch_op:
-        batch_op.add_column(
-            column=sa.Column(
-                name="pending_check_message_id",
-                type_=sa.Integer,
-                default=0,
-            )
-        )
-        batch_op.add_column(
-            column=sa.Column(
-                name="checking_message_id",
-                type_=sa.Integer,
-                default=0,
-            )
-        )
+    pass
 
 
 def downgrade() -> None:

@@ -19,12 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("trusted_agents_orders") as batch_op:
-        batch_op.alter_column(
-            column_name="creation_date",
-            new_column_name="order_date"
-        )
-
+    pass
 
 
 def downgrade() -> None:
