@@ -18,7 +18,12 @@ from common.constants import *
 import os
 import asyncio
 
-from common.common import build_worker_keyboard, apply_ex_rate, notify_workers, send_message_to_user
+from common.common import (
+    build_worker_keyboard,
+    apply_ex_rate,
+    notify_workers,
+    send_message_to_user,
+)
 from common.stringifies import stringify_process_withdraw_order
 
 (
@@ -277,7 +282,7 @@ check_payment_handler = CallbackQueryHandler(
 
 back_to_withdraw_check_handler = CallbackQueryHandler(
     callback=back_to_withdraw_check,
-    pattern="(^back_from_decline_withdraw_order)|(^back_from_get_withdraw_order_amount)",
+    pattern="^back_from_(decline_withdraw_order)|(get_withdraw_order_amount)",
 )
 
 get_withdraw_order_amount_handler = CallbackQueryHandler(
