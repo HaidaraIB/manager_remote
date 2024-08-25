@@ -30,7 +30,7 @@ from start import admin_command, start_command
 from common.constants import *
 from custom_filters import Admin
 
-NEW_GROUP_ID = 0
+CHOOSE_GROUP_TO_CHANGE, NEW_GROUP_ID = range(2)
 
 
 async def change_groups(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,6 +43,7 @@ async def change_groups(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="اختر الغروب الذي تريد تغييره:",
             reply_markup=InlineKeyboardMarkup(change_groups_keyboard),
         )
+        return CHOOSE_GROUP_TO_CHANGE
 
 
 async def change_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -92,16 +93,20 @@ async def get_new_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
 
-change_groups_handler = CallbackQueryHandler(change_groups, "^change groups$")
-
 change_group_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            change_group,
-            "^change.*_group$",
+            change_groups,
+            "^change groups$",
         ),
     ],
     states={
+        CHOOSE_GROUP_TO_CHANGE: [
+            CallbackQueryHandler(
+                change_group,
+                "^change.*_group$",
+            ),
+        ],
         NEW_GROUP_ID: [
             MessageHandler(
                 filters=filters.StatusUpdate.CHAT_SHARED,
@@ -111,7 +116,7 @@ change_group_handler = ConversationHandler(
                 filters=filters.Regex("^-?\d+$"),
                 callback=get_new_group,
             ),
-        ]
+        ],
     },
     fallbacks=[
         back_to_admin_home_page_handler,

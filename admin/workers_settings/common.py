@@ -28,12 +28,12 @@ async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         worker_settings_keyboard = [
             [
-                InlineKeyboardButton(text="إضافة موظف➕", callback_data="add_worker"),
-                InlineKeyboardButton(text="حذف موظف✖️", callback_data="remove_worker"),
+                InlineKeyboardButton(text="إضافة موظف ➕", callback_data="add_worker"),
+                InlineKeyboardButton(text="حذف موظف ✖️", callback_data="remove_worker"),
             ],
             [
                 InlineKeyboardButton(
-                    text="عرض الموظفين🔍", callback_data="show_worker"
+                    text="عرض الموظفين 🔍", callback_data="show_worker"
                 ),
             ],
             [
@@ -53,11 +53,11 @@ back_to_choose_option = worker_settings
 
 async def choose_option(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        if update.callback_query.data.startswith("back"):
-            op = update.callback_query.data.split("_")[-1]
-        else:
+        if not update.callback_query.data.startswith("back"):
             op = update.callback_query.data.split("_")[0]
             context.user_data["worker_settings_option"] = op
+        else:
+            op = context.user_data["worker_settings_option"]
         await update.callback_query.edit_message_text(
             text="اختر الوظيفة:",
             reply_markup=build_positions_keyboard(op=op),
@@ -70,6 +70,11 @@ back_to_choose_position = choose_option
 back_to_choose_option_handler = CallbackQueryHandler(
     back_to_choose_option,
     "^back_to_choose_option$",
+)
+
+back_to_choose_position_handler = CallbackQueryHandler(
+    back_to_choose_position,
+    "^back_to_choose_position$",
 )
 
 worker_settings_handler = CallbackQueryHandler(

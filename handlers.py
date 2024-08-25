@@ -240,7 +240,6 @@ def main():
     app.add_handler(complaint_handler)
 
     # GROUPS SETTINGS
-    app.add_handler(change_groups_handler)
     app.add_handler(change_group_handler)
 
     # ADMIN CALLS
@@ -249,6 +248,7 @@ def main():
     app.add_handler(turn_payment_method_on_or_off_handler)
 
     app.add_handler(wallets_settings_handler)
+    
     app.add_handler(broadcast_message_handler)
 
     app.add_handler(request_order_handler)

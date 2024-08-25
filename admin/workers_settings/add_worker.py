@@ -28,6 +28,8 @@ from custom_filters import Admin
 from admin.workers_settings.common import (
     build_positions_keyboard,
     build_checker_positions_keyboard,
+    back_to_choose_option_handler,
+    back_to_choose_position_handler,
 )
 from common.constants import *
 from common.common import build_back_button
@@ -40,7 +42,7 @@ from common.common import build_back_button
 ) = range(4)
 
 
-async def add_worker_cp(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         text = "اختر حساب الموظف الذي تريد إضافته بالضغط على الزر أدناه، يمكنك إلغاء العملية بالضغط على /admin."
 
@@ -149,7 +151,7 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-back_to_worker_id = add_worker_cp
+back_to_worker_id = choose_position
 
 
 async def choose_deposit_after_check_position(
@@ -207,19 +209,16 @@ async def choose_check_position(update: Update, context: ContextTypes.DEFAULT_TY
             text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
-
-
-async def back_to_choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        await update.callback_query.edit_message_text(
-            text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
-            reply_markup=build_positions_keyboard(op="add"),
-        )
-        return POSITION
+        return CHECK_POSITION
 
 
 add_worker_cp_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(add_worker_cp, "^add_worker$")],
+    entry_points=[
+        CallbackQueryHandler(
+            choose_position,
+            "^add_worker$",
+        )
+    ],
     states={
         WORKER_ID: [
             MessageHandler(
@@ -254,7 +253,8 @@ add_worker_cp_handler = ConversationHandler(
         back_to_admin_home_page_handler,
         admin_command,
         start_command,
+        back_to_choose_position_handler,
+        back_to_choose_option_handler,
         CallbackQueryHandler(back_to_worker_id, "^back_to_worker_id$"),
-        CallbackQueryHandler(back_to_choose_position, "^back_to_choose_position$"),
     ],
 )

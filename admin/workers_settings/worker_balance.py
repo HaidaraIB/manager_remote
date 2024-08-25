@@ -32,8 +32,8 @@ from admin.workers_settings.common import (
     build_workers_keyboard,
     choose_option,
     create_worker_info_text,
-    back_to_choose_position,
     back_to_choose_option_handler,
+    back_to_choose_position_handler,
 )
 from common.constants import *
 
@@ -211,13 +211,10 @@ worker_balance_handler = ConversationHandler(
             "^back_to_worker_for_worker_balance$",
         ),
         CallbackQueryHandler(
-            back_to_choose_position,
-            "^back_to_balance$",
-        ),
-        CallbackQueryHandler(
             back_to_choose_worker_balance,
             "^back_to_choose_worker_balance$",
         ),
+        back_to_choose_position_handler,
         back_to_choose_option_handler,
         back_to_admin_home_page_handler,
         admin_command,
