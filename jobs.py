@@ -44,6 +44,7 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
             )
             updated_worker = model.get_workers(
                 worker_id=worker.id,
+                is_point=worker.is_point,
             )
 
         worker_text = (
