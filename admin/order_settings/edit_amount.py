@@ -1,9 +1,4 @@
-from telegram import (
-    Update,
-    Chat,
-    InlineKeyboardMarkup,
-)
-
+from telegram import Update, Chat, InlineKeyboardMarkup
 from telegram.ext import (
     ContextTypes,
     CallbackQueryHandler,
@@ -14,6 +9,7 @@ from telegram.ext import (
 from common.common import (
     parent_to_child_models_mapper,
     build_back_button,
+    ensure_positive_amount,
 )
 from common.back_to_home_page import (
     back_to_admin_home_page_button,
@@ -26,7 +22,7 @@ from admin.order_settings.common import (
 
 import models
 
-(NEW_AMOUNT,) = range(1)
+NEW_AMOUNT = 0
 
 
 async def edit_order_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -60,12 +56,16 @@ async def get_new_amount(
 ):
     if update.effective_chat.type == Chat.PRIVATE:
 
+        new_amount = float(update.message.text)
+        is_pos = await ensure_positive_amount(amount=new_amount, update=update)
+        if not is_pos:
+            return
+        
         serial = context.user_data["edit_order_amount_serial"]
         order_type = context.user_data["edit_order_amount_type"]
 
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
 
-        new_amount = float(update.message.text)
         old_amount = order.amount
 
         await parent_to_child_models_mapper[order_type].edit_order_amount(
@@ -124,5 +124,6 @@ edit_order_amount_handler = ConversationHandler(
             back_to_choose_action,
             "^back_from_edit_order_amount",
         ),
+        back_to_admin_home_page_handler,
     ],
 )

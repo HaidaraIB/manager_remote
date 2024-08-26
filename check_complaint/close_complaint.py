@@ -104,7 +104,6 @@ async def skip_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYP
             serial=op.serial,
             took_care_of=1,
         )
-        context.bot_data["suspended_workers"].discard(op.worker_id)
 
 
 async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -189,7 +188,6 @@ async def reply_on_close_complaint(update: Update, context: ContextTypes.DEFAULT
             serial=op.serial, took_care_of=1
         )
 
-        context.bot_data["suspended_workers"].discard(op.worker_id)
 
 
 back_from_close_complaint = back_from_respond_to_user_complaint

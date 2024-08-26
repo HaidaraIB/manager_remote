@@ -228,7 +228,7 @@ def create_worker_info_text(
             f"السحوبات حتى الآن: {format_amount(worker.approved_withdraws)}\n"
             f"عددها: {worker.approved_withdraws_num}\n"
             f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"
-            f"السحوبات هذا الاسبوع: {format_amount(worker.approved_withdraws_day)}\n"
+            f"السحوبات هذا اليوم: {format_amount(worker.approved_withdraws_day)}\n"
             f"رصيد المكافآت: {format_amount(worker.daily_rewards_balance)}\n"
         )
     return text

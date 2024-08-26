@@ -23,23 +23,15 @@ from common.common import (
     apply_ex_rate,
     notify_workers,
     send_message_to_user,
+    ensure_positive_amount,
 )
 from common.stringifies import stringify_process_withdraw_order
-
-(
-    DECLINE_REASON,
-    AMOUNT,
-) = range(2)
 
 
 async def check_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
-
-        # if update.effective_user.id in context.bot_data['suspended_workers']:
-        #     await update.callback_query.answer("تم إيقافك عن العمل إلى حين معالجة الشكاوى الصادرة باسمك.")
-        #     return
 
         serial = int(update.callback_query.data.split("_")[-1])
 
@@ -78,19 +70,21 @@ async def get_withdraw_order_amount(update: Update, context: ContextTypes.DEFAUL
                 )
             )
         )
-        return AMOUNT
 
 
 async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
     ]:
+        amount = float(update.message.text)
+        is_pos = await ensure_positive_amount(amount=amount, update=update)
+        if not is_pos:
+            return
         serial = int(
             update.message.reply_to_message.reply_markup.inline_keyboard[0][
                 0
             ].callback_data.split("_")[-1]
         )
-        amount = float(update.message.text)
         await WithdrawOrder.edit_order_amount(
             new_amount=amount,
             serial=serial,
@@ -181,7 +175,6 @@ async def decline_withdraw_order(update: Update, context: ContextTypes.DEFAULT_T
                 )
             )
         )
-        return DECLINE_REASON
 
 
 async def decline_withdraw_order_reason(

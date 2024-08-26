@@ -11,6 +11,7 @@ from telegram.ext import (
 from custom_filters import Ref
 from models import RefNumber, DepositOrder, PaymentMethod
 from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
+from common.common import ensure_positive_amount
 
 
 async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -23,8 +24,12 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         ref_number_info = update.message.text.split("\n")
 
-        number = ref_number_info[0].split(": ")[1]
         amount = float(ref_number_info[2].split(": ")[1])
+        is_pos = await ensure_positive_amount(amount=amount, update=update)
+        if not is_pos:
+            return
+        
+        number = ref_number_info[0].split(": ")[1]
         method = ref_number_info[1]
 
         ref_present = RefNumber.get_ref_number(

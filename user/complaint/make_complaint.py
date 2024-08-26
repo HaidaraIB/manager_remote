@@ -228,9 +228,6 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
             )
             photos = Photo.get(order_serial=serial, order_type=order_type)
 
-            if order.worker_id:
-                context.bot_data["suspended_workers"].add(order.worker_id)
-
             data = [order_type, serial]
             complaint_keyboard = build_complaint_keyboard(data, True)
 

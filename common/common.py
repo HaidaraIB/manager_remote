@@ -41,6 +41,14 @@ order_dict_en_to_ar = {
 }
 
 
+async def ensure_positive_amount(amount:float, update:Update):
+    if amount < 0:
+        await update.message.reply_text(
+            text="يجب أن يكون المبلغ قيمة موجبة لا تساوي الصفر ❗️"
+        )
+        return False
+    return True
+
 async def send_to_photos_archive(
     context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type
 ):

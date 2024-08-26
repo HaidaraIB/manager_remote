@@ -12,7 +12,11 @@ from telegram.ext import (
     filters,
 )
 from custom_filters import Complaint, ModAmountUserComplaint
-from common.common import build_complaint_keyboard, parent_to_child_models_mapper
+from common.common import (
+    build_complaint_keyboard,
+    ensure_positive_amount,
+    parent_to_child_models_mapper,
+)
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_conv_text
 from common.constants import EXT_COMPLAINT_LINE
@@ -47,6 +51,12 @@ async def edit_order_amount_user_complaint(
 ):
     if update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP, Chat.PRIVATE]:
 
+        new_amount = float(update.message.text)
+
+        is_pos = await ensure_positive_amount(amount=new_amount, update=update)
+        if not is_pos:
+            return
+
         callback_data = update.message.reply_to_message.reply_markup.inline_keyboard[0][
             0
         ].callback_data.split("_")
@@ -58,7 +68,6 @@ async def edit_order_amount_user_complaint(
             order_serial=serial, order_type=order_type
         )
 
-        new_amount = float(update.message.text)
         old_amount = op.amount
 
         await parent_to_child_models_mapper[order_type].edit_order_amount(
@@ -82,7 +91,7 @@ async def edit_order_amount_user_complaint(
 
         conv_text = (
             EXT_COMPLAINT_LINE.format(serial)
-            + "تم تعديل المبلغ بنجاح ✅\n"
+            + "تم تعديل المبلغ بنجاح ✅\n\n"
             + f"المبلغ: <b>{new_amount}</b>\n\n"
         )
         conv_text += make_conv_text(complaint_id=complaint.id)
