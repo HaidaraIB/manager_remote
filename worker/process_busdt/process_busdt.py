@@ -57,9 +57,8 @@ async def user_payment_verified_busdt(
                     )
                 ]
             ]
-            text = (
-                "قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
-            )
+            text = "قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة."
+            
 
         await update.callback_query.answer(text=text, show_alert=True)
         await update.callback_query.edit_message_reply_markup(

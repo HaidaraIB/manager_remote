@@ -49,9 +49,6 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
             ]
             text = "لقد قامت الإدارة بحذف هذا الطلب ⁉️"
         else:
-            text = (
-                "قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
-            )
             keyboard = [
                 [
                     InlineKeyboardButton(
@@ -60,6 +57,7 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
                     )
                 ]
             ]
+            text = "قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة."
 
         await update.callback_query.answer(text=text, show_alert=True)
         await update.callback_query.edit_message_reply_markup(
