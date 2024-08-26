@@ -1,10 +1,4 @@
-from telegram import (
-    Update,
-    Chat,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-
+from telegram import Update, Chat, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -12,26 +6,22 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-
 from common.common import (
     build_user_keyboard,
     apply_ex_rate,
     build_back_button,
     parent_to_child_models_mapper,
 )
-
-from common.back_to_home_page import back_to_user_home_page_handler
-
-import models
-
 from common.stringifies import (
     stringify_deposit_order,
     stringify_process_withdraw_order,
     stringify_process_busdt_order,
     stringify_returned_order,
 )
+import models
 
-(SEND_ATTACHMENTS,) = range(1)
+
+SEND_ATTACHMENTS = 0
 
 
 async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -42,6 +32,12 @@ async def handle_returned_order(update: Update, context: ContextTypes.DEFAULT_TY
         order = parent_to_child_models_mapper[order_type].get_one_order(
             serial=int(data[-1])
         )
+        if order.state == "deleted":
+            await update.message.reply_text(
+                text="طلب محذوف ❗️",
+            )
+            return ConversationHandler.END
+
         if order_type == "withdraw":
             code_present = models.WithdrawOrder.check_withdraw_code(
                 withdraw_code=order.withdraw_code
@@ -89,6 +85,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data: list[str] = context.user_data["returned_data"]
         serial = int(data[-1])
         order_type = data[2]
+        worker_id = int(data[-2])
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
         reply_markup = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
@@ -116,16 +113,16 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 order.payment_method_number,
             )
             if order_type == "withdraw":
-                await context.bot.send_message(
-                    chat_id=int(data[-2]),
+                message = await context.bot.send_message(
+                    chat_id=worker_id,
                     text=stringify_returned_order(
                         *stringify_returned_payment_order_args
                     ),
                     reply_markup=reply_markup,
                 )
             else:
-                await context.bot.send_photo(
-                    chat_id=int(data[-2]),
+                message = await context.bot.send_photo(
+                    chat_id=worker_id,
                     photo=context.user_data["effective_photo"],
                     caption=stringify_returned_order(
                         *stringify_returned_payment_order_args
@@ -147,19 +144,19 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 order.acc_number,
                 order.deposit_wallet,
                 order.ref_number,
-                workplace_id
+                workplace_id,
             )
             if order.ref_number:
-                await context.bot.send_message(
-                    chat_id=int(data[-2]),
+                message = await context.bot.send_message(
+                    chat_id=worker_id,
                     text=stringify_returned_order(
                         *stringify_returned_deposit_order_args
                     ),
                     reply_markup=reply_markup,
                 )
             else:
-                await context.bot.send_photo(
-                    chat_id=int(data[-2]),
+                message = await context.bot.send_photo(
+                    chat_id=worker_id,
                     photo=context.user_data["effective_photo"],
                     caption=stringify_returned_order(
                         *stringify_returned_deposit_order_args
@@ -167,8 +164,9 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=reply_markup,
                 )
 
-        await parent_to_child_models_mapper[order_type].add_date(
-            serial=serial, date_type="return"
+        await parent_to_child_models_mapper[order_type].return_order_to_worker(
+            serial=serial,
+            processing_message_id=message.id,
         )
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,

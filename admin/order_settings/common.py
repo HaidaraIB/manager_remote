@@ -1,16 +1,11 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Chat,
-)
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat
 from telegram.ext import ContextTypes, ConversationHandler
-from common.common import (
-    parent_to_child_models_mapper,
-)
+from custom_filters import Admin
+from common.common import parent_to_child_models_mapper
 from common.back_to_home_page import back_to_admin_home_page_button
 from common.stringifies import general_stringify_order, order_settings_dict
 import models
+
 
 def build_order_types_keyboard():
     keyboard = [
@@ -50,6 +45,7 @@ def build_actions_keyboard(order_type: str, serial: int):
             ),
         ],
     ]
+
     edit_amount_button = InlineKeyboardButton(
         text="تعديل المبلغ",
         callback_data=f"edit_{order_type}_order_amount_{serial}",
@@ -86,12 +82,19 @@ def build_actions_keyboard(order_type: str, serial: int):
     elif order.state == "sent":
         actions_keyboard.append([decline_order_button])
 
+    delete_order_button = InlineKeyboardButton(
+        text="حذف الطلب",
+        callback_data=f"delete_{order_type}_order_{serial}",
+    )
+    if order.state == "returned":
+        actions_keyboard[0].append([delete_order_button])
+
     actions_keyboard.append(back_to_admin_home_page_button[0])
     return actions_keyboard
 
 
 async def back_to_choose_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = update.callback_query.data.split("_")
         serial = int(data[-1])
         order_type = data[-3]
@@ -130,16 +133,13 @@ async def refresh_order_settings_message(
     )
 
 
-def make_conv_text(serial:int, order_type:str):
-    conv = models.ContactUserConv.get_conv(
-        order_type=order_type,
-        serial=serial
-    )
+def make_conv_text(serial: int, order_type: str):
+    conv = models.ContactUserConv.get_conv(order_type=order_type, serial=serial)
     conv_text = ""
     for m in conv:
         if m.from_user:
             conv_text += f"المستخدم:\n<b>{m.msg}</b>\n\n"
         else:
             conv_text += f"الدعم:\n<b>{m.msg}</b>\n\n"
-    
+
     return conv_text

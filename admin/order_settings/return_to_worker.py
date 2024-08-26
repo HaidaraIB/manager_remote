@@ -1,15 +1,18 @@
 from telegram import Update, Chat
 from telegram.ext import ContextTypes, CallbackQueryHandler
 
+from custom_filters import Admin
+
 from common.constants import *
 from common.common import parent_to_child_models_mapper
 from worker.request_order.common import get_order_message
+
 
 from admin.order_settings.common import refresh_order_settings_message
 
 
 async def return_order_to_worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = update.callback_query.data.split("_")
         serial = int(data[-1])
         order_type = data[-3]

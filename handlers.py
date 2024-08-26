@@ -265,6 +265,7 @@ def main():
     app.add_handler(request_photos_handler)
     app.add_handler(return_order_to_worker_handler)
     app.add_handler(unset_working_on_it_handler)
+    app.add_handler(delete_order_handler)
 
     app.add_handler(contact_user_handler)
     app.add_handler(respond_to_contact_msg_handler)

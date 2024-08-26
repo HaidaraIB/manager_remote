@@ -1,18 +1,14 @@
-from telegram import (
-    Update,
-    Chat,
-    InputMediaPhoto,
-)
-
+from telegram import Update, Chat, InputMediaPhoto
 from telegram.ext import ContextTypes, CallbackQueryHandler
 
-from common.common import parent_to_child_models_mapper
+from custom_filters import Admin
+
 from admin.order_settings.common import refresh_order_settings_message
 import models
 
 
 async def request_photos(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = update.callback_query.data.split("_")
         serial = int(data[-1])
         order_type = data[-4]

@@ -126,6 +126,17 @@ class BaseOrder(Base):
 
     @classmethod
     @lock_and_release
+    async def delete_order(cls, serial: int, s: Session = None):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "deleted",
+                cls.working_on_it: 0,
+                cls.delete_date: datetime.datetime.now(),
+            }
+        )
+
+    @classmethod
+    @lock_and_release
     async def add_message_ids(
         cls,
         serial: int,
@@ -220,6 +231,21 @@ class BaseOrder(Base):
 
     @classmethod
     @lock_and_release
+    async def return_order_to_worker(
+        cls,
+        serial: int,
+        processing_message_id: int,
+        s: Session = None,
+    ):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.return_date: datetime.datetime.now(),
+                cls.processing_message_id: processing_message_id,
+            }
+        )
+
+    @classmethod
+    @lock_and_release
     async def add_date(cls, serial: int, date_type: str, s: Session = None):
         date_type_dict = {
             "return": cls.return_date,
@@ -228,7 +254,9 @@ class BaseOrder(Base):
             "decline": cls.decline_date,
         }
         s.query(cls).filter_by(serial=serial).update(
-            {date_type_dict[date_type]: datetime.datetime.now()}
+            {
+                date_type_dict[date_type]: datetime.datetime.now(),
+            }
         )
 
     @classmethod

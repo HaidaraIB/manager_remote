@@ -21,7 +21,6 @@ from common.common import (
     send_message_to_user,
 )
 from admin.order_settings.common import (
-    refresh_order_settings_message,
     back_to_choose_action,
     make_conv_text,
 )

@@ -1,10 +1,4 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Chat,
-)
-
+from telegram import Update, InlineKeyboardMarkup, Chat
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -12,10 +6,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from common.common import (
-    build_back_button,
-    build_admin_keyboard,
-)
+from common.common import build_back_button
 from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,

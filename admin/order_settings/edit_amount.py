@@ -6,6 +6,9 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+
+from custom_filters import Admin
+
 from common.common import (
     parent_to_child_models_mapper,
     build_back_button,
@@ -26,7 +29,7 @@ NEW_AMOUNT = 0
 
 
 async def edit_order_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = update.callback_query.data.split("_")
         serial = int(data[-1])
         order_type = data[-4]
@@ -54,13 +57,13 @@ async def get_new_amount(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
 
         new_amount = float(update.message.text)
         is_pos = await ensure_positive_amount(amount=new_amount, update=update)
         if not is_pos:
             return
-        
+
         serial = context.user_data["edit_order_amount_serial"]
         order_type = context.user_data["edit_order_amount_type"]
 

@@ -10,6 +10,7 @@ state_dict_en_to_ar = {
     "sent": "بانتظار التنفيذ",
     "checking": "قيد التحقق",
     "processing": "قيد التنفيذ",
+    "deleted": "محذوف",
 }
 
 worker_type_dict = {
@@ -121,6 +122,7 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"تاريخ الموافقة: <b>{'\n' + format_datetime(order.approve_date) if order.approve_date else 'لا يوجد'}</b>\n\n"
         f"تاريخ الرفض: <b>{'\n' + format_datetime(order.decline_date) if order.decline_date else 'لا يوجد'}</b>\n\n"
         f"تاريخ الإعادة: <b>{'\n' + format_datetime(order.return_date) if order.return_date else 'لا يوجد'}</b>\n\n"
+        f"تاريخ الرفض: <b>{'\n' + format_datetime(order.delete_date) if order.delete_date else 'لا يوجد'}</b>\n\n"
     )
 
 

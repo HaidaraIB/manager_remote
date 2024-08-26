@@ -88,7 +88,7 @@ async def send_notification(order_type: str, serial: int):
 
     await cpyro.send_message(
         chat_id=chat_id,
-        text="وصلتنا شكوى تأخير بشأن الطلب أعلاه⬆️",
+        text="وصلتنا شكوى تأخير بشأن الطلب أعلاه ⬆️",
     )
     await cpyro.delete_messages(
         chat_id=chat_id,
@@ -122,7 +122,7 @@ async def notify_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not res:
             await update.callback_query.answer(
-                text="يمكنك إرسال تنبيه واحد عن كل طلب في اليوم❗️",
+                text="يمكنك إرسال تنبيه واحد عن كل طلب في اليوم ❗️",
                 show_alert=True,
             )
             return

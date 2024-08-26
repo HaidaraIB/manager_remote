@@ -146,7 +146,7 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             alert_button = [
                 [
                     InlineKeyboardButton(
-                        text="إرسال تنبيه🔔",
+                        text="إرسال تنبيه 🔔",
                         callback_data=f"notify_{order.state}_order_{serial}",
                     )
                 ],
@@ -194,8 +194,8 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = [
             [
-                InlineKeyboardButton(text="نعم👍", callback_data="yes complaint"),
-                InlineKeyboardButton(text="لا👎", callback_data="no complaint"),
+                InlineKeyboardButton(text="نعم 👍", callback_data="yes complaint"),
+                InlineKeyboardButton(text="لا 👎", callback_data="no complaint"),
             ],
             build_back_button("back_to_complaint_reason"),
             back_to_user_home_page_button[0],

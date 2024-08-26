@@ -1,6 +1,8 @@
 from telegram import Update, Chat
 from telegram.ext import ContextTypes, CallbackQueryHandler
 
+from custom_filters import Admin
+
 from common.common import parent_to_child_models_mapper
 
 from admin.order_settings.common import refresh_order_settings_message
@@ -9,7 +11,7 @@ from PyroClientSingleton import PyroClientSingleton
 
 
 async def unset_working_on_it(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         data = update.callback_query.data.split("_")
         serial = int(data[-1])
         order_type = data[-3]

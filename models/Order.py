@@ -38,3 +38,4 @@ class Order(BaseOrder):
     return_date = Column(TIMESTAMP)
     approve_date = Column(TIMESTAMP)
     decline_date = Column(TIMESTAMP)
+    delete_date = Column(TIMESTAMP)
