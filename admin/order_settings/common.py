@@ -87,7 +87,7 @@ def build_actions_keyboard(order_type: str, serial: int):
         callback_data=f"delete_{order_type}_order_{serial}",
     )
     if order.state == "returned":
-        actions_keyboard[0].append([delete_order_button])
+        actions_keyboard.append([delete_order_button])
 
     actions_keyboard.append(back_to_admin_home_page_button[0])
     return actions_keyboard

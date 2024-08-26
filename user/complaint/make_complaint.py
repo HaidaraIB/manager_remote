@@ -100,10 +100,9 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["complaint_serial"] = serial
         else:
             serial = context.user_data["complaint_serial"]
+
         about = context.user_data["complaint_order_type"]
-        order = parent_to_child_models_mapper[about].get_one_order(
-            serial=serial,
-        )
+        order = parent_to_child_models_mapper[about].get_one_order(serial=serial)
 
         order_text = (
             f"تفاصيل العملية:\n\n"
@@ -120,6 +119,8 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_user_home_page_button[0],
         ]
 
+        ret = None
+
         if (
             about == "deposit"
             and order.state == "pending"
@@ -129,21 +130,30 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",
                 show_alert=True,
             )
-            return
+            return ret
+
+        elif order.state == "deleted":
+            text = order_text + "<b>طلب محذوف، أعد تقديمه مرة أخرى</b>"
+            keyboard = back_buttons
 
         elif order.state == "returned":
-            await update.callback_query.edit_message_text(
-                text=(
-                    order_text
-                    + "<b>طلب معاد راجع محادثة البوت وقم بإرفاق المطلوب.\n"
-                    + "في حال لم تجدها أعد تقديم الطلب من جديد، مع الأخذ بعين الاعتبار سبب الإعادة.</b>"
-                ),
-                reply_markup=InlineKeyboardMarkup(back_buttons),
+            text = (
+                order_text
+                + "<b>طلب معاد راجع محادثة البوت وقم بإرفاق المطلوب.\n"
+                + "في حال لم تجدها أعد تقديم الطلب من جديد، مع الأخذ بعين الاعتبار سبب الإعادة.</b>"
             )
-            return
+
+            keyboard = back_buttons
 
         elif order.state in ["sent", "pending", "checking", "processing"]:
-            alert_button = [
+            if order.state in ["sent", "processing"]:
+                text = (
+                    order_text + "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير بشأنها.</b>"
+                )
+
+            elif order.state in ["pending", "checking"]:
+                text = order_text + "<b>عملية قيد التحقق، يمكنك إرسال تذكير بشأنها.</b>"
+            keyboard = [
                 [
                     InlineKeyboardButton(
                         text="إرسال تنبيه 🔔",
@@ -152,27 +162,17 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ],
                 *back_buttons,
             ]
-            if order.state in ["sent", "processing"]:
-                order_text += "<b>عملية قيد التنفيذ، يمكنك إرسال تذكير بشأنها.</b>"
+            ret = NOTIFY_ORDER
+        else:
+            keyboard = back_buttons
+            text = order_text + "<b>أرسل سبب هذه الشكوى</b>"
+            ret = COMPLAINT_REASON
 
-            elif order.state in ["pending", "checking"]:
-                order_text += "<b>عملية قيد التحقق، يمكنك إرسال تذكير بشأنها.</b>"
-
-            await update.callback_query.edit_message_text(
-                text=order_text,
-                reply_markup=InlineKeyboardMarkup(alert_button),
-            )
-            return NOTIFY_ORDER
-
-        keyboard = [
-            build_back_button("back_to_choose_order"),
-            back_to_user_home_page_button[0],
-        ]
         await update.callback_query.edit_message_text(
-            text=order_text + "<b>أرسل سبب هذه الشكوى</b>",
+            text=text,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
-        return COMPLAINT_REASON
+        return ret
 
 
 back_to_choose_order = choose_order_type
