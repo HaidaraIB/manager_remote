@@ -9,7 +9,7 @@ from telegram import (
     ReplyKeyboardMarkup,
     error,
     PhotoSize,
-    InputMedia
+    InputMedia,
 )
 
 from telegram.ext import ContextTypes
@@ -41,13 +41,14 @@ order_dict_en_to_ar = {
 }
 
 
-async def ensure_positive_amount(amount:float, update:Update):
-    if amount < 0:
+async def ensure_positive_amount(amount: float, update: Update):
+    if amount <= 0:
         await update.message.reply_text(
             text="يجب أن يكون المبلغ قيمة موجبة لا تساوي الصفر ❗️"
         )
         return False
     return True
+
 
 async def send_to_photos_archive(
     context: ContextTypes.DEFAULT_TYPE, photo, serial, order_type
@@ -184,6 +185,7 @@ async def send_photo_to_user(
                 text=("خطأ ❌\n" "لقد قام هذا المستخدم بحظر البوت"),
             )
         return False
+
 
 async def send_media_to_user(
     update: Update,
