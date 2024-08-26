@@ -37,17 +37,33 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
 
         serial = int(update.callback_query.data.split("_")[-1])
 
-        await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
-            show_alert=True,
-        )
-        await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="إعادة الطلب📥",
-                    callback_data=f"return_deposit_order_{serial}",
-                )
+        order = DepositOrder.get_one_order(serial=serial)
+        if order.state == "deleted":
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="طلب محذوف ⁉️",
+                        callback_data="!?!?!?!?!?!?!?!?!?!?!?",
+                    )
+                ]
+            ]
+            text = "لقد قامت الإدارة بحذف هذا الطلب ⁉️"
+        else:
+            text = (
+                "قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة.",
             )
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="إعادة الطلب📥",
+                        callback_data=f"return_deposit_order_{serial}",
+                    )
+                ]
+            ]
+
+        await update.callback_query.answer(text=text, show_alert=True)
+        await update.callback_query.edit_message_reply_markup(
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
 

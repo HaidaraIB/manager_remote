@@ -43,17 +43,10 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
                 "أو يمكنك الإعادة إلى المستخدم في حال وجود مشكلة في معلومات الدفع الخاصة به."
             )
 
-        await update.callback_query.answer(
-            text=text,
-            show_alert=True,
+        await update.callback_query.answer(text=text, show_alert=True)
+        await update.callback_query.edit_message_reply_markup(
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
-        try:
-            await update.callback_query.edit_message_reply_markup(
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
-        except:
-            import traceback
-            traceback.print_exc()
 
 
 async def reply_with_payment_proof_withdraw(

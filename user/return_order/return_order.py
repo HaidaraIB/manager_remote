@@ -69,11 +69,14 @@ async def back_to_handle_returned_order(
 ):
     if update.effective_chat.type == Chat.PRIVATE:
         data: list[str] = context.user_data["returned_data"]
+        serial = int(data[-1])
+        worker_id = int(data[-2])
+        order_type = data[2]
         await update.callback_query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
                     text="إرفاق المطلوب",
-                    callback_data=f"handle_return_deposit_{data[-2]}_{data[-1]}",
+                    callback_data=f"handle_return_{order_type}_{worker_id}_{serial}",
                 )
             )
         )
@@ -84,8 +87,8 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         data: list[str] = context.user_data["returned_data"]
         serial = int(data[-1])
-        order_type = data[2]
         worker_id = int(data[-2])
+        order_type = data[2]
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
         reply_markup = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
