@@ -77,7 +77,7 @@ async def return_order_to_user(
         "قم بالضغط على الزر أدناه وإرفاق المطلوب."
     )
 
-    await send_message_to_user(
+    message = await send_message_to_user(
         update=update,
         context=context,
         user_id=user_id,
@@ -94,3 +94,4 @@ async def return_order_to_user(
         serial=w_order.serial,
         reason=update.message.text,
     )
+    return message

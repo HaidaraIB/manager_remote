@@ -133,6 +133,7 @@ class BaseOrder(Base):
         pending_check_message_id: int = 0,
         processing_message_id: int = 0,
         pending_process_message_id: int = 0,
+        returned_message_id: int = 0,
         s: Session = None,
     ):
         update_dict = {
@@ -140,6 +141,7 @@ class BaseOrder(Base):
             cls.pending_process_message_id: pending_process_message_id,
             cls.pending_check_message_id: pending_check_message_id,
             cls.checking_message_id: checking_message_id,
+            cls.returned_message_id: returned_message_id,
         }
         # Remove keys with zero values
         update_dict = {k: v for k, v in update_dict.items() if v}

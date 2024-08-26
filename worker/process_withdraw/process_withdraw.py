@@ -1,17 +1,5 @@
-from telegram import (
-    Chat,
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
-
+from telegram import Chat, Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 import os
 import datetime
 from custom_filters import Withdraw, Returned, DepositAgent, Approved
@@ -82,7 +70,7 @@ async def reply_with_payment_proof_withdraw(
             msg=caption,
         )
 
-        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.text_html
+        caption = "تمت الموافقة ✅\n" + update.message.reply_to_message.text_html
 
         await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
@@ -95,7 +83,7 @@ async def reply_with_payment_proof_withdraw(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅",
+                    text="تمت الموافقة ✅",
                     callback_data="✅✅✅✅✅✅✅✅✅",
                 ),
             ),
@@ -103,7 +91,7 @@ async def reply_with_payment_proof_withdraw(
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة✅",
+            text="تمت الموافقة ✅",
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -185,17 +173,25 @@ async def return_withdraw_order_reason(
                 w_order=w_order,
                 reason=reason,
             )
-            return_to_who_line = "تمت إعادة الطلب إلى الموظف 📥\n"
+            return_to_who_line = "تمت إعادة الطلب إلى الموظف 📥"
         else:
-            await return_order_to_user(
+            message = await return_order_to_user(
                 update=update,
                 context=context,
                 w_order=w_order,
             )
-            return_to_who_line = "تمت إعادة الطلب إلى المستخدم 📥\n"
+            if not message:
+                return_to_who_line = "لقد قام هذا المستخدم بحظر البوت"
+            else:
+                return_to_who_line = "تمت إعادة الطلب إلى المستخدم 📥"
+                await WithdrawOrder.add_message_ids(
+                    serial=serial,
+                    returned_message_id=message.id,
+                )
 
         text = (
             return_to_who_line
+            + "\n"
             + update.message.reply_to_message.text_html
             + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
         )

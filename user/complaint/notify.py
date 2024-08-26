@@ -130,9 +130,6 @@ async def notify_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             await send_notification(order_type=order_type, serial=serial)
         except:
-            import traceback
-
-            traceback.print_exc()
             pass
 
         context.user_data[

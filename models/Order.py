@@ -29,6 +29,7 @@ class Order(BaseOrder):
     checking_message_id = Column(Integer, default=0)
     pending_process_message_id = Column(Integer, default=0)
     processing_message_id = Column(Integer, default=0)
+    returned_message_id = Column(Integer, default=0)
     complaint_took_care_of = Column(Integer, default=0)
     working_on_it = Column(Integer, default=0)
 

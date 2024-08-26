@@ -24,12 +24,13 @@ def build_orders_keyboard(serials: list[int]):
                 text=str(serials[i]), callback_data=f"serial {serials[i]}"
             )
         )
-        if i + 1 < len(serials) - 1:
+        if i + 1 < len(serials):
             row.append(
                 InlineKeyboardButton(
                     text=str(serials[i + 1]), callback_data=f"serial {serials[i+1]}"
                 )
             )
+        if i + 1 < len(serials) - 1:
             row.append(
                 InlineKeyboardButton(
                     text=str(serials[i + 2]), callback_data=f"serial {serials[i+2]}"

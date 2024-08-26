@@ -85,7 +85,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             msg=caption,
         )
 
-        caption = "تمت الموافقة✅\n" + (
+        caption = "تمت الموافقة ✅\n" + (
             update.message.reply_to_message.text_html
             if update.message.reply_to_message.text_html
             else update.message.reply_to_message.caption_html
@@ -102,7 +102,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅",
+                    text="تمت الموافقة ✅",
                     callback_data="✅✅✅✅✅✅✅✅✅",
                 )
             ),
@@ -110,7 +110,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة✅",
+            text="تمت الموافقة ✅",
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -185,14 +185,10 @@ async def return_deposit_order_reason(
         )
 
         ar_text = (
-            "تمت إعادة الطلب📥\n"
-            + (
-                update.message.reply_to_message.text_html
-                if update.message.reply_to_message.text_html
-                else update.message.reply_to_message.caption
-            )
-            + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
-        )
+            update.message.reply_to_message.text_html
+            if update.message.reply_to_message.text_html
+            else update.message.reply_to_message.caption
+        ) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
 
         return_button = InlineKeyboardButton(
             text="إرفاق المطلوب",
@@ -200,7 +196,7 @@ async def return_deposit_order_reason(
         )
 
         if update.message.reply_to_message.photo:
-            await send_photo_to_user(
+            message = await send_photo_to_user(
                 update=update,
                 context=context,
                 user_id=d_order.user_id,
@@ -208,22 +204,34 @@ async def return_deposit_order_reason(
                 msg=user_text,
                 keyboard=InlineKeyboardMarkup.from_button(return_button),
             )
+        else:
+            message = await send_message_to_user(
+                update=update,
+                context=context,
+                user_id=d_order.user_id,
+                msg=user_text,
+                keyboard=InlineKeyboardMarkup.from_button(return_button),
+            )
+
+        if not message:
+            res_flag = "لقد قام هذا المستخدم بحظر البوت"
+        else:
+            res_flag = "تمت إعادة الطلب 📥"
+            await DepositOrder.add_message_ids(
+                serial=serial,
+                returned_message_id=message.id,
+            )
+
+        if update.message.reply_to_message.photo:
             await context.bot.send_photo(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
                 photo=update.message.reply_to_message.photo[-1],
-                caption=ar_text,
+                caption=res_flag + "\n" + ar_text,
             )
         else:
-            await send_message_to_user(
-                update=update,
-                context=context,
-                user_id=d_order.user_id,
-                msg=user_text,
-                keyboard=InlineKeyboardMarkup.from_button(return_button),
-            )
             await context.bot.send_message(
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-                text=ar_text,
+                text=res_flag + "\n" + ar_text,
             )
 
         await context.bot.edit_message_reply_markup(
@@ -231,14 +239,15 @@ async def return_deposit_order_reason(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت إعادة الطلب📥", callback_data="📥📥📥📥📥📥📥📥"
+                    text=res_flag,
+                    callback_data="📥📥📥📥📥📥📥📥",
                 )
             ),
         )
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت إعادة الطلب📥",
+            text=res_flag,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),

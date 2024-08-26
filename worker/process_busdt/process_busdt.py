@@ -88,7 +88,7 @@ async def reply_with_payment_proof_busdt(
             msg=user_caption,
         )
 
-        caption = "تمت الموافقة✅\n" + update.message.reply_to_message.caption_html
+        caption = "تمت الموافقة ✅\n" + update.message.reply_to_message.caption_html
 
         await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
@@ -101,7 +101,7 @@ async def reply_with_payment_proof_busdt(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة✅",
+                    text="تمت الموافقة ✅",
                     callback_data="✅✅✅✅✅✅✅✅✅",
                 ),
             ),
@@ -109,7 +109,7 @@ async def reply_with_payment_proof_busdt(
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة✅",
+            text="تمت الموافقة ✅",
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -174,19 +174,17 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
             ].callback_data.split("_")[-1]
         )
 
-        b_order = BuyUsdtdOrder.get_one_order(
-            serial=serial,
-        )
+        b_order = BuyUsdtdOrder.get_one_order(serial=serial)
 
         amount = b_order.amount
 
         text = (
-            f"تم إعادة طلب شراء: <b>{amount} USDT</b>❗️\n\n"
+            f"تمت إعادة طلب شراء: <b>{amount} USDT</b> ❗️\n\n"
             "السبب:\n"
             f"<b>{update.message.text_html}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
-        await send_photo_to_user(
+        message = await send_photo_to_user(
             update=update,
             context=context,
             user_id=b_order.user_id,
@@ -199,9 +197,18 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
                 )
             ),
         )
+        if not message:
+            res_flag = "لقد قام هذا المستخدم بحظر البوت"
+        else:
+            res_flag = "تمت إعادة الطلب 📥"
+            await BuyUsdtdOrder.add_message_ids(
+                serial=serial,
+                returned_message_id=message.id,
+            )
 
         caption = (
-            "تمت إعادة الطلب📥\n"
+            res_flag
+            + "\n"
             + update.message.reply_to_message.caption_html
             + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
         )
@@ -217,7 +224,7 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت إعادة الطلب📥",
+                    text=res_flag,
                     callback_data="📥📥📥📥📥📥📥📥",
                 )
             ),
@@ -225,7 +232,7 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت إعادة الطلب📥",
+            text=res_flag,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -240,9 +247,11 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
             await context.bot.send_photo(
                 chat_id=context.bot_data["data"]["latency_group"],
                 photo=update.message.reply_to_message.photo[-1],
-                caption=f"طلب متأخر بمقدار\n"
-                + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
-                f"الموظف المسؤول {update.effective_user.name}\n\n" + caption,
+                caption=(
+                    f"طلب متأخر بمقدار\n"
+                    + f"<code>{pretty_time_delta(latency.total_seconds() - 600)}</code>\n"
+                    f"الموظف المسؤول {update.effective_user.name}\n\n" + caption
+                ),
             )
 
         await BuyUsdtdOrder.return_order_to_user(

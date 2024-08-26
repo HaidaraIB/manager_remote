@@ -147,12 +147,12 @@ async def send_message_to_user(
     keyboard: InlineKeyboardMarkup = None,
 ):
     try:
-        await context.bot.send_message(
+        message = await context.bot.send_message(
             chat_id=user_id,
             text=msg,
             reply_markup=keyboard,
         )
-        return True
+        return message
     except error.Forbidden as f:
         if "bot was blocked by the user" in f.message:
             await context.bot.send_message(
@@ -171,13 +171,13 @@ async def send_photo_to_user(
     keyboard: InlineKeyboardMarkup = None,
 ):
     try:
-        await context.bot.send_photo(
+        message = await context.bot.send_photo(
             chat_id=user_id,
             photo=photo,
             caption=msg,
             reply_markup=keyboard,
         )
-        return True
+        return message
     except error.Forbidden as f:
         if "bot was blocked by the user" in f.message:
             await context.bot.send_message(
