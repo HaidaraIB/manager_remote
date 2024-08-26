@@ -25,16 +25,31 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
 
         serial = int(update.callback_query.data.split("_")[-1])
 
-        await update.callback_query.answer(
-            text=(
+        order = WithdrawOrder.get_one_order(serial=serial)
+        if order.state == "deleted":
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="طلب محذوف ⁉️",
+                        callback_data="⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️",
+                    )
+                ]
+            ]
+            text = "لقد قامت الإدارة بحذف هذا الطلب ⁉️"
+        else:
+            keyboard = build_process_withdraw_keyboard(serial)
+            text = (
                 "قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة في المبلغ قم بالإعادة إلى الموظف المسؤول، "
                 "أو يمكنك الإعادة إلى المستخدم في حال وجود مشكلة في معلومات الدفع الخاصة به."
-            ),
+            )
+
+        await update.callback_query.answer(
+            text=text,
             show_alert=True,
         )
 
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(build_process_withdraw_keyboard(serial))
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
 
