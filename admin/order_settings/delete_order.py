@@ -13,19 +13,19 @@ async def delete_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         order_type = data[-3]
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
 
-        try:
-            await PyroClientSingleton().delete_messages(
-                chat_id=order.user_id,
-                message_ids=order.returned_message_id,
-            )
-        except:
-            try:
-                await PyroClientSingleton().delete_messages(
-                    chat_id=order.user_id,
-                    message_ids=order.processing_message_id,
-                )
-            except:
-                pass
+        # try:
+        #     await PyroClientSingleton().delete_messages(
+        #         chat_id=order.user_id,
+        #         message_ids=order.returned_message_id,
+        #     )
+        # except:
+        #     try:
+        #         await PyroClientSingleton().delete_messages(
+        #             chat_id=order.user_id,
+        #             message_ids=order.processing_message_id,
+        #         )
+        #     except:
+        #         pass
 
         await parent_to_child_models_mapper[order_type].delete_order(serial=serial)
         await update.callback_query.delete_message()

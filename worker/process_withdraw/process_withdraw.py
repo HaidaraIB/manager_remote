@@ -31,7 +31,7 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
                 [
                     InlineKeyboardButton(
                         text="طلب محذوف ⁉️",
-                        callback_data="⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️",
+                        callback_data="!?!?!?!?!?!?!?!?!?!?!?",
                     )
                 ]
             ]
@@ -47,10 +47,13 @@ async def user_payment_verified(update: Update, context: ContextTypes.DEFAULT_TY
             text=text,
             show_alert=True,
         )
-
-        await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        try:
+            await update.callback_query.edit_message_reply_markup(
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        except:
+            import traceback
+            traceback.print_exc()
 
 
 async def reply_with_payment_proof_withdraw(
