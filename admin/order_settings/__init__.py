@@ -5,3 +5,4 @@ from admin.order_settings.return_to_worker import return_order_to_worker_handler
 from admin.order_settings.unset_working_on_it import unset_working_on_it_handler
 from admin.order_settings.contact_user import contact_user_handler
 from admin.order_settings.delete_order import delete_order_handler
+from admin.order_settings.request_returned_conv import request_returned_conv_handler

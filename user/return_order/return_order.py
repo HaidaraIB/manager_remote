@@ -89,6 +89,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         serial = int(data[-1])
         worker_id = int(data[-2])
         order_type = data[2]
+        attachments = update.message.text_html
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
         reply_markup = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
@@ -104,7 +105,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         if order_type in ["withdraw", "busdt"]:
             stringify_returned_payment_order_args = (
-                update.message.text,
+                attachments,
                 (
                     stringify_process_withdraw_order
                     if order_type == "withdraw"
@@ -139,7 +140,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     gov=order.gov, user_id=order.agent_id
                 ).team_cash_workplace_id
             stringify_returned_deposit_order_args = (
-                update.message.text,
+                attachments,
                 stringify_deposit_order,
                 amount,
                 order.serial,
@@ -170,6 +171,13 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await parent_to_child_models_mapper[order_type].return_order_to_worker(
             serial=serial,
             processing_message_id=message.id,
+        )
+        await models.ReturnedConv.add_response(
+            serial=serial,
+            order_type=order_type,
+            worker_id=worker_id,
+            msg=attachments,
+            from_user=True,
         )
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,

@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, fil
 import os
 import datetime
 from custom_filters import Withdraw, Returned, DepositAgent, Approved
-from models import WithdrawOrder
+from models import WithdrawOrder, ReturnedConv
 from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
@@ -177,6 +177,14 @@ async def return_withdraw_order_reason(
         serial = int(data.split("_")[-1])
         w_order = WithdrawOrder.get_one_order(serial=serial)
         reason = update.message.text_html
+        
+        await ReturnedConv.add_response(
+            serial=serial,
+            order_type="withdraw",
+            worker_id=update.effective_user.id,
+            msg=reason,
+            from_user=False,
+        )
 
         if "return_to_checker" in data:
             await return_order_to_checker(

@@ -202,14 +202,12 @@ class BaseOrder(Base):
     @lock_and_release
     async def return_order_to_user(
         cls,
-        reason: str,
         serial: int,
         s: Session = None,
     ):
         s.query(cls).filter_by(serial=serial).update(
             {
                 cls.state: "returned",
-                cls.reason: reason,
                 cls.return_date: datetime.datetime.now(),
             }
         )

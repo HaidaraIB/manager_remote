@@ -76,8 +76,9 @@ async def get_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order_type=order_type,
             serial=serial,
         )
+        conv = models.ContactUserConv.get_conv(order_type=order_type, serial=serial)
         msg = (
-            make_conv_text(serial=serial, order_type=order_type)
+            make_conv_text(conv)
             + f"هذه الرسالة من المستخدم عن طلب <b>{order_dict_en_to_ar[order_type]}</b> ذي الرقم التسلسلي <code>{serial}</code>"
         )
         await context.bot.send_message(
@@ -94,24 +95,18 @@ async def get_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=update.effective_chat.id,
             message_id=context.user_data["effective_respond_to_contact_message_id"],
         )
-        await update.message.reply_text(
-            text="تم إرسال الرد ✅"
-        )
+        await update.message.reply_text(text="تم إرسال الرد ✅")
         return ConversationHandler.END
 
 
 respond_to_contact_msg_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(
-            respond_to_contact_msg,
-            "^respond_to_contact_user"
-        )
+        CallbackQueryHandler(respond_to_contact_msg, "^respond_to_contact_user")
     ],
     states={
         RESPONSE: [
             MessageHandler(
-                filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_response
+                filters=filters.TEXT & ~filters.COMMAND, callback=get_response
             )
         ]
     },
@@ -122,5 +117,5 @@ respond_to_contact_msg_handler = ConversationHandler(
         ),
     ],
     persistent=True,
-    name="respond_to_contact_msg_conv"
+    name="respond_to_contact_msg_conv",
 )

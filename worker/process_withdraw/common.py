@@ -90,8 +90,5 @@ async def return_order_to_user(
         ),
     )
 
-    await WithdrawOrder.return_order_to_user(
-        serial=w_order.serial,
-        reason=update.message.text,
-    )
+    await WithdrawOrder.return_order_to_user(serial=w_order.serial)
     return message

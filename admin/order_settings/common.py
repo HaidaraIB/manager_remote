@@ -50,23 +50,18 @@ def build_actions_keyboard(order_type: str, serial: int):
         text="تعديل المبلغ",
         callback_data=f"edit_{order_type}_order_amount_{serial}",
     )
-    if order.state in ["approved", "sent"]:
-        actions_keyboard[0].append(edit_amount_button)
-
     return_to_worker_button = InlineKeyboardButton(
         text="إعادة إلى الموظف المسؤول",
         callback_data=f"admin_return_{order_type}_order_{serial}",
     )
-    if order.state in ["approved", "declined", "sent"]:
-        actions_keyboard.append([return_to_worker_button])
-
-    unset_working_on_it_button = InlineKeyboardButton(
-        text="السماح بإعادة الطلب",
-        callback_data=f"unset_working_on_it_{order_type}_order_{serial}",
+    request_returned_conv_button = InlineKeyboardButton(
+        text="طلب محادثة إعادة",
+        callback_data=f"request_{order_type}_order_returned_conv_{serial}",
     )
-    if order.working_on_it and order.state in ["checking", "processing"]:
-        actions_keyboard.append([unset_working_on_it_button])
-
+    delete_order_button = InlineKeyboardButton(
+        text="حذف الطلب",
+        callback_data=f"delete_{order_type}_order_{serial}",
+    )
     send_order_button = InlineKeyboardButton(
         text="إرسال الطلب",
         callback_data=f"admin_send_{order_type}_order_{serial}",
@@ -75,19 +70,32 @@ def build_actions_keyboard(order_type: str, serial: int):
         text="رفض الطلب",
         callback_data=f"admin_decline_{order_type}_order_{serial}",
     )
-    if order.state in ["checking", "pending"]:
-        actions_keyboard.append([send_order_button, decline_order_button])
-    elif order.state == "declined":
-        actions_keyboard.append([send_order_button])
-    elif order.state == "sent":
-        actions_keyboard.append([decline_order_button])
-
-    delete_order_button = InlineKeyboardButton(
-        text="حذف الطلب",
-        callback_data=f"delete_{order_type}_order_{serial}",
+    unset_working_on_it_button = InlineKeyboardButton(
+        text="السماح بإعادة الطلب",
+        callback_data=f"unset_working_on_it_{order_type}_order_{serial}",
     )
-    if order.state == "returned":
-        actions_keyboard.append([delete_order_button])
+    if order.state == "pending":
+        actions_keyboard.append([send_order_button, decline_order_button])
+
+    elif order.state in ["checking", "processing"]:
+        if order.state == "checking":
+            actions_keyboard.append([send_order_button, decline_order_button])
+        if order.working_on_it:
+            actions_keyboard.append([unset_working_on_it_button])
+
+    elif order.state in ["declined", "sent", "approved"]:
+        if order.state != "declined":
+            actions_keyboard[0].append(edit_amount_button)
+        elif order.state == "declined":
+            actions_keyboard.append([send_order_button])
+        elif order.state == "approved":
+            actions_keyboard.append([request_returned_conv_button])
+        elif order.state == "sent":
+            actions_keyboard.append([decline_order_button])
+        actions_keyboard.append([return_to_worker_button])
+
+    elif order.state == "returned":
+        actions_keyboard.append([delete_order_button, request_returned_conv_button])
 
     actions_keyboard.append(back_to_admin_home_page_button[0])
     return actions_keyboard
@@ -133,8 +141,7 @@ async def refresh_order_settings_message(
     )
 
 
-def make_conv_text(serial: int, order_type: str):
-    conv = models.ContactUserConv.get_conv(order_type=order_type, serial=serial)
+def make_conv_text(conv: list[models.Conv]):
     conv_text = ""
     for m in conv:
         if m.from_user:

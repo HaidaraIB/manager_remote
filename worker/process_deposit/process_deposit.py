@@ -4,7 +4,6 @@ from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMediaPhoto,
-    error,
 )
 from telegram.ext import (
     ContextTypes,
@@ -16,7 +15,7 @@ from telegram.ext import (
 import os
 
 from custom_filters import Deposit, Returned, DepositAgent, Approved
-from models import DepositOrder, User
+from models import DepositOrder, ReturnedConv
 from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
@@ -190,11 +189,20 @@ async def return_deposit_order_reason(
         ].callback_data.split("_")[-1]
 
         d_order = DepositOrder.get_one_order(serial=serial)
+        reason = update.message.text_html
+
+        await ReturnedConv.add_response(
+            serial=serial,
+            order_type="deposit",
+            worker_id=update.effective_user.id,
+            msg=reason,
+            from_user=False,
+        )
 
         user_text = (
             f"تم إعادة طلب إيداع مبلغ: <b>{d_order.amount}</b>❗️\n\n"
             "السبب:\n"
-            f"<b>{update.message.text_html}</b>\n\n"
+            f"<b>{reason}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
@@ -202,7 +210,7 @@ async def return_deposit_order_reason(
             update.message.reply_to_message.text_html
             if update.message.reply_to_message.text_html
             else update.message.reply_to_message.caption
-        ) + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+        ) + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
 
         return_button = InlineKeyboardButton(
             text="إرفاق المطلوب",
@@ -288,10 +296,7 @@ async def return_deposit_order_reason(
                     f"الموظف المسؤول {update.effective_user.name}\n\n" + ar_text,
                 )
 
-        await DepositOrder.return_order_to_user(
-            reason=update.message.text,
-            serial=serial,
-        )
+        await DepositOrder.return_order_to_user(serial=serial)
 
 
 async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):

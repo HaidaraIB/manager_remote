@@ -3,7 +3,6 @@ from telegram import (
     Chat,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    error,
 )
 from telegram.ext import (
     ContextTypes,
@@ -20,13 +19,10 @@ from common.common import (
     order_dict_en_to_ar,
     send_message_to_user,
 )
-from admin.order_settings.common import (
-    back_to_choose_action,
-    make_conv_text,
-)
+from admin.order_settings.common import back_to_choose_action, make_conv_text
 import models
 
-CONTACT_USER_MESSAGE = range(1)
+CONTACT_USER_MESSAGE = 0
 
 
 async def contact_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -64,8 +60,9 @@ async def get_contact_user_message(update: Update, context: ContextTypes.DEFAULT
             order_type=order_type,
             serial=serial,
         )
+        conv = models.ContactUserConv.get_conv(order_type=order_type, serial=serial)
         msg = (
-            make_conv_text(serial=serial, order_type=order_type)
+            make_conv_text(conv)
             + f"هذه الرسالة من الدعم عن طلب <b>{order_dict_en_to_ar[order_type]}</b> ذي الرقم التسلسلي <code>{serial}</code>"
         )
         res = await send_message_to_user(

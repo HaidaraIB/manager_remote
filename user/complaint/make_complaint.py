@@ -30,7 +30,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-from common.stringifies import complaint_stringify_order, state_dict_en_to_ar
+from common.stringifies import complaint_stringify_order
 from user.complaint.notify import notify_order
 from user.complaint.common import *
 from start import start_command
@@ -102,23 +102,15 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serial = context.user_data["complaint_serial"]
 
         about = context.user_data["complaint_order_type"]
-        order = parent_to_child_models_mapper[about].get_one_order(serial=serial)
 
-        order_text = (
-            f"تفاصيل العملية:\n\n"
-            f"النوع: <b>{order_dict_en_to_ar[about]}</b>\n"
-            f"الرقم التسلسلي: <code>{order.serial}</code>\n"
-            f"المبلغ: <b>{order.amount}</b>\n"
-            f"وسيلة الدفع: <b>{order.method}</b>\n"
-            f"الحالة: <b>{state_dict_en_to_ar[order.state]}</b>\n"
-            f"سبب إعادة/رفض: <b>{order.reason if order.reason else 'لا يوجد'}</b>\n\n"
-        )
+        order_text = complaint_stringify_order(order_type=about, serial=serial)
 
         back_buttons = [
             build_back_button("back_to_choose_order"),
             back_to_user_home_page_button[0],
         ]
 
+        order = parent_to_child_models_mapper[about].get_one_order(serial=serial)
         ret = None
 
         if (

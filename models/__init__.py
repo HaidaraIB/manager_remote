@@ -23,3 +23,5 @@ from models.Photo import Photo
 from models.ComplaintConv import ComplaintConv
 from models.ContactUserConv import ContactUserConv
 from models.Partner import Partner
+from models.Conv import Conv
+from models.ReturnedConv import ReturnedConv

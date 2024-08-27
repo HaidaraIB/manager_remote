@@ -4,7 +4,6 @@ from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMediaPhoto,
-    error,
 )
 
 from telegram.ext import (
@@ -16,7 +15,7 @@ from telegram.ext import (
 
 import os
 import datetime
-from models import BuyUsdtdOrder
+from models import BuyUsdtdOrder, ReturnedConv
 from custom_filters import BuyUSDT, Returned, DepositAgent, Approved
 
 from common.common import (
@@ -58,7 +57,6 @@ async def user_payment_verified_busdt(
                 ]
             ]
             text = "قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة."
-            
 
         await update.callback_query.answer(text=text, show_alert=True)
         await update.callback_query.edit_message_reply_markup(
@@ -188,13 +186,21 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
         )
 
         b_order = BuyUsdtdOrder.get_one_order(serial=serial)
-
         amount = b_order.amount
+        reason = update.message.text_html
+
+        await ReturnedConv.add_response(
+            serial=serial,
+            order_type="busdt",
+            worker_id=update.effective_user.id,
+            msg=reason,
+            from_user=False,
+        )
 
         text = (
             f"تمت إعادة طلب شراء: <b>{amount} USDT</b> ❗️\n\n"
             "السبب:\n"
-            f"<b>{update.message.text_html}</b>\n\n"
+            f"<b>{reason}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
         message = await send_photo_to_user(
@@ -223,7 +229,7 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
             res_flag
             + "\n"
             + update.message.reply_to_message.caption_html
-            + f"\n\nسبب الإعادة:\n<b>{update.message.text_html}</b>"
+            + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
         )
 
         await context.bot.send_photo(
@@ -267,10 +273,7 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
                 ),
             )
 
-        await BuyUsdtdOrder.return_order_to_user(
-            reason=update.message.text,
-            serial=serial,
-        )
+        await BuyUsdtdOrder.return_order_to_user(serial=serial)
 
 
 async def back_from_return_busdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):

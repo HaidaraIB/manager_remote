@@ -114,7 +114,7 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"وسيلة الدفع: <code>{order.method}</code>\n"
         f"محفظة الإيداع: <code>{getattr(order, 'deposit_wallet', 'لا يوجد')}</code>\n\n"
         f"الحالة: <b>{state_dict_en_to_ar[order.state]}</b>\n"
-        f"سبب إعادة/رفض: <b>{'\n' + order.reason if order.reason else 'لا يوجد'}</b>\n\n"
+        f"سبب رفض: <b>{'\n' + order.reason if order.reason else 'لا يوجد'}</b>\n\n"
         f"جاري العمل عليه: <b>{'نعم' if order.working_on_it else 'لا'}</b>\n"
         f"تم إغلاق شكوى عنه : <b>{'نعم' if order.complaint_took_care_of else 'لا'}</b>\n\n"
         f"تاريخ الإنشاء:\n<b>{format_datetime(order.order_date)}</b>\n\n"
@@ -142,7 +142,7 @@ def complaint_stringify_order(serial: int, order_type: str):
         f"عنوان الدفع: <code>{payment_method_number}</code>\n"
         f"اسم صاحب الحساب البنكي: <code>{bank_account_name}</code>\n"
         f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
-        f"سبب إعادة/رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
+        f"سبب رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
     )
 
 
