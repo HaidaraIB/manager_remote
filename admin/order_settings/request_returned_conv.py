@@ -1,8 +1,8 @@
 from telegram import Update, Chat
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from custom_filters import Admin
-from common.common import parent_to_child_models_mapper
-from admin.order_settings.common import refresh_order_settings_message, make_conv_text
+from common.common import parent_to_child_models_mapper, make_conv_text
+from admin.order_settings.common import refresh_order_settings_message
 import models
 
 
@@ -30,7 +30,12 @@ async def request_returned_conv(update: Update, context: ContextTypes.DEFAULT_TY
         chat = await context.bot.get_chat(chat_id=chat_id)
         await context.bot.send_message(
             chat_id=update.effective_user.id,
-            text=conv_text + f"\n\nالطلب الآن عند {chat.mention_html(name=name)}",
+            text=conv_text
+            + (
+                f"\n\nالطلب الآن عند {chat.mention_html(name=name)}"
+                if order.state == "returned"
+                else ""
+            ),
             disable_web_page_preview=True,
         )
         await update.callback_query.delete_message()

@@ -10,13 +10,13 @@ from common.common import (
     build_user_keyboard,
     apply_ex_rate,
     build_back_button,
+    make_conv_text,
     parent_to_child_models_mapper,
 )
 from common.stringifies import (
     stringify_deposit_order,
     stringify_process_withdraw_order,
     stringify_process_busdt_order,
-    stringify_returned_order,
 )
 import models
 
@@ -90,6 +90,15 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         worker_id = int(data[-2])
         order_type = data[2]
         attachments = update.message.text_html
+        await models.ReturnedConv.add_response(
+            serial=serial,
+            order_type=order_type,
+            worker_id=worker_id,
+            msg=attachments,
+            from_user=True,
+        )
+        conv = models.ReturnedConv.get_conv(serial=serial, order_type=order_type)
+        conv_text = make_conv_text(conv)
         order = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
         reply_markup = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
@@ -103,34 +112,34 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order_type=order_type,
             context=context,
         )
+        await context.bot.send_message(
+            chat_id=worker_id,
+            text="<b>" + "\n\nطلب معاد، محادثة الإعادة:\n\n" + conv_text + "</b>",
+        )
         if order_type in ["withdraw", "busdt"]:
-            stringify_returned_payment_order_args = (
-                attachments,
-                (
-                    stringify_process_withdraw_order
-                    if order_type == "withdraw"
-                    else stringify_process_busdt_order
-                ),
+            common_args = (
                 amount,
                 order.serial,
                 order.method,
                 order.payment_method_number,
             )
+            order_text = (
+                stringify_process_withdraw_order(*common_args)
+                if order_type == "withdraw"
+                else stringify_process_busdt_order(*common_args)
+            )
+
             if order_type == "withdraw":
                 message = await context.bot.send_message(
                     chat_id=worker_id,
-                    text=stringify_returned_order(
-                        *stringify_returned_payment_order_args
-                    ),
+                    text=order_text,
                     reply_markup=reply_markup,
                 )
             else:
                 message = await context.bot.send_photo(
                     chat_id=worker_id,
                     photo=context.user_data["effective_photo"],
-                    caption=stringify_returned_order(
-                        *stringify_returned_payment_order_args
-                    ),
+                    caption=order_text,
                     reply_markup=reply_markup,
                 )
         else:
@@ -139,9 +148,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 workplace_id = models.TrustedAgent.get_workers(
                     gov=order.gov, user_id=order.agent_id
                 ).team_cash_workplace_id
-            stringify_returned_deposit_order_args = (
-                attachments,
-                stringify_deposit_order,
+            order_text = stringify_deposit_order(
                 amount,
                 order.serial,
                 order.method,
@@ -150,34 +157,24 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 order.ref_number,
                 workplace_id,
             )
+
             if order.ref_number:
                 message = await context.bot.send_message(
                     chat_id=worker_id,
-                    text=stringify_returned_order(
-                        *stringify_returned_deposit_order_args
-                    ),
+                    text=order_text,
                     reply_markup=reply_markup,
                 )
             else:
                 message = await context.bot.send_photo(
                     chat_id=worker_id,
                     photo=context.user_data["effective_photo"],
-                    caption=stringify_returned_order(
-                        *stringify_returned_deposit_order_args
-                    ),
+                    caption=order_text,
                     reply_markup=reply_markup,
                 )
 
         await parent_to_child_models_mapper[order_type].return_order_to_worker(
             serial=serial,
             processing_message_id=message.id,
-        )
-        await models.ReturnedConv.add_response(
-            serial=serial,
-            order_type=order_type,
-            worker_id=worker_id,
-            msg=attachments,
-            from_user=True,
         )
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,

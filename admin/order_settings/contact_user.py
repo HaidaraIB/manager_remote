@@ -18,8 +18,9 @@ from common.common import (
     parent_to_child_models_mapper,
     order_dict_en_to_ar,
     send_message_to_user,
+    make_conv_text,
 )
-from admin.order_settings.common import back_to_choose_action, make_conv_text
+from admin.order_settings.common import back_to_choose_action
 import models
 
 CONTACT_USER_MESSAGE = 0

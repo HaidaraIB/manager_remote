@@ -84,13 +84,13 @@ def build_actions_keyboard(order_type: str, serial: int):
             actions_keyboard.append([unset_working_on_it_button])
 
     elif order.state in ["declined", "sent", "approved"]:
-        if order.state != "declined":
-            actions_keyboard[0].append(edit_amount_button)
-        elif order.state == "declined":
+        if order.state == "declined":
             actions_keyboard.append([send_order_button])
         elif order.state == "approved":
+            actions_keyboard[0].append(edit_amount_button)
             actions_keyboard.append([request_returned_conv_button])
         elif order.state == "sent":
+            actions_keyboard[0].append(edit_amount_button)
             actions_keyboard.append([decline_order_button])
         actions_keyboard.append([return_to_worker_button])
 
@@ -140,13 +140,3 @@ async def refresh_order_settings_message(
         reply_markup=InlineKeyboardMarkup(build_actions_keyboard(order_type, serial)),
     )
 
-
-def make_conv_text(conv: list[models.Conv]):
-    conv_text = ""
-    for m in conv:
-        if m.from_user:
-            conv_text += f"المستخدم:\n<b>{m.msg}</b>\n\n"
-        else:
-            conv_text += f"الدعم:\n<b>{m.msg}</b>\n\n"
-
-    return conv_text

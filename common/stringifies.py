@@ -257,9 +257,3 @@ def stringify_process_busdt_order(
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
         "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )
-
-
-def stringify_returned_order(attachments: str, stringify_order, *args):
-    order = stringify_order(*args)
-    order += "<b>" + "\n\nطلب معاد، المرفقات:\n\n" + attachments + "</b>"
-    return order

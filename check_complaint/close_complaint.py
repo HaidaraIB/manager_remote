@@ -16,7 +16,6 @@ from common.common import parent_to_child_models_mapper, send_to_photos_archive,
 from custom_filters import Complaint, ResponseToUserComplaint
 from check_complaint.respond_to_user import back_from_respond_to_user_complaint
 from check_complaint.check_complaint import make_complaint_main_text, make_conv_text
-from common.constants import EXT_COMPLAINT_LINE
 
 import models
 import os

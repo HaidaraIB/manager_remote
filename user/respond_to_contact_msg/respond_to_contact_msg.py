@@ -14,8 +14,7 @@ from telegram.ext import (
 )
 
 import models
-from admin.order_settings.common import make_conv_text
-from common.common import build_back_button, order_dict_en_to_ar
+from common.common import build_back_button, make_conv_text, order_dict_en_to_ar
 
 RESPONSE = range(1)
 

@@ -24,6 +24,7 @@ from models import (
     PaymentAgent,
     Checker,
     Photo,
+    Conv,
 )
 from common.constants import *
 
@@ -40,6 +41,15 @@ order_dict_en_to_ar = {
     "busdt": "شراء USDT",
 }
 
+def make_conv_text(conv: list[Conv]):
+    conv_text = ""
+    for m in conv:
+        if m.from_user:
+            conv_text += f"المستخدم:\n<b>{m.msg}</b>\n\n"
+        else:
+            conv_text += f"الدعم:\n<b>{m.msg}</b>\n\n"
+
+    return conv_text
 
 async def ensure_positive_amount(amount: float, update: Update):
     if amount <= 0:
