@@ -33,7 +33,7 @@ async def return_order_to_checker(
         text=stringify_check_withdraw_order(
             w_type="balance",
             acc_number=w_order.acc_number,
-            password=account.password,
+            password=account.password if account else None,
             withdraw_code=w_order.withdraw_code,
             method=w_order.method,
             serial=w_order.serial,
