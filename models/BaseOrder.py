@@ -41,7 +41,6 @@ class BaseOrder(Base):
         checker_id: int,
         state: str,
         serial: int,
-        amount: float = None,
         s: Session = None,
     ):
         values = {
@@ -51,8 +50,6 @@ class BaseOrder(Base):
         }
         if checker_id:
             values[cls.checker_id] = checker_id
-        if amount:
-            values[cls.pre_balance] = cls.pre_balance - amount
         s.query(cls).filter_by(serial=serial).update(values)
 
     @classmethod

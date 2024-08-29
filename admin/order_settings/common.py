@@ -62,36 +62,28 @@ def build_actions_keyboard(order_type: str, serial: int):
         text="حذف الطلب",
         callback_data=f"delete_{order_type}_order_{serial}",
     )
-    send_order_button = InlineKeyboardButton(
-        text="إرسال الطلب",
-        callback_data=f"admin_send_{order_type}_order_{serial}",
-    )
-    decline_order_button = InlineKeyboardButton(
-        text="رفض الطلب",
-        callback_data=f"admin_decline_{order_type}_order_{serial}",
-    )
     unset_working_on_it_button = InlineKeyboardButton(
         text="السماح بإعادة الطلب",
         callback_data=f"unset_working_on_it_{order_type}_order_{serial}",
     )
     if order.state == "pending":
-        actions_keyboard.append([send_order_button, decline_order_button])
+        actions_keyboard.append([])
 
     elif order.state in ["checking", "processing"]:
         if order.state == "checking":
-            actions_keyboard.append([send_order_button, decline_order_button])
+            actions_keyboard.append([])
         if order.working_on_it:
             actions_keyboard.append([unset_working_on_it_button])
 
     elif order.state in ["declined", "sent", "approved"]:
         if order.state == "declined":
-            actions_keyboard.append([send_order_button])
+            actions_keyboard.append([])
         elif order.state == "approved":
             actions_keyboard[0].append(edit_amount_button)
             actions_keyboard.append([request_returned_conv_button])
         elif order.state == "sent":
             actions_keyboard[0].append(edit_amount_button)
-            actions_keyboard.append([decline_order_button])
+            actions_keyboard.append([])
         actions_keyboard.append([return_to_worker_button])
 
     elif order.state == "returned":
@@ -139,4 +131,3 @@ async def refresh_order_settings_message(
         + note,
         reply_markup=InlineKeyboardMarkup(build_actions_keyboard(order_type, serial)),
     )
-

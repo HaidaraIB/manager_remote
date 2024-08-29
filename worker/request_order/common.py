@@ -71,28 +71,22 @@ async def get_order_message(group_id: int, message_id: int, worker_id: int):
 
 async def send_requested_order(
     serial: int,
+    order_type: str,
     message_id: int,
     group_id: int,
     worker_id: int,
-    order_type: str,
-    role: str,
-    amount: float = None,
+    checker_id:int,
+    state: str,
 ):
     message = await get_order_message(group_id, message_id, worker_id)
-    if role.startswith("check"):
-        await parent_to_child_models_mapper[order_type].add_message_ids(
-            serial=serial,
-            checking_message_id=message.id,
-        )
-    else:
-        await parent_to_child_models_mapper[order_type].add_message_ids(
-            serial=serial,
-            processing_message_id=message.id,
-        )
+    await parent_to_child_models_mapper[order_type].add_message_ids(
+        serial=serial,
+        checking_message_id=message.id if state == "checking" else 0,
+        processing_message_id=message.id if state == "processing" else 0,
+    )
     await parent_to_child_models_mapper[order_type].set_working_on_it(
         serial=serial,
-        checker_id=worker_id if role.startswith("check") else 0,
+        checker_id=checker_id,
         worker_id=worker_id,
-        state="checking" if role.startswith("check") else "processing",
-        amount=amount if role.startswith("check") else None,
+        state=state,
     )

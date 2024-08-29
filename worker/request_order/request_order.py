@@ -152,11 +152,12 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.edit_message_text(text="الرجاء الانتظار...")
         await send_requested_order(
             serial=serial,
+            order_type=order_type,
             message_id=message_id,
             group_id=group_id,
             worker_id=update.effective_user.id,
-            role=role,
-            order_type=order_type,
+            checker_id=update.effective_user.id if role.startswith("check") else 0,
+            state="checking" if role.startswith("check") else "processing",
         )
         await update.callback_query.delete_message()
 
@@ -204,11 +205,12 @@ async def choose_check_position_request_order(
         await update.callback_query.edit_message_text(text="الرجاء الانتظار...")
         await send_requested_order(
             serial=c_order.serial,
+            order_type=check_what,
             message_id=c_order.pending_check_message_id,
             group_id=c_order.group_id,
             worker_id=update.effective_user.id,
-            role=role,
-            order_type=check_what,
+            checker_id=update.effective_user.id,
+            state="checking",
         )
         await update.callback_query.delete_message()
 
