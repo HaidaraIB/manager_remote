@@ -8,18 +8,13 @@ from common.stringifies import stringify_process_busdt_order
 import asyncio
 
 
-async def check_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-
+async def check_busdt(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [Chat.PRIVATE]:
         await check_order(update=update, order_type="busdt")
 
 
 async def send_busdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+    if update.effective_chat.type in [Chat.PRIVATE]:
         serial = int(update.callback_query.data.split("_")[-1])
         b_order = BuyUsdtdOrder.get_one_order(serial=serial)
         method = b_order.method
@@ -79,26 +74,18 @@ async def send_busdt_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def decline_busdt_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+    if update.effective_chat.type in [Chat.PRIVATE]:
         await decline_order(update=update, order_type="busdt")
 
 
 async def decline_busdt_order_reason(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+    if update.effective_chat.type in [Chat.PRIVATE]:
         await decline_order_reason(update=update, context=context, order_type="busdt")
 
 
-async def back_to_busdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-        await check_order(update=update, order_type="busdt")
+back_to_busdt_check = check_busdt
 
 
 check_busdt_handler = CallbackQueryHandler(

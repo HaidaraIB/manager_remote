@@ -1,49 +1,22 @@
-from telegram import (
-    Update,
-    Chat,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
-
-from common.common import (
-    apply_ex_rate,
-    notify_workers,
-    build_worker_keyboard,
-    send_message_to_user,
-)
+from telegram import Update, Chat, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
+from common.common import apply_ex_rate, notify_workers, build_worker_keyboard
+from worker.common import decline_order, decline_order_reason, check_order
 from common.stringifies import stringify_deposit_order
 from common.constants import *
 from worker.check_deposit.common import build_check_deposit_keyboard
 import models
-import os
 import asyncio
-
 from custom_filters import Declined, DepositAgent, Deposit, DepositAmount
 
 
 async def check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-
-        serial = int(update.callback_query.data.split("_")[-1])
-
-        await update.callback_query.edit_message_reply_markup(
-            reply_markup=build_check_deposit_keyboard(serial),
-        )
+    if update.effective_chat.type in [Chat.PRIVATE]:
+        await check_order(update=update, order_type="deposit")
 
 
 async def edit_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+    if update.effective_chat.type in [Chat.PRIVATE]:
         serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
@@ -61,9 +34,7 @@ async def edit_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+    if update.effective_chat.type in [Chat.PRIVATE]:
         serial = int(
             update.message.reply_to_message.reply_markup.inline_keyboard[0][
                 0
@@ -122,9 +93,7 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+    if update.effective_chat.type in [Chat.PRIVATE]:
         serial = int(update.callback_query.data.split("_")[-1])
         d_order = models.DepositOrder.get_one_order(serial=serial)
 
@@ -196,111 +165,18 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def decline_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-
-        serial = int(update.callback_query.data.split("_")[-1])
-
-        await update.callback_query.answer(
-            text="قم بالرد على هذه الرسالة بسبب الرفض",
-            show_alert=True,
-        )
-        await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="الرجوع عن الرفض 🔙",
-                    callback_data=f"back_from_decline_deposit_order_{serial}",
-                )
-            )
-        )
+    if update.effective_chat.type in [Chat.PRIVATE]:
+        await decline_order(update=update, order_type="deposit")
 
 
 async def decline_deposit_order_reason(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-
-        serial = int(
-            update.message.reply_to_message.reply_markup.inline_keyboard[0][
-                0
-            ].callback_data.split("_")[-1]
-        )
-
-        d_order = models.DepositOrder.get_one_order(serial=serial)
-        workplace_id = None
-        if not d_order.acc_number:
-            agent = models.TrustedAgent.get_workers(
-                gov=d_order.gov, user_id=d_order.agent_id
-            )
-            workplace_id = agent.team_cash_workplace_id
-        text = (
-            "تم رفض طلب الإيداع الخاص بك ❌\n\n"
-            f"الرقم التسلسلي للطلب: <code>{serial}</code>\n\n"
-            f"السبب: {update.message.text_html}"
-        )
-        await send_message_to_user(
-            update=update,
-            context=context,
-            user_id=d_order.user_id,
-            msg=text,
-        )
-
-        caption = (
-            "تم رفض الطلب ❌\n"
-            + update.message.reply_to_message.caption_html
-            + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
-        )
-
-        await context.bot.send_photo(
-            chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            photo=update.message.reply_to_message.photo[-1],
-            caption=caption,
-        )
-
-        await context.bot.edit_message_reply_markup(
-            chat_id=update.effective_chat.id,
-            message_id=update.message.reply_to_message.id,
-            reply_markup=InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    text="تم رفض الطلب ❌",
-                    callback_data="❌❌❌❌❌❌❌",
-                )
-            ),
-        )
-
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="تم رفض الطلب ❌",
-            reply_markup=build_worker_keyboard(
-                deposit_agent=DepositAgent().filter(update)
-            ),
-        )
-        if not workplace_id:
-            await models.Checker.update_pre_balance(
-                check_what="deposit",
-                method=d_order.method,
-                worker_id=update.effective_user.id,
-                amount=-d_order.amount,
-            )
-        await models.DepositOrder.decline_order(
-            reason=update.message.text,
-            serial=serial,
-        )
+    if update.effective_chat.type in [Chat.PRIVATE]:
+        await decline_order_reason(update=update, context=context, order_type="deposit")
 
 
-async def back_to_check_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-
-        serial = int(update.callback_query.data.split("_")[-1])
-
-        await update.callback_query.edit_message_reply_markup(
-            reply_markup=build_check_deposit_keyboard(serial)
-        )
+back_to_check_deposit = check_deposit
 
 
 check_deposit_handler = CallbackQueryHandler(

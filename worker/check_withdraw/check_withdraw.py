@@ -4,28 +4,23 @@ from custom_filters import Withdraw, Declined, Sent, DepositAgent
 from models import WithdrawOrder, PaymentAgent
 from common.constants import *
 import asyncio
-
+from common.stringifies import stringify_process_withdraw_order
+from worker.common import decline_order, decline_order_reason, check_order
 from common.common import (
     build_worker_keyboard,
     apply_ex_rate,
     notify_workers,
     ensure_positive_amount,
 )
-from common.stringifies import stringify_process_withdraw_order
-from worker.common import decline_order, decline_order_reason, check_order
 
 
-async def check_withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+async def check_withdraw(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [Chat.PRIVATE]:
         await check_order(update=update, order_type="withdraw")
 
 
-async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+async def send_withdraw_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [Chat.PRIVATE]:
         serial = int(update.callback_query.data.split("_")[-1])
 
         await update.callback_query.answer(
@@ -43,9 +38,7 @@ async def send_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+    if update.effective_chat.type in [Chat.PRIVATE]:
         amount = float(update.message.text)
         is_pos = await ensure_positive_amount(amount=amount, update=update)
         if not is_pos:
@@ -124,30 +117,21 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def decline_withdraw_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
+async def decline_withdraw_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [Chat.PRIVATE]:
         await decline_order(update=update, order_type="withdraw")
 
 
 async def decline_withdraw_order_reason(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-
+    if update.effective_chat.type in [Chat.PRIVATE]:
         await decline_order_reason(
             update=update, context=context, order_type="withdraw"
         )
 
 
-async def back_to_withdraw_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type in [
-        Chat.PRIVATE,
-    ]:
-        await check_withdraw(update=update, order_type="withdraw")
+back_to_withdraw_check = check_withdraw
 
 
 check_withdraw_handler = CallbackQueryHandler(
