@@ -10,14 +10,16 @@ def build_process_withdraw_keyboard(serial: int):
     keyboard = [
         [
             InlineKeyboardButton(
-                text="إعادة الطلب إلى المستخدم 📥",
+                text="إعادة إلى المستخدم 📥",
                 callback_data=f"return_withdraw_order_{serial}",
             ),
+        ],
+        [
             InlineKeyboardButton(
-                text="إعادة الطلب إلى الموظف📥",
+                text="إعادة إلى الموظف 📥",
                 callback_data=f"return_to_checker_withdraw_order_{serial}",
             ),
-        ]
+        ],
     ]
     return keyboard
 

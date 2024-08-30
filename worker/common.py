@@ -135,7 +135,7 @@ async def decline_order_reason(
             check_what="deposit",
             method=order.method,
             worker_id=update.effective_user.id,
-            amount=-order.amount,
+            amount=order.amount,
         )
     await parent_to_child_models_mapper[order_type].decline_order(
         reason=update.message.text,

@@ -209,7 +209,7 @@ async def send_to_check_bemo_deposit(
         notify_workers(
             context=context,
             workers=workers,
-            text=f"انتباه يوجد طلب تحقق إيداع جديد 🚨",
+            text=f"انتباه إيداع جديد قيد التحقق 🚨",
         )
     )
     workers = models.Checker.get_workers(

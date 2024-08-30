@@ -61,17 +61,10 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         account_number=d_order.acc_number,
                         wal=d_order.deposit_wallet,
                     )
-                    + "\n\ليس لديك رصيد كافي ❗️",
+                    + "\n\nليس لديك رصيد كافي ❗️",
                     reply_markup=build_check_deposit_keyboard(serial),
                 )
                 return
-            else:
-                await models.Checker.update_pre_balance(
-                    check_what="deposit",
-                    method=d_order.method,
-                    worker_id=update.effective_user.id,
-                    amount=d_order.amount - new_amount,
-                )
 
         await models.DepositOrder.edit_order_amount(
             new_amount=new_amount, serial=serial
@@ -103,12 +96,14 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             order_type="deposit",
             context=context,
         )
+        
         workplace_id = None
         if not d_order.acc_number:
             agent = models.TrustedAgent.get_workers(
                 gov=d_order.gov, user_id=d_order.agent_id
             )
             workplace_id = agent.team_cash_workplace_id
+
         message = await context.bot.send_photo(
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
             photo=update.effective_message.photo[-1],
@@ -154,6 +149,14 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             ),
             ex_rate=ex_rate,
         )
+
+        await models.Checker.update_pre_balance(
+            check_what="deposit",
+            method=d_order.method,
+            worker_id=update.effective_user.id,
+            amount=-amount,
+        )
+
         workers = models.DepositAgent.get_workers(is_point=(workplace_id is not None))
         asyncio.create_task(
             notify_workers(

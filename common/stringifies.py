@@ -178,7 +178,7 @@ def stringify_deposit_order(
 ):
     deposit_order_text = (
         "إيداع جديد:\n"
-        f"رقم العملية: <code>{ref_num}</code>\n"
+        f"رقم العملية: <code>{ref_num if ref_num else 'لا يوجد'}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
         f"رقم الحساب: <code>{account_number if account_number else 'لا يوجد'}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
@@ -206,7 +206,7 @@ def stringify_check_withdraw_order(
     return (
         f"تفاصيل طلب سحب {g_b_dict[w_type]}:\n\n"
         f"رقم الحساب 🔢: <code>{acc_number}</code>\n"
-        f"كلمة المرور 🈴: <code>{password if password else "لا يوجد"}</code>\n"
+        f"كلمة المرور 🈴: <code>{password if password else 'لا يوجد'}</code>\n"
         f"كود السحب: <code>{withdraw_code}</code>\n"
         f"وسيلة الدفع 💳: <b>{method}</b>\n\n"
         f"Serial: <code>{serial}</code>\n\n"

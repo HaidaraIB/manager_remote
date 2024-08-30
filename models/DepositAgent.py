@@ -60,7 +60,7 @@ class DepositAgent(Worker):
                 return list(map(lambda x: x[0], res.tuples().all()))
             except:
                 pass
-        elif is_point:
+        elif is_point is not None:
             res = s.execute(
                 select(cls).where(cls.is_point == is_point)
             )  # get all point deposit agents

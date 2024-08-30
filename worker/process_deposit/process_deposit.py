@@ -52,7 +52,7 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
 
         await update.callback_query.answer(text=text, show_alert=True)
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(button)
+            reply_markup=InlineKeyboardMarkup.from_button(button)
         )
 
 
@@ -70,10 +70,9 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         d_order = DepositOrder.get_one_order(serial=serial)
 
         caption = (
-            f"مبروك🎉، تم الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n"
+            "مبروك 🎉🎉🎉\n"
+            f"تم الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
-            f"Congrats🎉, the deposit you made <b>{format_amount(d_order.amount)}</b> has been approved.\n"
-            f"Serial: <code>{serial}</code>"
         )
 
         media = [

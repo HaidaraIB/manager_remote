@@ -51,7 +51,7 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 build_back_button("back_to_deposit_method"),
                 back_to_user_home_page_button[0],
             ]
-            if 50000 > amount > 500000:
+            if amount < 50000 or amount > 500000:
                 await update.message.reply_text(
                     text="أدخل المبلغ بين 50 و500 ألف ليرة",
                     reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
@@ -65,6 +65,8 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 )
                 context.bot_data["bemo_deposit_off"] = True
                 return
+
+            context.bot_data["bemo_deposit_off"] = False
             context.user_data["deposit_amount"] = amount
             await update.message.reply_text(
                 text=text,
@@ -83,18 +85,8 @@ back_to_deposit_amount = bemo_deposit
 
 async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        method = context.user_data["deposit_method"]
-        await send_to_check_bemo_deposit(
-            context=context,
-            user_id=update.effective_user.id,
-            photo=update.message.photo[-1],
-            amount=context.user_data["deposit_amount"],
-            acc_number=context.user_data["account_deposit"],
-            method=method,
-            target_group=context.bot_data["data"]["deposit_orders_group"],
-            deposit_wallet=context.bot_data["data"][f"{method}_number"],
-        )
-
+        await send_to_check_bemo_deposit(update=update, context=context)
+        
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
             reply_markup=build_user_keyboard(),
