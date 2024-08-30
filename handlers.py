@@ -155,7 +155,7 @@ def main():
     app.add_handler(back_from_decline_deposit_order_handler)
 
     # WITHDRAW
-    app.add_handler(check_payment_handler)
+    app.add_handler(check_withdraw_handler)
     app.add_handler(send_withdraw_order_handler)
     app.add_handler(decline_withdraw_order_handler)
     app.add_handler(back_to_withdraw_check_handler)

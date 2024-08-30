@@ -38,29 +38,21 @@ async def user_payment_verified_busdt(
         serial = int(update.callback_query.data.split("_")[-1])
         order = BuyUsdtdOrder.get_one_order(serial=serial)
         if order.state == "deleted":
-            keyboard = [
-                [
-                    InlineKeyboardButton(
-                        text="طلب محذوف ⁉️",
-                        callback_data="!?!?!?!?!?!?!?!?!?!?!?",
-                    )
-                ]
-            ]
+            button = InlineKeyboardButton(
+                text="طلب محذوف ⁉️",
+                callback_data="!?!?!?!?!?!?!?!?!?!?!?",
+            )
             text = "لقد قامت الإدارة بحذف هذا الطلب ⁉️"
         else:
-            keyboard = [
-                [
-                    InlineKeyboardButton(
-                        text="إعادة الطلب📥",
-                        callback_data=f"return_busdt_order_{serial}",
-                    )
-                ]
-            ]
+            button = InlineKeyboardButton(
+                text="إعادة الطلب📥",
+                callback_data=f"return_busdt_order_{serial}",
+            )
             text = "قم بالرد على هذه الرسالة بصورة لإشعار الدفع، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة."
 
         await update.callback_query.answer(text=text, show_alert=True)
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(keyboard)
+            reply_markup=InlineKeyboardMarkup.from_button(button)
         )
 
 
