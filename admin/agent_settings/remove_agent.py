@@ -18,7 +18,10 @@ async def choose_gov_or_agent_to_remove(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        if not update.callback_query.data.startswith("back"):
+        if (
+            not update.callback_query.data.startswith("back")
+            and not update.callback_query.data.isnumeric()
+        ):
             gov = update.callback_query.data.split("_")[0]
             context.user_data["gov_to_remove_agent_from"] = gov
         else:
@@ -37,6 +40,10 @@ async def choose_gov_or_agent_to_remove(
         agents = models.TrustedAgent.get_workers(gov=gov)
 
         if not agents:
+            await update.callback_query.answer(
+                text="ليس هناك وكلاء لهذه المحافظة",
+                show_alert=True,
+            )
             await choose_agent_settings_option(update, context)
             return GOV
 
