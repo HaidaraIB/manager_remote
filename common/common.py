@@ -304,6 +304,10 @@ def build_admin_keyboard():
                 text="📄 إعدادات الطلب ⚙️",
                 callback_data="order settings",
             ),
+            InlineKeyboardButton(
+                text="إعدادات الوكيل ⚙️",
+                callback_data="agent_settings",
+            ),
         ],
         [
             InlineKeyboardButton(
