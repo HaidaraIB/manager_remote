@@ -5,9 +5,10 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     select,
     and_,
+    delete,
 )
 from sqlalchemy.orm import Session
-from models.DB import Base, connect_and_close
+from models.DB import Base, connect_and_close, lock_and_release
 
 
 class WorkerWithUs(Base):
@@ -48,3 +49,20 @@ class WorkerWithUs(Base):
                 return list(map(lambda x: x[0], res.tuples().all()))
         except:
             pass
+
+    @classmethod
+    @lock_and_release
+    async def remove_worker(
+        cls,
+        worker_id: int,
+        gov: str,
+        s: Session = None,
+    ):
+        s.execute(
+            delete(cls).where(
+                and_(
+                    cls.user_id == worker_id,
+                    cls.gov == gov,
+                )
+            )
+        )

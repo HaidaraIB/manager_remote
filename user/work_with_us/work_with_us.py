@@ -61,7 +61,7 @@ import models
 @check_user_call_on_or_off_decorator
 @check_if_user_present_decorator
 @check_if_user_member_decorator
-async def work_with_us(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def work_with_us(update: Update, _: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         await update.callback_query.edit_message_text(
             text="عملك معنا",
@@ -98,15 +98,11 @@ async def choose_working_with_us(update: Update, context: ContextTypes.DEFAULT_T
 back_to_choose_working_with_us = work_with_us
 
 
-async def choose_what_do_u_wanna_be(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def choose_what_do_u_wanna_be(update: Update, _: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        back_buttons = [
-            build_back_button("back_to_choose_what_do_u_wanna_be"),
-            back_to_user_home_page_button[0],
-        ]
         govs_keyboard = build_govs_keyboard()
-        govs_keyboard.append(back_buttons[0])
-        govs_keyboard.append(back_buttons[1])
+        govs_keyboard.append(build_back_button("back_to_choose_what_do_u_wanna_be"))
+        govs_keyboard.append(back_to_user_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر المحافظة التي ستعمل بها",
             reply_markup=InlineKeyboardMarkup(govs_keyboard),

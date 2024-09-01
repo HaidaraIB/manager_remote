@@ -130,7 +130,7 @@ async def choose_admin_id_to_remove(update: Update, context: ContextTypes.DEFAUL
             return
 
         await models.Admin.remove_admin(admin_id=admin_id)
-        await update.callback_query.answer(text="تمت إزالة الآدمن بنجاح✅")
+        await update.callback_query.answer(text="تمت إزالة الآدمن بنجاح ✅")
         admins = models.Admin.get_admin_ids()
         admin_ids_keyboard = [
             [InlineKeyboardButton(text=str(admin.id), callback_data=str(admin.id))]

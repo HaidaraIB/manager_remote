@@ -34,6 +34,21 @@ worker_type_dict = {
 }
 
 
+def stringify_agent(agent: models.TrustedAgent):
+    text = (
+        "معلومات الوكيل:\n"
+        f"الآيدي: <code>{agent.user_id}</code>\n"
+        f"المحافظة: <b>{agent.gov}</b>\n"
+        f"الحي: <code>{agent.neighborhood}</code>\n\n"
+        f"Workplace ID: <code>{agent.team_cash_workplace_id}</code>\n"
+        f"Team Cash User ID: <code>{agent.team_cash_user_id}</code>\n"
+        f"Team Cash Password: <code>{agent.team_cash_password}</code>\n\n"
+        f"Promo Username: <code>{agent.promo_username}</code>\n"
+        f"Promo Password: <code>{agent.promo_password}</code>\n\n"
+    )
+    return text
+
+
 def stringify_manager_reward_report(
     worker: models.DepositAgent | models.PaymentAgent,
     updated_worker: models.DepositAgent | models.PaymentAgent,

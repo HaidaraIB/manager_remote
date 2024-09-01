@@ -57,6 +57,7 @@ from admin.groups_settings import *
 from admin.workers_settings import *
 from admin.order_settings import *
 from admin.exchange_rates import *
+from admin.agent_settings import *
 
 from worker.request_order import request_order_handler
 from worker.process_deposit import *
@@ -248,17 +249,23 @@ def main():
     app.add_handler(turn_payment_method_on_or_off_handler)
 
     app.add_handler(wallets_settings_handler)
-    
+
     app.add_handler(broadcast_message_handler)
 
     app.add_handler(request_order_handler)
 
+    # WORKER SETTINGS
     app.add_handler(worker_balance_handler)
     app.add_handler(worker_settings_handler)
     app.add_handler(add_worker_cp_handler)
     app.add_handler(remove_worker_handler)
     app.add_handler(show_worker_handler)
-    
+
+    # AGENT SETTINGS
+    app.add_handler(agent_settings_handler)
+    app.add_handler(remove_agent_handler)
+    app.add_handler(show_agent_handler)
+
     # ORDER SETTINGS
     app.add_handler(order_settings_handler)
     app.add_handler(edit_order_amount_handler)

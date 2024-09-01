@@ -44,7 +44,7 @@ class DepositAgent(Worker):
         is_point: bool = None,
         s: Session = None,
     ):
-        if worker_id and is_point:
+        if worker_id and (is_point is not None):
             res = s.execute(
                 select(cls).where(and_(cls.is_point == is_point, cls.id == worker_id))
             )  # get deposit agent

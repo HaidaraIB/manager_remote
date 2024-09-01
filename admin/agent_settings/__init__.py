@@ -1,0 +1,3 @@
+from admin.agent_settings.agent_settings import agent_settings_handler
+from admin.agent_settings.remove_agent import remove_agent_handler
+from admin.agent_settings.show_agent import show_agent_handler

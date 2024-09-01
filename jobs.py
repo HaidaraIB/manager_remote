@@ -1,7 +1,6 @@
 from telegram.ext import ContextTypes
 from telegram.error import RetryAfter
 from models import PaymentAgent, DepositAgent
-from common.common import format_amount
 from common.constants import *
 import asyncio
 from common.stringifies import (
@@ -16,10 +15,10 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
     model: DepositAgent | PaymentAgent = worker_type_dict[worker_type]["model"]
     workers: list[PaymentAgent] | list[DepositAgent] = model.get_workers()
     for worker in workers:
-        approved_work = worker.__getattribute__(
-            worker_type_dict[worker_type]["approved_work"]
+        approved_work = getattr(
+            worker, worker_type_dict[worker_type]["approved_work"], None
         )
-        if approved_work == 0:
+        if not approved_work:
             continue
 
         amount = float(
