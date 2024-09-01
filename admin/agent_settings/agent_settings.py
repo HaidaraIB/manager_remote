@@ -14,5 +14,6 @@ async def agent_settings(update: Update, _: ContextTypes.DEFAULT_TYPE):
         )
         return ConversationHandler.END
 
+back_to_agent_settings = agent_settings
 
 agent_settings_handler = CallbackQueryHandler(agent_settings, "^agent_settings$")

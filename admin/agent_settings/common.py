@@ -2,7 +2,6 @@ from telegram import InlineKeyboardButton, Update, Chat, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from user.work_with_us.common import build_govs_keyboard
 from common.common import build_back_button
-from admin.agent_settings.agent_settings import agent_settings
 from common.back_to_home_page import back_to_admin_home_page_button
 from custom_filters import Admin
 
@@ -39,4 +38,3 @@ async def choose_agent_settings_option(
         return GOV
 
 
-back_to_agent_settings = agent_settings

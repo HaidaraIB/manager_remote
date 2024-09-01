@@ -297,18 +297,23 @@ def main():
 
     app.add_error_handler(error_handler)
 
-    app.job_queue.run_daily(
+    app.job_queue.run_once(
         callback=reward_worker,
-        time=datetime.time(0, 0, 0),
-        days=(0,),
+        when=2,
         name="weekly_reward_worker",
-        job_kwargs={
-            "id": "weekly_reward_worker",
-            "misfire_grace_time": None,
-            "coalesce": True,
-            "replace_existing": True,
-        },
     )
+    # app.job_queue.run_daily(
+    #     callback=reward_worker,
+    #     time=datetime.time(0, 0, 0),
+    #     days=(0,),
+    #     name="weekly_reward_worker",
+    #     job_kwargs={
+    #         "id": "weekly_reward_worker",
+    #         "misfire_grace_time": None,
+    #         "coalesce": True,
+    #         "replace_existing": True,
+    #     },
+    # )
     app.job_queue.run_daily(
         callback=reward_worker,
         time=datetime.time(0, 0, 0),

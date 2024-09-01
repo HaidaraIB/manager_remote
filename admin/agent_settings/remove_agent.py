@@ -7,11 +7,8 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
 )
-from admin.agent_settings.common import (
-    GOV,
-    choose_agent_settings_option,
-    back_to_agent_settings,
-)
+from admin.agent_settings.common import GOV, choose_agent_settings_option
+from admin.agent_settings.agent_settings import back_to_agent_settings
 import models
 
 AGENT = 1
