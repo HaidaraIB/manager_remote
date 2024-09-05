@@ -207,8 +207,6 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
                 order_serial=serial, order_type=order_type
             )
 
-            if op.worker_id:
-                context.bot_data["suspended_workers"].add(op.worker_id)
 
             data = [order_type, serial]
             complaint_keyboard = build_complaint_keyboard(data, True)
