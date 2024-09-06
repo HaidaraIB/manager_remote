@@ -60,7 +60,6 @@ back_to_worker_home_page_button = [
 ]
 
 
-@check_if_user_agent_decorator
 async def back_to_agent_home_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         try:

@@ -28,10 +28,12 @@ async def choose_gov_or_agent_to_remove(
             gov = context.user_data["gov_to_remove_agent_from"]
 
         if update.callback_query.data.isnumeric():
-            await models.TrustedAgent.remove_worker(
-                worker_id=int(update.callback_query.data),
-                gov=gov,
-            )
+            worker_id = int(update.callback_query.data)
+
+            worker = models.TrustedAgent.get_workers(gov=gov, user_id=worker_id)
+            await models.TrustedAgent.remove_worker(worker_id=worker_id, gov=gov)
+            await models.WorkWithUsOrder.delete_order(order_serial=worker.order_serial)
+            
             await update.callback_query.answer(
                 text="تمت الإزالة بنجاح ✅",
                 show_alert=True,

@@ -55,9 +55,11 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ag = models.TrustedAgent.get_workers(order_serial=serial)
             if (
                 not order
+                or order.state == "deleted"
                 or order.state != "approved"
                 or order.user_id != update.effective_user.id
                 or ag
+                or (not ag and order.state == "approved")
             ):
                 await update.message.reply_text(
                     text=(
@@ -95,6 +97,11 @@ async def get_team_cash(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_agent_home_page_button[0],
         ]
         if update.message:
+
+            if "User ID: Someone" in update.message.text:
+                await update.message.reply_text(text="الرجاء إرسال معلومات صحيحة ❗️")
+                return
+
             team_cash_info = list(
                 map(lambda x: x.split(": ")[1], update.message.text.split("\n"))
             )

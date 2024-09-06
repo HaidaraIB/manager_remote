@@ -36,6 +36,7 @@ class WorkWithUsOrder(BaseOrder):
     order_date = Column(TIMESTAMP, server_default=func.current_timestamp())
     approve_date = Column(TIMESTAMP)
     decline_date = Column(TIMESTAMP)
+    delete_date = Column(TIMESTAMP)
 
     @staticmethod
     @lock_and_release
@@ -86,6 +87,16 @@ class WorkWithUsOrder(BaseOrder):
             {
                 WorkWithUsOrder.approve_date: datetime.datetime.now(),
                 WorkWithUsOrder.state: "approved",
+            }
+        )
+
+    @staticmethod
+    @lock_and_release
+    async def delete_order(order_serial: int, s: Session = None):
+        s.query(WorkWithUsOrder).filter_by(serial=order_serial).update(
+            {
+                WorkWithUsOrder.delete_date: datetime.datetime.now(),
+                WorkWithUsOrder.state: "deleted",
             }
         )
 
