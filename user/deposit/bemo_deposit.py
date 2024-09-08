@@ -37,7 +37,7 @@ async def bemo_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await update.callback_query.edit_message_text(
                 text=(
-                    "أدخل المبلغ بين 50 و 500 ألف\n" "الحد الأدنى للإيداع = 50,000 ل.س"
+                    "أدخل المبلغ أكبر من 50 ألف\n" "الحد الأدنى للإيداع = 50,000 ل.س"
                 ),
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
@@ -46,7 +46,7 @@ async def bemo_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=update.effective_user.id,
                 text=(
-                    "أدخل المبلغ بين 50 و 500 ألف\n" "الحد الأدنى للإيداع = 50,000 ل.س"
+                    "أدخل المبلغ أكبر من 50 ألف\n" "الحد الأدنى للإيداع = 50,000 ل.س"
                 ),
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
