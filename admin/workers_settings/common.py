@@ -85,7 +85,7 @@ worker_settings_handler = CallbackQueryHandler(
 
 def build_checker_positions_keyboard(check_what: str, op: str):
     pos_method_list_dict = {
-        "deposit": CHECK_DEPOSIT_LIST + [POINT_DEPOSIT],
+        "deposit": [POINT_DEPOSIT],
         "withdraw": PAYMENT_METHODS_LIST,
         "busdt": PAYMENT_METHODS_LIST,
     }

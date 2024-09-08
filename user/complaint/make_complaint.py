@@ -116,7 +116,6 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if (
             about == "deposit"
             and order.state == "pending"
-            and order.method not in CHECK_DEPOSIT_LIST
         ):
             await update.callback_query.answer(
                 text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",

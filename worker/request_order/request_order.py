@@ -191,16 +191,6 @@ async def choose_check_position_request_order(
                 show_alert=True,
             )
             return
-        elif (
-            checker.check_what == "deposit"
-            and checker.method in CHECK_DEPOSIT_LIST
-            and c_order.amount > checker.pre_balance
-        ):
-            await update.callback_query.answer(
-                f"ليس لديك رصيد كافِ",
-                show_alert=True,
-            )
-            return
 
         await update.callback_query.edit_message_text(text="الرجاء الانتظار...")
         await send_requested_order(

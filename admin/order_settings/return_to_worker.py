@@ -42,7 +42,7 @@ async def return_order_to_worker(update: Update, context: ContextTypes.DEFAULT_T
                 processing_message_id=message.id,
             )
         else:
-            if order_type == "deposit" and order.method not in CHECK_DEPOSIT_LIST:
+            if order_type == "deposit":
                 await update.callback_query.answer(
                     text="البوت هو من يقوم بمهام تحقق الإيداع ❗️",
                     show_alert=True,

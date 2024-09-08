@@ -47,24 +47,24 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             check_what="deposit",
         )
         new_amount = float(update.message.text)
-        if d_order.method in CHECK_DEPOSIT_LIST:
-            if (
-                d_order.amount < new_amount
-                and (new_amount - d_order.amount) > checker.pre_balance
-            ):
-                await update.message.delete()
-                await update.message.reply_to_message.edit_caption(
-                    caption=stringify_deposit_order(
-                        amount=new_amount,
-                        serial=serial,
-                        method=d_order.method,
-                        account_number=d_order.acc_number,
-                        wal=d_order.deposit_wallet,
-                    )
-                    + "\n\nليس لديك رصيد كافي ❗️",
-                    reply_markup=build_check_deposit_keyboard(serial),
-                )
-                return
+        order_text = stringify_deposit_order(
+            amount=new_amount,
+            serial=serial,
+            method=d_order.method,
+            account_number=d_order.acc_number,
+            wal=d_order.deposit_wallet,
+            ref_num=d_order.ref_number,
+        )
+        if (
+            d_order.amount < new_amount
+            and (new_amount - d_order.amount) > checker.pre_balance
+        ):
+            await update.message.delete()
+            await update.message.reply_to_message.edit_text(
+                text=order_text + "\n\nليس لديك رصيد كافي ❗️",
+                reply_markup=build_check_deposit_keyboard(serial),
+            )
+            return
 
         await models.DepositOrder.edit_order_amount(
             new_amount=new_amount, serial=serial
@@ -72,15 +72,8 @@ async def get_new_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.delete()
 
-        await update.message.reply_to_message.edit_caption(
-            caption=stringify_deposit_order(
-                amount=new_amount,
-                serial=serial,
-                method=d_order.method,
-                account_number=d_order.acc_number,
-                wal=d_order.deposit_wallet,
-            )
-            + "\n\nتم تعديل المبلغ ✅",
+        await update.message.reply_to_message.edit_text(
+            text=order_text + "\n\nتم تعديل المبلغ ✅",
             reply_markup=build_check_deposit_keyboard(serial),
         )
 
@@ -96,7 +89,7 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             order_type="deposit",
             context=context,
         )
-        
+
         workplace_id = None
         if not d_order.acc_number:
             agent = models.TrustedAgent.get_workers(
@@ -104,15 +97,15 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
             )
             workplace_id = agent.team_cash_workplace_id
 
-        message = await context.bot.send_photo(
+        message = await context.bot.send_message(
             chat_id=context.bot_data["data"]["deposit_after_check_group"],
-            photo=update.effective_message.photo[-1],
-            caption=stringify_deposit_order(
+            text=stringify_deposit_order(
                 amount=amount,
                 serial=d_order.serial,
                 method=d_order.method,
                 account_number=d_order.acc_number,
                 wal=d_order.deposit_wallet,
+                ref_num=d_order.ref_number,
                 workplace_id=workplace_id,
             ),
             reply_markup=InlineKeyboardMarkup.from_button(

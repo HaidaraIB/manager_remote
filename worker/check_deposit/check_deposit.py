@@ -126,7 +126,7 @@ async def send_order_to_process(
         group_id=context.bot_data["data"]["deposit_after_check_group"],
         ex_rate=ex_rate,
     )
-    workers = DepositAgent.get_workers()
+    workers = DepositAgent.get_workers(is_point=False)
     asyncio.create_task(
         notify_workers(
             context=context,

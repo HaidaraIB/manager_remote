@@ -9,3 +9,4 @@ data_test
 old_data
 errors.txt
 db_to_extract_photos_from_archive_message_ids.sqlite3
+test2.py

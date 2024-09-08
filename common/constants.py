@@ -8,9 +8,6 @@ PERFECT_MONEY = "PERFECT MONEY"
 
 POINT_DEPOSIT = "نقاط وكلاء"
 
-CHECK_DEPOSIT_LIST = [
-    BEMO
-]
 
 CRYPTO_LIST = [
     USDT,
@@ -56,8 +53,7 @@ AGENT_COMMAND_TEXT = (
 )
 
 LOGIN_GUIDE_TEXT = (
-    "يوضح الفيديو المرفق خطوات تسجيل الدخول ⬆️⬆️⬆️\n\n"
-    "أرسل الرقم التسلسلي للطلب"
+    "يوضح الفيديو المرفق خطوات تسجيل الدخول ⬆️⬆️⬆️\n\n" "أرسل الرقم التسلسلي للطلب"
 )
 
 CHOOSE_ORDERS_TEXT = (

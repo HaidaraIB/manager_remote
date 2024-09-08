@@ -34,10 +34,9 @@ from user.deposit.common import (
 )
 from user.deposit.bemo_deposit import (
     DEPOSIT_AMOUNT,
-    SCREENSHOT,
+    BEMO_REF_NUM,
     bemo_deposit,
     get_deposit_amount,
-    get_screenshot,
     back_to_deposit_amount,
 )
 
@@ -47,25 +46,27 @@ REF_NUM = 2
 
 async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        data = update.callback_query.data
-        method = PaymentMethod.get_payment_method(name=data)
+        method_name = update.callback_query.data
+        method = PaymentMethod.get_payment_method(name=method_name)
         if method.on_off == 0:
             await update.callback_query.answer(
                 "هذه الوسيلة متوقفة مؤقتاً❗️",
                 show_alert=True,
             )
             return
-        context.user_data["deposit_method"] = data
+        context.user_data["deposit_method"] = method_name
+        context.user_data["deposit_amount"] = 0
+
         back_buttons = [
             build_back_button("back_to_deposit_method"),
             back_to_user_home_page_button[0],
         ]
         text = (
             f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
-            f"<code>{context.bot_data['data'][f'{data}_number']}</code>\n\n"
+            f"<code>{context.bot_data['data'][f'{method_name}_number']}</code>\n\n"
             f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
         )
-        if data == "USDT":
+        if method_name == "USDT":
             text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n"
 
         await update.callback_query.edit_message_text(
@@ -87,6 +88,7 @@ async def get_ref_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
             acc_number=context.user_data["account_deposit"],
             method=context.user_data["deposit_method"],
             target_group=context.bot_data["data"]["deposit_orders_group"],
+            amount=context.user_data["deposit_amount"],
         )
         if not res:
             await update.message.reply_text(
@@ -138,10 +140,10 @@ deposit_handler = ConversationHandler(
                 callback=get_deposit_amount,
             )
         ],
-        SCREENSHOT: [
+        BEMO_REF_NUM: [
             MessageHandler(
-                filters=filters.PHOTO,
-                callback=get_screenshot,
+                filters=filters.Regex("^\d+$"),
+                callback=get_ref_num,
             ),
         ],
     },

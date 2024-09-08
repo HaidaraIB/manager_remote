@@ -1,17 +1,9 @@
-from telegram import (
-    Update,
-    Chat,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    MessageHandler,
-)
-
+from telegram import Update, Chat
+from telegram.ext import ContextTypes, MessageHandler
 from custom_filters import Ref
 from models import RefNumber, DepositOrder, PaymentMethod
 from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
-from common.common import ensure_positive_amount
+from common.common import ensure_positive_amount, format_amount
 
 
 async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -28,7 +20,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         is_pos = await ensure_positive_amount(amount=amount, update=update)
         if not is_pos:
             return
-        
+
         number = ref_number_info[0].split(": ")[1]
         method = ref_number_info[1]
 
@@ -38,7 +30,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         if ref_present:
             await update.message.reply_text(
-                text="رقم عملية مكرر!",
+                text="رقم عملية مكرر ❗️",
             )
             return
         await RefNumber.add_ref_number(
@@ -53,6 +45,16 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text="تم ✅")
 
         d_order = DepositOrder.get_one_order(ref_num=number, method=method)
+
+        if d_order.amount and d_order.amount != amount:
+            await context.bot.send_message(
+                chat_id=d_order.user_id,
+                text=(
+                    f"تم تصحيح مبلغ إيداع الطلب صاحب رقم العملية: <b>{number}</b>\n"
+                    f"من: <b>{format_amount(d_order.amount)}</b>\n"
+                    f"إلى: <b>{format_amount(amount)}</b>"
+                ),
+            )
 
         await check_deposit_lock.acquire()
         if d_order and d_order.state == "pending":

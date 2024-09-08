@@ -42,7 +42,7 @@ from common.common import build_back_button
 ) = range(4)
 
 
-async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def add_worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         text = "اختر حساب الموظف الذي تريد إضافته بالضغط على الزر أدناه، يمكنك إلغاء العملية بالضغط على /admin."
 
@@ -215,7 +215,7 @@ async def choose_check_position(update: Update, context: ContextTypes.DEFAULT_TY
 add_worker_cp_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
-            choose_position,
+            add_worker,
             "^add_worker$",
         )
     ],

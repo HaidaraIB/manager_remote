@@ -76,6 +76,7 @@ async def send_to_check_deposit(
     ref_num: str = "",
     agent_id: int = 0,
     gov: str = "",
+    amount: float = 0,
 ):
     ref_present = models.RefNumber.get_ref_number(
         number=ref_num,
@@ -93,7 +94,7 @@ async def send_to_check_deposit(
         method=method,
         acc_number=acc_number,
         deposit_wallet=context.bot_data["data"][f"{method}_number"],
-        amount=0,
+        amount=amount,
         ref_number=ref_num,
         agent_id=agent_id,
         gov=gov,
@@ -128,7 +129,7 @@ async def send_to_check_deposit(
         pending_check_message_id=message.id,
     )
 
-    workers = models.DepositAgent.get_workers()
+    workers = models.DepositAgent.get_workers(is_point=False)
     asyncio.create_task(
         notify_workers(
             context=context,
@@ -143,9 +144,9 @@ async def send_to_check_bemo_deposit(
     update: Update, context: ContextTypes.DEFAULT_TYPE, is_point_deposit=False
 ):
     user_id = update.effective_user.id
-    photo = update.message.photo[-1]
 
     if is_point_deposit:
+        photo = update.message.photo[-1]
         ref_number = context.user_data["point_deposit_ref_num"]
         deposit_wallet = context.bot_data["data"]["طلبات الوكيل_number"]
         amount = context.user_data["point_deposit_amount"]
@@ -153,6 +154,7 @@ async def send_to_check_bemo_deposit(
         agent = models.TrustedAgent.get_workers(user_id=user_id, gov=gov)
     else:
         amount = context.user_data["deposit_amount"]
+        ref_number = update.message.text
         acc_number = context.user_data["account_deposit"]
         method = context.user_data["deposit_method"]
         deposit_wallet = context.bot_data["data"][f"{method}_number"]
@@ -166,17 +168,17 @@ async def send_to_check_bemo_deposit(
         acc_number=acc_number if not is_point_deposit else None,
         deposit_wallet=deposit_wallet,
         amount=amount,
-        ref_number=ref_number if is_point_deposit else None,
+        ref_number=ref_number,
         agent_id=user_id if is_point_deposit else None,
         gov=agent.gov if is_point_deposit else None,
     )
 
-    caption = stringify_deposit_order(
+    text = stringify_deposit_order(
         amount=amount,
         serial=serial,
         method=SYRCASH if is_point_deposit else method,
         wal=deposit_wallet,
-        ref_num=ref_number if is_point_deposit else None,
+        ref_num=ref_number,
         account_number=acc_number if not is_point_deposit else None,
         workplace_id=agent.team_cash_workplace_id if is_point_deposit else None,
     )
@@ -185,19 +187,25 @@ async def send_to_check_bemo_deposit(
             text="التحقق ☑️", callback_data=f"check_deposit_order_{serial}"
         )
     )
-
-    message = await context.bot.send_photo(
-        chat_id=target_group,
-        photo=photo,
-        caption=caption,
-        reply_markup=markup,
-    )
-    await send_to_photos_archive(
-        context=context,
-        photo=photo,
-        serial=serial,
-        order_type="deposit",
-    )
+    if is_point_deposit:
+        message = await context.bot.send_photo(
+            chat_id=target_group,
+            photo=photo,
+            caption=text,
+            reply_markup=markup,
+        )
+        await send_to_photos_archive(
+            context=context,
+            photo=photo,
+            serial=serial,
+            order_type="deposit",
+        )
+    else:
+        message = await context.bot.send_message(
+            chat_id=target_group,
+            text=text,
+            reply_markup=markup,
+        )
 
     await models.DepositOrder.add_message_ids(
         serial=serial,
