@@ -31,7 +31,6 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-from user.withdraw.common import request_bank_account_name
 from start import start_command
 from user.busdt.common import *
 from models import PaymentMethod
@@ -42,9 +41,8 @@ from common.constants import *
     YES_NO_BUSDT,
     BUSDT_METHOD,
     CASH_CODE,
-    BANK_ACCOUNT_NAME_BUSDT,
     BUSDT_CHECK,
-) = range(6)
+) = range(5)
 
 
 @check_user_pending_orders_decorator
@@ -180,10 +178,6 @@ async def get_cash_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["payment_method_number_busdt"] = update.message.text
         method = context.user_data["payment_method_busdt"]
 
-        if method in [BEMO, BARAKAH]:
-            await request_bank_account_name(update, back_keyboard)
-            return BANK_ACCOUNT_NAME_BUSDT
-
         await update.message.reply_text(
             text=(
                 "أرسل الآن العملات إلى المحفظة:\n\n"
@@ -198,36 +192,6 @@ async def get_cash_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 back_to_get_cash_code_busdt = busdt_method
-
-
-async def get_bank_account_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        back_keyboard = [
-            build_back_button("back_to_get_bank_account_name_busdt"),
-            back_to_user_home_page_button[0],
-        ]
-        text = (
-            "أرسل الآن العملات إلى المحفظة:\n\n"
-            f"<code>{context.bot_data['data']['USDT_number']}</code>\n\n"
-            "ثم أرسل لقطة شاشة أو ملف pdf لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-            "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
-        )
-        if update.message:
-            context.user_data["bank_account_name_busdt"] = update.message.text
-            await update.message.reply_text(
-                text=text,
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
-        else:
-            await update.callback_query.edit_message_text(
-                text=text,
-                reply_markup=InlineKeyboardMarkup(back_keyboard),
-            )
-
-        return BUSDT_CHECK
-
-
-back_to_get_bank_account_name_busdt = get_cash_code
 
 
 async def busdt_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -258,12 +222,6 @@ busdt_handler = ConversationHandler(
                 callback=get_cash_code,
             )
         ],
-        BANK_ACCOUNT_NAME_BUSDT: [
-            MessageHandler(
-                filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_bank_account_name,
-            )
-        ],
         BUSDT_CHECK: [
             MessageHandler(
                 filters=filters.PHOTO | filters.Document.PDF, callback=busdt_check
@@ -278,9 +236,6 @@ busdt_handler = ConversationHandler(
         CallbackQueryHandler(back_to_busdt_method, "^back_to_busdt_method$"),
         CallbackQueryHandler(
             back_to_get_cash_code_busdt, "^back_to_get_cash_code_busdt$"
-        ),
-        CallbackQueryHandler(
-            back_to_get_bank_account_name_busdt, "^back_to_get_bank_account_name_busdt$"
         ),
         back_to_user_home_page_handler,
         start_command,

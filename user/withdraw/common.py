@@ -7,12 +7,8 @@ from common.constants import *
 import asyncio
 
 
-def make_payment_method_info(payment_method_number, bank_account_name, method):
-    return f"<b>Payment info</b>: <code>{payment_method_number}</code>" + (
-        f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
-        if method in [BARAKAH, BEMO]
-        else ""
-    )
+def make_payment_method_info(payment_method_number):
+    return f"<b>Payment info</b>: <code>{payment_method_number}</code>"
 
 
 async def send_withdraw_order_to_check(
@@ -22,7 +18,6 @@ async def send_withdraw_order_to_check(
     target_group: int,
     user_id: int,
     acc_number: str,
-    bank_account_name: str,
     payment_method_number: str,
     w_type: str,
     password: str = "",
@@ -41,7 +36,6 @@ async def send_withdraw_order_to_check(
         method=method,
         acc_number=acc_number,
         withdraw_code=withdraw_code,
-        bank_account_name=bank_account_name,
         payment_method_number=payment_method_number,
         agent_id=agent_id,
         gov=gov,
@@ -57,9 +51,7 @@ async def send_withdraw_order_to_check(
             method=method,
             serial=serial,
             method_info=make_payment_method_info(
-                payment_method_number=payment_method_number,
-                bank_account_name=bank_account_name,
-                method=method,
+                payment_method_number=payment_method_number
             ),
         ),
         reply_markup=InlineKeyboardMarkup.from_button(
@@ -92,16 +84,3 @@ async def send_withdraw_order_to_check(
         )
     )
     return True
-
-
-async def request_bank_account_name(update: Update, back_keyboard):
-    if update.message:
-        await update.message.reply_text(
-            text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
-    else:
-        await update.callback_query.edit_message_text(
-            text="أرسل اسم صاحب الحساب كما هو مسجل بالبنك.",
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
