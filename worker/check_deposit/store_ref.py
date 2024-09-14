@@ -46,7 +46,10 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         d_order = DepositOrder.get_one_order(ref_num=number, method=method)
 
-        if d_order and d_order.amount and d_order.amount != amount:
+        if not d_order:
+            return
+
+        if d_order.amount and d_order.amount != amount:
             await context.bot.send_message(
                 chat_id=d_order.user_id,
                 text=(
@@ -57,7 +60,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         await check_deposit_lock.acquire()
-        if d_order and d_order.state == "pending":
+        if d_order.state == "pending":
             await send_order_to_process(
                 d_order=d_order,
                 ref_info=ref,
