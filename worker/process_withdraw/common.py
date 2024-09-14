@@ -40,9 +40,7 @@ async def return_order_to_checker(
             method=w_order.method,
             serial=w_order.serial,
             method_info=make_payment_method_info(
-                payment_method_number=w_order.payment_method_number,
-                bank_account_name=w_order.bank_account_name,
-                method=w_order.method,
+                payment_method_number=w_order.payment_method_number
             ),
         ),
         reply_markup=InlineKeyboardMarkup.from_button(

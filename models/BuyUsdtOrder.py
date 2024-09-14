@@ -14,7 +14,6 @@ class BuyUsdtdOrder(PaymentOrder):
         group_id: int,
         method: str,
         amount: float,
-        bank_account_name: str,
         payment_method_number: int,
         s: Session = None,
     ):
@@ -24,7 +23,6 @@ class BuyUsdtdOrder(PaymentOrder):
                 group_id=group_id,
                 method=method,
                 amount=amount,
-                bank_account_name=bank_account_name,
                 payment_method_number=payment_method_number,
             )
         )

@@ -10,14 +10,10 @@ from common.constants import *
 async def send_busdt_order_to_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     method = context.user_data["payment_method_busdt"]
-    bank_account_name = context.user_data["bank_account_name_busdt"]
     payment_method_number = context.user_data["payment_method_number_busdt"]
     method_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>"
     target_group = context.bot_data["data"]["busdt_orders_group"]
     amount = context.user_data["usdt_to_buy_amount"]
-
-    if method not in CRYPTO_LIST:
-        method_info += f"\nاسم صاحب الحساب: <b>{bank_account_name}</b>"
 
     serial = await models.BuyUsdtdOrder.add_busdt_order(
         group_id=target_group,
@@ -25,7 +21,6 @@ async def send_busdt_order_to_check(update: Update, context: ContextTypes.DEFAUL
         method=method,
         amount=amount,
         payment_method_number=payment_method_number,
-        bank_account_name=bank_account_name,
     )
     message = await context.bot.send_photo(
         chat_id=target_group,

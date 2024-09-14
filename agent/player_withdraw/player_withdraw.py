@@ -31,7 +31,7 @@ from agent.common import (
     agent_option,
     back_to_choose_point,
 )
-from user.withdraw.common import send_withdraw_order_to_check, request_bank_account_name
+from user.withdraw.common import send_withdraw_order_to_check
 from agent.point_deposit.common import govs_pattern
 from start import agent_command, start_command
 from models import PaymentMethod
@@ -42,9 +42,8 @@ import os
 (
     PAYMENT_METHOD,
     PAYMENT_INFO,
-    BANK_ACCOUNT_NAME,
     WITHDRAW_CODE,
-) = range(2, 6)
+) = range(2, 5)
 
 
 async def get_player_number_withdraw(
@@ -112,7 +111,7 @@ async def choose_payment_method_player_withdraw(
 back_to_choose_payment_method_player_withdraw = get_player_number_withdraw
 
 
-async def get_withdraw_code_bank_account_name_player_withdraw(
+async def get_withdraw_code_player_withdraw(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
@@ -123,11 +122,6 @@ async def get_withdraw_code_bank_account_name_player_withdraw(
         ]
         if update.message:
             context.user_data["payment_method_number"] = update.message.text
-        if context.user_data["payment_method"] in (BARAKAH, BEMO):
-            await request_bank_account_name(update, back_keyboard)
-            return BANK_ACCOUNT_NAME
-
-        context.user_data["bank_account_name"] = ""
 
         await update.message.reply_video(
             video=os.getenv("VIDEO_ID"),
@@ -143,31 +137,6 @@ async def get_withdraw_code_bank_account_name_player_withdraw(
 back_to_get_payment_info_player_withdraw = choose_payment_method_player_withdraw
 
 
-async def get_bank_accuont_name_player_withdraw(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
-        if update.message:
-            context.user_data["bank_account_name"] = update.message.text
-        back_keyboard = [
-            build_back_button("back_to_get_bank_account_name_player_withdraw"),
-            back_to_agent_home_page_button[0],
-        ]
-        await update.message.reply_video(
-            video=os.getenv("VIDEO_ID"),
-            filename="how_to_get_withdraw_code",
-            caption=(
-                "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
-            ),
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
-        return WITHDRAW_CODE
-
-
-back_to_get_bank_account_name_player_withdraw = (
-    get_withdraw_code_bank_account_name_player_withdraw
-)
-
 
 async def get_withdraw_code_player_withdraw(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -175,7 +144,6 @@ async def get_withdraw_code_player_withdraw(
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         res = await send_withdraw_order_to_check(
             acc_number=context.user_data["withdraw_account"],
-            bank_account_name=context.user_data["bank_account_name"],
             context=context,
             method=context.user_data["payment_method"],
             payment_method_number=context.user_data["payment_method_number"],
@@ -229,13 +197,7 @@ player_withdraw_handler = ConversationHandler(
         PAYMENT_INFO: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_withdraw_code_bank_account_name_player_withdraw,
-            )
-        ],
-        BANK_ACCOUNT_NAME: [
-            MessageHandler(
-                filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_bank_accuont_name_player_withdraw,
+                callback=get_withdraw_code_player_withdraw,
             )
         ],
         WITHDRAW_CODE: [
@@ -261,10 +223,6 @@ player_withdraw_handler = ConversationHandler(
         CallbackQueryHandler(
             back_to_get_payment_info_player_withdraw,
             "^back_to_get_payment_info_player_withdraw$",
-        ),
-        CallbackQueryHandler(
-            back_to_get_bank_account_name_player_withdraw,
-            "^back_to_get_bank_account_name_player_withdraw$",
         ),
         back_to_agent_home_page_handler,
         start_command,
