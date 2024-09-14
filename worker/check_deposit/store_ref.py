@@ -46,7 +46,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         d_order = DepositOrder.get_one_order(ref_num=number, method=method)
 
-        if d_order.amount and d_order.amount != amount:
+        if d_order and d_order.amount and d_order.amount != amount:
             await context.bot.send_message(
                 chat_id=d_order.user_id,
                 text=(
