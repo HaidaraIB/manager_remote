@@ -133,7 +133,7 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
 back_to_choose_payment_method = choose_withdraw_account
 
 
-async def get_withdraw_code(
+async def get_payment_info(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
@@ -210,7 +210,7 @@ withdraw_handler = ConversationHandler(
         PAYMENT_INFO: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
-                callback=get_withdraw_code,
+                callback=get_payment_info,
             )
         ],
         WITHDRAW_CODE: [
