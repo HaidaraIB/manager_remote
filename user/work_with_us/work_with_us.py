@@ -327,9 +327,18 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             build_back_button("back_to_get_amount"),
             back_to_user_home_page_button[0],
         ]
+        wal = models.Wallet.get_wallets(amount=amount, method="طلبات الوكيل")
+        if not wal:
+            await update.message.reply_text(
+                text=(
+                    "المبلغ المدخل تجاوز الحد المسموح لحسابات الشركة ❗️\n"
+                    "جرب مع قيمة أصغر"
+                )
+            )
+            return
         text = (
             f"أرسل مبلغ الإيداع المسبق إلى الرقم\n\n"
-            f"<code>{context.bot_data['data']['طلبات الوكيل_number']}</code>\n\n"
+            f"<code>{wal.number}</code>\n\n"
             f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
             "<b>ملاحظة: التحويل مقبول فقط من أجهزة سيريتيل أو من خطوط الجملة الخاصة لمحلات الموبايل (غير مقبول التحويل من رقم شخصي)</b>"
         )

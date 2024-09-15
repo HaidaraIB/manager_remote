@@ -333,12 +333,6 @@ def build_admin_keyboard():
         ],
         [
             InlineKeyboardButton(
-                text="تفعيل/إلغاء تفعيل وسيلة دفع 🔂",
-                callback_data="turn payment method on or off",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
                 text="تفعيل/إلغاء تفعيل أزرار مستخدم 🔂",
                 callback_data="turn user calls on or off",
             ),
