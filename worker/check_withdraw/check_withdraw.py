@@ -141,7 +141,7 @@ check_withdraw_handler = CallbackQueryHandler(
 
 back_to_withdraw_check_handler = CallbackQueryHandler(
     callback=back_to_withdraw_check,
-    pattern="^back_from_(decline_withdraw_order)|(get_withdraw_order_amount)",
+    pattern="^back_from_((decline_withdraw_order)|(get_withdraw_order_amount))",
 )
 
 get_withdraw_order_amount_handler = CallbackQueryHandler(
