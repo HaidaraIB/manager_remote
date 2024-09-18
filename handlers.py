@@ -13,7 +13,7 @@ from telegram.constants import ParseMode
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 from PyroClientSingleton import PyroClientSingleton
 from start import start_command, admin_command, worker_command, error_command, inits
-from jobs import reward_worker
+from jobs import reward_worker, remind_agent_to_clear_wallets
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
 from common.force_join import check_joined_handler
@@ -64,6 +64,7 @@ from check_work_with_us import *
 from dotenv import load_dotenv
 
 import datetime
+from dateutil import tz
 import os
 from models import create_tables
 
@@ -305,6 +306,17 @@ def main():
         name="daily_reward_worker",
         job_kwargs={
             "id": "daily_reward_worker",
+            "misfire_grace_time": None,
+            "coalesce": True,
+            "replace_existing": True,
+        },
+    )
+    app.job_queue.run_daily(
+        callback=remind_agent_to_clear_wallets,
+        time=datetime.time(0, 0, 0, tzinfo=tz.gettz("Syria/Damascus")),
+        name="remind_agent_to_clear_wallets",
+        job_kwargs={
+            "id": "remind_agent_to_clear_wallets",
             "misfire_grace_time": None,
             "coalesce": True,
             "replace_existing": True,

@@ -188,7 +188,7 @@ update_wallet_handler = ConversationHandler(
         CallbackQueryHandler(back_to_choose_method, "^back_to_choose_method$"),
         CallbackQueryHandler(back_to_choose_wallet, "^back_to_choose_wallet$"),
         CallbackQueryHandler(
-            back_to_choose_update_wallet_option, "back_to_choose_update_wallet_option"
+            back_to_choose_update_wallet_option, "^back_to_choose_update_wallet_option$"
         ),
     ],
 )

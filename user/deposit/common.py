@@ -264,7 +264,7 @@ async def send_to_check_deposit(
     message = await context.bot.send_message(
         chat_id=target_group,
         text=stringify_deposit_order(
-            amount=0,
+            amount=amount,
             serial=serial,
             method=method,
             account_number=acc_number,
@@ -283,7 +283,7 @@ async def send_to_check_deposit(
         notify_workers(
             context=context,
             workers=workers,
-            text=f"انتباه يوجد طلب قيد التحقق رقم عملية <code>{ref_num}</code> 🚨",
+            text=f"انتباه يوجد طلب إيداع قيد التحقق رقم العملية <code>{ref_num}</code> 🚨",
         )
     )
     return True

@@ -1,6 +1,6 @@
 from telegram.ext import ContextTypes
 from telegram.error import RetryAfter
-from models import PaymentAgent, DepositAgent
+from models import PaymentAgent, DepositAgent, Wallet
 from common.constants import *
 import asyncio
 from common.stringifies import (
@@ -8,6 +8,7 @@ from common.stringifies import (
     stringify_manager_reward_report,
     stringify_reward_report,
 )
+from common.common import notify_workers
 
 
 async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
@@ -73,3 +74,14 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=context.bot_data["data"]["worker_gifts_group"],
                 text=manager_text,
             )
+
+
+async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
+    for method in PAYMENT_METHODS_LIST:
+        await Wallet.update_wallets(
+            method=method,
+            option="balance",
+            value=0,
+        )
+    agents = DepositAgent.get_workers()
+    asyncio.create_task(notify_workers(context, agents, "الرجاء إخلاء جميع المحافظ 🚨"))
