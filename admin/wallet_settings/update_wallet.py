@@ -176,7 +176,7 @@ update_wallet_handler = ConversationHandler(
         UPDATE_OPTION: [
             CallbackQueryHandler(
                 choose_update_wallet_option,
-                "^update_wallet_((balance)|(limit))$",
+                "^update_wallet_((balance)|(limit)|(number))$",
             )
         ],
         NEW_VALUE: [
