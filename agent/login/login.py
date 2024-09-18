@@ -1,9 +1,4 @@
-from telegram import (
-    Update,
-    InlineKeyboardMarkup,
-    Chat,
-)
-
+from telegram import Update, InlineKeyboardMarkup, Chat
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -59,7 +54,7 @@ async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 or order.state != "approved"
                 or order.user_id != update.effective_user.id
                 or ag
-                or (not ag and order.state == "approved")
+                # or (not ag and order.state == "approved")
             ):
                 await update.message.reply_text(
                     text=(

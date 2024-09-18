@@ -125,6 +125,12 @@ player_deposit_handler = ConversationHandler(
                 govs_pattern,
             )
         ],
+        AMOUNT: [
+            MessageHandler(
+                filters=filters.Regex("^\d+.?\d*$"),
+                callback=get_amount,
+            )
+        ],
         PLAYER_NUMBER: [
             MessageHandler(
                 filters=filters.Regex("^\d+$"),
