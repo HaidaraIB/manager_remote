@@ -21,41 +21,15 @@ from common.back_to_home_page import (
 from models import Wallet
 from admin.wallet_settings.common import (
     CHOOSE_METHOD,
-    build_wallets_keyboard,
+    WALLET,
     choose_wallet_settings_option,
+    choose_method,
+    back_to_choose_method,
+    back_to_choose_wallet_settings_option_handler,
 )
 from start import admin_command, worker_command
 
-WALLET, UPDATE_OPTION, NEW_VALUE = range(1, 4)
-
-
-async def choose_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and (
-        Admin().filter(update) or DepositAgent().filter(update)
-    ):
-        if not update.callback_query.data.startswith("back"):
-            method = update.callback_query.data
-            context.user_data["update_wal_method"] = method
-        else:
-            method = context.user_data["update_wal_method"]
-        wallets = Wallet.get_wallets(method=method)
-        if not wallets:
-            await update.callback_query.answer(
-                text=f"ليس لديك محافظ {method} بعد",
-                show_alert=True,
-            )
-            return
-        wallets_keyboard = build_wallets_keyboard(wallets)
-        wallets_keyboard.append(build_back_button("back_to_choose_method"))
-        wallets_keyboard.append(back_to_admin_home_page_button[0])
-        await update.callback_query.edit_message_text(
-            text="اختر المحفظة التي تريد تعديلها",
-            reply_markup=InlineKeyboardMarkup(wallets_keyboard),
-        )
-        return WALLET
-
-
-back_to_choose_method = choose_wallet_settings_option
+UPDATE_OPTION, NEW_VALUE = range(2, 4)
 
 
 async def choose_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -63,7 +37,7 @@ async def choose_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         Admin().filter(update) or DepositAgent().filter(update)
     ):
         if not update.callback_query.data.startswith("back"):
-            wal_num = update.callback_query.data
+            wal_num = update.callback_query.data.split("_")[1]
             context.user_data["update_wallet_number"] = wal_num
         else:
             wal_num = context.user_data["update_wallet_number"]
@@ -114,7 +88,7 @@ async def choose_update_wallet_option(
         else:
             update_option = context.user_data["update_wallet_option"]
         wal = Wallet.get_wallets(
-            method=context.user_data["update_wal_method"],
+            method=context.user_data["wallet_setting_method"] ,
             number=context.user_data["update_wallet_number"],
         )
         cur_val = getattr(wal, update_option)
@@ -137,7 +111,7 @@ async def get_new_value(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ):
         new_val = update.message.text
         await Wallet.update_wallets(
-            method=context.user_data["update_wal_method"],
+            method=context.user_data["wallet_setting_method"],
             number=context.user_data["update_wallet_number"],
             option=context.user_data["update_wallet_option"],
             value=new_val,
@@ -170,7 +144,7 @@ update_wallet_handler = ConversationHandler(
         WALLET: [
             CallbackQueryHandler(
                 choose_wallet,
-                "^\d+$",
+                "^update",
             ),
         ],
         UPDATE_OPTION: [
@@ -190,6 +164,7 @@ update_wallet_handler = ConversationHandler(
         admin_command,
         worker_command,
         back_to_admin_home_page_handler,
+        back_to_choose_wallet_settings_option_handler,
         CallbackQueryHandler(back_to_choose_method, "^back_to_choose_method$"),
         CallbackQueryHandler(back_to_choose_wallet, "^back_to_choose_wallet$"),
         CallbackQueryHandler(

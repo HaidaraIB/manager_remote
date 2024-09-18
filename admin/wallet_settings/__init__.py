@@ -8,3 +8,4 @@ from admin.wallet_settings.common import (
 from admin.wallet_settings.turn_method_on_or_off import (
     turn_payment_method_on_or_off_handler,
 )
+from admin.wallet_settings.remove_wallet import remove_wallet_handler

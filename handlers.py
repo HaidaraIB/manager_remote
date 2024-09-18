@@ -236,6 +236,7 @@ def main():
     app.add_handler(turn_payment_method_on_or_off_handler)
 
     app.add_handler(add_wallet_handler)
+    app.add_handler(remove_wallet_handler)
     app.add_handler(update_wallet_handler)
     app.add_handler(wallet_settings_handler)
     app.add_handler(clear_wallets_handler)

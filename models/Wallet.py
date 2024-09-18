@@ -1,11 +1,10 @@
 from sqlalchemy import (
     Column,
-    Integer,
     String,
     Float,
-    exc,
     select,
     insert,
+    delete,
     func,
     and_,
     PrimaryKeyConstraint,
@@ -66,11 +65,13 @@ class Wallet(Base):
                 select(cls).where(
                     cls.balance
                     == (
-                        select(func.max(cls.balance)).where(
+                        select(func.max(cls.balance))
+                        .where(
                             cls.method == method,
                             cls.limit > cls.balance,
                             (cls.limit - cls.balance) >= amount,
-                        ).scalar_subquery()
+                        )
+                        .scalar_subquery()
                     )
                 )
             )
@@ -119,3 +120,15 @@ class Wallet(Base):
                     getattr(cls, option): value,
                 }
             )
+
+    @classmethod
+    @lock_and_release
+    async def remove_wallet(cls, method: str, number: str, s: Session = None):
+        s.execute(
+            delete(cls).where(
+                and_(
+                    cls.method == method,
+                    cls.number == number,
+                )
+            )
+        )
