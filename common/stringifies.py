@@ -128,6 +128,7 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"كود السحب: <code>{getattr(order, 'withdraw_code', 'لا يوجد')}</code>\n\n"
         f"وسيلة الدفع: <code>{order.method}</code>\n"
         f"محفظة الإيداع: <code>{getattr(order, 'deposit_wallet', 'لا يوجد')}</code>\n\n"
+        f"رقم العملية: <code>{getattr(order, 'ref_number', 'لا يوجد')}</code>\n\n"
         f"الحالة: <b>{state_dict_en_to_ar[order.state]}</b>\n"
         f"سبب رفض: <b>{'\n' + order.reason if order.reason else 'لا يوجد'}</b>\n\n"
         f"جاري العمل عليه: <b>{'نعم' if order.working_on_it else 'لا'}</b>\n"
