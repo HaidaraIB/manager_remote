@@ -77,7 +77,7 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
-    for method in PAYMENT_METHODS_LIST:
+    for method in PAYMENT_METHODS_LIST + ["طلبات الوكيل"]:
         await Wallet.update_wallets(
             method=method,
             option="balance",

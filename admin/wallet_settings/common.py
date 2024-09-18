@@ -31,10 +31,32 @@ def build_wallets_keyboard(wallets: list[Wallet], op: str):
 
 def build_wallet_settings_keyboard():
     keyboard = [
-        [InlineKeyboardButton(text="إضافة محفظة ➕", callback_data="add_wallet")],
-        [InlineKeyboardButton(text="تعديل محفظة 🔄", callback_data="update_wallet")],
-        [InlineKeyboardButton(text="حذف محفظة 🗑", callback_data="remove_wallet")],
-        [InlineKeyboardButton(text="تصفير محافظ 0️⃣", callback_data="clear_wallets")],
+        [
+            InlineKeyboardButton(
+                text="إضافة محفظة ➕",
+                callback_data="add_wallet",
+            ),
+            InlineKeyboardButton(
+                text="تعديل محفظة 🔄",
+                callback_data="update_wallet",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="حذف محفظة 🗑",
+                callback_data="remove_wallet",
+            ),
+            InlineKeyboardButton(
+                text="تصفير محافظ 0️⃣",
+                callback_data="clear_wallets",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="عرض محفظة 🔎",
+                callback_data="show_wallet",
+            ),
+        ],
         [
             InlineKeyboardButton(
                 text="تفعيل/إلغاء تفعيل وسيلة دفع 🔂",
@@ -123,6 +145,7 @@ async def reply_with_wallets(
     update_or_remove = {
         "remove": "حذفها",
         "update": "تعديلها",
+        "show": "عرضها",
     }
     wallets_keyboard = build_wallets_keyboard(
         wallets, context.user_data["wallet_setting"]
