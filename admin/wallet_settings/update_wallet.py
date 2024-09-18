@@ -69,6 +69,10 @@ async def choose_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
             wal_num = context.user_data["update_wallet_number"]
         update_wallet_keyboard = [
             InlineKeyboardButton(
+                text="رقم المحفظة",
+                callback_data="update_wallet_number",
+            ),
+            InlineKeyboardButton(
                 text="الحد المسموح",
                 callback_data="update_wallet_limit",
             ),
@@ -98,6 +102,7 @@ async def choose_update_wallet_option(
         update_option_dict = {
             "balance": "الرصيد",
             "limit": "الحد المسموح",
+            "number": "رقم المحفظة",
         }
         back_buttons = [
             build_back_button("back_to_choose_update_wallet_option"),
@@ -176,7 +181,7 @@ update_wallet_handler = ConversationHandler(
         ],
         NEW_VALUE: [
             MessageHandler(
-                filters=filters.Regex("^\d+.?\d*$"),
+                filters=filters.TEXT & ~filters.COMMAND,
                 callback=get_new_value,
             )
         ],
