@@ -45,13 +45,13 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text="تم ✅")
 
         d_order = DepositOrder.get_one_order(ref_num=number, method=method)
-        
-        await Wallet.update_balance(
-            amout=amount, number=d_order.deposit_wallet, method=method
-        )
 
         if not d_order:
             return
+
+        await Wallet.update_balance(
+            amout=amount, number=d_order.deposit_wallet, method=method
+        )
 
         if d_order.amount and d_order.amount != amount:
             await context.bot.send_message(
