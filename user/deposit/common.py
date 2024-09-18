@@ -20,8 +20,14 @@ from common.decorators import (
 
 import models
 import asyncio
+import os
 
-ACCOUNT_DEPOSIT, DEPOSIT_METHOD = range(2)
+(
+    ACCOUNT_DEPOSIT,
+    DEPOSIT_METHOD,
+    DEPOSIT_AMOUNT,
+    REF_NUM,
+) = range(4)
 
 
 @check_user_pending_orders_decorator
@@ -67,17 +73,160 @@ async def account_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 back_to_account_deposit = make_deposit
 
 
+async def choose_deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        back_buttons = [
+            build_back_button("back_to_choose_deposit_method"),
+            back_to_user_home_page_button[0],
+        ]
+
+        if not update.callback_query.data.startswith("back"):
+            method_name = update.callback_query.data
+            context.user_data["deposit_method"] = method_name
+        else:
+            method_name = context.user_data["deposit_method"]
+
+        text = (
+            ("أدخل المبلغ أكبر من 50 ألف\n" "الحد الأدنى للإيداع = 50,000 ل.س")
+            if method_name == BEMO
+            else "أرسل مبلغ الإيداع"
+        )
+
+        if not update.callback_query.data.startswith("back"):
+            method = models.PaymentMethod.get_payment_method(name=method_name)
+            if not method.on_off:
+                await update.callback_query.answer(
+                    "هذه الوسيلة متوقفة مؤقتاً ❗️",
+                    show_alert=True,
+                )
+                return
+
+            await update.callback_query.edit_message_text(
+                text=text,
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        else:
+            await update.callback_query.delete_message()
+            await context.bot.send_message(
+                chat_id=update.effective_user.id,
+                text=text,
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+
+        return DEPOSIT_AMOUNT
+
+
+back_to_choose_deposit_method = account_deposit
+
+
+async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        back_to_get_deposit_amount_buttons = [
+            build_back_button("back_to_get_deposit_amount"),
+            back_to_user_home_page_button[0],
+        ]
+        back_to_deposit_method_buttons = [
+            build_back_button("back_to_choose_deposit_method"),
+            back_to_user_home_page_button[0],
+        ]
+
+        method = context.user_data["deposit_method"]
+
+        if update.message:
+            amount = float(update.message.text)
+
+            if method == BEMO and amount < 50000:
+                await update.message.reply_text(
+                    text="الحد الأدنى للإيداع = 50,000 ل.س",
+                    reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
+                )
+                return
+
+            context.user_data["deposit_amount"] = amount
+        else:
+            amount = context.user_data["deposit_amount"]
+
+        wal = models.Wallet.get_wallets(amount=amount, method=method)
+        if not wal:
+            await update.message.reply_text(
+                text=(
+                    "المبلغ المدخل تجاوز الحد المسموح لحسابات الشركة ❗️\n"
+                    "جرب مع قيمة أصغر"
+                ),
+                reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
+            )
+            return
+
+        text = (
+            f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
+            f"<code>{wal.number}</code>\n\n"
+            f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+        ) + (
+            "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n" if method == USDT else ""
+        )
+
+        if update.message:
+            if method == BEMO:
+                await update.message.reply_photo(
+                    photo=os.getenv("BEMO_REF_NUMBER_GUIDE_PHOTO_ID"),
+                    caption=text,
+                    reply_markup=InlineKeyboardMarkup(
+                        back_to_get_deposit_amount_buttons
+                    ),
+                )
+            else:
+                await update.message.reply_text(
+                    text=text,
+                    reply_markup=InlineKeyboardMarkup(
+                        back_to_get_deposit_amount_buttons
+                    ),
+                )
+
+        else:
+            if method == BEMO:
+                await update.callback_query.edit_message_caption(
+                    caption=text,
+                    reply_markup=InlineKeyboardMarkup(
+                        back_to_get_deposit_amount_buttons
+                    ),
+                )
+            else:
+                await update.callback_query.edit_message_text(
+                    text=text,
+                    reply_markup=InlineKeyboardMarkup(
+                        back_to_get_deposit_amount_buttons
+                    ),
+                )
+        return REF_NUM
+
+
+back_to_get_deposit_amount = choose_deposit_method
+
+
 async def send_to_check_deposit(
+    update: Update,
     context: ContextTypes.DEFAULT_TYPE,
-    user_id: int,
-    method: str,
-    acc_number: str,
-    target_group: int,
-    ref_num: str = "",
-    agent_id: int = 0,
-    gov: str = "",
-    amount: float = 0,
+    is_player_deposit: bool = False,
 ):
+    if is_player_deposit:
+        user_id = update.effective_user.id
+        ref_num = update.message.text
+        acc_number = context.user_data["player_number"]
+        method = SYRCASH
+        target_group = context.bot_data["data"]["deposit_orders_group"]
+        amount = context.user_data["player_deposit_amount"]
+        agent_id = update.effective_user.id
+        gov = context.user_data[f"{context.user_data['agent_option']}_point"]
+    else:
+        user_id = update.effective_user.id
+        ref_num = update.message.text
+        acc_number = context.user_data["account_deposit"]
+        method = context.user_data["deposit_method"]
+        target_group = context.bot_data["data"]["deposit_orders_group"]
+        amount = context.user_data["deposit_amount"]
+        agent_id = 0
+        gov = ""
+
     ref_present = models.RefNumber.get_ref_number(
         number=ref_num,
         method=method,
@@ -87,13 +236,13 @@ async def send_to_check_deposit(
         order_present and order_present.state == "approved"
     ):
         return False
-
+    deposit_wallet = models.Wallet.get_wallets(amount=amount, method=method)
     serial = await models.DepositOrder.add_deposit_order(
         user_id=user_id,
         group_id=target_group,
         method=method,
         acc_number=acc_number,
-        deposit_wallet=context.bot_data["data"][f"{method}_number"],
+        deposit_wallet=deposit_wallet.number,
         amount=amount,
         ref_number=ref_num,
         agent_id=agent_id,
@@ -115,11 +264,11 @@ async def send_to_check_deposit(
     message = await context.bot.send_message(
         chat_id=target_group,
         text=stringify_deposit_order(
-            amount=0,
+            amount=amount,
             serial=serial,
             method=method,
             account_number=acc_number,
-            wal=context.bot_data["data"][f"{method}_number"],
+            wal=deposit_wallet.number,
             ref_num=ref_num,
         ),
     )
@@ -134,85 +283,71 @@ async def send_to_check_deposit(
         notify_workers(
             context=context,
             workers=workers,
-            text=f"انتباه يوجد طلب قيد التحقق رقم عملية <code>{ref_num}</code> 🚨",
+            text=f"انتباه يوجد طلب إيداع قيد التحقق رقم العملية <code>{ref_num}</code> 🚨",
         )
     )
     return True
 
 
-async def send_to_check_bemo_deposit(
-    update: Update, context: ContextTypes.DEFAULT_TYPE, is_point_deposit=False
+async def send_to_check_point_deposit(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     user_id = update.effective_user.id
 
-    if is_point_deposit:
-        photo = update.message.photo[-1]
-        ref_number = context.user_data["point_deposit_ref_num"]
-        deposit_wallet = context.bot_data["data"]["طلبات الوكيل_number"]
-        amount = context.user_data["point_deposit_amount"]
-        gov = context.user_data["point_deposit_point"]
-        agent = models.TrustedAgent.get_workers(user_id=user_id, gov=gov)
-    else:
-        amount = context.user_data["deposit_amount"]
-        ref_number = update.message.text
-        acc_number = context.user_data["account_deposit"]
-        method = context.user_data["deposit_method"]
-        deposit_wallet = context.bot_data["data"][f"{method}_number"]
+    photo = update.message.photo[-1]
+    ref_number = context.user_data["point_deposit_ref_num"]
+    deposit_wallet = models.Wallet.get_wallets(
+        amount=context.user_data["player_deposit_amount"],
+    )
+    amount = context.user_data["point_deposit_amount"]
+    gov = context.user_data["point_deposit_point"]
+    agent = models.TrustedAgent.get_workers(user_id=user_id, gov=gov)
 
     target_group = context.bot_data["data"]["deposit_orders_group"]
 
     serial = await models.DepositOrder.add_deposit_order(
         user_id=user_id,
         group_id=target_group,
-        method=SYRCASH if is_point_deposit else method,
-        acc_number=acc_number if not is_point_deposit else None,
+        method=SYRCASH,
         deposit_wallet=deposit_wallet,
         amount=amount,
         ref_number=ref_number,
-        agent_id=user_id if is_point_deposit else None,
-        gov=agent.gov if is_point_deposit else None,
+        agent_id=user_id,
+        gov=agent.gov,
     )
 
     text = stringify_deposit_order(
         amount=amount,
         serial=serial,
-        method=SYRCASH if is_point_deposit else method,
+        method=SYRCASH,
         wal=deposit_wallet,
         ref_num=ref_number,
-        account_number=acc_number if not is_point_deposit else None,
-        workplace_id=agent.team_cash_workplace_id if is_point_deposit else None,
+        workplace_id=agent.team_cash_workplace_id,
     )
     markup = InlineKeyboardMarkup.from_button(
         InlineKeyboardButton(
             text="التحقق ☑️", callback_data=f"check_deposit_order_{serial}"
         )
     )
-    if is_point_deposit:
-        message = await context.bot.send_photo(
-            chat_id=target_group,
-            photo=photo,
-            caption=text,
-            reply_markup=markup,
-        )
-        await send_to_photos_archive(
-            context=context,
-            photo=photo,
-            serial=serial,
-            order_type="deposit",
-        )
-    else:
-        message = await context.bot.send_message(
-            chat_id=target_group,
-            text=text,
-            reply_markup=markup,
-        )
+    message = await context.bot.send_photo(
+        chat_id=target_group,
+        photo=photo,
+        caption=text,
+        reply_markup=markup,
+    )
+    await send_to_photos_archive(
+        context=context,
+        photo=photo,
+        serial=serial,
+        order_type="deposit",
+    )
 
     await models.DepositOrder.add_message_ids(
         serial=serial,
         pending_check_message_id=message.id,
     )
 
-    workers = models.DepositAgent.get_workers(is_point=is_point_deposit)
+    workers = models.DepositAgent.get_workers(is_point=True)
     asyncio.create_task(
         notify_workers(
             context=context,
@@ -220,10 +355,7 @@ async def send_to_check_bemo_deposit(
             text=f"انتباه إيداع جديد قيد التحقق 🚨",
         )
     )
-    workers = models.Checker.get_workers(
-        check_what="deposit",
-        method=POINT_DEPOSIT if is_point_deposit else method,
-    )
+    workers = models.Checker.get_workers(check_what="deposit", method=POINT_DEPOSIT)
     asyncio.create_task(
         notify_workers(
             context=context,

@@ -1,7 +1,7 @@
 from telegram import Update, Chat
 from telegram.ext import ContextTypes, MessageHandler
 from custom_filters import Ref
-from models import RefNumber, DepositOrder, PaymentMethod
+from models import RefNumber, DepositOrder, PaymentMethod, Wallet
 from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
 from common.common import ensure_positive_amount, format_amount
 
@@ -45,6 +45,10 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text="تم ✅")
 
         d_order = DepositOrder.get_one_order(ref_num=number, method=method)
+        
+        await Wallet.update_balance(
+            amout=amount, number=d_order.deposit_wallet, method=method
+        )
 
         if not d_order:
             return

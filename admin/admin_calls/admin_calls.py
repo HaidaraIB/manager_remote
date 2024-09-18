@@ -14,12 +14,7 @@ from telegram.ext import (
     filters,
 )
 
-from common.common import (
-    build_admin_keyboard,
-    build_methods_keyboard,
-    payment_method_pattern,
-    request_buttons,
-)
+from common.common import build_admin_keyboard, request_buttons
 
 from common.back_to_home_page import (
     back_to_admin_home_page_button,
@@ -29,14 +24,10 @@ from common.back_to_home_page import (
 from start import admin_command, start_command
 
 from custom_filters import Admin
-from models import PaymentMethod
 from common.constants import *
 
 
-(
-    PAYMENT_METHOD_TO_TURN_ON_OR_OFF,
-    USER_CALL_TO_TURN_ON_OR_OFF,
-) = range(2)
+USER_CALL_TO_TURN_ON_OR_OFF = 0
 
 turn_user_calls_on_or_off_keyboard = [
     [InlineKeyboardButton(text="سحب💳", callback_data="awithdraw")],
@@ -95,44 +86,6 @@ async def hide_ids_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
 
-async def turn_payment_method_on_or_off(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        payment_methods_keyboard = build_methods_keyboard()
-        payment_methods_keyboard.append(back_to_admin_home_page_button[0])
-        await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع💳.",
-            reply_markup=InlineKeyboardMarkup(payment_methods_keyboard),
-        )
-        return PAYMENT_METHOD_TO_TURN_ON_OR_OFF
-
-
-async def payment_method_to_turn_on_or_off(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        method = PaymentMethod.get_payment_method(name=update.callback_query.data)
-        if method.on_off:
-            await PaymentMethod.turn_payment_method_on_or_off(
-                name=update.callback_query.data
-            )
-            await update.callback_query.answer("تم إيقاف وسيلة الدفع✅")
-        else:
-            await PaymentMethod.turn_payment_method_on_or_off(
-                name=update.callback_query.data, on=1
-            )
-            await update.callback_query.answer("تم تشغيل وسيلة الدفع✅")
-
-        payment_methods_keyboard = build_methods_keyboard()
-        payment_methods_keyboard.append(back_to_admin_home_page_button[0])
-        await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع💳.",
-            reply_markup=InlineKeyboardMarkup(payment_methods_keyboard),
-        )
-        return PAYMENT_METHOD_TO_TURN_ON_OR_OFF
-
-
 async def turn_user_calls_on_or_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         await update.callback_query.edit_message_text(
@@ -163,26 +116,6 @@ async def user_call_to_turn_on_or_off(
         )
         return USER_CALL_TO_TURN_ON_OR_OFF
 
-
-turn_payment_method_on_or_off_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(
-            turn_payment_method_on_or_off, "^turn payment method on or off$"
-        )
-    ],
-    states={
-        PAYMENT_METHOD_TO_TURN_ON_OR_OFF: [
-            CallbackQueryHandler(
-                payment_method_to_turn_on_or_off, payment_method_pattern
-            )
-        ]
-    },
-    fallbacks=[
-        back_to_admin_home_page_handler,
-        admin_command,
-        start_command,
-    ],
-)
 
 turn_user_calls_on_or_off_handler = ConversationHandler(
     entry_points=[

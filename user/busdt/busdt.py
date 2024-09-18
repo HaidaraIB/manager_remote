@@ -33,7 +33,7 @@ from common.back_to_home_page import (
 )
 from start import start_command
 from user.busdt.common import *
-from models import PaymentMethod
+from models import PaymentMethod, Wallet
 from common.constants import *
 
 (
@@ -76,7 +76,19 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     reply_markup=InlineKeyboardMarkup(back_buttons),
                 )
                 return
-
+            
+            wal = Wallet.get_wallets(
+                amount=amount, method=USDT
+            )
+            if not wal:
+                await update.message.reply_text(
+                    text=(
+                        "المبلغ المدخل تجاوز الحد المسموح لحسابات الشركة ❗️\n"
+                        "جرب مع قيمة أصغر"
+                    )
+                )
+                return
+            
             context.user_data["usdt_to_buy_amount"] = amount
         else:
             amount = context.user_data["usdt_to_buy_amount"]
@@ -176,13 +188,15 @@ async def get_cash_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         if update.message:
             context.user_data["payment_method_number_busdt"] = update.message.text
-        method = context.user_data["payment_method_busdt"]
 
+        wal = Wallet.get_wallets(
+            amount=context.user_data["usdt_to_buy_amount"], method=USDT
+        )
         await update.message.reply_text(
             text=(
                 "أرسل الآن العملات إلى المحفظة:\n\n"
-                f"<code>{context.bot_data['data']['USDT_number']}</code>\n\n"
-                "ثم أرسل لقطة شاشة أو ملف pdf لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+                f"<code>{wal.number}</code>\n\n"
+                "ثم أرسل لقطة شاشة لعملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
                 "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
             ),
             reply_markup=InlineKeyboardMarkup(back_keyboard),
@@ -222,11 +236,7 @@ busdt_handler = ConversationHandler(
                 callback=get_cash_code,
             )
         ],
-        BUSDT_CHECK: [
-            MessageHandler(
-                filters=filters.PHOTO | filters.Document.PDF, callback=busdt_check
-            )
-        ],
+        BUSDT_CHECK: [MessageHandler(filters=filters.PHOTO, callback=busdt_check)],
     },
     fallbacks=[
         CallbackQueryHandler(

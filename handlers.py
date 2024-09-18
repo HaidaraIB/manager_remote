@@ -1,5 +1,4 @@
 from telegram import Update
-
 from telegram.ext import (
     CallbackQueryHandler,
     Application,
@@ -10,23 +9,11 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-
 from telegram.constants import ParseMode
-
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
-
 from PyroClientSingleton import PyroClientSingleton
-
-from start import (
-    start_command,
-    admin_command,
-    worker_command,
-    error_command,
-    inits,
-)
-
-from jobs import reward_worker
-
+from start import start_command, admin_command, worker_command, error_command, inits
+from jobs import reward_worker, remind_agent_to_clear_wallets
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
 from common.force_join import check_joined_handler
@@ -37,10 +24,9 @@ from common.back_to_home_page import (
 
 from agent.login import *
 
-from user.withdraw import withdraw_handler
-from user.deposit import deposit_handler
-from user.busdt import busdt_handler
-from user.complaint import complaint_handler
+from user.withdraw import *
+from user.deposit import *
+from user.busdt import *
 from user.return_order import *
 from user.create_account import *
 from user.work_with_us import *
@@ -59,7 +45,7 @@ from admin.order_settings import *
 from admin.exchange_rates import *
 from admin.agent_settings import *
 
-from worker.request_order import request_order_handler
+from worker.request_order import *
 from worker.process_deposit import *
 from worker.check_withdraw import *
 from worker.process_withdraw import *
@@ -78,6 +64,7 @@ from check_work_with_us import *
 from dotenv import load_dotenv
 
 import datetime
+from dateutil import tz
 import os
 from models import create_tables
 
@@ -147,13 +134,13 @@ def main():
     app.add_handler(store_ref_number_handler, group=1)
     app.add_handler(invalid_ref_format_handler, group=1)
 
-    app.add_handler(check_deposit_handler)
-    app.add_handler(get_new_amount_handler)
-    app.add_handler(send_deposit_order_handler)
-    app.add_handler(edit_deposit_amount_handler)
-    app.add_handler(decline_deposit_order_handler)
-    app.add_handler(decline_deposit_order_reason_handler)
-    app.add_handler(back_from_decline_deposit_order_handler)
+    # app.add_handler(check_deposit_handler)
+    # app.add_handler(get_new_amount_handler)
+    # app.add_handler(send_deposit_order_handler)
+    # app.add_handler(edit_deposit_amount_handler)
+    # app.add_handler(decline_deposit_order_handler)
+    # app.add_handler(decline_deposit_order_reason_handler)
+    # app.add_handler(back_from_decline_deposit_order_handler)
 
     # WITHDRAW
     app.add_handler(check_withdraw_handler)
@@ -248,7 +235,11 @@ def main():
     app.add_handler(turn_user_calls_on_or_off_handler)
     app.add_handler(turn_payment_method_on_or_off_handler)
 
-    app.add_handler(wallets_settings_handler)
+    app.add_handler(add_wallet_handler)
+    app.add_handler(update_wallet_handler)
+    app.add_handler(wallet_settings_handler)
+    app.add_handler(clear_wallets_handler)
+    app.add_handler(back_to_choose_wallet_settings_option_handler)
 
     app.add_handler(broadcast_message_handler)
 
@@ -315,6 +306,17 @@ def main():
         name="daily_reward_worker",
         job_kwargs={
             "id": "daily_reward_worker",
+            "misfire_grace_time": None,
+            "coalesce": True,
+            "replace_existing": True,
+        },
+    )
+    app.job_queue.run_daily(
+        callback=remind_agent_to_clear_wallets,
+        time=datetime.time(0, 0, 0, tzinfo=tz.gettz("Syria/Damascus")),
+        name="remind_agent_to_clear_wallets",
+        job_kwargs={
+            "id": "remind_agent_to_clear_wallets",
             "misfire_grace_time": None,
             "coalesce": True,
             "replace_existing": True,

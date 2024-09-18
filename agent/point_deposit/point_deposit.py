@@ -11,7 +11,7 @@ from common.back_to_home_page import (
     back_to_agent_home_page_handler,
 )
 from common.common import build_back_button, build_agent_keyboard
-from user.deposit.common import send_to_check_bemo_deposit
+from user.deposit.common import send_to_check_point_deposit
 from agent.point_deposit.common import govs_pattern
 from start import agent_command
 import models
@@ -45,18 +45,33 @@ back_to_choose_point = agent_option
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
+        if update.message:
+            amount = float(update.message.text)
+            context.user_data["point_deposit_amount"] = amount
+        else:
+            amount = context.user_data["point_deposit_amount"]
+
+        wal = models.Wallet.get_wallets(amount=amount, method="طلبات الوكيل")
+        if not wal:
+            await update.message.reply_text(
+                text=(
+                    "المبلغ المدخل تجاوز الحد المسموح لحسابات الشركة ❗️\n"
+                    "جرب مع قيمة أصغر"
+                )
+            )
+            return
+
         back_buttons = [
             build_back_button("back_to_get_amount"),
             back_to_agent_home_page_button[0],
         ]
         text = (
             f"أرسل مبلغ الإيداع إلى الرقم\n\n"
-            f"<code>{context.bot_data['data']['طلبات الوكيل_number']}</code>\n\n"
+            f"<code>{wal.number}</code>\n\n"
             f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
             "<b>ملاحظة: التحويل مقبول فقط من أجهزة سيريتيل أو من خطوط الجملة الخاصة لمحلات الموبايل (غير مقبول التحويل من رقم شخصي)</b>"
         )
         if not update.callback_query:
-            context.user_data["point_deposit_amount"] = float(update.message.text)
             await update.message.reply_text(
                 text=text,
                 reply_markup=InlineKeyboardMarkup(back_buttons),
@@ -105,8 +120,8 @@ back_to_get_ref_num = get_amount
 async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
 
-        await send_to_check_bemo_deposit(
-            update=update, context=context, is_point_deposit=True
+        await send_to_check_point_deposit(
+            update=update, context=context
         )
 
         await update.message.reply_text(

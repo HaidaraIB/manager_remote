@@ -1,9 +1,4 @@
-from telegram import (
-    Update,
-    Chat,
-    InlineKeyboardMarkup,
-)
-
+from telegram import Update, Chat
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -12,84 +7,28 @@ from telegram.ext import (
     filters,
 )
 from common.constants import *
-from common.common import (
-    build_user_keyboard,
-    payment_method_pattern,
-    build_back_button,
-)
-
-from common.back_to_home_page import (
-    back_to_user_home_page_handler,
-    back_to_user_home_page_button,
-)
+from common.common import build_user_keyboard, payment_method_pattern
+from common.back_to_home_page import back_to_user_home_page_handler
 from start import start_command
-from models import PaymentMethod
 from user.deposit.common import (
     ACCOUNT_DEPOSIT,
     DEPOSIT_METHOD,
-    account_deposit,
-    send_to_check_deposit,
-    make_deposit,
-    back_to_account_deposit,
-)
-from user.deposit.bemo_deposit import (
     DEPOSIT_AMOUNT,
-    BEMO_REF_NUM,
-    bemo_deposit,
+    REF_NUM,
+    make_deposit,
+    account_deposit,
+    choose_deposit_method,
     get_deposit_amount,
-    back_to_deposit_amount,
+    send_to_check_deposit,
+    back_to_account_deposit,
+    back_to_choose_deposit_method,
+    back_to_get_deposit_amount,
 )
-
-
-REF_NUM = 2
-
-
-async def deposit_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE:
-        method_name = update.callback_query.data
-        method = PaymentMethod.get_payment_method(name=method_name)
-        if method.on_off == 0:
-            await update.callback_query.answer(
-                "هذه الوسيلة متوقفة مؤقتاً❗️",
-                show_alert=True,
-            )
-            return
-        context.user_data["deposit_method"] = method_name
-        context.user_data["deposit_amount"] = 0
-
-        back_buttons = [
-            build_back_button("back_to_deposit_method"),
-            back_to_user_home_page_button[0],
-        ]
-        text = (
-            f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
-            f"<code>{context.bot_data['data'][f'{method_name}_number']}</code>\n\n"
-            f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-        )
-        if method_name == "USDT":
-            text += "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n"
-
-        await update.callback_query.edit_message_text(
-            text=text,
-            reply_markup=InlineKeyboardMarkup(back_buttons),
-        )
-        return REF_NUM
-
-
-back_to_deposit_method = account_deposit
 
 
 async def get_ref_num(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        res = await send_to_check_deposit(
-            context=context,
-            user_id=update.effective_user.id,
-            ref_num=update.message.text,
-            acc_number=context.user_data["account_deposit"],
-            method=context.user_data["deposit_method"],
-            target_group=context.bot_data["data"]["deposit_orders_group"],
-            amount=context.user_data["deposit_amount"],
-        )
+        res = await send_to_check_deposit(update=update, context=context)
         if not res:
             await update.message.reply_text(
                 text="رقم عملية مكرر ❗️",
@@ -120,11 +59,7 @@ deposit_handler = ConversationHandler(
         ],
         DEPOSIT_METHOD: [
             CallbackQueryHandler(
-                bemo_deposit,
-                BEMO,
-            ),
-            CallbackQueryHandler(
-                deposit_method,
+                choose_deposit_method,
                 payment_method_pattern,
             ),
         ],
@@ -140,18 +75,16 @@ deposit_handler = ConversationHandler(
                 callback=get_deposit_amount,
             )
         ],
-        BEMO_REF_NUM: [
-            MessageHandler(
-                filters=filters.Regex("^\d+$"),
-                callback=get_ref_num,
-            ),
-        ],
     },
     fallbacks=[
         start_command,
         back_to_user_home_page_handler,
-        CallbackQueryHandler(back_to_deposit_amount, "^back_to_deposit_amount$"),
-        CallbackQueryHandler(back_to_deposit_method, "^back_to_deposit_method$"),
+        CallbackQueryHandler(
+            back_to_get_deposit_amount, "^back_to_get_deposit_amount$"
+        ),
+        CallbackQueryHandler(
+            back_to_choose_deposit_method, "^back_to_choose_deposit_method$"
+        ),
         CallbackQueryHandler(
             back_to_account_deposit, "^back_to_account_number_deposit$"
         ),

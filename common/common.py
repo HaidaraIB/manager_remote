@@ -41,6 +41,7 @@ order_dict_en_to_ar = {
     "busdt": "شراء USDT",
 }
 
+
 def make_conv_text(conv: list[Conv]):
     conv_text = ""
     for m in conv:
@@ -50,6 +51,7 @@ def make_conv_text(conv: list[Conv]):
             conv_text += f"الدعم:\n<b>{m.msg}</b>\n\n"
 
     return conv_text
+
 
 async def ensure_positive_amount(amount: float, update: Update):
     if amount <= 0:
@@ -225,9 +227,10 @@ async def notify_workers(
     workers: list[DepositAgent | PaymentAgent | Checker],
     text: str,
 ):
-    for worker in workers:
+    ids = set(map(lambda x: x.id, workers))
+    for i in ids:
         await context.bot.send_message(
-            chat_id=worker.id,
+            chat_id=i,
             text=text,
         )
         await asyncio.sleep(1)
@@ -329,12 +332,6 @@ def build_admin_keyboard():
             InlineKeyboardButton(
                 text="تعديل نسب مكافآت 👨🏻‍💻",
                 callback_data="update percentages",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="تفعيل/إلغاء تفعيل وسيلة دفع 🔂",
-                callback_data="turn payment method on or off",
             ),
         ],
         [
