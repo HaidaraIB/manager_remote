@@ -9,11 +9,7 @@ from sqlalchemy import (
     and_,
     PrimaryKeyConstraint,
 )
-from models.DB import (
-    Base,
-    lock_and_release,
-    connect_and_close,
-)
+from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
 
 
@@ -52,7 +48,9 @@ class Wallet(Base):
         cls, amout: float, number: str, method: str, s: Session = None
     ):
         s.query(cls).filter_by(number=number, method=method).update(
-            {cls.balance: cls.balance + amout}
+            {
+                cls.balance: cls.balance + amout,
+            }
         )
 
     @classmethod
@@ -62,19 +60,19 @@ class Wallet(Base):
     ):
         if amount:
             res = s.execute(
-                select(cls).where(
-                    cls.balance
-                    == (
-                        select(func.max(cls.balance))
-                        .where(
-                            cls.method == method,
-                            cls.limit > cls.balance,
-                            (cls.limit - cls.balance) >= amount,
-                        )
-                        .scalar_subquery()
+                select(func.max(cls.balance)).where(
+                    and_(
+                        cls.method == method,
+                        cls.limit > cls.balance,
+                        (cls.limit - cls.balance) >= amount,
                     )
                 )
             )
+            try:
+                max_balance = res.fetchone().t[0]
+                res = s.execute(select(cls).where(cls.balance == max_balance))
+            except:
+                return
 
         elif number:
             res = s.execute(
