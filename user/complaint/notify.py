@@ -1,7 +1,7 @@
 from telegram import Update, Chat
 from telegram.ext import ContextTypes, ConversationHandler
 from common.common import build_user_keyboard, parent_to_child_models_mapper
-from models import DepositOrder, WithdrawOrder, BuyUsdtdOrder, CreateAccountOrder
+from models import DepositOrder, WithdrawOrder, BuyUsdtdOrder
 from PyroClientSingleton import PyroClientSingleton
 import datetime
 
@@ -38,7 +38,7 @@ async def check_complaint_date(
 
 
 def get_chat_id(
-    order: DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder,
+    order: DepositOrder | WithdrawOrder | BuyUsdtdOrder,
 ):
     group_id = (
         order.group_id
@@ -50,7 +50,7 @@ def get_chat_id(
 
 
 def get_message_id(
-    order: DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder,
+    order: DepositOrder | WithdrawOrder | BuyUsdtdOrder,
 ):
     message_id = (
         order.processing_message_id

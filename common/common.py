@@ -19,7 +19,6 @@ from models import (
     WithdrawOrder,
     DepositOrder,
     BuyUsdtdOrder,
-    CreateAccountOrder,
     DepositAgent,
     PaymentAgent,
     Checker,
@@ -33,7 +32,7 @@ import os
 import uuid
 import logging
 from datetime import datetime
-from dateutil import tz
+import pytz
 
 order_dict_en_to_ar = {
     "withdraw": "سحب",
@@ -78,12 +77,11 @@ async def send_to_photos_archive(
 
 
 parent_to_child_models_mapper: dict[
-    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder | CreateAccountOrder
+    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder
 ] = {
     "withdraw": WithdrawOrder,
     "deposit": DepositOrder,
     "busdt": BuyUsdtdOrder,
-    "create account": CreateAccountOrder,
 }
 
 
@@ -92,7 +90,7 @@ def format_amount(amount: float):
 
 
 def format_datetime(d: datetime):
-    return d.replace(tzinfo=tz.gettz("Syria/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
+    return d.replace(tzinfo=pytz("Asia/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
 
 
 def pretty_time_delta(seconds):

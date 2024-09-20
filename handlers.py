@@ -212,11 +212,8 @@ def main():
     app.add_handler(get_decline_agent_order_reason_handler)
     app.add_handler(back_to_check_agent_order_handler)
 
-    app.add_handler(reply_to_create_account_order_handler)
     app.add_handler(create_account_handler)
-    app.add_handler(decline_create_account_handler)
-    app.add_handler(decline_account_reason_handler)
-    app.add_handler(back_from_decline_create_account_handler)
+    app.add_handler(store_account_handler)
     app.add_handler(invalid_account_format_handler, group=3)
 
     app.add_handler(withdraw_handler)
@@ -304,7 +301,7 @@ def main():
     )
     app.job_queue.run_daily(
         callback=reward_worker,
-        time=datetime.time(0, 0, 0),
+        time=datetime.time(0, 0),
         name="daily_reward_worker",
         job_kwargs={
             "id": "daily_reward_worker",
@@ -313,9 +310,11 @@ def main():
             "replace_existing": True,
         },
     )
+    import pytz
+
     app.job_queue.run_daily(
         callback=remind_agent_to_clear_wallets,
-        time=datetime.time(0, 0, 0, tzinfo=tz.gettz("Syria/Damascus")),
+        time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
         name="remind_agent_to_clear_wallets",
         job_kwargs={
             "id": "remind_agent_to_clear_wallets",
@@ -324,7 +323,6 @@ def main():
             "replace_existing": True,
         },
     )
-
     try:
         PyroClientSingleton().start()
     except ConnectionError:

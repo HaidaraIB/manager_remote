@@ -16,47 +16,52 @@ class Account(Base):
     serial = Column(Integer)
     creation_date = Column(TIMESTAMP, server_default=func.current_timestamp())
 
-    @staticmethod
+    @classmethod
     @lock_and_release
-    async def connect_account_to_user(user_id: int, acc_num: str, s: Session = None):
-        s.query(Account).filter_by(acc_num=acc_num).update({Account.user_id: user_id})
+    async def connect_account_to_user(
+        cls, user_id: int, acc_num: str, s: Session = None
+    ):
+        s.query(cls).filter_by(acc_num=acc_num).update(
+            {
+                cls.user_id: user_id,
+            }
+        )
 
-    @staticmethod
+    @classmethod
     @connect_and_close
-    def get_account(acc_num: str, s: Session = None):
-        res = s.execute(select(Account).where(Account.acc_num == acc_num))
+    def get_account(cls, acc_num: str = None, new: bool = False, s: Session = None):
+        if acc_num:
+            res = s.execute(select(cls).where(cls.acc_num == acc_num))
+        elif new:
+            res = s.execute(select(cls).where(cls.user_id == None))
+
         try:
             return res.fetchone().t[0]
         except:
             pass
 
-    @staticmethod
+    @classmethod
     @connect_and_close
-    def get_user_accounts(user_id: int, s: Session = None):
-        res = s.execute(select(Account).where(Account.user_id == user_id))
+    def get_user_accounts(cls, user_id: int, s: Session = None):
+        res = s.execute(select(cls).where(cls.user_id == user_id))
         try:
             return list(map(lambda x: x[0], res.tuples().all()))
         except:
             pass
 
-    @staticmethod
+    @classmethod
     @lock_and_release
     async def add_account(
+        cls,
         acc_num: str,
-        user_id: int,
         password: str,
-        full_name: str,
-        serial: int,
         s: Session = None,
     ):
         try:
             s.execute(
-                insert(Account).values(
+                insert(cls).values(
                     acc_num=acc_num,
-                    user_id=user_id,
                     password=password,
-                    full_name=full_name,
-                    serial=serial,
                 )
             )
         except exc.IntegrityError:

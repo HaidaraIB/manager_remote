@@ -1,11 +1,4 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    TIMESTAMP,
-    insert,
-    func,
-)
+from sqlalchemy import Column, Integer, String, TIMESTAMP, insert, select, func
 from sqlalchemy.orm import Session
 from models.BaseOrder import BaseOrder
 from models.DB import lock_and_release
@@ -20,16 +13,17 @@ class CreateAccountOrder(BaseOrder):
     state = Column(String, default="pending")
     order_date = Column(TIMESTAMP, server_default=func.current_timestamp())
 
-    @staticmethod
+    @classmethod
     @lock_and_release
     async def add_create_account_order(
+        cls,
         user_id: int,
-        full_name: str,
-        nat_num: int,
+        full_name: str = None,
+        nat_num: int = None,
         s: Session = None,
     ):
         res = s.execute(
-            insert(CreateAccountOrder).values(
+            insert(cls).values(
                 user_id=user_id,
                 full_name=full_name,
                 national_number=nat_num,
