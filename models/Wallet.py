@@ -64,7 +64,7 @@ class Wallet(Base):
                 .filter(
                     Wallet.method == method,
                     Wallet.limit > Wallet.balance,
-                    Wallet.limit - Wallet.balance >= 55000,
+                    Wallet.limit - Wallet.balance >= amount,
                 )
                 .order_by(Wallet.balance.desc())
                 .first()
