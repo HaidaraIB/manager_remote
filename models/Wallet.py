@@ -59,31 +59,21 @@ class Wallet(Base):
         cls, method: str, number: str = None, amount: float = None, s: Session = None
     ):
         if amount:
-            max_balance_query = (
-                s.query(Wallet.balance)
-                .filter(
-                    Wallet.method == method,
-                    Wallet.limit > Wallet.balance,
-                    Wallet.limit - Wallet.balance >= amount,
-                )
-                .order_by(Wallet.balance.desc())
-                .first()
-            )
-
-            if max_balance_query:
-                max_balance = max_balance_query[0]
-                try:
-                    result = (
-                        s.query(Wallet)
-                        .filter(
-                            Wallet.method == method,
-                            Wallet.balance == max_balance,
-                        )
-                        .one()
+            try:
+                res = (
+                    s.query(cls)
+                    .filter(
+                        cls.method == method,
+                        cls.limit > cls.balance,
+                        cls.limit - cls.balance >= amount,
                     )
-                    return result
-                except:
-                    return
+                    .order_by(cls.balance.desc())
+                    .first()
+                )
+
+                return res
+            except:
+                return
 
         elif number:
             res = s.execute(
