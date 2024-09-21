@@ -1,11 +1,4 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Chat,
-)
-
-
+from telegram import Update, InlineKeyboardMarkup, Chat
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -13,7 +6,6 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
 )
-
 from common.common import (
     build_user_keyboard,
     build_methods_keyboard,
@@ -33,6 +25,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
+from user.account_settings.common import reply_with_user_accounts
 from user.withdraw.common import send_withdraw_order_to_check
 from start import start_command
 from models import PaymentMethod, Account
@@ -54,22 +47,7 @@ import os
 @check_if_user_created_account_from_bot_decorator
 async def withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        accounts = Account.get_user_accounts(user_id=update.effective_user.id)
-        accounts_keyboard = [
-            InlineKeyboardButton(
-                text=a.acc_num,
-                callback_data=str(a.acc_num),
-            )
-            for a in accounts
-        ]
-        keybaord = [
-            accounts_keyboard,
-            back_to_user_home_page_button[0],
-        ]
-        await update.callback_query.edit_message_text(
-            text="اختر حساباً من حساباتك المسجلة لدينا",
-            reply_markup=InlineKeyboardMarkup(keybaord),
-        )
+        await reply_with_user_accounts(update)
         return WITHDRAW_ACCOUNT
 
 

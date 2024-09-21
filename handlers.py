@@ -28,7 +28,7 @@ from user.withdraw import *
 from user.deposit import *
 from user.busdt import *
 from user.return_order import *
-from user.create_account import *
+from user.account_settings import *
 from user.work_with_us import *
 from user.show_trusted_agents import *
 from user.complaint import *
@@ -213,6 +213,7 @@ def main():
     app.add_handler(back_to_check_agent_order_handler)
 
     app.add_handler(create_account_handler)
+    app.add_handler(delete_account_handler)
     app.add_handler(store_account_handler)
     app.add_handler(invalid_account_format_handler, group=3)
 

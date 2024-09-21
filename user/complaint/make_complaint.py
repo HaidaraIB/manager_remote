@@ -20,6 +20,7 @@ from common.common import (
     build_complaint_keyboard,
     parent_to_child_models_mapper,
     order_dict_en_to_ar,
+    build_confirmation_keyboard,
 )
 from common.decorators import (
     check_if_user_present_decorator,
@@ -113,10 +114,7 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         order = parent_to_child_models_mapper[about].get_one_order(serial=serial)
         ret = None
 
-        if (
-            about == "deposit"
-            and order.state == "pending"
-        ):
+        if about == "deposit" and order.state == "pending":
             await update.callback_query.answer(
                 text="إيداع قيد التحقق، يقوم البوت بالتحقق بشكل دوري من نجاح العملية، الرجاء التحلي بالصبر.",
                 show_alert=True,
@@ -184,10 +182,7 @@ async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         keyboard = [
-            [
-                InlineKeyboardButton(text="نعم 👍", callback_data="yes complaint"),
-                InlineKeyboardButton(text="لا 👎", callback_data="no complaint"),
-            ],
+            build_confirmation_keyboard("complaint"),
             build_back_button("back_to_complaint_reason"),
             back_to_user_home_page_button[0],
         ]
@@ -305,7 +300,7 @@ complaint_handler = ConversationHandler(
         COMPLAINT_CONFIRMATION: [
             CallbackQueryHandler(
                 complaint_confirmation,
-                "^((yes)|(no)) complaint$",
+                "^((yes)|(no))_complaint$",
             )
         ],
     },

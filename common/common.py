@@ -24,6 +24,7 @@ from models import (
     Checker,
     Photo,
     Conv,
+    Account,
 )
 from common.constants import *
 
@@ -247,21 +248,75 @@ def build_back_button(data: str):
     return [InlineKeyboardButton(text="الرجوع🔙", callback_data=data)]
 
 
+def build_accounts_keyboard(user_id: int):
+    accounts = Account.get_user_accounts(user_id=user_id)
+    accounts_keyboard = [
+        InlineKeyboardButton(
+            text=a.acc_num,
+            callback_data=str(a.acc_num).strip(),
+        )
+        for a in accounts
+    ]
+    return accounts_keyboard
+
+
+def build_confirmation_keyboard(data: str):
+    keyboard = [
+        InlineKeyboardButton(text="نعم 👍", callback_data=f"yes_{data}"),
+        InlineKeyboardButton(text="لا 👎", callback_data=f"no_{data}"),
+    ]
+
+    return keyboard
+
+
 def build_user_keyboard():
     keyboard = [
-        [InlineKeyboardButton(text="سحب 💳", callback_data="withdraw")],
-        [InlineKeyboardButton(text="إيداع 📥", callback_data="deposit")],
         [
             InlineKeyboardButton(
-                text="إنشاء حساب موثق ™️", callback_data="create account"
+                text="سحب 💳",
+                callback_data="withdraw",
             )
         ],
-        [InlineKeyboardButton(text="شراء USDT 💰", callback_data="busdt")],
-        [InlineKeyboardButton(text="إنشاء شكوى 🗳", callback_data="make complaint")],
-        [InlineKeyboardButton(text="عملك معنا 💼", callback_data="work with us")],
         [
             InlineKeyboardButton(
-                text="وكلاء موصى بهم 🈂️", callback_data="trusted agents"
+                text="إيداع 📥",
+                callback_data="deposit",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="إنشاء حساب موثق ™️",
+                callback_data="create account",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="حذف حساب 🗑",
+                callback_data="delete account",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="شراء USDT 💰",
+                callback_data="busdt",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="إنشاء شكوى 🗳",
+                callback_data="make complaint",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="عملك معنا 💼",
+                callback_data="work with us",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="وكلاء موصى بهم 🈂️",
+                callback_data="trusted agents",
             )
         ],
     ]

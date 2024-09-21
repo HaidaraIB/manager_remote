@@ -1,9 +1,4 @@
-from telegram import (
-    Update,
-    Chat,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
+from telegram import Update, Chat, InlineKeyboardButton, InlineKeyboardMarkup
 
 from telegram.ext import (
     ContextTypes,
@@ -19,6 +14,7 @@ from common.common import (
     build_back_button,
     build_methods_keyboard,
     format_amount,
+    build_confirmation_keyboard,
 )
 
 from common.decorators import (
@@ -38,7 +34,7 @@ from common.constants import *
 
 (
     USDT_TO_BUY_AMOUNT,
-    YES_NO_BUSDT,
+    CONFIRM_BUSDT,
     BUSDT_METHOD,
     CASH_CODE,
     BUSDT_CHECK,
@@ -76,10 +72,8 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     reply_markup=InlineKeyboardMarkup(back_buttons),
                 )
                 return
-            
-            wal = Wallet.get_wallets(
-                amount=amount, method=USDT
-            )
+
+            wal = Wallet.get_wallets(amount=amount, method=USDT)
             if not wal:
                 await update.message.reply_text(
                     text=(
@@ -88,16 +82,13 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     )
                 )
                 return
-            
+
             context.user_data["usdt_to_buy_amount"] = amount
         else:
             amount = context.user_data["usdt_to_buy_amount"]
 
         keyboard = [
-            [
-                InlineKeyboardButton(text="موافق 👍", callback_data="yes busdt"),
-                InlineKeyboardButton(text="غير موافق 👍", callback_data="no busdt"),
-            ],
+            build_confirmation_keyboard("busdt"),
             *back_buttons,
         ]
         text = (
@@ -115,13 +106,13 @@ async def usdt_to_buy_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
 
-        return YES_NO_BUSDT
+        return CONFIRM_BUSDT
 
 
 back_to_usdt_to_buy_amount = busdt
 
 
-async def yes_no_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def confirm_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         if update.callback_query.data.startswith("no"):
             await update.callback_query.answer(
@@ -135,7 +126,7 @@ async def yes_no_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return ConversationHandler.END
         else:
             busdt_methods = build_methods_keyboard(busdt=True)
-            busdt_methods.append(build_back_button("back_to_yes_no_busdt"))
+            busdt_methods.append(build_back_button("back_to_confirm_busdt"))
             busdt_methods.append(back_to_user_home_page_button[0])
             await update.callback_query.edit_message_text(
                 text="اختر وسيلة الدفع لاستلام أموالك 💳",
@@ -144,7 +135,7 @@ async def yes_no_busdt(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return BUSDT_METHOD
 
 
-back_to_yes_no_busdt = usdt_to_buy_amount
+back_to_confirm_busdt = usdt_to_buy_amount
 
 
 async def busdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -176,7 +167,7 @@ async def busdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return CASH_CODE
 
 
-back_to_busdt_method = yes_no_busdt
+back_to_busdt_method = confirm_busdt
 
 
 async def get_cash_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -228,7 +219,7 @@ busdt_handler = ConversationHandler(
                 filters=filters.Regex("^[1-9]+\.?\d*$"), callback=usdt_to_buy_amount
             )
         ],
-        YES_NO_BUSDT: [CallbackQueryHandler(yes_no_busdt, "^yes busdt$|^no busdt$")],
+        CONFIRM_BUSDT: [CallbackQueryHandler(confirm_busdt, "^((yes)|(no))_busdt$")],
         BUSDT_METHOD: [CallbackQueryHandler(busdt_method, payment_method_pattern)],
         CASH_CODE: [
             MessageHandler(
@@ -242,7 +233,7 @@ busdt_handler = ConversationHandler(
         CallbackQueryHandler(
             back_to_usdt_to_buy_amount, "^back_to_usdt_to_buy_amount$"
         ),
-        CallbackQueryHandler(back_to_yes_no_busdt, "^back_to_yes_no_busdt$"),
+        CallbackQueryHandler(back_to_confirm_busdt, "^back_to_confirm_busdt$"),
         CallbackQueryHandler(back_to_busdt_method, "^back_to_busdt_method$"),
         CallbackQueryHandler(
             back_to_get_cash_code_busdt, "^back_to_get_cash_code_busdt$"

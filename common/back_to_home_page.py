@@ -1,15 +1,6 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    Chat,
-    error,
-)
+from telegram import Update, InlineKeyboardButton, Chat, error
 
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    ConversationHandler,
-)
+from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler
 
 from common.common import (
     build_user_keyboard,
@@ -20,7 +11,6 @@ from common.common import (
 
 from custom_filters import Admin, DepositAgent
 from common.force_join import check_if_user_member_decorator
-from common.decorators import check_if_user_agent_decorator
 from common.constants import *
 
 back_to_admin_home_page_button = [

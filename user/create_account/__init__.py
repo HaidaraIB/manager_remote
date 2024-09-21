@@ -1,2 +1,0 @@
-from user.create_account.create_account import create_account_handler
-from user.create_account.store_account import invalid_account_format_handler, store_account_handler

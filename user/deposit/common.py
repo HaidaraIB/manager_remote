@@ -1,4 +1,4 @@
-from telegram import Update, Chat, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, Chat, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from worker.check_deposit.check_deposit import check_deposit
 from common.back_to_home_page import back_to_user_home_page_button
@@ -9,7 +9,6 @@ from common.common import (
     notify_workers,
     build_methods_keyboard,
     build_back_button,
-    send_to_photos_archive,
 )
 from common.decorators import (
     check_user_pending_orders_decorator,
@@ -17,7 +16,7 @@ from common.decorators import (
     check_if_user_present_decorator,
     check_if_user_created_account_from_bot_decorator,
 )
-
+from user.account_settings.common import reply_with_user_accounts
 import models
 import asyncio
 import os
@@ -37,22 +36,7 @@ import os
 @check_if_user_created_account_from_bot_decorator
 async def make_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        accounts = models.Account.get_user_accounts(user_id=update.effective_user.id)
-        accounts_keyboard = [
-            InlineKeyboardButton(
-                text=a.acc_num,
-                callback_data=str(a.acc_num),
-            )
-            for a in accounts
-        ]
-        keybaord = [
-            accounts_keyboard,
-            back_to_user_home_page_button[0],
-        ]
-        await update.callback_query.edit_message_text(
-            text="اختر حساباً من حساباتك المسجلة لدينا",
-            reply_markup=InlineKeyboardMarkup(keybaord),
-        )
+        await reply_with_user_accounts(update)
         return ACCOUNT_DEPOSIT
 
 

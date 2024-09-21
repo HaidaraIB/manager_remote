@@ -1,7 +1,6 @@
-from telegram import Update, Chat, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes, MessageHandler, filters
-from common.common import send_message_to_user
-from custom_filters import Account, Declined
+from telegram import Update, Chat
+from telegram.ext import ContextTypes, MessageHandler
+from custom_filters import Account
 import models
 
 
@@ -38,7 +37,7 @@ async def reply_to_create_account_order(
             == context.bot_data["data"]["accounts_orders_group"]
         ):
             return
-        
+
         account = update.message.text.split("\n")
         res = await models.Account.add_account(
             acc_num=int(account[0]),
@@ -47,7 +46,7 @@ async def reply_to_create_account_order(
 
         if res:
             await update.effective_message.reply_text(
-                text="هذا الحساب مسجل لدينا مسبقاً"
+                text="هذا الحساب مسجل لدينا مسبقاً ❗️"
             )
             return
 

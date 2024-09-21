@@ -5,7 +5,11 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
 )
-from common.common import build_admin_keyboard, payment_method_pattern
+from common.common import (
+    build_admin_keyboard,
+    payment_method_pattern,
+    build_confirmation_keyboard,
+)
 from models import Wallet
 from admin.wallet_settings.common import CHOOSE_METHOD, choose_wallet_settings_option
 from start import admin_command, worker_command
@@ -31,16 +35,13 @@ async def choose_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        yes_no_keyboard = [
-            [
-                InlineKeyboardButton(text="نعم 👍", callback_data="yes_clear_wallets"),
-                InlineKeyboardButton(text="لا 👎", callback_data="no_clear_wallets"),
-            ],
+        keyboard = [
+            build_confirmation_keyboard("clear_wallets"),
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
             text=f"هل أنت متأكد من أنك تريد تصفير جميع محافظ {method}؟",
-            reply_markup=InlineKeyboardMarkup(yes_no_keyboard),
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return CONFIRM_CLEAR_WALLETS
 

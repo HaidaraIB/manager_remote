@@ -1,4 +1,14 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP, exc, select, insert, func
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    TIMESTAMP,
+    exc,
+    select,
+    insert,
+    delete,
+    func,
+)
 from models.DB import (
     Base,
     lock_and_release,
@@ -66,3 +76,8 @@ class Account(Base):
             )
         except exc.IntegrityError:
             return True
+
+    @classmethod
+    @lock_and_release
+    async def delete_account(cls, acc_num: str, s: Session = None):
+        s.execute(delete(cls).where(cls.acc_num == acc_num))
