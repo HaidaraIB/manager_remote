@@ -11,8 +11,7 @@ from common.back_to_home_page import (
     back_to_agent_home_page_handler,
 )
 from common.common import build_back_button, build_agent_keyboard
-from user.deposit.common import send_to_check_point_deposit
-from agent.point_deposit.common import govs_pattern
+from agent.point_deposit.common import govs_pattern, send_to_check_point_deposit
 from start import agent_command
 import models
 from custom_filters import Agent
@@ -45,6 +44,10 @@ back_to_choose_point = agent_option
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
+        back_buttons = [
+            build_back_button("back_to_get_amount"),
+            back_to_agent_home_page_button[0],
+        ]
         if update.message:
             amount = float(update.message.text)
             context.user_data["point_deposit_amount"] = amount
@@ -61,10 +64,8 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        back_buttons = [
-            build_back_button("back_to_get_amount"),
-            back_to_agent_home_page_button[0],
-        ]
+        context.user_data["wal_num_point_deposit"] = wal.number
+
         text = (
             f"أرسل مبلغ الإيداع إلى الرقم\n\n"
             f"<code>{wal.number}</code>\n\n"
@@ -120,9 +121,7 @@ back_to_get_ref_num = get_amount
 async def get_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
 
-        await send_to_check_point_deposit(
-            update=update, context=context
-        )
+        await send_to_check_point_deposit(update=update, context=context)
 
         await update.message.reply_text(
             text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",

@@ -84,6 +84,10 @@ class Wallet(Base):
                     )
                 )
             )
+            try:
+                return res.fetchone().t[0]
+            except:
+                pass
         else:
             res = s.execute(select(cls).where(cls.method == method))
 
@@ -91,11 +95,6 @@ class Wallet(Base):
                 return list(map(lambda x: x[0], res.tuples().all()))
             except:
                 pass
-
-        try:
-            return res.fetchone().t[0]
-        except:
-            pass
 
     @classmethod
     @lock_and_release
