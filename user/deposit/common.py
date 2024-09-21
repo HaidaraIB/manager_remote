@@ -135,7 +135,14 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if update.message:
             amount = float(update.message.text)
 
-            if method == BEMO and amount < 50000:
+            if amount <= 0:
+                await update.message.reply_text(
+                    text="الرجاء إرسال قيمة موجبة تماماً",
+                    reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
+                )
+                return
+
+            elif method == BEMO and amount < 50000:
                 await update.message.reply_text(
                     text="الحد الأدنى للإيداع = 50,000 ل.س",
                     reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
@@ -156,7 +163,7 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
             )
             return
-
+        context.user_data["wal_num_deposit"] = wal.number
         text = (
             f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
             f"<code>{wal.number}</code>\n\n"
@@ -212,6 +219,7 @@ async def send_to_check_deposit(
         user_id = update.effective_user.id
         ref_num = update.message.text
         acc_number = context.user_data["player_number"]
+        deposit_wallet = context.user_data["wal_num_player_deposit"]
         method = SYRCASH
         target_group = context.bot_data["data"]["deposit_orders_group"]
         amount = context.user_data["player_deposit_amount"]
@@ -221,6 +229,7 @@ async def send_to_check_deposit(
         user_id = update.effective_user.id
         ref_num = update.message.text
         acc_number = context.user_data["account_deposit"]
+        deposit_wallet = context.user_data["wal_num_deposit"]
         method = context.user_data["deposit_method"]
         target_group = context.bot_data["data"]["deposit_orders_group"]
         amount = context.user_data["deposit_amount"]
@@ -236,13 +245,12 @@ async def send_to_check_deposit(
         order_present and order_present.state == "approved"
     ):
         return False
-    deposit_wallet = models.Wallet.get_wallets(amount=amount, method=method)
     serial = await models.DepositOrder.add_deposit_order(
         user_id=user_id,
         group_id=target_group,
         method=method,
         acc_number=acc_number,
-        deposit_wallet=deposit_wallet.number,
+        deposit_wallet=deposit_wallet,
         amount=amount,
         ref_number=ref_num,
         agent_id=agent_id,
@@ -268,7 +276,7 @@ async def send_to_check_deposit(
             serial=serial,
             method=method,
             account_number=acc_number,
-            wal=deposit_wallet.number,
+            wal=deposit_wallet,
             ref_num=ref_num,
         ),
     )
@@ -287,79 +295,3 @@ async def send_to_check_deposit(
         )
     )
     return True
-
-
-async def send_to_check_point_deposit(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    user_id = update.effective_user.id
-
-    photo = update.message.photo[-1]
-    ref_number = context.user_data["point_deposit_ref_num"]
-    deposit_wallet = models.Wallet.get_wallets(
-        amount=context.user_data["player_deposit_amount"],
-    )
-    amount = context.user_data["point_deposit_amount"]
-    gov = context.user_data["point_deposit_point"]
-    agent = models.TrustedAgent.get_workers(user_id=user_id, gov=gov)
-
-    target_group = context.bot_data["data"]["deposit_orders_group"]
-
-    serial = await models.DepositOrder.add_deposit_order(
-        user_id=user_id,
-        group_id=target_group,
-        method=SYRCASH,
-        deposit_wallet=deposit_wallet,
-        amount=amount,
-        ref_number=ref_number,
-        agent_id=user_id,
-        gov=agent.gov,
-    )
-
-    text = stringify_deposit_order(
-        amount=amount,
-        serial=serial,
-        method=SYRCASH,
-        wal=deposit_wallet,
-        ref_num=ref_number,
-        workplace_id=agent.team_cash_workplace_id,
-    )
-    markup = InlineKeyboardMarkup.from_button(
-        InlineKeyboardButton(
-            text="التحقق ☑️", callback_data=f"check_deposit_order_{serial}"
-        )
-    )
-    message = await context.bot.send_photo(
-        chat_id=target_group,
-        photo=photo,
-        caption=text,
-        reply_markup=markup,
-    )
-    await send_to_photos_archive(
-        context=context,
-        photo=photo,
-        serial=serial,
-        order_type="deposit",
-    )
-
-    await models.DepositOrder.add_message_ids(
-        serial=serial,
-        pending_check_message_id=message.id,
-    )
-
-    workers = models.DepositAgent.get_workers(is_point=True)
-    asyncio.create_task(
-        notify_workers(
-            context=context,
-            workers=workers,
-            text=f"انتباه إيداع جديد قيد التحقق 🚨",
-        )
-    )
-    workers = models.Checker.get_workers(check_what="deposit", method=POINT_DEPOSIT)
-    asyncio.create_task(
-        notify_workers(
-            context=context,
-            workers=workers,
-            text=f"انتباه يوجد طلب تحقق إيداع جديد 🚨",
-        )
-    )

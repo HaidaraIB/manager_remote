@@ -65,7 +65,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             )
             return
-
+        context.user_data["wal_num_player_deposit"] = wal.number
         text = (
             f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
             f"<code>{wal.number}</code>\n\n"
