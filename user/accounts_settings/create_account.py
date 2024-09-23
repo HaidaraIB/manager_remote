@@ -97,7 +97,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=int(os.getenv("CHANNEL_ID")),
                     text=group_text,
-                    message_thread_id=1503,
+                    message_thread_id=int(os.getenv("DEPOSIT_GIFT_ON_CREATE_ACCOUNT_SUCCESS_TOPIC_ID")),
                 )
 
             await models.Account.connect_account_to_user(
