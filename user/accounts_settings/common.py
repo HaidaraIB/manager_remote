@@ -43,21 +43,9 @@ async def reply_with_user_accounts(update: Update, context: ContextTypes.DEFAULT
     )
 
 
-def find_valid_amounts(
-    context: ContextTypes.DEFAULT_TYPE, amounts: list, large_amount: float
-):
-    if context.bot_data.get("large_amount_create_account_deposit_used", None) is None:
-        context.bot_data["large_amount_create_account_deposit_used"] = False
-
+def find_valid_amounts(context: ContextTypes.DEFAULT_TYPE, amounts: list):
     valid_amounts = []
     for a in amounts:
-
-        if (
-            a == large_amount
-            and context.bot_data["large_amount_create_account_deposit_used"]
-        ):
-            continue
-
         reminder = context.bot_data["create_account_deposit"] - a
         if reminder > 0:
             valid_amounts.append(a)
@@ -65,14 +53,9 @@ def find_valid_amounts(
     return valid_amounts
 
 
-def choose_random_amount(
-    context: ContextTypes.DEFAULT_TYPE, valid_amounts: float, large_amount: float
-):
+def choose_random_amount(context: ContextTypes.DEFAULT_TYPE, valid_amounts: float):
     rand = random.choice(valid_amounts)
     context.bot_data["create_account_deposit"] -= rand
-
-    if rand == large_amount:
-        context.bot_data["large_amount_create_account_deposit_used"] = True
 
     return rand
 
@@ -84,11 +67,7 @@ async def send_deposit_on_create_account_seccess(
     valid_amounts: list,
 ):
     target_group = context.bot_data["data"]["deposit_orders_group"]
-    amount = choose_random_amount(
-        context=context,
-        valid_amounts=valid_amounts,
-        large_amount=50000,
-    )
+    amount = choose_random_amount(context=context, valid_amounts=valid_amounts)
     serial = await models.DepositOrder.add_deposit_order(
         user_id=user_id,
         group_id=target_group,
