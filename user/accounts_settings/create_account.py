@@ -4,13 +4,14 @@ from common.decorators import (
     check_if_user_present_decorator,
     check_user_call_on_or_off_decorator,
 )
-from common.common import build_user_keyboard, format_amount, build_back_button
+from common.common import format_amount, build_back_button
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import back_to_user_home_page_button
 from common.constants import HOME_PAGE_TEXT
 from user.accounts_settings.common import (
     send_deposit_on_create_account_seccess,
     find_valid_amounts,
+    build_accounts_settings_keyboard,
 )
 import models
 import asyncio
@@ -125,7 +126,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await update.callback_query.edit_message_text(
                 text=HOME_PAGE_TEXT,
-                reply_markup=build_user_keyboard(),
+                reply_markup=build_accounts_settings_keyboard(),
             )
         create_account_lock.release()
 

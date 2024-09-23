@@ -4,14 +4,36 @@ from common.common import build_accounts_keyboard, notify_workers, build_back_bu
 from common.back_to_home_page import back_to_user_home_page_button
 from common.stringifies import stringify_deposit_order
 from common.constants import CREATE_ACCOUNT_DEPOSIT
+import user.accounts_settings.accounts_settings as accounts_settings
 import models
 import asyncio
 import random
 
 
-async def reply_with_user_accounts(update: Update):
+def build_accounts_settings_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="إنشاء حساب موثق ™️",
+                callback_data="create account",
+            ),
+            InlineKeyboardButton(
+                text="حذف حساب 🗑",
+                callback_data="delete account",
+            ),
+        ],
+        back_to_user_home_page_button[0],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+async def reply_with_user_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    accounts = build_accounts_keyboard(user_id=update.effective_user.id)
+    if not accounts:
+        await accounts_settings.accounts_settings(update, context)
+        return
     keybaord = [
-        build_accounts_keyboard(user_id=update.effective_user.id),
+        accounts,
         build_back_button("back_to_accounts_settings"),
         back_to_user_home_page_button[0],
     ]

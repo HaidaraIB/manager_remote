@@ -47,7 +47,7 @@ import os
 @check_if_user_created_account_from_bot_decorator
 async def withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await reply_with_user_accounts(update)
+        await reply_with_user_accounts(update, context)
         return WITHDRAW_ACCOUNT
 
 

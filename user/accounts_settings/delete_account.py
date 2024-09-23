@@ -23,7 +23,7 @@ ACCOUNT, CONFIRM_DELETE_ACCOUNT = range(2)
 @check_if_user_created_account_from_bot_decorator
 async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await reply_with_user_accounts(update)
+        await reply_with_user_accounts(update, context)
         return ACCOUNT
 
 
@@ -36,12 +36,15 @@ async def choose_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             acc_num = context.user_data["acc_num_to_del"]
 
         acc = models.Account.get_account(acc_num=acc_num)
-        if (datetime.now() - acc.connect_to_user_date).days < 15:
-            await update.callback_query.edit_message_text(
-                text="لا تستطيع حذف الحساب إلا بعد مرور 15 يوماً على إنشائه.",
-                reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
-            )
-            return
+        try:
+            if (datetime.now() - acc.connect_to_user_date).days < 15:
+                await update.callback_query.edit_message_text(
+                    text="لا تستطيع حذف الحساب إلا بعد مرور 15 يوماً على إنشائه.",
+                    reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
+                )
+                return
+        except TypeError:
+            pass
 
         confirmation_keyboard = [
             build_confirmation_keyboard("delete_account"),
@@ -67,7 +70,7 @@ async def confirm_delete_account(update: Update, context: ContextTypes.DEFAULT_T
             await update.callback_query.answer(
                 "تم حذف الحساب بنجاح ✅", show_alert=True
             )
-        await reply_with_user_accounts(update)
+        await reply_with_user_accounts(update, context)
         return ACCOUNT
 
 
