@@ -228,10 +228,13 @@ async def notify_workers(
 ):
     ids = set(map(lambda x: x.id, workers))
     for i in ids:
-        await context.bot.send_message(
-            chat_id=i,
-            text=text,
-        )
+        try:
+            await context.bot.send_message(
+                chat_id=i,
+                text=text,
+            )
+        except:
+            pass
         await asyncio.sleep(1)
 
 
@@ -285,14 +288,8 @@ def build_user_keyboard():
         ],
         [
             InlineKeyboardButton(
-                text="إنشاء حساب موثق ™️",
-                callback_data="create account",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="حذف حساب 🗑",
-                callback_data="delete account",
+                text="إدارة حساباتك 🛂",
+                callback_data="accounts settings",
             )
         ],
         [
@@ -383,7 +380,7 @@ def build_admin_keyboard():
         ],
         [
             InlineKeyboardButton(
-                text="تعديل نسب مكافآت 👨🏻‍💻",
+                text="إعدادات المكافآت 👨🏻‍💻",
                 callback_data="update percentages",
             ),
         ],

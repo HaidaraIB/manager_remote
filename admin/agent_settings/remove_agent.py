@@ -7,11 +7,10 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
 )
-from admin.agent_settings.common import GOV, choose_agent_settings_option
+from admin.agent_settings.common import GOV, AGENT, choose_agent_settings_option
 from admin.agent_settings.agent_settings import back_to_agent_settings
 import models
 
-AGENT = 1
 
 
 async def choose_gov_or_agent_to_remove(
@@ -33,7 +32,7 @@ async def choose_gov_or_agent_to_remove(
             worker = models.TrustedAgent.get_workers(gov=gov, user_id=worker_id)
             await models.TrustedAgent.remove_worker(worker_id=worker_id, gov=gov)
             await models.WorkWithUsOrder.delete_order(order_serial=worker.order_serial)
-            
+
             await update.callback_query.answer(
                 text="تمت الإزالة بنجاح ✅",
                 show_alert=True,

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, insert, select, and_
+from sqlalchemy import Column, Integer, String, TIMESTAMP, func, insert, select, and_
 from models.DB import (
     Base,
     lock_and_release,
@@ -13,6 +13,7 @@ class Complaint(Base):
     order_serial = Column(Integer)
     order_type = Column(String)
     reason = Column(String)
+    complaint_date = Column(TIMESTAMP, server_default=func.current_timestamp())
 
     @staticmethod
     @lock_and_release

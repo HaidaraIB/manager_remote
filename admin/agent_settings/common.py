@@ -22,7 +22,7 @@ def build_agent_settings_keyboard():
     return keyboard
 
 
-GOV = 0
+GOV, AGENT = range(2)
 
 
 async def choose_agent_settings_option(

@@ -161,6 +161,7 @@ def complaint_stringify_order(serial: int, order_type: str):
         )
 
     return (
+        f"نوع الطلب: <b>{order_settings_dict[order_type]['t']}</b>\n"
         f"الرقم التسلسلي: <code>{op.serial}</code>\n"
         f"المبلغ: <b>{format_amount(op.amount)}</b>\n"
         f"وسيلة الدفع: <b>{op.method}</b>\n"
@@ -194,17 +195,17 @@ def stringify_deposit_order(
     amount: float,
     serial: int,
     method: str,
-    account_number: int = None,
-    wal: str = None,
+    account_number: int = "لا يوجد",
+    wal: str = "لا يوجد",
     ref_num: str = "لا يوجد",
     workplace_id: int = None,
     *args,
 ):
     deposit_order_text = (
         "إيداع جديد:\n"
-        f"رقم العملية: <code>{ref_num if ref_num else 'لا يوجد'}</code>\n"
+        f"رقم العملية: <code>{ref_num}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        f"رقم الحساب: <code>{account_number if account_number else 'لا يوجد'}</code>\n\n"
+        f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
         f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"

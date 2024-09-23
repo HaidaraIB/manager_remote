@@ -1,19 +1,9 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Chat,
-    User,
-)
-
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat, User
 from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler
 from common.common import build_back_button, format_amount, order_dict_en_to_ar
 from common.back_to_home_page import back_to_admin_home_page_button
-
 from common.constants import *
-
 from custom_filters.Admin import Admin
-
 from models import DepositAgent, PaymentAgent, Checker
 
 (
@@ -22,6 +12,10 @@ from models import DepositAgent, PaymentAgent, Checker
     DEPOSIT_AFTER_CHECK_POSITION_SHOW_REMOVE,
     CHOOSE_WORKER,
 ) = range(4)
+
+
+WORKER_ADDED_SUCCESSFULLY_TEXT = "تمت إضافة الموظف بنجاح ✅"
+CHOOSE_POSITION_TEXT = "اختر الوظيفة:" "\n\n" "للإنهاء اضغط /admin"
 
 
 async def worker_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -114,13 +108,17 @@ def build_checker_positions_keyboard(check_what: str, op: str):
     return [usdt, banks, syr, payeer, point_deposit]
 
 
+def build_worker_balance_keyboard():
+    keyboard = build_checker_positions_keyboard(check_what="deposit", op="balance")
+    keyboard += build_payment_positions_keyboard("balance")
+    keyboard.append(build_back_button("back_to_choose_option"))
+    keyboard.append(back_to_admin_home_page_button[0])
+    return InlineKeyboardMarkup(keyboard)
+
+
 def build_positions_keyboard(op: str):
     if op == "balance":
-        keyboard = build_checker_positions_keyboard(check_what="deposit", op="balance")
-        keyboard += build_payment_positions_keyboard("balance")
-        keyboard.append(build_back_button("back_to_choose_option"))
-        keyboard.append(back_to_admin_home_page_button[0])
-        return InlineKeyboardMarkup(keyboard)
+        return build_worker_balance_keyboard()
     add_worker_keyboard = [
         [
             InlineKeyboardButton(
@@ -196,6 +194,23 @@ def build_workers_keyboard(
     keyboard.append(back_to_admin_home_page_button[0])
     return keyboard
 
+
+def build_deposit_after_check_positions():
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="لاعبين",
+                callback_data="players_deposit_after_check",
+            ),
+            InlineKeyboardButton(
+                text="وكلاء",
+                callback_data="agents_deposit_after_check",
+            ),
+        ],
+    ]
+    keyboard.append(build_back_button("back_to_choose_add_position"))
+    keyboard.append(back_to_admin_home_page_button[0])
+    return InlineKeyboardMarkup(keyboard)
 
 def create_worker_info_text(
     t_worker: User,

@@ -100,13 +100,13 @@ class WorkWithUsOrder(BaseOrder):
             }
         )
 
-    @staticmethod
+    @classmethod
     @connect_and_close
-    def get_user_ids(role: str, s: Session = None):
+    def get_user_ids(cls, role: str, s: Session = None):
         res = s.execute(
-            select(WorkWithUsOrder.user_id)
+            select(cls.user_id)
             .where(
-                and_(WorkWithUsOrder.role == role, WorkWithUsOrder.state == "approved"),
+                and_(cls.role == role, cls.state == "approved"),
             )
             .distinct()
         )

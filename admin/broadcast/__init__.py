@@ -1,3 +1,1 @@
-from admin.broadcast.broadcast import (
-    broadcast_message_handler,
-)
+from admin.broadcast.broadcast import broadcast_message_handler

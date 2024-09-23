@@ -1,7 +1,6 @@
 from telegram import (
     Chat,
     Update,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
     ReplyKeyboardMarkup,
     KeyboardButton,
@@ -26,10 +25,11 @@ from start import admin_command, start_command
 from models import PaymentAgent, DepositAgent, Checker
 from custom_filters import Admin
 from admin.workers_settings.common import (
+    WORKER_ADDED_SUCCESSFULLY_TEXT,
+    CHOOSE_POSITION_TEXT,
     build_positions_keyboard,
     build_checker_positions_keyboard,
-    back_to_choose_option_handler,
-    back_to_choose_position_handler,
+    build_deposit_after_check_positions,
 )
 from common.constants import *
 from common.common import build_back_button
@@ -45,6 +45,9 @@ from common.common import build_back_button
 async def add_worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         text = "اختر حساب الموظف الذي تريد إضافته بالضغط على الزر أدناه، يمكنك إلغاء العملية بالضغط على /admin."
+
+        if not update.callback_query.data.startswith("back"):
+            context.user_data["worker_settings_option"] = "add"
 
         await update.callback_query.delete_message()
         await context.bot.send_message(
@@ -67,33 +70,43 @@ async def add_worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return WORKER_ID
 
 
-async def worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        try:
-            if update.effective_message.users_shared:
-                user_id = update.effective_message.users_shared.users[0].user_id
-            else:
-                user_id = int(update.message.text)
-            worker_to_add = await context.bot.get_chat(chat_id=user_id)
-        except TelegramError:
-            await update.message.reply_text(
-                text=(
-                    "لم يتم العثور على الحساب ❗️\n\n"
-                    "تأكد من أن الموظف قد بدأ محادثة مع البوت، يمكنك إلغاء العملية بالضغط على /admin."
-                ),
-            )
-            return
-        context.user_data["worker_to_add"] = worker_to_add
+        if update.message:
+            try:
+                if update.message.users_shared:
+                    user_id = update.message.users_shared.users[0].user_id
+                else:
+                    user_id = int(update.message.text)
+                worker_to_add = await context.bot.get_chat(chat_id=user_id)
+            except TelegramError:
+                await update.message.reply_text(
+                    text=(
+                        "لم يتم العثور على الحساب ❗️\n\n"
+                        "تأكد من أن الموظف قد بدأ محادثة مع البوت، يمكنك إلغاء العملية بالضغط على /admin."
+                    ),
+                )
+                return
+            context.user_data["worker_to_add"] = worker_to_add
 
-        await update.message.reply_text(
-            text="تم العثور على الحساب✅",
-            reply_markup=ReplyKeyboardRemove(),
-        )
-        await update.message.reply_text(
-            text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
-            reply_markup=build_positions_keyboard(op="add"),
-        )
+            await update.message.reply_text(
+                text="تم العثور على الحساب✅",
+                reply_markup=ReplyKeyboardRemove(),
+            )
+            await update.message.reply_text(
+                text=CHOOSE_POSITION_TEXT,
+                reply_markup=build_positions_keyboard(op="add"),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text=CHOOSE_POSITION_TEXT,
+                reply_markup=build_positions_keyboard(op="add"),
+            )
+
         return POSITION
+
+
+back_to_worker_id = add_worker
 
 
 async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -106,23 +119,9 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pos = context.user_data["add_worker_pos"]
 
         if pos == "deposit after check":
-            keyboard = [
-                [
-                    InlineKeyboardButton(
-                        text="لاعبين",
-                        callback_data="players_deposit_after_check",
-                    ),
-                    InlineKeyboardButton(
-                        text="وكلاء",
-                        callback_data="agents_deposit_after_check",
-                    ),
-                ],
-            ]
-            keyboard.append(build_back_button("back_to_choose_position"))
-            keyboard.append(back_to_admin_home_page_button[0])
             await update.callback_query.edit_message_text(
-                text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
-                reply_markup=InlineKeyboardMarkup(keyboard),
+                text=CHOOSE_POSITION_TEXT,
+                reply_markup=build_deposit_after_check_positions(),
             )
             return DEPOSIT_AFTER_CHECK_POSITION
         elif pos in ["withdraw", "busdt", "deposit"]:
@@ -130,10 +129,10 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 op="add",
                 check_what=pos,
             )
-            keyboard.append(build_back_button("back_to_choose_position"))
+            keyboard.append(build_back_button("back_to_choose_add_position"))
             keyboard.append(back_to_admin_home_page_button[0])
             await update.callback_query.edit_message_text(
-                text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
+                text=CHOOSE_POSITION_TEXT,
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
             return CHECK_POSITION
@@ -144,14 +143,18 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 username=worker_to_add.username,
                 method=pos,
             )
-        await update.callback_query.answer("تمت إضافة الموظف بنجاح✅")
+        await update.callback_query.answer(WORKER_ADDED_SUCCESSFULLY_TEXT)
         await update.callback_query.edit_message_text(
-            text="تمت إضافة الموظف بنجاح✅\n\n\nاختر وظيفة أخرى إن إردت، للإنهاء اضغط /admin.",
+            text=(
+                WORKER_ADDED_SUCCESSFULLY_TEXT
+                + "\n\n"
+                + "اختر وظيفة أخرى إن إردت، للإنهاء اضغط /admin."
+            ),
             reply_markup=build_positions_keyboard(op="add"),
         )
 
 
-back_to_worker_id = choose_position
+back_to_choose_add_position = get_worker_id
 
 
 async def choose_deposit_after_check_position(
@@ -165,24 +168,10 @@ async def choose_deposit_after_check_position(
             username=worker_to_add.username,
             is_point=update.callback_query.data.startswith("agents"),
         )
-        await update.callback_query.answer("تمت إضافة الموظف بنجاح✅")
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="لاعبين",
-                    callback_data="players_deposit_after_check",
-                ),
-                InlineKeyboardButton(
-                    text="وكلاء",
-                    callback_data="agents_deposit_after_check",
-                ),
-            ],
-        ]
-        keyboard.append(build_back_button("back_to_choose_position"))
-        keyboard.append(back_to_admin_home_page_button[0])
+        await update.callback_query.answer(WORKER_ADDED_SUCCESSFULLY_TEXT)
         await update.callback_query.edit_message_text(
-            text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
-            reply_markup=InlineKeyboardMarkup(keyboard),
+            text=CHOOSE_POSITION_TEXT,
+            reply_markup=build_deposit_after_check_positions(),
         )
         return DEPOSIT_AFTER_CHECK_POSITION
 
@@ -198,15 +187,15 @@ async def choose_check_position(update: Update, context: ContextTypes.DEFAULT_TY
             method=method,
             check_what=context.user_data["add_worker_pos"],
         )
-        await update.callback_query.answer("تمت إضافة الموظف بنجاح✅")
+        await update.callback_query.answer(WORKER_ADDED_SUCCESSFULLY_TEXT)
         keyboard = build_checker_positions_keyboard(
             check_what=context.user_data["add_worker_pos"],
             op="add",
         )
-        keyboard.append(build_back_button("back_to_choose_position"))
+        keyboard.append(build_back_button("back_to_choose_add_position"))
         keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
-            text="اختر الوظيفة:\n\nللإنهاء اضغط /admin",
+            text=CHOOSE_POSITION_TEXT,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return CHECK_POSITION
@@ -223,11 +212,11 @@ add_worker_cp_handler = ConversationHandler(
         WORKER_ID: [
             MessageHandler(
                 filters=filters.StatusUpdate.USER_SHARED,
-                callback=worker_id,
+                callback=get_worker_id,
             ),
             MessageHandler(
                 filters=filters.Regex("^\d+$"),
-                callback=worker_id,
+                callback=get_worker_id,
             ),
         ],
         POSITION: [
@@ -253,8 +242,9 @@ add_worker_cp_handler = ConversationHandler(
         back_to_admin_home_page_handler,
         admin_command,
         start_command,
-        back_to_choose_position_handler,
-        back_to_choose_option_handler,
         CallbackQueryHandler(back_to_worker_id, "^back_to_worker_id$"),
+        CallbackQueryHandler(
+            back_to_choose_add_position, "^back_to_choose_add_position$"
+        ),
     ],
 )

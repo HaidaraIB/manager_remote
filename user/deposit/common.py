@@ -16,7 +16,7 @@ from common.decorators import (
     check_if_user_present_decorator,
     check_if_user_created_account_from_bot_decorator,
 )
-from user.account_settings.common import reply_with_user_accounts
+from user.accounts_settings.common import reply_with_user_accounts
 import models
 import asyncio
 import os

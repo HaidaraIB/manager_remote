@@ -1,9 +1,4 @@
-from telegram import (
-    Chat,
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
+from telegram import Chat, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -11,20 +6,12 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-
-from common.common import (
-    build_back_button,
-    build_admin_keyboard,
-    format_amount
-)
-
+from common.common import build_back_button, build_admin_keyboard, format_amount
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
     back_to_admin_home_page_button,
 )
-
 from start import admin_command, start_command
-
 from models import PaymentAgent, Checker
 from custom_filters import Admin
 from admin.workers_settings.common import (

@@ -68,7 +68,8 @@ async def choose_order_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
             about = context.user_data["complaint_order_type"]
 
         orders = parent_to_child_models_mapper[about].get_orders(
-            user_id=update.effective_user.id
+            user_id=update.effective_user.id,
+            limit=20,
         )
 
         keyboard = build_orders_keyboard(
@@ -251,7 +252,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
 
         else:  # in case of no complaint selection
             orders = parent_to_child_models_mapper[order_type].get_orders(
-                user_id=update.effective_user.id,
+                user_id=update.effective_user.id, limit=20
             )
             keyboard = build_orders_keyboard(
                 serials=[

@@ -81,8 +81,11 @@ class BaseOrder(Base):
 
     @classmethod
     @connect_and_close
-    def get_orders(cls, user_id: int, s: Session = None):
-        res = s.execute(select(cls).where(cls.user_id == user_id))
+    def get_orders(cls, user_id: int, limit: int = 0, s: Session = None):
+        if limit:
+            res = s.execute(select(cls).where(cls.user_id == user_id).limit(limit))
+        else:
+            res = s.execute(select(cls).where(cls.user_id == user_id))
         try:
             return list(map(lambda x: x[0], res.tuples().all()))
         except:
@@ -354,14 +357,5 @@ class BaseOrder(Base):
         )
         try:
             return res.fetchone().t[0]
-        except:
-            pass
-
-    @classmethod
-    @connect_and_close
-    def get_all_orders(cls, s: Session = None):
-        res = s.execute(select(cls))
-        try:
-            return list(map(lambda x: x[0], res.tuples().all()))
         except:
             pass

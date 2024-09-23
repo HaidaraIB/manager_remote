@@ -9,11 +9,11 @@ from common.decorators import (
     check_if_user_present_decorator,
 )
 from common.common import build_confirmation_keyboard, build_back_button
-from user.account_settings.common import reply_with_user_accounts
+from user.accounts_settings.common import reply_with_user_accounts
 from common.force_join import check_if_user_member_decorator
 import models
 from start import start_command
-
+from datetime import datetime
 
 ACCOUNT, CONFIRM_DELETE_ACCOUNT = range(2)
 
@@ -34,6 +34,15 @@ async def choose_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["acc_num_to_del"] = acc_num
         else:
             acc_num = context.user_data["acc_num_to_del"]
+
+        acc = models.Account.get_account(acc_num=acc_num)
+        if (datetime.now() - acc.connect_to_user_date).days < 15:
+            await update.callback_query.edit_message_text(
+                text="لا تستطيع حذف الحساب إلا بعد مرور 15 يوماً على إنشائه.",
+                reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
+            )
+            return
+
         confirmation_keyboard = [
             build_confirmation_keyboard("delete_account"),
             build_back_button("back_to_choose_account"),

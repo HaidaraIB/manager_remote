@@ -25,7 +25,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-from user.account_settings.common import reply_with_user_accounts
+from user.accounts_settings.common import reply_with_user_accounts
 from user.withdraw.common import send_withdraw_order_to_check
 from start import start_command
 from models import PaymentMethod, Account

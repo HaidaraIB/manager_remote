@@ -13,7 +13,7 @@ from telegram.constants import ParseMode
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 from PyroClientSingleton import PyroClientSingleton
 from start import start_command, admin_command, worker_command, error_command, inits
-from jobs import reward_worker, remind_agent_to_clear_wallets
+from jobs import reward_worker, remind_agent_to_clear_wallets, reset_daily_values
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
 from common.force_join import check_joined_handler
@@ -28,7 +28,7 @@ from user.withdraw import *
 from user.deposit import *
 from user.busdt import *
 from user.return_order import *
-from user.account_settings import *
+from user.accounts_settings import *
 from user.work_with_us import *
 from user.show_trusted_agents import *
 from user.complaint import *
@@ -64,7 +64,7 @@ from check_work_with_us import *
 from dotenv import load_dotenv
 
 import datetime
-from dateutil import tz
+import pytz
 import os
 from models import create_tables
 
@@ -212,6 +212,8 @@ def main():
     app.add_handler(get_decline_agent_order_reason_handler)
     app.add_handler(back_to_check_agent_order_handler)
 
+    app.add_handler(accounts_settings_handler)
+    app.add_handler(back_to_accounts_settings_handler)
     app.add_handler(create_account_handler)
     app.add_handler(delete_account_handler)
     app.add_handler(store_account_handler)
@@ -311,7 +313,6 @@ def main():
             "replace_existing": True,
         },
     )
-    import pytz
 
     app.job_queue.run_daily(
         callback=remind_agent_to_clear_wallets,
@@ -319,6 +320,17 @@ def main():
         name="remind_agent_to_clear_wallets",
         job_kwargs={
             "id": "remind_agent_to_clear_wallets",
+            "misfire_grace_time": None,
+            "coalesce": True,
+            "replace_existing": True,
+        },
+    )
+    app.job_queue.run_daily(
+        callback=reset_daily_values,
+        time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
+        name="reset_daily_values",
+        job_kwargs={
+            "id": "reset_daily_values",
             "misfire_grace_time": None,
             "coalesce": True,
             "replace_existing": True,

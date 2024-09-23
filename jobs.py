@@ -24,7 +24,7 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
 
         amount = float(
             approved_work
-            * context.bot_data["data"][worker_type_dict[worker_type]["percentage"]]
+            * context.bot_data[worker_type_dict[worker_type]["percentage"]]
             / 100
         )
         if worker_type == "daily":
@@ -85,3 +85,10 @@ async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
         )
     agents = DepositAgent.get_workers()
     asyncio.create_task(notify_workers(context, agents, "الرجاء إخلاء جميع المحافظ 🚨"))
+
+
+async def reset_daily_values(context: ContextTypes.DEFAULT_TYPE):
+    context.bot_data["create_account_deposit"] = context.bot_data[
+        "create_account_deposit_pin"
+    ]
+    context.bot_data["large_amount_create_account_deposit_used"] = False

@@ -1,10 +1,9 @@
 from telegram import Update, Chat, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
-
 from custom_filters import Admin
-
 from admin.agent_settings.common import build_agent_settings_keyboard
 from common.back_to_home_page import back_to_admin_home_page_button
+
 
 async def agent_settings(update: Update, _: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
@@ -15,6 +14,7 @@ async def agent_settings(update: Update, _: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return ConversationHandler.END
+
 
 back_to_agent_settings = agent_settings
 
