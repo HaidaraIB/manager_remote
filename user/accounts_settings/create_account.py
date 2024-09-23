@@ -38,23 +38,29 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         accounts = models.Account.get_user_accounts(user_id=update.effective_user.id)
-        if len(accounts) >= 2:
-            await update.callback_query.edit_message_text(
-                text=(
-                    "بعد التحديث الجديد أصبح يسمح لكل لاعب بحسابين عن طريق البوت فقط.\n"
-                    "لن نقوم بحذف حساباتك القديمة ولكن لن تتمكن من إنشاء حساب جديد إلا عندما يكون لديك أقل من حسابين في البوت.\n"
-                    "بالإضافة إلى أنه أصبح بإمكانك حذف حساب عن طريق زر حذف حساب الجديد.\n"
-                    "ملاحظة: تستطيع إنشاء حساب جديد مرة كل 15 يوماً، ولن تستطيع حذفه إلا بعد مرور هذه المدة أيضاً."
-                ),
-                reply_markup=InlineKeyboardMarkup(back_buttons),
-            )
-            return
-        elif accounts and (datetime.now() - accounts[0].connect_to_user_date).days < 15:
-            await update.callback_query.edit_message_text(
-                text="تستطيع إنشاء حساب جديد مرة كل 15 يوماً",
-                reply_markup=InlineKeyboardMarkup(back_buttons),
-            )
-            return
+        try:
+            if len(accounts) >= 2:
+                await update.callback_query.edit_message_text(
+                    text=(
+                        "بعد التحديث الجديد أصبح يسمح لكل لاعب بحسابين عن طريق البوت فقط.\n"
+                        "لن نقوم بحذف حساباتك القديمة ولكن لن تتمكن من إنشاء حساب جديد إلا عندما يكون لديك أقل من حسابين في البوت.\n"
+                        "بالإضافة إلى أنه أصبح بإمكانك حذف حساب عن طريق زر حذف حساب الجديد.\n"
+                        "ملاحظة: تستطيع إنشاء حساب جديد مرة كل 15 يوماً، ولن تستطيع حذفه إلا بعد مرور هذه المدة أيضاً."
+                    ),
+                    reply_markup=InlineKeyboardMarkup(back_buttons),
+                )
+                return
+            elif (
+                accounts
+                and (datetime.now() - accounts[0].connect_to_user_date).days < 15
+            ):
+                await update.callback_query.edit_message_text(
+                    text="تستطيع إنشاء حساب جديد مرة كل 15 يوماً",
+                    reply_markup=InlineKeyboardMarkup(back_buttons),
+                )
+                return
+        except TypeError:
+            pass
 
         await update.callback_query.edit_message_text(
             text="لحظات، طلبك قيد المعالجة..."
@@ -97,7 +103,9 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=int(os.getenv("CHANNEL_ID")),
                     text=group_text,
-                    message_thread_id=int(os.getenv("DEPOSIT_GIFT_ON_CREATE_ACCOUNT_SUCCESS_TOPIC_ID")),
+                    message_thread_id=int(
+                        os.getenv("DEPOSIT_GIFT_ON_CREATE_ACCOUNT_SUCCESS_TOPIC_ID")
+                    ),
                 )
 
             await models.Account.connect_account_to_user(
