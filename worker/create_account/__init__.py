@@ -1,0 +1,1 @@
+from worker.create_account.accounts_statistics import accounts_count_hanlder

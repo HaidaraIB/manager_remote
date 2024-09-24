@@ -1,5 +1,5 @@
 from telegram import Update, Chat
-from telegram.ext import ContextTypes, MessageHandler
+from telegram.ext import ContextTypes, MessageHandler, filters
 from custom_filters import Ref
 from models import RefNumber, DepositOrder, PaymentMethod, Wallet
 from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
@@ -95,4 +95,6 @@ async def invalid_ref_format(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 store_ref_number_handler = MessageHandler(filters=Ref(), callback=store_ref_number)
-invalid_ref_format_handler = MessageHandler(filters=~Ref(), callback=invalid_ref_format)
+invalid_ref_format_handler = MessageHandler(
+    filters=~Ref() & ~filters.COMMAND, callback=invalid_ref_format
+)

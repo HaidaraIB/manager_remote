@@ -16,9 +16,10 @@ class ReturnedConv(Conv):
         ),
     )
 
-    @staticmethod
+    @classmethod
     @lock_and_release
     async def add_response(
+        cls,
         serial: int,
         order_type: str,
         worker_id: int,
@@ -27,14 +28,14 @@ class ReturnedConv(Conv):
         s: Session = None,
     ):
         res = s.execute(
-            select(func.max(ReturnedConv.count)).where(
-                ReturnedConv.serial == serial,
-                ReturnedConv.order_type == order_type,
+            select(func.max(cls.count)).where(
+                cls.serial == serial,
+                cls.order_type == order_type,
             )
         )
         count = res.fetchone().t[0]
         s.execute(
-            insert(ReturnedConv).values(
+            insert(cls).values(
                 serial=serial,
                 order_type=order_type,
                 worker_id=worker_id,

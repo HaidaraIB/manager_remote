@@ -1,19 +1,6 @@
-from telegram import (
-    Update,
-    Chat,
-    BotCommandScopeChat,
-    ReplyKeyboardRemove,
-)
-
-from telegram.ext import (
-    CommandHandler,
-    ContextTypes,
-    Application,
-    ConversationHandler,
-)
-
+from telegram import Update, Chat, BotCommandScopeChat, ReplyKeyboardRemove
+from telegram.ext import CommandHandler, ContextTypes, Application, ConversationHandler
 import models
-
 from common.common import (
     build_user_keyboard,
     build_admin_keyboard,
@@ -21,11 +8,10 @@ from common.common import (
     build_agent_keyboard,
     check_hidden_keyboard,
 )
-
 from common.force_join import check_if_user_member
-
 from custom_filters import Admin, Worker, DepositAgent, Agent
 from common.constants import *
+
 
 async def inits(app: Application):
     pass  # Fill this when you need to run a code only once and then clear it.
@@ -33,13 +19,25 @@ async def inits(app: Application):
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     st_cmd = ("start", "start command")
-    commands = [st_cmd]
-    if Worker().filter(update):
-        commands.append(("worker", "worker command"))
-    if Admin().filter(update):
-        commands.append(("admin", "admin command"))
-    if Agent().filter(update):
-        commands.append(("agent", "agent command"))
+    commands = set()
+    if update.effective_chat.type == Chat.PRIVATE:
+        if Worker().filter(update):
+            commands.add(st_cmd)
+            commands.add(("worker", "worker command"))
+
+        if Admin().filter(update):
+            commands.add(st_cmd)
+            commands.add(("admin", "admin command"))
+
+        if Agent().filter(update):
+            commands.add(st_cmd)
+            commands.add(("agent", "agent command"))
+    elif update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
+        if (
+            update.effective_chat.id
+            == context.bot_data["data"]["accounts_orders_group"]
+        ):
+            commands.add(("count", "count accounts"))
     await context.bot.set_my_commands(
         commands=commands, scope=BotCommandScopeChat(chat_id=update.effective_chat.id)
     )
@@ -106,9 +104,11 @@ async def agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=build_agent_keyboard(),
         )
         return ConversationHandler.END
-    
+
+
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    ''.error()
+    "".error()
+
 
 worker_command = CommandHandler(command="worker", callback=worker)
 admin_command = CommandHandler(command="admin", callback=admin)

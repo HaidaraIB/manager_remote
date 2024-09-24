@@ -9,6 +9,7 @@ from sqlalchemy import (
     insert,
     delete,
     desc,
+    and_,
     func,
 )
 from models.DB import Base, lock_and_release, connect_and_close
@@ -94,3 +95,18 @@ class Account(Base):
     @lock_and_release
     async def delete_account(cls, acc_num: str, s: Session = None):
         s.execute(delete(cls).where(cls.acc_num == acc_num))
+
+    @classmethod
+    @connect_and_close
+    def count_accounts(cls, s: Session = None):
+        free_count_res = s.execute(
+            select(func.count()).select_from(cls).where(cls.user_id == None)
+        )
+        connected_count_res = s.execute(
+            select(func.count())
+            .select_from(cls)
+            .where(and_(cls.deposit_gift != None, cls.user_id != None))
+        )
+        free_count = free_count_res.fetchone().t[0]
+        connected_count = connected_count_res.fetchone().t[0]
+        return free_count, connected_count

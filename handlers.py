@@ -52,6 +52,7 @@ from worker.process_withdraw import *
 from worker.check_busdt import *
 from worker.process_busdt import *
 from worker.check_deposit import *
+from worker.create_account import *
 
 from agent.player_deposit import *
 from agent.player_withdraw import *
@@ -170,6 +171,9 @@ def main():
     app.add_handler(return_busdt_order_handler)
     app.add_handler(return_busdt_order_reason_handler)
     app.add_handler(back_from_return_busdt_order_handler)
+
+    # CREATE ACCOUNT
+    app.add_handler(accounts_count_hanlder)
 
     # RETURN
     app.add_handler(handle_returned_order_handler)

@@ -13,9 +13,10 @@ class ContactUserConv(Conv):
         ),
     )
 
-    @staticmethod
+    @classmethod
     @lock_and_release
     async def add_response(
+        cls,
         serial: int,
         order_type: str,
         admin_id: int,
@@ -24,14 +25,14 @@ class ContactUserConv(Conv):
         s: Session = None,
     ):
         res = s.execute(
-            select(func.max(ContactUserConv.count)).where(
-                ContactUserConv.serial == serial,
-                ContactUserConv.order_type == order_type,
+            select(func.max(cls.count)).where(
+                cls.serial == serial,
+                cls.order_type == order_type,
             )
         )
         count = res.fetchone().t[0]
         s.execute(
-            insert(ContactUserConv).values(
+            insert(cls).values(
                 serial=serial,
                 order_type=order_type,
                 admin_id=admin_id,

@@ -1,5 +1,5 @@
 from telegram import Update, Chat
-from telegram.ext import ContextTypes, MessageHandler
+from telegram.ext import ContextTypes, MessageHandler, filters
 from custom_filters import Account
 import models
 
@@ -54,7 +54,7 @@ async def reply_to_create_account_order(
 
 
 invalid_account_format_handler = MessageHandler(
-    filters=~Account(),
+    filters=~Account() & ~filters.COMMAND,
     callback=invalid_account_format,
 )
 store_account_handler = MessageHandler(
