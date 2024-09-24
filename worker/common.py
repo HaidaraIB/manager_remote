@@ -6,6 +6,7 @@ from common.common import (
     send_message_to_user,
     build_worker_keyboard,
 )
+from common.constants import *
 from models import TrustedAgent, Checker
 from custom_filters import DepositAgent
 import os
@@ -82,12 +83,13 @@ async def decline_order_reason(
         workplace_id = agent.team_cash_workplace_id
 
     text = (
-        f"تم رفض الطلب ❗️\n\n"
+        DECLINE_TEXT + f"\n\n"
         f"نوع الطلب: <b>{order_dict_en_to_ar[order_type]}</b>\n"
         f"الرقم التسلسلي: <code>{serial}</code>\n\n"
         "سبب الرفض:\n"
         f"<b>{update.message.text_html}</b>"
     )
+
     await send_message_to_user(
         update=update,
         context=context,
@@ -96,7 +98,8 @@ async def decline_order_reason(
     )
 
     text = (
-        "تم رفض الطلب ❌\n"
+        DECLINE_TEXT
+        + "\n"
         + update.message.reply_to_message.text_html
         + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
     )
@@ -117,7 +120,7 @@ async def decline_order_reason(
         message_id=update.message.reply_to_message.id,
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
-                text="تم رفض الطلب ❌",
+                text=DECLINE_TEXT,
                 callback_data="❌❌❌❌❌❌❌",
             )
         ),
@@ -125,7 +128,7 @@ async def decline_order_reason(
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="تم رفض الطلب ❌",
+        text=DECLINE_TEXT,
         reply_markup=build_worker_keyboard(
             deposit_agent=DepositAgent().filter(update),
         ),

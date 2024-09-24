@@ -2,6 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, error
 from telegram.ext import ContextTypes
 from common.common import apply_ex_rate, notify_workers
 from common.stringifies import stringify_deposit_order
+from common.constants import *
 from models import RefNumber, DepositOrder, DepositAgent
 
 import os
@@ -59,15 +60,16 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                     f"{reason}\n\n"
                     f"الرقم التسلسلي للطلب: {serial}\n"
                     f"نوع الطلب: إيداع\n\n"
-                    "عليك التحقق وإعادة الطلب مرة أخرى، سيتم التحقق بشكل دوري."
+                    "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
                 ),
             )
         except error.Forbidden as f:
             if "bot was blocked by the user" in f.message:
                 pass
-            
+
         text = (
-            "تم رفض الطلب❌\n"
+            DECLINE_TEXT
+            + "\n"
             + stringify_deposit_order(
                 amount=0,
                 serial=d_order.serial,

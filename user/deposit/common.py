@@ -224,11 +224,13 @@ async def send_to_check_deposit(
         number=ref_num,
         method=method,
     )
+
     order_present = models.DepositOrder.get_one_order(ref_num=ref_num, method=method)
     if (ref_present and ref_present.order_serial != -1) or (
         order_present and order_present.state == "approved"
     ):
         return False
+
     serial = await models.DepositOrder.add_deposit_order(
         user_id=user_id,
         group_id=target_group,
