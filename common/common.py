@@ -91,7 +91,7 @@ def format_amount(amount: float):
 
 
 def format_datetime(d: datetime):
-    return d.replace(tzinfo=pytz("Asia/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
+    return d.replace(tzinfo=pytz.timezone("Asia/Damascus")).strftime(r"%d/%m/%Y  %I:%M %p")
 
 
 def pretty_time_delta(seconds):
