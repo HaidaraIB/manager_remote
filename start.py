@@ -21,17 +21,16 @@ async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     st_cmd = ("start", "start command")
     commands = set()
     if update.effective_chat.type == Chat.PRIVATE:
+        commands.add(st_cmd)
         if Worker().filter(update):
-            commands.add(st_cmd)
             commands.add(("worker", "worker command"))
 
         if Admin().filter(update):
-            commands.add(st_cmd)
             commands.add(("admin", "admin command"))
 
         if Agent().filter(update):
-            commands.add(st_cmd)
             commands.add(("agent", "agent command"))
+            
     elif update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
         if (
             update.effective_chat.id
