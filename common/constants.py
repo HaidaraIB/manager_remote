@@ -8,6 +8,7 @@ PERFECT_MONEY = "PERFECT MONEY"
 
 POINT_DEPOSIT = "نقاط وكلاء"
 CREATE_ACCOUNT_DEPOSIT = "إيداع إنشاء حساب"
+GHAFLA_OFFER = "عرض الغفلة"
 
 CRYPTO_LIST = [
     USDT,

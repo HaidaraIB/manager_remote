@@ -7,16 +7,17 @@ from common.decorators import (
 from common.common import format_amount, build_back_button
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import back_to_user_home_page_button
-from common.constants import HOME_PAGE_TEXT
+from common.constants import HOME_PAGE_TEXT, CREATE_ACCOUNT_DEPOSIT
 from user.accounts_settings.common import (
-    send_deposit_on_create_account_seccess,
+    choose_random_amount,
     find_valid_amounts,
     build_accounts_settings_keyboard,
 )
+from common.functions import send_deposit_without_check
 import models
 import asyncio
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 create_account_lock = asyncio.Lock()
 
@@ -33,6 +34,17 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if context.user_data.get("pending_create_account", False):
             await update.callback_query.answer(
                 text="لديك طلب قيد التنفيذ بالفعل",
+                show_alert=True,
+            )
+            return
+
+        today_count = models.Account.count_accounts(today=date.today())
+        if today_count >= 100:
+            await update.callback_query.answer(
+                text=(
+                    "بسبب حجم الحسابات الهائل المنجز خلال الأيام الماضية تم فرض قيود على عدد الحسابات ليصبح فقط 100 حساب لكل يوم يمنحها البوت\n"
+                    "يتجدد هذا العدد عند 12 ليلاً من كل يوم."
+                ),
                 show_alert=True,
             )
             return
@@ -91,11 +103,15 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             gift_line = ""
             deposit_gift = 0
             if valid_amounts:
-                deposit_gift = await send_deposit_on_create_account_seccess(
+                deposit_gift = choose_random_amount(
+                    context=context, valid_amounts=valid_amounts
+                )
+                await send_deposit_without_check(
                     context=context,
                     acc_number=account.acc_num,
                     user_id=update.effective_user.id,
-                    valid_amounts=valid_amounts,
+                    amount=deposit_gift,
+                    method=CREATE_ACCOUNT_DEPOSIT,
                 )
                 gift_line = f"قيمة الهدية: <b>{format_amount(deposit_gift)} ل.س</b>\n\n"
                 group_text = (

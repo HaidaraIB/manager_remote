@@ -13,7 +13,11 @@ from telegram.constants import ParseMode
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 from PyroClientSingleton import PyroClientSingleton
 from start import start_command, admin_command, worker_command, error_command, inits
-from jobs import reward_worker, remind_agent_to_clear_wallets, reset_daily_values
+from jobs import (
+    reward_worker,
+    remind_agent_to_clear_wallets,
+    schedule_ghafla_offer_jobs,
+)
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
 from common.force_join import check_joined_handler
@@ -306,6 +310,7 @@ def main():
             "replace_existing": True,
         },
     )
+
     app.job_queue.run_daily(
         callback=reward_worker,
         time=datetime.time(0, 0),
@@ -329,17 +334,19 @@ def main():
             "replace_existing": True,
         },
     )
+
     app.job_queue.run_daily(
-        callback=reset_daily_values,
+        callback=schedule_ghafla_offer_jobs,
         time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
-        name="reset_daily_values",
+        name="schedule_ghafla_offer_jobs",
         job_kwargs={
-            "id": "reset_daily_values",
+            "id": "schedule_ghafla_offer_jobs",
             "misfire_grace_time": None,
             "coalesce": True,
             "replace_existing": True,
         },
     )
+
     try:
         PyroClientSingleton().start()
     except ConnectionError:

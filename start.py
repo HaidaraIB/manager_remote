@@ -30,7 +30,7 @@ async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if Agent().filter(update):
             commands.add(("agent", "agent command"))
-            
+
     elif update.effective_chat.type in [Chat.SUPERGROUP, Chat.GROUP]:
         if (
             update.effective_chat.id

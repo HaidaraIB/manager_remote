@@ -14,7 +14,7 @@ from sqlalchemy import (
 )
 from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 
 class Account(Base):
@@ -98,15 +98,23 @@ class Account(Base):
 
     @classmethod
     @connect_and_close
-    def count_accounts(cls, s: Session = None):
-        free_count_res = s.execute(
-            select(func.count()).select_from(cls).where(cls.user_id == None)
-        )
-        connected_count_res = s.execute(
-            select(func.count())
-            .select_from(cls)
-            .where(and_(cls.deposit_gift != None, cls.user_id != None))
-        )
-        free_count = free_count_res.fetchone().t[0]
-        connected_count = connected_count_res.fetchone().t[0]
-        return free_count, connected_count
+    def count_accounts(cls, today: date = None, s: Session = None):
+        if today:
+            today_count_res = s.execute(
+                select(func.count())
+                .select_from(cls)
+                .where(func.date(cls.connect_to_user_date) == today)
+            )
+            return today_count_res.fetchone().t[0]
+        else:
+            free_count_res = s.execute(
+                select(func.count()).select_from(cls).where(cls.user_id == None)
+            )
+            connected_count_res = s.execute(
+                select(func.count())
+                .select_from(cls)
+                .where(and_(cls.deposit_gift != None, cls.user_id != None))
+            )
+            free_count = free_count_res.fetchone().t[0]
+            connected_count = connected_count_res.fetchone().t[0]
+            return free_count, connected_count

@@ -1,14 +1,19 @@
 from telegram.ext import ContextTypes
 from telegram.error import RetryAfter
-from models import PaymentAgent, DepositAgent, Wallet
+from models import PaymentAgent, DepositAgent, Wallet, DepositOrder
 from common.constants import *
-import asyncio
 from common.stringifies import (
     worker_type_dict,
     stringify_manager_reward_report,
     stringify_reward_report,
 )
 from common.common import notify_workers
+from common.functions import send_deposit_without_check
+
+import asyncio
+import os
+from datetime import datetime, date, timedelta
+import random
 
 
 async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
@@ -77,6 +82,9 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
+    context.bot_data["create_account_deposit"] = context.bot_data[
+        "create_account_deposit_pin"
+    ]
     for method in PAYMENT_METHODS_LIST + ["طلبات الوكيل"]:
         await Wallet.update_wallets(
             method=method,
@@ -87,8 +95,86 @@ async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
     asyncio.create_task(notify_workers(context, agents, "الرجاء إخلاء جميع المحافظ 🚨"))
 
 
-async def reset_daily_values(context: ContextTypes.DEFAULT_TYPE):
-    context.bot_data["create_account_deposit"] = context.bot_data[
-        "create_account_deposit_pin"
+async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
+    time_window = 15
+    group_by_user = "user_id"
+    group_by_interval = "interval"
+
+    distinct_user_id_orders = DepositOrder.get_orders(
+        time_window=time_window, group_by=group_by_user
+    )
+    amounts_sum = DepositOrder.get_orders(
+        time_window=time_window, group_by=group_by_interval
+    )
+
+    selected_date = None
+    for amount_sum in amounts_sum:
+        if 50000 <= amount_sum[1] <= 100000:
+            selected_date = amount_sum[0]
+            break
+
+    if not selected_date:
+        return
+
+    selected_serials = [
+        order[2] for order in distinct_user_id_orders if order[0] == selected_date
     ]
-    context.bot_data["large_amount_create_account_deposit_used"] = False
+
+    start_time = datetime.fromisoformat(str(selected_date)).time().strftime("%H:%M")
+    end_time = (
+        (datetime.fromisoformat(str(selected_date)) + timedelta(minutes=time_window))
+        .time()
+        .strftime("%H:%M")
+    )
+
+    group_text = f"المستفيدين من عرض الغفلة <b>500%</b> من الساعة <b>{start_time}</b> حتى الساعة <b>{end_time}</b>:\n"
+    for serial in selected_serials:
+        order = DepositOrder.get_one_order(serial=serial)
+        group_text += f"<code>{order.acc_number}</code>\n"
+        await send_deposit_without_check(
+            context=context,
+            acc_number=order.acc_number,
+            user_id=order.user_id,
+            amount=order.amount * 4,
+            method=GHAFLA_OFFER,
+        )
+
+    await context.bot.send_message(
+        chat_id=int(os.getenv("CHANNEL_ID")),
+        text=group_text,
+        message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
+    )
+
+
+async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
+    today = date.today()
+    ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
+    job_names_dict = {
+        0: f"{ghafla_offer_base_job_name}_morning",
+        1: f"{ghafla_offer_base_job_name}_noon",
+        2: f"{ghafla_offer_base_job_name}_after_noon",
+        3: f"{ghafla_offer_base_job_name}_evening",
+    }
+    job_hours_dict = {
+        0: random.randint(7, 10),
+        1: random.randint(13, 16),
+        2: random.randint(19, 22),
+        3: random.randint(1, 4),
+    }
+    for i in range(4):
+        context.job_queue.run_once(
+            process_orders_for_ghafla_offer,
+            when=datetime(
+                today.year,
+                today.month,
+                today.day,
+                job_hours_dict[i],
+            ),
+            name=job_names_dict[i],
+            job_kwargs={
+                "id": job_names_dict[i],
+                "misfire_grace_time": None,
+                "coalesce": True,
+                "replace_existing": True,
+            },
+        )

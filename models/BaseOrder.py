@@ -1,4 +1,4 @@
-from sqlalchemy import select, and_, or_, desc
+from sqlalchemy import select, and_, or_, desc, func, text
 from models.DB import Base, lock_and_release, connect_and_close
 from models.RefNumber import RefNumber
 from sqlalchemy.orm import Session
@@ -81,11 +81,54 @@ class BaseOrder(Base):
 
     @classmethod
     @connect_and_close
-    def get_orders(cls, user_id: int, limit: int = 0, s: Session = None):
+    def get_orders(
+        cls,
+        user_id: int = None,
+        limit: int = 0,
+        time_window: int = 0,
+        group_by: str = None,
+        s: Session = None,
+    ):
         if limit:
             res = s.execute(select(cls).where(cls.user_id == user_id).limit(limit))
-        else:
+
+        elif user_id:
             res = s.execute(select(cls).where(cls.user_id == user_id))
+
+        elif time_window:
+            today = datetime.date.today()
+            hour = str(datetime.datetime.now(datetime.UTC).hour - 3).rjust(2, "0")
+            res = s.execute(
+                text(
+                    f"""
+                        SELECT DATETIME(
+                                (
+                                    STRFTIME('%s', order_date) / {time_window * 60}
+                                ) * {time_window * 60},
+                                'unixepoch'
+                            ) interval,
+                            SUM(amount),
+                            serial
+                        FROM deposit_orders
+                        WHERE state = 'approved'
+                          AND date(order_date) = '{today}'
+                          AND strftime('%H', order_date) >= '{hour}'
+                          AND agent_id = 0 -- exclude player deposits
+                          AND ref_number != '' -- exclude create account deposits
+                          AND acc_number != '' -- exclude point deposits
+                        GROUP BY {group_by}
+                        ORDER BY interval;
+                    """
+                )
+            )
+            try:
+                return res.all()
+            except:
+                pass
+
+        else:
+            res = s.execute(select(cls))
+
         try:
             return list(map(lambda x: x[0], res.tuples().all()))
         except:
@@ -98,6 +141,7 @@ class BaseOrder(Base):
         serial: int = None,
         ref_num: str = None,
         method: str = None,
+        last: bool = None,
         s: Session = None,
     ):
         if serial:
@@ -119,6 +163,9 @@ class BaseOrder(Base):
                 .where(and_(cls.ref_number == ref_num))
                 .order_by(desc(cls.order_date))
             )
+        elif last is not None:
+            res = s.execute(select(func.max(cls.serial)))
+
         try:
             return res.fetchone().t[0]
         except:
