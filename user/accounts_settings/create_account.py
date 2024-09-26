@@ -89,7 +89,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             valid_amounts = find_valid_amounts(
                 context=context,
-                amounts=[10000, 15000],
+                amounts=[5000, 10000, 15000],
             )
 
             if not valid_amounts and context.bot_data["create_account_deposit"] > 0:
