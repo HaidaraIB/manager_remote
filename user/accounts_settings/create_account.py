@@ -43,7 +43,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.answer(
                 text=(
                     "بسبب حجم الحسابات الهائل المنجز خلال الأيام الماضية تم فرض قيود على عدد الحسابات ليصبح فقط 100 حساب لكل يوم يمنحها البوت\n"
-                    "يتجدد هذا العدد عند 12 ليلاً من كل يوم."
+                    "يتجدد هذا العدد عند 3 بعد منتصف الليل من كل يوم."
                 ),
                 show_alert=True,
             )
