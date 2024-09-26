@@ -12,8 +12,9 @@ from common.functions import send_deposit_without_check
 
 import asyncio
 import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import random
+import pytz
 
 
 async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
@@ -147,7 +148,8 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
-    today = date.today()
+    tz = pytz.timezone("Asia/Damascus")
+    today = datetime.now(tz=tz)
     ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
     job_names_dict = {
         0: f"{ghafla_offer_base_job_name}_morning",
@@ -156,10 +158,10 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
         3: f"{ghafla_offer_base_job_name}_evening",
     }
     job_hours_dict = {
-        0: random.randint(7, 10),
-        1: random.randint(13, 16),
-        2: random.randint(19, 22),
-        3: random.randint(1, 4),
+        0: random.randint(7, 9),
+        1: random.randint(11, 13),
+        2: random.randint(15, 17),
+        3: random.randint(19, 21),
     }
     for i in range(4):
         context.job_queue.run_once(
@@ -169,6 +171,7 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
                 today.month,
                 today.day,
                 job_hours_dict[i],
+                tzinfo=tz,
             ),
             name=job_names_dict[i],
             job_kwargs={
