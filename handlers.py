@@ -57,6 +57,7 @@ from worker.check_busdt import *
 from worker.process_busdt import *
 from worker.check_deposit import *
 from worker.create_account import *
+from worker.contact_dev import *
 
 from agent.player_deposit import *
 from agent.player_withdraw import *
@@ -295,6 +296,8 @@ def main():
         MessageHandler(filters=filters.ALL, callback=get_file_id),
         group=4,
     )
+
+    app.add_handler(contact_dev_handler)
 
     app.add_error_handler(error_handler)
 

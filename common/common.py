@@ -10,6 +10,7 @@ from telegram import (
     error,
     PhotoSize,
     InputMedia,
+    Message,
 )
 
 from telegram.ext import ContextTypes
@@ -617,3 +618,42 @@ def build_groups_keyboard(op: str):
             ),
         ],
     ]
+
+
+def resolve_message(msg: Message):
+    media_dict = {
+        "photo": msg.photo[-1] if msg.photo else None,
+        "video": msg.video,
+        "voice": msg.voice,
+        "audio": msg.audio,
+    }
+    media = None
+    media_type = None
+    for m_type, m in media_dict.items():
+        if m:
+            media = m
+            media_type = m_type
+            break
+
+    return media, media_type
+
+
+async def send_resolved_message(
+    media,
+    media_type: str,
+    context: ContextTypes.DEFAULT_TYPE,
+    text: str,
+    chat_id: int,
+):
+    if media:
+        func = getattr(context.bot, f"send_{media_type}")
+        await func(
+            chat_id=chat_id,
+            caption=text,
+            **{media_type: media},
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+        )

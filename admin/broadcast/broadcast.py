@@ -144,7 +144,9 @@ broadcast_message_handler = ConversationHandler(
                 filters=(filters.TEXT & ~filters.COMMAND)
                 | filters.PHOTO
                 | filters.CAPTION
-                | filters.VIDEO,
+                | filters.VIDEO
+                | filters.VOICE
+                | filters.AUDIO,
                 callback=get_message,
             )
         ],

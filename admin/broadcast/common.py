@@ -1,6 +1,6 @@
 from telegram import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from common.common import build_back_button
+from common.common import build_back_button, resolve_message, send_resolved_message
 from common.back_to_home_page import back_to_admin_home_page_button
 
 
@@ -46,25 +46,17 @@ def build_done_button():
 
 async def send_to(user_ids: list, context: ContextTypes.DEFAULT_TYPE):
     msg: Message = context.user_data["the message"]
+
+    media, media_type = resolve_message(msg)
+
     for i in user_ids:
         try:
-            if msg.photo:
-                await context.bot.send_photo(
-                    chat_id=i,
-                    photo=msg.photo[-1],
-                    caption=msg.caption,
-                )
-            elif msg.video:
-                await context.bot.send_video(
-                    chat_id=i,
-                    video=msg.video,
-                    caption=msg.caption,
-                )
-            else:
-                await context.bot.send_message(
-                    chat_id=i,
-                    text=msg.text,
-                )
-
+            await send_resolved_message(
+                media=media,
+                media_type=media_type,
+                context=context,
+                text=msg.text if msg.text else msg.caption,
+                chat_id=i,
+            )
         except:
             continue
