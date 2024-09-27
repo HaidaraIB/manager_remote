@@ -1,14 +1,4 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    TIMESTAMP,
-    PrimaryKeyConstraint,
-    Boolean,
-    select,
-    and_,
-    func,
-)
+from sqlalchemy import Column, Integer, String, TIMESTAMP, Boolean, select, and_, func
 from models.DB import Base, connect_and_close
 from sqlalchemy.orm import Session
 

@@ -1,8 +1,4 @@
-from sqlalchemy import (
-    Column,
-    String,
-    insert,
-)
+from sqlalchemy import Column, String, insert
 from sqlalchemy.orm import Session
 from models.DB import lock_and_release
 from models.WorkerWithUs import WorkerWithUs

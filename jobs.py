@@ -1,13 +1,13 @@
 from telegram.ext import ContextTypes
 from telegram.error import RetryAfter
-from models import PaymentAgent, DepositAgent, Wallet, DepositOrder
+from models import PaymentAgent, DepositAgent, Wallet, DepositOrder, GhaflaOffer
 from common.constants import *
 from common.stringifies import (
     worker_type_dict,
     stringify_manager_reward_report,
     stringify_reward_report,
 )
-from common.common import notify_workers
+from common.common import notify_workers, format_amount
 from common.functions import send_deposit_without_check
 
 import asyncio
@@ -120,25 +120,41 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     selected_serials = [
         order[2] for order in distinct_user_id_orders if order[0] == selected_date
     ]
-
-    start_time = datetime.fromisoformat(str(selected_date)).time().strftime("%H:%M")
+    start_time = datetime.fromisoformat(str(selected_date)).time().strftime(r"%I:%M %p")
     end_time = (
         (datetime.fromisoformat(str(selected_date)) + timedelta(minutes=time_window))
         .time()
-        .strftime("%H:%M")
+        .strftime(r"%I:%M %p")
     )
 
-    group_text = f"المستفيدين من عرض الغفلة <b>500%</b> من الساعة <b>{start_time}</b> حتى الساعة <b>{end_time}</b>:\n"
+    group_text = (
+        f"عرض الغفلة <b>500%</b> 🔥\n"
+        f"من الساعة: <b>{start_time}</b>\n"
+        f"حتى الساعة: <b>{end_time}</b>\n\n"
+        "المستفيدون:\n"
+    )
     for serial in selected_serials:
         order = DepositOrder.get_one_order(serial=serial)
-        group_text += f"<code>{order.acc_number}</code>\n"
+        factor = 4
+        amount = order.amount * factor
+        user = await context.bot.get_chat(chat_id=755501092)
+        group_text += (
+            f"المستفيد:\n{'@' + user.username if user.username else f'<b>{user.full_name}</b>'}\n"
+            f"رقم الحساب: <code>{order.acc_number}</code>\n\n"
+        )
         await send_deposit_without_check(
             context=context,
             acc_number=order.acc_number,
             user_id=order.user_id,
-            amount=order.amount * 4,
+            amount=amount,
             method=GHAFLA_OFFER,
         )
+        if not context.bot_data.get("total_ghafla_offer", False):
+            context.bot_data["total_ghafla_offer"] = amount
+        else:
+            context.bot_data["total_ghafla_offer"] += amount
+
+        await GhaflaOffer.add(serial=serial, factor=factor)
 
     await context.bot.send_message(
         chat_id=int(os.getenv("CHANNEL_ID")),
@@ -180,4 +196,12 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
                 "coalesce": True,
                 "replace_existing": True,
             },
+        )
+
+    if not context.bot_data.get("total_ghafla_offer", False):
+        context.bot_data["total_ghafla_offer"] = 0
+    else:
+        await context.bot.send_message(
+            chat_id=int(os.getenv("OWNER_ID")),
+            text=f"عرض الغفلة اليوم: <b>{format_amount(context.bot_data['total_ghafla_offer'])}</b> ل.س",
         )
