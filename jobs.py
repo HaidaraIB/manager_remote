@@ -179,16 +179,26 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
         2: random.randint(15, 17),
         3: random.randint(19, 21),
     }
+    dev_id = int(os.getenv("DEV_ID"))
+    await context.bot.send_message(
+        chat_id=dev_id,
+        text=f"أوقات عرض الغفلة:",
+    )
     for i in range(4):
+        when = datetime(
+            today.year,
+            today.month,
+            today.day,
+            job_hours_dict[i],
+            tzinfo=tz,
+        )
+        await context.bot.send_message(
+            chat_id=dev_id,
+            text=str(when),
+        )
         context.job_queue.run_once(
             process_orders_for_ghafla_offer,
-            when=datetime(
-                today.year,
-                today.month,
-                today.day,
-                job_hours_dict[i],
-                tzinfo=tz,
-            ),
+            when=when,
             name=job_names_dict[i],
             job_kwargs={
                 "id": job_names_dict[i],
