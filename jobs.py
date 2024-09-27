@@ -110,7 +110,7 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
 
     selected_date = None
     for amount_sum in amounts_sum:
-        if 50000 <= amount_sum[1] <= 100000:
+        if amount_sum[1] <= 100000:
             selected_date = amount_sum[0]
             break
 
