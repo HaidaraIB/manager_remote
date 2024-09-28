@@ -83,9 +83,6 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
-    context.bot_data["create_account_deposit"] = context.bot_data[
-        "create_account_deposit_pin"
-    ]
     for method in PAYMENT_METHODS_LIST + ["طلبات الوكيل"]:
         await Wallet.update_wallets(
             method=method,
@@ -225,7 +222,27 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
     if not context.bot_data.get("total_ghafla_offer", False):
         context.bot_data["total_ghafla_offer"] = 0
     else:
+        create_account_deposits = 0
+        if context.bot_data["create_account_deposit"] < 0:
+            create_account_deposits = context.bot_data[
+                "create_account_deposit_pin"
+            ] + abs(context.bot_data["create_account_deposit"])
+
+        elif context.bot_data["create_account_deposit"] == 0:
+            create_account_deposits = context.bot_data["create_account_deposit_pin"]
+
+        else:
+            create_account_deposits = (
+                context.bot_data["create_account_deposit_pin"]
+                - context.bot_data["create_account_deposit"]
+            )
+        context.bot_data["create_account_deposit"] = context.bot_data[
+            "create_account_deposit_pin"
+        ]
         await context.bot.send_message(
             chat_id=int(os.getenv("OWNER_ID")),
-            text=f"عرض الغفلة اليوم: <b>{format_amount(context.bot_data['total_ghafla_offer'])}</b> ل.س",
+            text=(
+                f"عرض الغفلة اليوم: <b>{format_amount(context.bot_data['total_ghafla_offer'])}</b> ل.س\n\n"
+                f"إنشاء الحسابات اليوم: <b>{format_amount(create_account_deposits)}</b> ل.س"
+            ),
         )
