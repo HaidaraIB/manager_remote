@@ -5,15 +5,7 @@ from telegram import (
     InlineKeyboardMarkup,
     InputMediaPhoto,
 )
-from telegram.ext import (
-    ContextTypes,
-    filters,
-    CallbackQueryHandler,
-    MessageHandler,
-)
-
-import os
-
+from telegram.ext import ContextTypes, filters, CallbackQueryHandler, MessageHandler
 from custom_filters import Deposit, Returned, DepositAgent, Approved
 from models import DepositOrder, ReturnedConv
 from common.common import (
@@ -27,6 +19,7 @@ from common.common import (
 )
 
 import datetime
+import os
 
 
 async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -71,8 +64,9 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
 
         caption = (
             "مبروك 🎉🎉🎉\n"
-            f"تم الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n"
+            f"تمت الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
+            f"وسيلة الدفع: <code>{d_order.method}</code>\n"
         )
 
         media = [
