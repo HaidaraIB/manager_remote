@@ -8,6 +8,26 @@ from models import Wallet
 CHOOSE_METHOD, WALLET = 0, 1
 
 
+def build_choose_proccess_to_turn_method_on_or_off_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="سحب 💳", callback_data="turn_withdraw_on_or_off"
+            ),
+            InlineKeyboardButton(
+                text="إيداع 📥", callback_data="turn_deposit_on_or_off"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="شراء USDT 💰",
+                callback_data="turn_busdt_on_or_off",
+            )
+        ],
+    ]
+    return keyboard
+
+
 def build_wallets_keyboard(wallets: list[Wallet], op: str):
     wallets_keyboard: list[list] = []
     for i in range(0, len(wallets), 2):

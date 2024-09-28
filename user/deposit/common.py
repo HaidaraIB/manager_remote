@@ -78,7 +78,7 @@ async def choose_deposit_method(update: Update, context: ContextTypes.DEFAULT_TY
 
         if not update.callback_query.data.startswith("back"):
             method = models.PaymentMethod.get_payment_method(name=method_name)
-            if not method.on_off:
+            if not method.deposit_on_off:
                 await update.callback_query.answer(
                     "هذه الوسيلة متوقفة مؤقتاً ❗️",
                     show_alert=True,

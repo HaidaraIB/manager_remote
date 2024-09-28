@@ -145,7 +145,7 @@ async def busdt_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not data.startswith("back"):
             method = PaymentMethod.get_payment_method(name=data)
 
-            if not method.on_off:
+            if not method.busdt_on_off:
                 await update.callback_query.answer(
                     "هذه الوسيلة متوقفة مؤقتاً ❗️",
                     show_alert=True,

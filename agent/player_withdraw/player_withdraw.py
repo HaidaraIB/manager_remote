@@ -79,7 +79,7 @@ async def choose_payment_method_player_withdraw(
         if not update.callback_query.data.startswith("back"):
             data = update.callback_query.data
             method = PaymentMethod.get_payment_method(name=data)
-            if not method.on_off:
+            if not method.withdraw_on_off:
                 await update.callback_query.answer(
                     "هذه الوسيلة متوقفة مؤقتاً❗️",
                     show_alert=True,
@@ -96,7 +96,11 @@ async def choose_payment_method_player_withdraw(
         ]
 
         if context.user_data["payment_method"] == USDT:
-            text = "أرسل كود محفظة USDT 👝\n\n<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>"
+            text = (
+                "أرسل كود محفظة USDT 👝\n\n"
+                "<b><i>ملاحظة هامة:</i> الشبكة المستخدمه هي TRC20</b>\n\n"
+                "<b><i>ملاحظة هامة ثانية:</i> العمولة = 2 usdt وأقل من 12 usdt غير قابلة للإرسال.</b>"
+            )
         else:
             text = f"أرسل رقم حساب {data}"
 
