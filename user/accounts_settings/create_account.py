@@ -98,7 +98,6 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             elif not valid_amounts and context.bot_data["create_account_deposit"] <= 0:
                 valid_amounts.append(5000)
-                context.bot_data["create_account_deposit"] = 0
 
             gift_line = ""
             deposit_gift = 0

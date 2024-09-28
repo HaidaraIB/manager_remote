@@ -1,13 +1,13 @@
 from telegram.ext import ContextTypes
-from telegram.error import RetryAfter
-from models import PaymentAgent, DepositAgent, Wallet, DepositOrder, GhaflaOffer
+from telegram.error import RetryAfter, BadRequest
+from models import PaymentAgent, DepositAgent, Wallet, DepositOrder, GhaflaOffer, User
 from common.constants import *
 from common.stringifies import (
     worker_type_dict,
     stringify_manager_reward_report,
     stringify_reward_report,
 )
-from common.common import notify_workers, format_amount
+from common.common import notify_workers, format_amount, format_datetime
 from common.functions import send_deposit_without_check
 
 import asyncio
@@ -120,27 +120,38 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     selected_serials = [
         order[2] for order in distinct_user_id_orders if order[0] == selected_date
     ]
-    start_time = datetime.fromisoformat(str(selected_date)).time().strftime(r"%I:%M %p")
+    start_time = (
+        (datetime.fromisoformat(str(selected_date)) + timedelta(hours=3))
+        .time()
+        .strftime(r"%I:%M %p")
+    )
     end_time = (
-        (datetime.fromisoformat(str(selected_date)) + timedelta(minutes=time_window))
+        (
+            datetime.fromisoformat(str(selected_date))
+            + timedelta(hours=3, minutes=time_window)
+        )
         .time()
         .strftime(r"%I:%M %p")
     )
 
     group_text = (
-        f"عرض الغفلة <b>500%</b> 🔥\n"
+        f"عرض الغفلة <b>500%</b> 🔥\n\n"
         f"من الساعة: <b>{start_time}</b>\n"
         f"حتى الساعة: <b>{end_time}</b>\n\n"
-        "المستفيدون:\n"
+        "الرابحون:\n\n"
     )
     for serial in selected_serials:
         order = DepositOrder.get_one_order(serial=serial)
         factor = 4
         amount = order.amount * factor
-        user = await context.bot.get_chat(chat_id=755501092)
+        try:
+            user = await context.bot.get_chat(chat_id=order.user_id)
+            name = "@" + user.username if user.username else f"<b>{user.full_name}</b>"
+        except BadRequest:
+            user = User.get_user(user_id=order.user_id)
+            name = "@" + user.username if user.username else f"<b>{user.name}</b>"
         group_text += (
-            f"المستفيد:\n{'@' + user.username if user.username else f'<b>{user.full_name}</b>'}\n"
-            f"رقم الحساب: <code>{order.acc_number}</code>\n\n"
+            f"الاسم:\n{name}\n" f"رقم الحساب: <code>{order.acc_number}</code>\n\n"
         )
         await send_deposit_without_check(
             context=context,
@@ -186,15 +197,18 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
     )
     for i in range(4):
         when = datetime(
-            today.year,
-            today.month,
-            today.day,
-            job_hours_dict[i],
+            year=today.year,
+            month=today.month,
+            day=today.day,
+            hour=job_hours_dict[i],
+            minute=0,
+            second=0,
+            microsecond=0,
             tzinfo=tz,
         )
         await context.bot.send_message(
             chat_id=dev_id,
-            text=str(when),
+            text=format_datetime(when),
         )
         context.job_queue.run_once(
             process_orders_for_ghafla_offer,
