@@ -6,9 +6,7 @@ import os
 
 
 async def contact_dev(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and (
-        Admin().filter(update) or Worker().filter(update)
-    ):
+    if update.effective_chat.type == Chat.PRIVATE:
         msg = update.message
         if (
             not (msg.text or msg.caption)
@@ -40,11 +38,14 @@ async def contact_dev(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 contact_dev_handler = MessageHandler(
-    filters=filters.COMMAND
-    | filters.PHOTO
-    | filters.CAPTION
-    | filters.VIDEO
-    | filters.VOICE
-    | filters.AUDIO,
+    filters=(Admin() | Worker())
+    & (
+        filters.COMMAND
+        | filters.PHOTO
+        | filters.CAPTION
+        | filters.VIDEO
+        | filters.VOICE
+        | filters.AUDIO
+    ),
     callback=contact_dev,
 )
