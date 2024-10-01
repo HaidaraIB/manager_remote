@@ -10,7 +10,7 @@ async def contact_dev(update: Update, context: ContextTypes.DEFAULT_TYPE):
         Admin().filter(update) or Worker().filter(update)
     ):
         msg = update.message
-        if (
+        if msg and (
             not (msg.text or msg.caption)
             or (msg.text and (not msg.text.startswith("/dev") or msg.text == "/dev"))
             or (msg.caption and not msg.caption.startswith("/dev"))
