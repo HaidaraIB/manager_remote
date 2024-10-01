@@ -13,8 +13,9 @@ from custom_filters import Admin, Worker, DepositAgent, Agent
 from common.constants import *
 
 
+# Fill this when you need to run a code only once and then clear it.
 async def inits(app: Application):
-    pass  # Fill this when you need to run a code only once and then clear it.
+    app.bot_data["restart"] = False
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):

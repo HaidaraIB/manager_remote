@@ -301,6 +301,9 @@ def main():
         group=4,
     )
 
+    # RESTART
+    app.add_handler(restart_handler)
+
     app.add_handler(contact_dev_handler)
 
     app.add_error_handler(error_handler)
@@ -353,10 +356,6 @@ def main():
             "replace_existing": True,
         },
     )
-
-    # RESTART
-    app.bot_data["restart"] = False
-    app.add_handler(restart_handler)
 
     PyroClientSingleton().start()
 
