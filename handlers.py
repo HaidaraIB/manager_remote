@@ -48,6 +48,7 @@ from admin.workers_settings import *
 from admin.order_settings import *
 from admin.exchange_rates import *
 from admin.agent_settings import *
+from admin.restart import restart_handler
 
 from worker.request_order import *
 from worker.process_deposit import *
@@ -72,6 +73,7 @@ from dotenv import load_dotenv
 import datetime
 import pytz
 import os
+import sys
 from models import create_tables
 
 
@@ -352,14 +354,15 @@ def main():
         },
     )
 
-    try:
-        PyroClientSingleton().start()
-    except ConnectionError:
-        pass
+    # RESTART
+    app.bot_data["restart"] = False
+    app.add_handler(restart_handler)
+
+    PyroClientSingleton().start()
 
     app.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
 
-    try:
-        PyroClientSingleton().stop()
-    except ConnectionError:
-        pass
+    PyroClientSingleton().stop()
+
+    if app.bot_data["restart"]:
+        os.execl(sys.executable, sys.executable, *sys.argv)
