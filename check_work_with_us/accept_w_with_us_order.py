@@ -1,17 +1,5 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Chat,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
-
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat
+from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 from user.work_with_us.common import syrian_govs_en_ar
 from custom_filters import AgentOrder, Declined
 from common.common import build_agent_keyboard, send_message_to_user
@@ -137,12 +125,9 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         + team_cash_caption,
                     )
 
-                    await context.bot.send_document(
+                    await context.bot.send_message(
                         chat_id=order.user_id,
-                        document=os.getenv("PROMO_CODE_ID"),
-                        caption="تطبيق استلام الأرباح من خسائر اللاعبين:\n\n"
-                        + "معلومات تسجيل الدخول:\n\n"
-                        + promo_code_caption,
+                        text=promo_code_caption,
                     )
 
                     await context.bot.send_message(
