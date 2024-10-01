@@ -1,15 +1,5 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Chat,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    ConversationHandler,
-    CallbackQueryHandler,
-)
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat
+from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
 from worker.request_order.common import (
     build_payment_agent_keyboard,
     build_checker_keyboard,
@@ -17,10 +7,7 @@ from worker.request_order.common import (
     orders_dict,
 )
 from common.constants import *
-from common.common import (
-    build_back_button,
-    parent_to_child_models_mapper,
-)
+from common.common import build_back_button, parent_to_child_models_mapper
 from common.back_to_home_page import (
     back_to_worker_home_page_button,
     back_to_worker_home_page_handler,
@@ -175,12 +162,6 @@ async def choose_check_position_request_order(
 
         check_what = role.split("_")[1]
         method = role.split("_")[2]
-
-        checker = models.Checker.get_workers(
-            worker_id=update.effective_user.id,
-            check_what=role.split("_")[1],
-            method=method,
-        )
 
         c_order = parent_to_child_models_mapper[check_what].get_check_order(
             method=method,
