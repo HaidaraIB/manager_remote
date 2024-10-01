@@ -185,7 +185,7 @@ edit_deposit_amount_handler = CallbackQueryHandler(
     pattern="^edit_deposit_amount",
 )
 get_new_amount_handler = MessageHandler(
-    filters=filters.REPLY & filters.Regex("^\d+.?\d*$") & Deposit() & DepositAmount(),
+    filters=filters.REPLY & filters.Regex("^\d+\.?\d*$") & Deposit() & DepositAmount(),
     callback=get_new_amount,
 )
 

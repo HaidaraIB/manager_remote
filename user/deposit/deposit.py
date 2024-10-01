@@ -71,7 +71,7 @@ deposit_handler = ConversationHandler(
         ],
         DEPOSIT_AMOUNT: [
             MessageHandler(
-                filters=filters.Regex("^\d+.?\d*$"),
+                filters=filters.Regex("^\d+\.?\d*$"),
                 callback=get_deposit_amount,
             )
         ],

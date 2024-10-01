@@ -147,7 +147,7 @@ point_deposit_handler = ConversationHandler(
         ],
         AMOUNT: [
             MessageHandler(
-                filters=filters.Regex("^\d+.?\d*$"),
+                filters=filters.Regex("^\d+\.?\d*$"),
                 callback=get_amount,
             )
         ],

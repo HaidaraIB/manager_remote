@@ -188,7 +188,7 @@ worker_balance_handler = ConversationHandler(
         ],
         GET_PRE_BALANCE_AMOUNT: [
             MessageHandler(
-                filters=filters.Regex("^\d+.?\d*$"),
+                filters=filters.Regex("^\d+\.?\d*$"),
                 callback=get_pre_balance_amount,
             )
         ],

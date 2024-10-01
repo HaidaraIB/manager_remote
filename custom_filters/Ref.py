@@ -11,7 +11,7 @@ class Ref(UpdateFilter):
             return (
                 bool(re.search(r"^رقم العملية: \d+$", ref_info[0]))
                 and payment_method_pattern(ref_info[1])
-                and bool(re.search(r"^المبلغ: \d+.?\d*$", ref_info[2]))
+                and bool(re.search(r"^المبلغ: \d+\.?\d*$", ref_info[2]))
             )
         except:
             return False
