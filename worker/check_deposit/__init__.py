@@ -11,3 +11,4 @@ from worker.check_deposit.check_bemo_deposit import (
     decline_deposit_order_reason_handler,
     back_from_decline_deposit_order_handler,
 )
+from worker.check_deposit.manual_check import manual_deposit_check_handler

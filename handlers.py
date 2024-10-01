@@ -140,6 +140,8 @@ def main():
     app.add_handler(store_ref_number_handler, group=1)
     app.add_handler(invalid_ref_format_handler, group=1)
 
+    app.add_handler(manual_deposit_check_handler)
+
     # app.add_handler(check_deposit_handler)
     # app.add_handler(get_new_amount_handler)
     # app.add_handler(send_deposit_order_handler)
