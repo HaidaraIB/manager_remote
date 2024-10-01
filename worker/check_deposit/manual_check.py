@@ -11,6 +11,10 @@ async def manual_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         d_order = DepositOrder.get_one_order(
             serial=serial,
         )
+        if not d_order:
+            await update.message.reply_text(text="No such order ❗️")
+            return
+
         if d_order and d_order.state != "pending":
             await update.message.reply_text(text="Not pending ❗️")
             return
