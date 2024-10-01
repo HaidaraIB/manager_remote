@@ -236,9 +236,6 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
                 context.bot_data["create_account_deposit_pin"]
                 - context.bot_data["create_account_deposit"]
             )
-        context.bot_data["create_account_deposit"] = context.bot_data[
-            "create_account_deposit_pin"
-        ]
         await context.bot.send_message(
             chat_id=int(os.getenv("OWNER_ID")),
             text=(
@@ -246,3 +243,7 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
                 f"إنشاء الحسابات اليوم: <b>{format_amount(create_account_deposits)}</b> ل.س"
             ),
         )
+        context.bot_data["create_account_deposit"] = context.bot_data[
+            "create_account_deposit_pin"
+        ]
+        context.bot_data["total_ghafla_offer"] = 0
