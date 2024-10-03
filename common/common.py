@@ -437,7 +437,7 @@ def build_agent_keyboard():
 
 
 def build_methods_keyboard(busdt: bool = False):
-    payment_methods: list[list] = []
+    payment_methods: list[list[InlineKeyboardButton]] = []
     for i in range(0, len(PAYMENT_METHODS_LIST), 2):
         row = []
         row.append(

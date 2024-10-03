@@ -3,9 +3,25 @@ from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
 from custom_filters import DepositAgent, Admin
 from common.common import build_methods_keyboard, build_back_button
 from common.back_to_home_page import back_to_admin_home_page_button
-from models import Wallet
+from models import Wallet, PaymentMethod
 
 CHOOSE_METHOD, WALLET = 0, 1
+
+
+def build_methods_on_off_keyboard(proccess:str):
+    on_off_dict = {
+        True: "🟢",
+        False: "🔴",
+    }
+    keyboard = build_methods_keyboard()
+    for row in keyboard:
+        for button in row:
+            method = PaymentMethod.get_payment_method(name=button.text)
+            keyboard[keyboard.index(row)][row.index(button)] = InlineKeyboardButton(
+                text=button.text + f" {on_off_dict[getattr(method, f"{proccess}_on_off")]}",
+                callback_data=f"method_on_off {button.text}"
+            )
+    return keyboard
 
 
 def build_choose_proccess_to_turn_method_on_or_off_keyboard():

@@ -7,6 +7,7 @@ from common.back_to_home_page import (
 from common.decorators import (
     check_if_user_created_account_from_bot_decorator,
     check_if_user_present_decorator,
+    check_user_call_on_or_off_decorator,
 )
 from common.common import build_confirmation_keyboard, build_back_button
 from user.accounts_settings.common import reply_with_user_accounts
@@ -18,6 +19,7 @@ from datetime import datetime
 ACCOUNT, CONFIRM_DELETE_ACCOUNT = range(2)
 
 
+@check_user_call_on_or_off_decorator
 @check_if_user_present_decorator
 @check_if_user_member_decorator
 @check_if_user_created_account_from_bot_decorator

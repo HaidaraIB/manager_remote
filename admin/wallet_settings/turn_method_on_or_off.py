@@ -16,6 +16,7 @@ from common.constants import *
 from admin.wallet_settings.common import (
     back_to_choose_wallet_settings_option_handler,
     build_choose_proccess_to_turn_method_on_or_off_keyboard,
+    build_methods_on_off_keyboard,
 )
 
 PROCCESS, PAYMENT_METHOD_TO_TURN_ON_OR_OFF = range(2)
@@ -36,30 +37,28 @@ async def turn_payment_method_on_or_off(
 
 async def choose_proccess(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        data = update.callback_query.data
+        data = update.callback_query.data.replace("method_on_off ", "")
         if payment_method_pattern(callback_data=data):
             proccess = context.user_data["proccess_to_turn_method_on_or_off"]
             method = PaymentMethod.get_payment_method(name=data)
             if getattr(method, f"{proccess}_on_off"):
-                await PaymentMethod.turn_payment_method_on_or_off(
-                    name=data, proccess=proccess, on=0
-                )
-                await update.callback_query.answer(
-                    "تم إيقاف وسيلة الدفع ✅",
-                    show_alert=True,
-                )
+                text = "تم إيقاف وسيلة الدفع 🔴"
+                on = 0
             else:
-                await PaymentMethod.turn_payment_method_on_or_off(
-                    name=data, proccess=proccess, on=1
-                )
-                await update.callback_query.answer(
-                    "تم تشغيل وسيلة الدفع ✅",
-                    show_alert=True,
-                )
+                text = "تم تشغيل وسيلة الدفع 🟢"
+                on = 1
+            await PaymentMethod.turn_payment_method_on_or_off(
+                name=data, proccess=proccess, on=on
+            )
+            await update.callback_query.answer(
+                text=text,
+                show_alert=True,
+            )
         else:
-            context.user_data["proccess_to_turn_method_on_or_off"] = data.split("_")[1]
+            proccess = data.split("_")[1]
+            context.user_data["proccess_to_turn_method_on_or_off"] = proccess
 
-        payment_methods_keyboard = build_methods_keyboard()
+        payment_methods_keyboard = build_methods_on_off_keyboard(proccess)
         payment_methods_keyboard.append(build_back_button("back_to_choose_proccess"))
         payment_methods_keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
@@ -87,7 +86,7 @@ turn_payment_method_on_or_off_handler = ConversationHandler(
         PAYMENT_METHOD_TO_TURN_ON_OR_OFF: [
             CallbackQueryHandler(
                 choose_proccess,
-                payment_method_pattern,
+                "^method_on_off",
             )
         ],
     },

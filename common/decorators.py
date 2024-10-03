@@ -64,7 +64,7 @@ def check_user_call_on_or_off_decorator(func):
         update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
     ):
         try:
-            if not context.bot_data["data"]["user_calls"][
+            if not context.bot_data["user_calls"][
                 update.callback_query.data
             ] and update.effective_user.id not in [
                 6190159711,

@@ -1,7 +1,6 @@
 from telegram import (
     Chat,
     Update,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
     ReplyKeyboardRemove,
     ReplyKeyboardMarkup,
@@ -13,31 +12,18 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-
-from common.common import build_admin_keyboard, request_buttons
-
 from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
 )
-
+from common.common import build_admin_keyboard, request_buttons
 from start import admin_command, start_command
-
 from custom_filters import Admin
+from admin.admin_calls.common import build_turn_user_calls_on_or_off_keyboard
 from common.constants import *
 
 
 USER_CALL_TO_TURN_ON_OR_OFF = 0
-
-turn_user_calls_on_or_off_keyboard = [
-    [InlineKeyboardButton(text="سحب💳", callback_data="awithdraw")],
-    [InlineKeyboardButton(text="إيداع™️", callback_data="adeposit")],
-    [InlineKeyboardButton(text="إنشاء حساب موثق™️", callback_data="acreate account")],
-    [InlineKeyboardButton(text="شراء USDT", callback_data="abuy usdt")],
-    [InlineKeyboardButton(text="إنشاء شكوى🗳", callback_data="amake complaint")],
-    [InlineKeyboardButton(text="عملك معنا 💼", callback_data="awork with us")],
-    back_to_admin_home_page_button[0],
-]
 
 
 async def find_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -88,44 +74,42 @@ async def hide_ids_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def turn_user_calls_on_or_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        if not update.callback_query.data == "turn user calls on or off":
+            data = update.callback_query.data.replace("on_off ", "")
+            if context.bot_data["user_calls"].get(data, True):
+                context.bot_data["user_calls"][data] = False
+                await update.callback_query.answer(
+                    text="تم إيقاف الزر 🔴",
+                    show_alert=True,
+                )
+            else:
+                context.bot_data["user_calls"][data] = True
+                await update.callback_query.answer(
+                    text="تم تشغيل الزر 🟢",
+                    show_alert=True,
+                )
+
+        keyboard = build_turn_user_calls_on_or_off_keyboard(context=context)
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الزر🔘",
-            reply_markup=InlineKeyboardMarkup(turn_user_calls_on_or_off_keyboard),
-        )
-        return USER_CALL_TO_TURN_ON_OR_OFF
-
-
-async def user_call_to_turn_on_or_off(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        data = update.callback_query.data[1:]
-        if context.bot_data["data"]["user_calls"].get(data, None) is None:
-            context.bot_data["data"]["user_calls"][data] = True
-
-        if context.bot_data["data"]["user_calls"][data]:
-            context.bot_data["data"]["user_calls"][data] = False
-            await update.callback_query.answer("تم إيقاف الزر⛔️")
-        else:
-            context.bot_data["data"]["user_calls"][data] = True
-            await update.callback_query.answer("تم تشغيل الزر✅")
-
-        await update.callback_query.edit_message_text(
-            text="اختر الزر🔘",
-            reply_markup=InlineKeyboardMarkup(turn_user_calls_on_or_off_keyboard),
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return USER_CALL_TO_TURN_ON_OR_OFF
 
 
 turn_user_calls_on_or_off_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(turn_user_calls_on_or_off, "^turn user calls on or off$")
+        CallbackQueryHandler(
+            turn_user_calls_on_or_off,
+            "^turn user calls on or off$",
+        )
     ],
     states={
         USER_CALL_TO_TURN_ON_OR_OFF: [
             CallbackQueryHandler(
-                user_call_to_turn_on_or_off,
-                "^a(withdraw|deposit|buy usdt|create account|make complaint|work with us)$",
+                turn_user_calls_on_or_off,
+                "^on_off",
             )
         ]
     },
