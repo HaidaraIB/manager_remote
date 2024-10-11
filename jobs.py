@@ -107,7 +107,7 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
 
     selected_date = None
     for amount_sum in amounts_sum:
-        if amount_sum[1] <= 100000:
+        if amount_sum[1] <= 50000:
             selected_date = amount_sum[0]
             break
 
@@ -182,10 +182,14 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
         3: f"{ghafla_offer_base_job_name}_evening",
     }
     job_hours_dict = {
-        0: random.randint(7, 9),
-        1: random.randint(11, 13),
-        2: random.randint(15, 17),
-        3: random.randint(19, 21),
+        0: random.randint(7, 8),
+        1: random.randint(10, 11),
+        2: random.randint(12, 13),
+        3: random.randint(14, 15),
+        4: random.randint(16, 17),
+        5: random.randint(18, 19),
+        6: random.randint(20, 21),
+        7: random.randint(22, 23),
     }
     dev_id = int(os.getenv("DEV_ID"))
     await context.bot.send_message(

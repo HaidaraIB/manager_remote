@@ -97,7 +97,7 @@ class BaseOrder(Base):
 
         elif time_window:
             today = datetime.date.today()
-            hour = str(datetime.datetime.now(datetime.UTC).hour - 2).rjust(2, "0")
+            hour = str(datetime.datetime.now(datetime.UTC).hour - 1).rjust(2, "0")
             res = s.execute(
                 text(
                     f"""
