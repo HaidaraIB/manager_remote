@@ -32,7 +32,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         number=d_order.ref_number,
         method=d_order.method,
     )
-    if ref_present:
+    if ref_present and ref_present.order_serial == -1:
         await send_order_to_process(
             d_order=d_order,
             ref_info=ref_present,
@@ -52,20 +52,23 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             },
         )
     else:
-        reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
+        if ref_present and ref_present.order_serial == -1:
+            reason = "رقم عملية مكرر"
+            sugg = "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
+        else:
+            reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
+            sugg = ""
         try:
             await context.bot.send_message(
                 chat_id=context.job.user_id,
                 text=(
                     f"{reason}\n\n"
                     f"الرقم التسلسلي للطلب: {serial}\n"
-                    f"نوع الطلب: إيداع\n\n"
-                    "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
+                    f"نوع الطلب: إيداع\n\n" + sugg
                 ),
             )
-        except error.Forbidden as f:
-            if "bot was blocked by the user" in f.message:
-                pass
+        except:
+            pass
 
         text = (
             DECLINE_TEXT
