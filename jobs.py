@@ -1,11 +1,13 @@
 from telegram.ext import ContextTypes
 from telegram.error import RetryAfter, BadRequest
-from models import PaymentAgent, DepositAgent, Wallet, DepositOrder, GhaflaOffer, User
+import models
 from common.constants import *
 from common.stringifies import (
     worker_type_dict,
     stringify_manager_reward_report,
     stringify_reward_report,
+    stringify_daily_order_stats,
+    stringify_daily_wallet_stats,
 )
 from common.common import notify_workers, format_amount, format_datetime
 from common.functions import send_deposit_without_check
@@ -19,8 +21,10 @@ import pytz
 
 async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
     worker_type = context.job.name.split("_")[0]
-    model: DepositAgent | PaymentAgent = worker_type_dict[worker_type]["model"]
-    workers: list[PaymentAgent] | list[DepositAgent] = model.get_workers()
+    model: models.DepositAgent | models.PaymentAgent = worker_type_dict[worker_type][
+        "model"
+    ]
+    workers: list[models.PaymentAgent] | list[models.DepositAgent] = model.get_workers()
     for worker in workers:
         approved_work = getattr(
             worker, worker_type_dict[worker_type]["approved_work"], None
@@ -84,12 +88,12 @@ async def reward_worker(context: ContextTypes.DEFAULT_TYPE):
 
 async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
     for method in PAYMENT_METHODS_LIST + ["طلبات الوكيل"]:
-        await Wallet.update_wallets(
+        await models.Wallet.update_wallets(
             method=method,
             option="balance",
             value=0,
         )
-    agents = DepositAgent.get_workers()
+    agents = models.DepositAgent.get_workers()
     asyncio.create_task(notify_workers(context, agents, "الرجاء إخلاء جميع المحافظ 🚨"))
 
 
@@ -98,10 +102,10 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     group_by_user = "user_id"
     group_by_interval = "interval"
 
-    distinct_user_id_orders = DepositOrder.get_orders(
+    distinct_user_id_orders = models.DepositOrder.get_orders(
         time_window=time_window, group_by=group_by_user
     )
-    amounts_sum = DepositOrder.get_orders(
+    amounts_sum = models.DepositOrder.get_orders(
         time_window=time_window, group_by=group_by_interval
     )
 
@@ -138,14 +142,14 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
         "الرابحون:\n\n"
     )
     for serial in selected_serials:
-        order = DepositOrder.get_one_order(serial=serial)
+        order = models.DepositOrder.get_one_order(serial=serial)
         factor = 4
         amount = order.amount * factor
         try:
             user = await context.bot.get_chat(chat_id=order.user_id)
             name = "@" + user.username if user.username else f"<b>{user.full_name}</b>"
         except BadRequest:
-            user = User.get_user(user_id=order.user_id)
+            user = models.User.get_user(user_id=order.user_id)
             name = "@" + user.username if user.username else f"<b>{user.name}</b>"
         group_text += (
             f"الاسم:\n{name}\n" f"رقم الحساب: <code>{order.acc_number}</code>\n\n"
@@ -162,7 +166,7 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
         else:
             context.bot_data["total_ghafla_offer"] += amount
 
-        await GhaflaOffer.add(serial=serial, factor=factor)
+        await models.GhaflaOffer.add(serial=serial, factor=factor)
 
     await context.bot.send_message(
         chat_id=int(os.getenv("CHANNEL_ID")),
@@ -245,3 +249,27 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
             "create_account_deposit_pin"
         ]
         context.bot_data["total_ghafla_offer"] = 0
+
+
+async def send_daily_stats(context: ContextTypes.DEFAULT_TYPE):
+    withdraw_stats = models.WithdrawOrder.calc_daily_stats()
+    deposit_stats = models.DepositOrder.calc_daily_stats()
+
+    await context.bot.send_message(
+        chat_id=int(os.getenv("OWNER_ID")),
+        text=stringify_daily_order_stats("إيداعات", stats=deposit_stats),
+    )
+    await context.bot.send_message(
+        chat_id=int(os.getenv("OWNER_ID")),
+        text=stringify_daily_order_stats("سحوبات", stats=withdraw_stats),
+    )
+
+    for method in PAYMENT_METHODS_LIST:
+        wallets_stats = models.Wallet.get_wallets(method=method)
+        if not wallets_stats:
+            continue
+
+        await context.bot.send_message(
+            chat_id=int(os.getenv("OWNER_ID")),
+            text=stringify_daily_wallet_stats(method=method, stats=wallets_stats),
+        )

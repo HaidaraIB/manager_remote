@@ -136,7 +136,7 @@ def apply_ex_rate(
             amount = amount * 0.97 / ex_rate
         return amount, ex_rate
     except:
-        return amount, 0
+        return amount, 1
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):

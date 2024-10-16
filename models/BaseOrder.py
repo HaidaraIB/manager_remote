@@ -406,3 +406,18 @@ class BaseOrder(Base):
             return res.fetchone().t[0]
         except:
             pass
+
+    @classmethod
+    @connect_and_close
+    def calc_daily_stats(cls, s: Session = None):
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        today = "2024-09-20"
+        res = s.execute(
+            select(cls.method, func.sum(cls.amount)).where(
+                and_(
+                    cls.state == "approved",
+                    func.date(cls.order_date) == today,
+                )
+            ).group_by(cls.method)
+        )
+        return res.fetchall()

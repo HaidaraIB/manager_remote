@@ -2,12 +2,11 @@ from sqlalchemy import (
     Column,
     String,
     Float,
+    PrimaryKeyConstraint,
     select,
     insert,
     delete,
-    func,
     and_,
-    PrimaryKeyConstraint,
 )
 from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
@@ -56,7 +55,11 @@ class Wallet(Base):
     @classmethod
     @connect_and_close
     def get_wallets(
-        cls, method: str, number: str = None, amount: float = None, s: Session = None
+        cls,
+        method: str = None,
+        number: str = None,
+        amount: float = None,
+        s: Session = None,
     ):
         if amount:
             try:
@@ -88,13 +91,17 @@ class Wallet(Base):
                 return res.fetchone().t[0]
             except:
                 pass
-        else:
+            
+        elif method:
             res = s.execute(select(cls).where(cls.method == method))
 
-            try:
-                return list(map(lambda x: x[0], res.tuples().all()))
-            except:
-                pass
+        else:
+            res = s.execute(select(cls))
+
+        try:
+            return list(map(lambda x: x[0], res.tuples().all()))
+        except:
+            pass
 
     @classmethod
     @lock_and_release

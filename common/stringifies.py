@@ -283,3 +283,30 @@ def stringify_process_busdt_order(
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
         "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
     )
+
+
+def stringify_daily_order_stats(type_: str, stats):
+    stats_by_method_text = ""
+    for s in stats:
+        stats_by_method_text += f"{s[0]}: <b>{format_amount(s[1])}</b>\n"
+
+    amounts_sum = sum(list(map(lambda x: float(x[1]), stats)))
+
+    return (
+        f"مجموع {type_} اليوم: <b>{format_amount(amounts_sum)}</b>\n\n"
+        "<i>التفاصيل:</i>\n" + stats_by_method_text
+    )
+
+
+def stringify_daily_wallet_stats(method: str, stats: list[models.Wallet]):
+    wallet_stats_text = ""
+    for s in stats:
+        wallet_stats_text += f"{s.number}: <b>{format_amount(s.balance)}</b>\n"
+
+    amounts_sum = sum(list(map(lambda x: x.balance, stats)))
+
+    return (
+        f"أرصدة محافظ {method}: \n\n"
+        + wallet_stats_text
+        + f"\nالمجموع: <b>{format_amount(amounts_sum)}</b>"
+    )

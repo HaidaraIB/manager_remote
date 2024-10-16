@@ -22,7 +22,7 @@ class Order(BaseOrder):
     state = Column(String, default="pending")
     method = Column(String)
     amount = Column(Float, default=0)
-    ex_rate = Column(Float, default=0)
+    ex_rate = Column(Float, default=1)
 
     reason = Column(String, default="")
     pending_check_message_id = Column(Integer, default=0)

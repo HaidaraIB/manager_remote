@@ -17,6 +17,7 @@ from jobs import (
     reward_worker,
     remind_agent_to_clear_wallets,
     schedule_ghafla_offer_jobs,
+    send_daily_stats,
 )
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
@@ -351,6 +352,17 @@ def main():
         name="schedule_ghafla_offer_jobs",
         job_kwargs={
             "id": "schedule_ghafla_offer_jobs",
+            "misfire_grace_time": None,
+            "coalesce": True,
+            "replace_existing": True,
+        },
+    )
+    app.job_queue.run_daily(
+        callback=send_daily_stats,
+        time=datetime.time(23, 58, tzinfo=pytz.timezone("Asia/Damascus")),
+        name="send_daily_stats",
+        job_kwargs={
+            "id": "send_daily_stats",
             "misfire_grace_time": None,
             "coalesce": True,
             "replace_existing": True,
