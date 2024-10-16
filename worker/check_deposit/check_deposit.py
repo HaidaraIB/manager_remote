@@ -12,87 +12,88 @@ check_deposit_lock = asyncio.Lock()
 
 
 async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
-    await check_deposit_lock.acquire()  # We're using the lock because we're checking deposit on storing ref too, so there's a possible conflict.
+    try:
+        await check_deposit_lock.acquire()  # We're using the lock because we're checking deposit on storing ref too, so there's a possible conflict.
 
-    serial = int(context.job.data)
-    d_order = DepositOrder.get_one_order(
-        serial=serial,
-    )
-    if d_order and d_order.state != "pending":
-        check_deposit_lock.release()
-        return
-
-    check_deposit_jobs_dict = {
-        "1_deposit_check": 240,
-        "2_deposit_check": 300,
-        "3_deposit_check": 600,
-        "4_deposit_check": 600,
-    }
-    ref_present = RefNumber.get_ref_number(
-        number=d_order.ref_number,
-        method=d_order.method,
-    )
-    if ref_present and ref_present.order_serial == -1:
-        await send_order_to_process(
-            d_order=d_order,
-            ref_info=ref_present,
-            context=context,
-        )
-    elif context.job.name in check_deposit_jobs_dict:
-        next_job_num = int(context.job.name.split("_")[0]) + 1
-        context.job_queue.run_once(
-            callback=check_deposit,
-            user_id=context.job.user_id,
-            when=check_deposit_jobs_dict[context.job.name],
-            data=serial,
-            name=f"{next_job_num}_deposit_check",
-            job_kwargs={
-                "misfire_grace_time": None,
-                "coalesce": True,
-            },
-        )
-    else:
-        if ref_present and ref_present.order_serial == -1:
-            reason = "رقم عملية مكرر"
-            sugg = "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
-        else:
-            reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
-            sugg = ""
-        try:
-            await context.bot.send_message(
-                chat_id=context.job.user_id,
-                text=(
-                    f"{reason}\n\n"
-                    f"الرقم التسلسلي للطلب: {serial}\n"
-                    f"نوع الطلب: إيداع\n\n" + sugg
-                ),
-            )
-        except:
-            pass
-
-        text = (
-            DECLINE_TEXT
-            + "\n"
-            + stringify_deposit_order(
-                amount=0,
-                serial=d_order.serial,
-                method=d_order.method,
-                account_number=d_order.acc_number,
-                wal=d_order.deposit_wallet,
-                ref_num=d_order.ref_number,
-            )
-            + f"\n\nالسبب:\n<b>{reason}</b>"
-        )
-
-        await context.bot.send_message(
-            chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
-            text=text,
-        )
-        await DepositOrder.decline_order(
-            reason=reason,
+        serial = int(context.job.data)
+        d_order = DepositOrder.get_one_order(
             serial=serial,
         )
-    check_deposit_lock.release()
+        if d_order and d_order.state != "pending":
+            return
+
+        check_deposit_jobs_dict = {
+            "1_deposit_check": 240,
+            "2_deposit_check": 300,
+            "3_deposit_check": 600,
+            "4_deposit_check": 600,
+        }
+        ref_present = RefNumber.get_ref_number(
+            number=d_order.ref_number,
+            method=d_order.method,
+        )
+        if ref_present and ref_present.order_serial == -1:
+            await send_order_to_process(
+                d_order=d_order,
+                ref_info=ref_present,
+                context=context,
+            )
+        elif context.job.name in check_deposit_jobs_dict:
+            next_job_num = int(context.job.name.split("_")[0]) + 1
+            context.job_queue.run_once(
+                callback=check_deposit,
+                user_id=context.job.user_id,
+                when=check_deposit_jobs_dict[context.job.name],
+                data=serial,
+                name=f"{next_job_num}_deposit_check",
+                job_kwargs={
+                    "misfire_grace_time": None,
+                    "coalesce": True,
+                },
+            )
+        else:
+            if ref_present and ref_present.order_serial == -1:
+                reason = "رقم عملية مكرر"
+                sugg = "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
+            else:
+                reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
+                sugg = ""
+            try:
+                await context.bot.send_message(
+                    chat_id=context.job.user_id,
+                    text=(
+                        f"{reason}\n\n"
+                        f"الرقم التسلسلي للطلب: {serial}\n"
+                        f"نوع الطلب: إيداع\n\n" + sugg
+                    ),
+                )
+            except:
+                pass
+
+            text = (
+                DECLINE_TEXT
+                + "\n"
+                + stringify_deposit_order(
+                    amount=0,
+                    serial=d_order.serial,
+                    method=d_order.method,
+                    account_number=d_order.acc_number,
+                    wal=d_order.deposit_wallet,
+                    ref_num=d_order.ref_number,
+                )
+                + f"\n\nالسبب:\n<b>{reason}</b>"
+            )
+
+            await context.bot.send_message(
+                chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
+                text=text,
+            )
+            await DepositOrder.decline_order(
+                reason=reason,
+                serial=serial,
+            )
+    finally:
+        check_deposit_lock.release()
 
 
 async def send_order_to_process(

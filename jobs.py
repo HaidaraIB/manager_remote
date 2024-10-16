@@ -175,12 +175,6 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
     tz = pytz.timezone("Asia/Damascus")
     today = datetime.now(tz=tz)
     ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
-    job_names_dict = {
-        0: f"{ghafla_offer_base_job_name}_morning",
-        1: f"{ghafla_offer_base_job_name}_noon",
-        2: f"{ghafla_offer_base_job_name}_after_noon",
-        3: f"{ghafla_offer_base_job_name}_evening",
-    }
     job_hours_dict = {
         0: random.randint(7, 8),
         1: random.randint(10, 11),
@@ -196,7 +190,7 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
         chat_id=dev_id,
         text=f"أوقات عرض الغفلة:",
     )
-    for i in range(4):
+    for i in range(8):
         when = datetime(
             year=today.year,
             month=today.month,
@@ -214,9 +208,9 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
         context.job_queue.run_once(
             process_orders_for_ghafla_offer,
             when=when,
-            name=job_names_dict[i],
+            name=ghafla_offer_base_job_name + f"_{i}",
             job_kwargs={
-                "id": job_names_dict[i],
+                "id": ghafla_offer_base_job_name + f"_{i}",
                 "misfire_grace_time": None,
                 "coalesce": True,
                 "replace_existing": True,

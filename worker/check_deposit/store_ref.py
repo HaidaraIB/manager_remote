@@ -62,15 +62,16 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"إلى: <b>{format_amount(amount)}</b>"
                 ),
             )
-
-        await check_deposit_lock.acquire()
-        if d_order.state == "pending":
-            await send_order_to_process(
-                d_order=d_order,
-                ref_info=ref,
-                context=context,
-            )
-        check_deposit_lock.release()
+        try:
+            await check_deposit_lock.acquire()
+            if d_order.state == "pending":
+                await send_order_to_process(
+                    d_order=d_order,
+                    ref_info=ref,
+                    context=context,
+                )
+        finally:
+            check_deposit_lock.release()
 
 
 def create_invalid_foramt_string():
