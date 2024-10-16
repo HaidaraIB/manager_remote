@@ -255,21 +255,23 @@ async def send_daily_stats(context: ContextTypes.DEFAULT_TYPE):
     withdraw_stats = models.WithdrawOrder.calc_daily_stats()
     deposit_stats = models.DepositOrder.calc_daily_stats()
 
-    await context.bot.send_message(
-        chat_id=int(os.getenv("OWNER_ID")),
-        text=stringify_daily_order_stats("إيداعات", stats=deposit_stats),
-    )
-    await context.bot.send_message(
-        chat_id=int(os.getenv("OWNER_ID")),
-        text=stringify_daily_order_stats("سحوبات", stats=withdraw_stats),
-    )
-
+    wallets_stats_text = ""
     for method in PAYMENT_METHODS_LIST:
         wallets_stats = models.Wallet.get_wallets(method=method)
         if not wallets_stats:
             continue
 
-        await context.bot.send_message(
-            chat_id=int(os.getenv("OWNER_ID")),
-            text=stringify_daily_wallet_stats(method=method, stats=wallets_stats),
+        wallets_stats_text += (
+            stringify_daily_wallet_stats(method=method, stats=wallets_stats) + "\n\n"
         )
+
+    await context.bot.send_message(
+        chat_id=int(os.getenv("OWNER_ID")),
+        text=(
+            stringify_daily_order_stats("إيداعات", stats=deposit_stats)
+            + "\n\n"
+            + stringify_daily_order_stats("سحوبات", stats=withdraw_stats)
+            + "\n\n"
+            + wallets_stats_text
+        ),
+    )

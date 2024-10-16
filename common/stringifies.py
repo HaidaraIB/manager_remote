@@ -1,6 +1,6 @@
 import models
 from common.common import format_amount, format_datetime, parent_to_child_models_mapper
-
+from common.constants import *
 
 state_dict_en_to_ar = {
     "declined": "مرفوض",
@@ -291,9 +291,22 @@ def stringify_daily_order_stats(type_: str, stats):
         stats_by_method_text += f"{s[0]}: <b>{format_amount(s[1])}</b>\n"
 
     amounts_sum = sum(list(map(lambda x: float(x[1]), stats)))
+    methods_amounts_sum = sum(
+        list(
+            map(
+                lambda x: (
+                    float(x[1])
+                    if x[0] not in [CREATE_ACCOUNT_DEPOSIT, GHAFLA_OFFER]
+                    else 0
+                ),
+                stats,
+            )
+        )
+    )
 
     return (
-        f"مجموع {type_} اليوم: <b>{format_amount(amounts_sum)}</b>\n\n"
+        f"مجموع {type_} اليوم الكلي: <b>{format_amount(amounts_sum)}</b>\n"
+        f"مجموع {type_} اليوم بدون العروض: <b>{format_amount(methods_amounts_sum)}</b>\n\n"
         "<i>التفاصيل:</i>\n" + stats_by_method_text
     )
 

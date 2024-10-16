@@ -359,7 +359,7 @@ def main():
     )
     app.job_queue.run_daily(
         callback=send_daily_stats,
-        time=datetime.time(23, 58, tzinfo=pytz.timezone("Asia/Damascus")),
+        time=datetime.time(20, 16, tzinfo=pytz.timezone("Asia/Damascus")),
         name="send_daily_stats",
         job_kwargs={
             "id": "send_daily_stats",
