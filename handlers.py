@@ -29,6 +29,7 @@ from common.back_to_home_page import (
 
 from agent.login import *
 
+from user.referral import *
 from user.withdraw import *
 from user.deposit import *
 from user.busdt import *
@@ -240,6 +241,8 @@ def main():
     app.add_handler(deposit_handler)
 
     app.add_handler(complaint_handler)
+
+    app.add_handler(referral_handler)
 
     # GROUPS SETTINGS
     app.add_handler(change_group_handler)

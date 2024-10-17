@@ -7,7 +7,7 @@ from telegram.ext import (
     filters,
 )
 from admin.broadcast.common import send_to, build_done_button, build_broadcast_keyboard
-from common.common import build_admin_keyboard
+from common.common import build_admin_keyboard, build_back_button
 from common.back_to_home_page import (
     back_to_admin_home_page_handler,
     back_to_admin_home_page_button,
@@ -39,16 +39,19 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        keyboard = build_broadcast_keyboard()
+        keyboard.append(build_back_button("back_to_the_message"))
+        keyboard.append(back_to_admin_home_page_button[0])
         if update.message:
             context.user_data["the message"] = update.message
             await update.message.reply_text(
                 text="هل تريد إرسال الرسالة إلى:",
-                reply_markup=build_broadcast_keyboard(),
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
         else:
             await update.callback_query.edit_message_text(
                 text="هل تريد إرسال الرسالة إلى:",
-                reply_markup=build_broadcast_keyboard(),
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
 
         return SEND_TO

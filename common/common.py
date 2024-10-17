@@ -11,22 +11,13 @@ from telegram import (
     PhotoSize,
     InputMedia,
     Message,
+    User,
 )
 
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
 
-from models import (
-    WithdrawOrder,
-    DepositOrder,
-    BuyUsdtdOrder,
-    DepositAgent,
-    PaymentAgent,
-    Checker,
-    Photo,
-    Conv,
-    Account,
-)
+import models
 from common.constants import *
 import asyncio
 import os
@@ -42,7 +33,19 @@ order_dict_en_to_ar = {
 }
 
 
-def make_conv_text(conv: list[Conv]):
+async def check_referral(context: ContextTypes.DEFAULT_TYPE, new_user: User):
+    if context.args:
+        referrer_id = int(context.args[0])
+        referrer = models.User.get_user(user_id=referrer_id)
+        referral = models.Referral.get_by(referred_user_id=new_user.id)
+        if referrer and not referral:
+            await models.Referral.add(
+                referred_user_id=new_user.id,
+                referrer_id=referrer_id,
+            )
+
+
+def make_conv_text(conv: list[models.Conv]):
     conv_text = ""
     for m in conv:
         if m.from_user:
@@ -70,7 +73,7 @@ async def send_to_photos_archive(
             chat_id=int(os.getenv("PHOTOS_ARCHIVE")), photo=photo
         )
     ).photo[-1]
-    await Photo.add(
+    await models.Photo.add(
         [p],
         order_serial=serial,
         order_type=order_type,
@@ -78,11 +81,11 @@ async def send_to_photos_archive(
 
 
 parent_to_child_models_mapper: dict[
-    str, DepositOrder | WithdrawOrder | BuyUsdtdOrder
+    str, models.DepositOrder | models.WithdrawOrder | models.BuyUsdtdOrder
 ] = {
-    "withdraw": WithdrawOrder,
-    "deposit": DepositOrder,
-    "busdt": BuyUsdtdOrder,
+    "withdraw": models.WithdrawOrder,
+    "deposit": models.DepositOrder,
+    "busdt": models.BuyUsdtdOrder,
 }
 
 
@@ -225,7 +228,7 @@ async def send_media_to_user(
 
 async def notify_workers(
     context: ContextTypes.DEFAULT_TYPE,
-    workers: list[DepositAgent | PaymentAgent | Checker],
+    workers: list[models.DepositAgent | models.PaymentAgent | models.Checker],
     text: str,
 ):
     ids = set(map(lambda x: x.id, workers))
@@ -254,7 +257,7 @@ def build_back_button(data: str):
 
 
 def build_accounts_keyboard(user_id: int):
-    accounts = Account.get_user_accounts(user_id=user_id)
+    accounts = models.Account.get_user_accounts(user_id=user_id)
     accounts_keyboard = [
         InlineKeyboardButton(
             text=a.acc_num,
@@ -316,6 +319,12 @@ def build_user_keyboard():
             InlineKeyboardButton(
                 text="وكلاء موصى بهم 🈂️",
                 callback_data="trusted agents",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="دعوة الأصدقاء ✉️",
+                callback_data="referral",
             )
         ],
     ]

@@ -24,10 +24,8 @@ def build_broadcast_keyboard():
                 callback_data="agents",
             ),
         ],
-        build_back_button("back_to_the_message"),
-        back_to_admin_home_page_button[0],
     ]
-    return InlineKeyboardMarkup(keyboard)
+    return keyboard
 
 
 def build_done_button():

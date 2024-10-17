@@ -7,6 +7,7 @@ from common.common import (
     build_worker_keyboard,
     build_agent_keyboard,
     check_hidden_keyboard,
+    check_referral,
 )
 from common.force_join import check_if_user_member
 from custom_filters import Admin, Worker, DepositAgent, Agent
@@ -49,6 +50,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         old_user = models.User.get_user(user_id=update.effective_user.id)
         if not old_user:
             new_user = update.effective_user
+            await check_referral(context=context, new_user=new_user)
             await models.User.add_new_user(
                 user_id=new_user.id,
                 username=new_user.username,

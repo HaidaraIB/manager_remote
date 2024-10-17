@@ -4,7 +4,6 @@ from custom_filters import Admin
 from common.common import parent_to_child_models_mapper
 from common.back_to_home_page import back_to_admin_home_page_button
 from common.stringifies import general_stringify_order, order_settings_dict
-import models
 
 
 def build_order_types_keyboard():
