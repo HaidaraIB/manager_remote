@@ -1,7 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, error
 from telegram.ext import ContextTypes
 from common.common import apply_ex_rate, notify_workers
-from common.stringifies import stringify_deposit_order
+from common.stringifies import stringify_deposit_order, create_order_user_info_line
 from common.constants import *
 from models import RefNumber, DepositOrder, DepositAgent
 
@@ -54,10 +54,10 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         else:
             if ref_present and ref_present.order_serial == -1:
                 reason = "رقم عملية مكرر"
-                sugg = "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
+                sugg = ""
             else:
                 reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
-                sugg = ""
+                sugg = "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
             try:
                 await context.bot.send_message(
                     chat_id=context.job.user_id,
@@ -69,19 +69,22 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 )
             except:
                 pass
-
+            order_user_info_line = await create_order_user_info_line(
+                user_id=d_order.user_id, context=context
+            )
             text = (
                 DECLINE_TEXT
                 + "\n"
                 + stringify_deposit_order(
-                    amount=0,
+                    amount=d_order.amount,
                     serial=d_order.serial,
                     method=d_order.method,
                     account_number=d_order.acc_number,
                     wal=d_order.deposit_wallet,
                     ref_num=d_order.ref_number,
                 )
-                + f"\n\nالسبب:\n<b>{reason}</b>"
+                + order_user_info_line
+                + f"السبب:\n<b>{reason}</b>"
             )
 
             await context.bot.send_message(

@@ -17,7 +17,8 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
-
+from common.stringifies import create_order_user_info_line
+from common.constants import *
 import datetime
 import os
 
@@ -88,11 +89,13 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             if update.message.reply_to_message.text_html
             else update.message.reply_to_message.caption_html
         )
-
+        order_user_info_line = await create_order_user_info_line(
+            user_id=d_order.user_id, context=context
+        )
         await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             media=media,
-            caption=caption,
+            caption=caption + order_user_info_line,
         )
 
         await context.bot.edit_message_reply_markup(
@@ -100,15 +103,15 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة ✅",
-                    callback_data="✅✅✅✅✅✅✅✅✅",
+                    text=APPROVED_TEXT,
+                    callback_data=APPROVED_TEXT,
                 )
             ),
         )
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة ✅",
+            text=APPROVED_TEXT,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -191,11 +194,14 @@ async def return_deposit_order_reason(
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
 
+        order_user_info_line = await create_order_user_info_line(
+            user_id=d_order.user_id, context=context
+        )
         ar_text = (
             update.message.reply_to_message.text_html
             if update.message.reply_to_message.text_html
             else update.message.reply_to_message.caption
-        ) + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
+        ) + (order_user_info_line + f"سبب الإعادة:\n<b>{reason}</b>")
 
         return_button = InlineKeyboardButton(
             text="إرفاق المطلوب",

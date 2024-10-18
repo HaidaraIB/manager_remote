@@ -71,3 +71,4 @@ EXT_COMPLAINT_LINE = "<b>ملحق بالشكوى على الطلب ذي الرق
 
 
 DECLINE_TEXT = "تم رفض الطلب ❌"
+APPROVED_TEXT = "تمت الموافقة ✅"

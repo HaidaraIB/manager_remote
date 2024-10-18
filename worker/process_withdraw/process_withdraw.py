@@ -11,6 +11,8 @@ from common.common import (
     send_to_photos_archive,
     send_photo_to_user,
 )
+from common.constants import *
+from common.stringifies import create_order_user_info_line
 from worker.process_withdraw.common import (
     return_order_to_user,
     return_order_to_checker,
@@ -80,8 +82,14 @@ async def reply_with_payment_proof_withdraw(
             photo=update.message.photo[-1],
             msg=caption,
         )
-
-        caption = "تمت الموافقة ✅\n" + update.message.reply_to_message.text_html
+        order_user_info_line = await create_order_user_info_line(
+            user_id=w_order.user_id, context=context
+        )
+        caption = (
+            "تمت الموافقة ✅\n"
+            + update.message.reply_to_message.text_html
+            + order_user_info_line
+        )
 
         await context.bot.send_photo(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
@@ -94,15 +102,15 @@ async def reply_with_payment_proof_withdraw(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة ✅",
-                    callback_data="✅✅✅✅✅✅✅✅✅",
+                    text=APPROVED_TEXT,
+                    callback_data=APPROVED_TEXT,
                 ),
             ),
         )
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة ✅",
+            text=APPROVED_TEXT,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -177,7 +185,7 @@ async def return_withdraw_order_reason(
         serial = int(data.split("_")[-1])
         w_order = WithdrawOrder.get_one_order(serial=serial)
         reason = update.message.text_html
-        
+
         await ReturnedConv.add_response(
             serial=serial,
             order_type="withdraw",
@@ -208,11 +216,15 @@ async def return_withdraw_order_reason(
                     returned_message_id=message.id,
                 )
 
+        order_user_info_line = await create_order_user_info_line(
+            user_id=w_order.user_id, context=context
+        )
         text = (
             return_to_who_line
             + "\n"
             + update.message.reply_to_message.text_html
-            + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
+            + order_user_info_line
+            + f"سبب الإعادة:\n<b>{reason}</b>"
         )
 
         await context.bot.send_message(

@@ -5,19 +5,12 @@ from telegram import (
     InlineKeyboardMarkup,
     InputMediaPhoto,
 )
-
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
-
+from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 import os
 import datetime
 from models import BuyUsdtdOrder, ReturnedConv
 from custom_filters import BuyUSDT, Returned, DepositAgent, Approved
-
+from common.constants import *
 from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
@@ -26,7 +19,7 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
-
+from common.stringifies import create_order_user_info_line
 
 async def user_payment_verified_busdt(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -104,15 +97,15 @@ async def reply_with_payment_proof_busdt(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة ✅",
-                    callback_data="✅✅✅✅✅✅✅✅✅",
+                    text=APPROVED_TEXT,
+                    callback_data=APPROVED_TEXT,
                 ),
             ),
         )
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة ✅",
+            text=APPROVED_TEXT,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
@@ -217,11 +210,15 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
                 returned_message_id=message.id,
             )
 
+        order_user_info_line = await create_order_user_info_line(
+            user_id=b_order.user_id, context=context
+        )
         caption = (
             res_flag
             + "\n"
             + update.message.reply_to_message.caption_html
-            + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
+            + order_user_info_line
+            + f"سبب الإعادة:\n<b>{reason}</b>"
         )
 
         await context.bot.send_photo(

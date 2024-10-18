@@ -159,7 +159,8 @@ async def get_login_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_to_message.edit_reply_markup(
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة ✅", callback_data="تمت الموافقة ✅"
+                    text=APPROVED_TEXT,
+                    callback_data=APPROVED_TEXT,
                 )
             )
         )
