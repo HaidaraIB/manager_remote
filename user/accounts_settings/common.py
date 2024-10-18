@@ -44,8 +44,8 @@ async def reply_with_user_accounts(update: Update, context: ContextTypes.DEFAULT
 def find_valid_amounts(context: ContextTypes.DEFAULT_TYPE, amounts: list):
     valid_amounts = []
     for a in amounts:
-        reminder = context.bot_data["create_account_deposit"] - a
-        if reminder > 0:
+        remainder = context.bot_data["create_account_deposit"] - a
+        if remainder > 0:
             valid_amounts.append(a)
 
     return valid_amounts
