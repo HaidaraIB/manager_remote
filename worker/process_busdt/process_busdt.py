@@ -19,7 +19,7 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
-
+from common.stringifies import create_order_user_info_line
 
 async def user_payment_verified_busdt(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -210,11 +210,15 @@ async def return_busdt_order_reason(update: Update, context: ContextTypes.DEFAUL
                 returned_message_id=message.id,
             )
 
+        order_user_info_line = await create_order_user_info_line(
+            user_id=b_order.user_id, context=context
+        )
         caption = (
             res_flag
             + "\n"
             + update.message.reply_to_message.caption_html
-            + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
+            + order_user_info_line
+            + f"سبب الإعادة:\n<b>{reason}</b>"
         )
 
         await context.bot.send_photo(

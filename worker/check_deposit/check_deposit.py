@@ -84,7 +84,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                     ref_num=d_order.ref_number,
                 )
                 + order_user_info_line
-                + f"\n\nالسبب:\n<b>{reason}</b>"
+                + f"السبب:\n<b>{reason}</b>"
             )
 
             await context.bot.send_message(

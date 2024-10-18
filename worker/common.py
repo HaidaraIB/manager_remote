@@ -6,6 +6,7 @@ from common.common import (
     send_message_to_user,
     build_worker_keyboard,
 )
+from common.stringifies import create_order_user_info_line
 from common.constants import *
 from models import TrustedAgent, Checker
 from custom_filters import DepositAgent
@@ -96,12 +97,15 @@ async def decline_order_reason(
         user_id=order.user_id,
         msg=text,
     )
-
+    order_user_info_line = await create_order_user_info_line(
+        user_id=order.user_id, context=context
+    )
     text = (
         DECLINE_TEXT
         + "\n"
         + update.message.reply_to_message.text_html
-        + f"\n\nالسبب:\n<b>{update.message.text_html}</b>"
+        + order_user_info_line
+        + f"السبب:\n<b>{update.message.text_html}</b>"
     )
     if order_type in ["busdt", "deposit"]:
         await context.bot.send_photo(
@@ -121,7 +125,7 @@ async def decline_order_reason(
         reply_markup=InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
                 text=DECLINE_TEXT,
-                callback_data="❌❌❌❌❌❌❌",
+                callback_data=DECLINE_TEXT,
             )
         ),
     )

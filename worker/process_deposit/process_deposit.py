@@ -201,7 +201,7 @@ async def return_deposit_order_reason(
             update.message.reply_to_message.text_html
             if update.message.reply_to_message.text_html
             else update.message.reply_to_message.caption
-        ) + (order_user_info_line + f"\n\nسبب الإعادة:\n<b>{reason}</b>")
+        ) + (order_user_info_line + f"سبب الإعادة:\n<b>{reason}</b>")
 
         return_button = InlineKeyboardButton(
             text="إرفاق المطلوب",
