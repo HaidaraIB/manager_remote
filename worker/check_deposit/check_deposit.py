@@ -1,7 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, error
 from telegram.ext import ContextTypes
 from common.common import apply_ex_rate, notify_workers
-from common.stringifies import stringify_deposit_order
+from common.stringifies import stringify_deposit_order, create_order_user_info_line
 from common.constants import *
 from models import RefNumber, DepositOrder, DepositAgent
 
@@ -69,7 +69,9 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 )
             except:
                 pass
-            tg_user = await context.bot.get_chat(chat_id=d_order.user_id)
+            order_user_info_line = await create_order_user_info_line(
+                user_id=d_order.user_id, context=context
+            )
             text = (
                 DECLINE_TEXT
                 + "\n"
@@ -81,7 +83,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                     wal=d_order.deposit_wallet,
                     ref_num=d_order.ref_number,
                 )
-                + f"\n\nصاحب الطلب: {"@" + tg_user.username if tg_user.username else tg_user.full_name}\n\n"
+                + order_user_info_line
                 + f"\n\nالسبب:\n<b>{reason}</b>"
             )
 

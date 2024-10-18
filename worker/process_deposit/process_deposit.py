@@ -17,6 +17,7 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
+from common.stringifies import create_order_user_info_line
 from common.constants import *
 import datetime
 import os
@@ -88,12 +89,13 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             if update.message.reply_to_message.text_html
             else update.message.reply_to_message.caption_html
         )
-        tg_user = await context.bot.get_chat(chat_id=d_order.user_id)
+        order_user_info_line = await create_order_user_info_line(
+            user_id=d_order.user_id, context=context
+        )
         await context.bot.send_media_group(
             chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
             media=media,
-            caption=caption
-            + f"\n\nصاحب الطلب: {'@' + tg_user.username if tg_user.username else tg_user.full_name}\n\n",
+            caption=caption + order_user_info_line,
         )
 
         await context.bot.edit_message_reply_markup(
@@ -191,16 +193,15 @@ async def return_deposit_order_reason(
             f"<b>{reason}</b>\n\n"
             "قم بالضغط على الزر أدناه وإرفاق المطلوب."
         )
-        
-        tg_user = await context.bot.get_chat(chat_id=d_order.user_id)
+
+        order_user_info_line = await create_order_user_info_line(
+            user_id=d_order.user_id, context=context
+        )
         ar_text = (
             update.message.reply_to_message.text_html
             if update.message.reply_to_message.text_html
             else update.message.reply_to_message.caption
-        ) + (
-            f"\n\nصاحب الطلب: {'@' + tg_user.username if tg_user.username else tg_user.full_name}\n\n"
-            + f"\n\nسبب الإعادة:\n<b>{reason}</b>"
-        )
+        ) + (order_user_info_line + f"\n\nسبب الإعادة:\n<b>{reason}</b>")
 
         return_button = InlineKeyboardButton(
             text="إرفاق المطلوب",

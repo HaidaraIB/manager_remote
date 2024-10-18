@@ -1,3 +1,4 @@
+from telegram.ext import ContextTypes
 import models
 from common.common import format_amount, format_datetime, parent_to_child_models_mapper
 from common.constants import *
@@ -323,3 +324,11 @@ def stringify_daily_wallet_stats(method: str, stats: list[models.Wallet]):
         + wallet_stats_text
         + f"\nالمجموع: <b>{format_amount(amounts_sum)}</b>"
     )
+
+
+async def create_order_user_info_line(user_id:int, context:ContextTypes.DEFAULT_TYPE):
+    try:
+        tg_user = await context.bot.get_chat(chat_id=user_id)
+    except:
+        tg_user = models.User.get_user(user_id=user_id)
+    return f"\n\nصاحب الطلب: {"@" + tg_user.username if tg_user.username else (tg_user.name if isinstance(tg_user, models.User) else tg_user.full_name)}\n\n"
