@@ -11,6 +11,7 @@ from common.common import (
     send_to_photos_archive,
     send_photo_to_user,
 )
+from common.constants import *
 from worker.process_withdraw.common import (
     return_order_to_user,
     return_order_to_checker,
@@ -94,15 +95,15 @@ async def reply_with_payment_proof_withdraw(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة ✅",
-                    callback_data="✅✅✅✅✅✅✅✅✅",
+                    text=APPROVED_TEXT,
+                    callback_data=APPROVED_TEXT,
                 ),
             ),
         )
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة ✅",
+            text=APPROVED_TEXT,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),

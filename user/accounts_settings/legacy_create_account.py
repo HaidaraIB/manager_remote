@@ -2,7 +2,7 @@ from telegram import (
     Update,
     Chat,
     InlineKeyboardButton,
-    InlineKeyboardMarkup,
+    InlineKeyboardMarkup
 )
 
 from telegram.ext import (
@@ -10,7 +10,7 @@ from telegram.ext import (
     ConversationHandler,
     CallbackQueryHandler,
     MessageHandler,
-    filters,
+    filters
 )
 
 from common.common import build_user_keyboard, build_back_button, send_message_to_user
@@ -19,6 +19,7 @@ from common.decorators import (
     check_user_call_on_or_off_decorator,
     check_user_pending_orders_decorator,
 )
+from common.constants import *
 from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_button,
@@ -179,8 +180,8 @@ async def reply_to_create_account_order(
             message_id=update.effective_message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة ✅",
-                    callback_data="تمت الموافقة ✅",
+                    text=APPROVED_TEXT,
+                    callback_data=APPROVED_TEXT,
                 )
             ),
         )

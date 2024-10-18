@@ -54,10 +54,10 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         else:
             if ref_present and ref_present.order_serial == -1:
                 reason = "رقم عملية مكرر"
-                sugg = "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
+                sugg = ""
             else:
                 reason = "لم يجد البوت رقم عملية الدفع المرتبط بهذا الطلب"
-                sugg = ""
+                sugg = "إن كنت تظن أن هذا خطأ، أعد تقديم الطلب وحسب."
             try:
                 await context.bot.send_message(
                     chat_id=context.job.user_id,
@@ -69,18 +69,19 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 )
             except:
                 pass
-
+            tg_user = await context.bot.get_chat(chat_id=d_order.user_id)
             text = (
                 DECLINE_TEXT
                 + "\n"
                 + stringify_deposit_order(
-                    amount=0,
+                    amount=d_order.amount,
                     serial=d_order.serial,
                     method=d_order.method,
                     account_number=d_order.acc_number,
                     wal=d_order.deposit_wallet,
                     ref_num=d_order.ref_number,
                 )
+                + f"\n\nصاحب الطلب: {"@" + tg_user.username if tg_user.username else tg_user.full_name}\n\n"
                 + f"\n\nالسبب:\n<b>{reason}</b>"
             )
 

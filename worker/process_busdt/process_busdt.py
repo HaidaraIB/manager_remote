@@ -5,19 +5,12 @@ from telegram import (
     InlineKeyboardMarkup,
     InputMediaPhoto,
 )
-
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
-
+from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 import os
 import datetime
 from models import BuyUsdtdOrder, ReturnedConv
 from custom_filters import BuyUSDT, Returned, DepositAgent, Approved
-
+from common.constants import *
 from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
@@ -104,15 +97,15 @@ async def reply_with_payment_proof_busdt(
             message_id=update.message.reply_to_message.id,
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    text="تمت الموافقة ✅",
-                    callback_data="✅✅✅✅✅✅✅✅✅",
+                    text=APPROVED_TEXT,
+                    callback_data=APPROVED_TEXT,
                 ),
             ),
         )
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="تمت الموافقة ✅",
+            text=APPROVED_TEXT,
             reply_markup=build_worker_keyboard(
                 deposit_agent=DepositAgent().filter(update)
             ),
