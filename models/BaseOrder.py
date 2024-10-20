@@ -1,4 +1,4 @@
-from sqlalchemy import select, and_, or_, desc, func, text
+from sqlalchemy import select, and_, or_, desc, text, func
 from models.DB import Base, lock_and_release, connect_and_close
 from models.RefNumber import RefNumber
 from sqlalchemy.orm import Session
@@ -412,11 +412,13 @@ class BaseOrder(Base):
     def calc_daily_stats(cls, s: Session = None):
         today = datetime.date.today().strftime("%Y-%m-%d")
         res = s.execute(
-            select(cls.method, func.sum(cls.amount)).where(
+            select(cls.method, func.sum(cls.amount))
+            .where(
                 and_(
                     cls.state == "approved",
-                    func.date(cls.order_date) == today,
+                    func.date(func.datetime(cls.order_date, "+3 hours")) == today,
                 )
-            ).group_by(cls.method)
+            )
+            .group_by(cls.method)
         )
         return res.fetchall()

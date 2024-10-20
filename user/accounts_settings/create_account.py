@@ -10,7 +10,7 @@ from common.back_to_home_page import back_to_user_home_page_button
 from common.constants import HOME_PAGE_TEXT, CREATE_ACCOUNT_DEPOSIT
 from user.accounts_settings.common import (
     choose_random_amount,
-    find_valid_amounts,
+    check_balance_condition,
     build_accounts_settings_keyboard,
 )
 from common.functions import send_deposit_without_check
@@ -80,53 +80,31 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             await create_account_lock.acquire()
             account = models.Account.get_account(new=True)
-            if account:
+            balance_available = check_balance_condition(context)
+            if account and balance_available:
                 context.user_data["pending_create_account"] = True
                 await asyncio.sleep(5)
-
-                if context.bot_data.get("create_account_deposit_pin", None) is None:
-                    context.bot_data["create_account_deposit"] = 0
-                    context.bot_data["create_account_deposit_pin"] = 0
-
-                valid_amounts = find_valid_amounts(
+                deposit_gift = choose_random_amount(context=context)
+                await send_deposit_without_check(
                     context=context,
-                    amounts=[5000, 10000, 15000],
+                    acc_number=account.acc_num,
+                    user_id=update.effective_user.id,
+                    amount=deposit_gift,
+                    method=CREATE_ACCOUNT_DEPOSIT,
                 )
+                gift_line = f"قيمة الهدية: <b>{format_amount(deposit_gift)} ل.س</b>\n\n"
+                group_text = (
+                    "تم إنشاء حساب جديد مشحون بمبلغ ✅\n\n"
+                    f"رقم الحساب: <code>{account.acc_num}</code>\n"
+                ) + gift_line
 
-                if not valid_amounts and context.bot_data["create_account_deposit"] > 0:
-                    valid_amounts.append(context.bot_data["create_account_deposit"])
-                    context.bot_data["create_account_deposit"] = 0
-
-                elif not valid_amounts and context.bot_data["create_account_deposit"] <= 0:
-                    valid_amounts.append(5000)
-
-                gift_line = ""
-                deposit_gift = 0
-                if valid_amounts:
-                    deposit_gift = choose_random_amount(
-                        context=context, valid_amounts=valid_amounts
-                    )
-                    await send_deposit_without_check(
-                        context=context,
-                        acc_number=account.acc_num,
-                        user_id=update.effective_user.id,
-                        amount=deposit_gift,
-                        method=CREATE_ACCOUNT_DEPOSIT,
-                    )
-                    gift_line = f"قيمة الهدية: <b>{format_amount(deposit_gift)} ل.س</b>\n\n"
-                    group_text = (
-                        "تم إنشاء حساب جديد مشحون بمبلغ ✅\n\n"
-                        f"رقم الحساب: <code>{account.acc_num}</code>\n"
-                    ) + gift_line
-
-                    await context.bot.send_message(
-                        chat_id=int(os.getenv("CHANNEL_ID")),
-                        text=group_text,
-                        message_thread_id=int(
-                            os.getenv("DEPOSIT_GIFT_ON_CREATE_ACCOUNT_SUCCESS_TOPIC_ID")
-                        ),
-                    )
-
+                await context.bot.send_message(
+                    chat_id=int(os.getenv("CHANNEL_ID")),
+                    text=group_text,
+                    message_thread_id=int(
+                        os.getenv("DEPOSIT_GIFT_ON_CREATE_ACCOUNT_SUCCESS_TOPIC_ID")
+                    ),
+                )
                 await models.Account.connect_account_to_user(
                     user_id=update.effective_user.id,
                     acc_num=account.acc_num,

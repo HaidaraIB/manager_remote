@@ -41,18 +41,19 @@ async def reply_with_user_accounts(update: Update, context: ContextTypes.DEFAULT
     )
 
 
-def find_valid_amounts(context: ContextTypes.DEFAULT_TYPE, amounts: list):
-    valid_amounts = []
-    for a in amounts:
-        reminder = context.bot_data["create_account_deposit"] - a
-        if reminder > 0:
-            valid_amounts.append(a)
+def check_balance_condition(context:ContextTypes.DEFAULT_TYPE):
+    if context.bot_data.get("create_account_deposit_pin", None) is None:
+        context.bot_data["create_account_deposit"] = 0
+        context.bot_data["create_account_deposit_pin"] = 0
 
-    return valid_amounts
+    return context.bot_data["create_account_deposit"] > 0
 
-
-def choose_random_amount(context: ContextTypes.DEFAULT_TYPE, valid_amounts: float):
-    rand = random.choice(valid_amounts)
-    context.bot_data["create_account_deposit"] -= rand
+def choose_random_amount(context: ContextTypes.DEFAULT_TYPE):
+    rand = random.randint(1000, 30000)
+    if rand >= context.bot_data["create_account_deposit"]:
+        rand = context.bot_data["create_account_deposit"]
+        context.bot_data["create_account_deposit"] = 0
+    else:
+        context.bot_data["create_account_deposit"] -= rand
 
     return rand

@@ -40,6 +40,7 @@ from user.show_trusted_agents import *
 from user.complaint import *
 from user.respond_to_contact_msg import *
 
+from admin.stats import *
 from admin.admin_calls import *
 from admin.admin_settings import *
 from admin.wallet_settings import *
@@ -252,6 +253,10 @@ def main():
     app.add_handler(turn_user_calls_on_or_off_handler)
     app.add_handler(turn_payment_method_on_or_off_handler)
 
+    # STATS
+    app.add_handler(stats_handler)
+    app.add_handler(choose_stats_handler)
+
     app.add_handler(add_wallet_handler)
     app.add_handler(remove_wallet_handler)
     app.add_handler(show_wallet_handler)
@@ -362,7 +367,7 @@ def main():
     )
     app.job_queue.run_daily(
         callback=send_daily_stats,
-        time=datetime.time(20, 16, tzinfo=pytz.timezone("Asia/Damascus")),
+        time=datetime.time(23, 59, tzinfo=pytz.timezone("Asia/Damascus")),
         name="send_daily_stats",
         job_kwargs={
             "id": "send_daily_stats",
