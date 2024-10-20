@@ -71,7 +71,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=InlineKeyboardMarkup(back_buttons),
                 )
                 return
-        except TypeError:
+        except (TypeError, AttributeError):
             pass
 
         await update.callback_query.edit_message_text(
