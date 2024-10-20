@@ -400,6 +400,12 @@ def build_admin_keyboard():
         ],
         [
             InlineKeyboardButton(
+                text="إحصائيات 📊",
+                callback_data="stats",
+            )
+        ],
+        [
+            InlineKeyboardButton(
                 text="رسالة جماعية 👥",
                 callback_data="broadcast",
             )

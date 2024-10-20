@@ -39,6 +39,7 @@ from user.show_trusted_agents import *
 from user.complaint import *
 from user.respond_to_contact_msg import *
 
+from admin.stats import *
 from admin.admin_calls import *
 from admin.admin_settings import *
 from admin.wallet_settings import *
@@ -248,6 +249,10 @@ def main():
     app.add_handler(update_exchange_rates_handler)
     app.add_handler(turn_user_calls_on_or_off_handler)
     app.add_handler(turn_payment_method_on_or_off_handler)
+
+    # STATS
+    app.add_handler(stats_handler)
+    app.add_handler(choose_stats_handler)
 
     app.add_handler(add_wallet_handler)
     app.add_handler(remove_wallet_handler)
