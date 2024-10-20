@@ -3,7 +3,7 @@ from models.DB import Base, lock_and_release, connect_and_close
 from models.RefNumber import RefNumber
 from sqlalchemy.orm import Session
 import datetime
-
+import pytz
 from common.constants import *
 
 
@@ -410,7 +410,7 @@ class BaseOrder(Base):
     @classmethod
     @connect_and_close
     def calc_daily_stats(cls, s: Session = None):
-        today = datetime.date.today().strftime("%Y-%m-%d")
+        today = datetime.datetime.now(tz=pytz.timezone("Asia/Damascus")).strftime("%Y-%m-%d")
         res = s.execute(
             select(cls.method, func.sum(cls.amount))
             .where(

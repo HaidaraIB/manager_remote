@@ -45,7 +45,7 @@ async def choose_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=InlineKeyboardMarkup(back_to_user_home_page_button),
                 )
                 return
-        except TypeError:
+        except (TypeError, AttributeError):
             pass
 
         confirmation_keyboard = [
