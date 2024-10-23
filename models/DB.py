@@ -4,6 +4,7 @@ import traceback
 from asyncio import Lock
 from models import *
 from common.constants import *
+from common.error_handler import write_error, read_error
 
 lock = Lock()
 Base = declarative_base()
@@ -26,8 +27,8 @@ def lock_and_release(func):
                 return result
         except Exception as e:
             print(e)
-            with open("errors.txt", "a", encoding="utf-8") as f:
-                f.write(f"{traceback.format_exc()}\n{'-'*100}\n\n\n")
+            if not read_error(str(e)):
+                write_error(traceback.format_exc() + "\n\n")
         finally:
             s.close()
             lock.release()

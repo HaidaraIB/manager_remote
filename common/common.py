@@ -321,12 +321,12 @@ def build_user_keyboard():
                 callback_data="trusted agents",
             )
         ],
-        [
-            InlineKeyboardButton(
-                text="دعوة الأصدقاء ✉️",
-                callback_data="referral",
-            )
-        ],
+        # [
+        #     InlineKeyboardButton(
+        #         text="دعوة الأصدقاء ✉️",
+        #         callback_data="referral",
+        #     )
+        # ],
     ]
     return InlineKeyboardMarkup(keyboard)
 

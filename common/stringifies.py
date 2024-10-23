@@ -106,7 +106,7 @@ def stringify_reward_report(
         f"مجموع المبالغ هذا {work_type}: <b>{format_amount(partial_balance)}</b>\n"
     )
     worker_text += (
-        f"الدفعات المسبقة:\n{format_amount(worker.pre_balance)}\n"
+        f"الدفعات المسبقة:\n<b>{format_amount(worker.pre_balance)}</b>\n"
         if isinstance(worker, models.PaymentAgent)
         else ""
     )

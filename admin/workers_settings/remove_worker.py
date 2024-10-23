@@ -1,6 +1,10 @@
 from telegram import Chat, Update, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
-from common.back_to_home_page import back_to_admin_home_page_handler
+from common.common import build_back_button
+from common.back_to_home_page import (
+    back_to_admin_home_page_handler,
+    back_to_admin_home_page_button,
+)
 from start import admin_command, start_command
 from models import PaymentAgent, DepositAgent, Checker
 from custom_filters import Admin
@@ -19,6 +23,7 @@ from admin.workers_settings.workers_settings import (
     position_to_show_remove_from,
     choose_check_position_show_remove,
     choose_deposit_after_check_position_show_remove,
+    back_to_choose_position_to_show_remove,
 )
 
 
@@ -34,35 +39,35 @@ async def choose_worker_to_remove(update: Update, context: ContextTypes.DEFAULT_
                 worker_id=worker_to_remove_id, is_point=is_point
             )
             workers = DepositAgent.get_workers(is_point=is_point)
+            back_data = "back_to_choose_position_to_show_remove"
 
         elif pos in ["withdraw", "busdt", "deposit"]:
             method = context.user_data[f"method_to_{option}"]
             await Checker.remove_worker(
-                worker_id=worker_to_remove_id,
-                check_what=pos,
-                method=method,
+                worker_id=worker_to_remove_id, check_what=pos, method=method
             )
-            workers = Checker.get_workers(
-                check_what=pos,
-                method=method,
-            )
+            workers = Checker.get_workers(check_what=pos, method=method)
+            back_data = "back_to_choose_position_to_show_remove"
 
         else:
             await PaymentAgent.remove_worker(worker_id=worker_to_remove_id, method=pos)
             workers = PaymentAgent.get_workers(method=pos)
+            back_data = "back_to_choose_position"
 
+        keyboard = build_positions_keyboard("remove")
+        keyboard.append(build_back_button("back_to_choose_option"))
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.answer(text="تمت إزالة الموظف بنجاح ✅")
-
         if not workers:
             await update.callback_query.edit_message_text(
                 text="اختر الوظيفة:",
-                reply_markup=build_positions_keyboard(op="remove"),
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
-
             return CHOOSE_POSITION
 
         keyboard = build_workers_keyboard(workers, "remove")
-
+        keyboard.append(build_back_button(back_data))
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الموظف.",
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -109,5 +114,9 @@ remove_worker_handler = ConversationHandler(
         start_command,
         back_to_choose_option_handler,
         back_to_choose_position_handler,
+        CallbackQueryHandler(
+            back_to_choose_position_to_show_remove,
+            "^back_to_choose_position_to_show_remove$",
+        ),
     ],
 )

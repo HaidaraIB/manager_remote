@@ -72,6 +72,9 @@ async def add_worker(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        keyboard = build_positions_keyboard("add")
+        keyboard.append(build_back_button("back_to_worker_id"))
+        keyboard.append(back_to_admin_home_page_button[0])
         if update.message:
             try:
                 if update.message.users_shared:
@@ -95,12 +98,12 @@ async def get_worker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await update.message.reply_text(
                 text=CHOOSE_POSITION_TEXT,
-                reply_markup=build_positions_keyboard(op="add"),
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
         else:
             await update.callback_query.edit_message_text(
                 text=CHOOSE_POSITION_TEXT,
-                reply_markup=build_positions_keyboard(op="add"),
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
 
         return POSITION
@@ -118,10 +121,13 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             pos = context.user_data["add_worker_pos"]
 
+        keyboard = build_deposit_after_check_positions()
+        keyboard.append(build_back_button("back_to_choose_add_position"))
+        keyboard.append(back_to_admin_home_page_button[0])
         if pos == "deposit after check":
             await update.callback_query.edit_message_text(
                 text=CHOOSE_POSITION_TEXT,
-                reply_markup=build_deposit_after_check_positions(),
+                reply_markup=InlineKeyboardMarkup(keyboard),
             )
             return DEPOSIT_AFTER_CHECK_POSITION
         elif pos in ["withdraw", "busdt", "deposit"]:
@@ -143,6 +149,9 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 username=worker_to_add.username,
                 method=pos,
             )
+        keyboard = build_positions_keyboard("add")
+        keyboard.append(build_back_button("back_to_worker_id"))
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.answer(WORKER_ADDED_SUCCESSFULLY_TEXT)
         await update.callback_query.edit_message_text(
             text=(
@@ -150,7 +159,7 @@ async def choose_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 + "\n\n"
                 + "اختر وظيفة أخرى إن إردت، للإنهاء اضغط /admin."
             ),
-            reply_markup=build_positions_keyboard(op="add"),
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
 
@@ -162,6 +171,9 @@ async def choose_deposit_after_check_position(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         worker_to_add: Chat = context.user_data["worker_to_add"]
+        keyboard = build_deposit_after_check_positions()
+        keyboard.append(build_back_button("back_to_choose_add_position"))
+        keyboard.append(back_to_admin_home_page_button[0])
         await DepositAgent.add_worker(
             worker_id=worker_to_add.id,
             name=worker_to_add.full_name,
@@ -171,7 +183,7 @@ async def choose_deposit_after_check_position(
         await update.callback_query.answer(WORKER_ADDED_SUCCESSFULLY_TEXT)
         await update.callback_query.edit_message_text(
             text=CHOOSE_POSITION_TEXT,
-            reply_markup=build_deposit_after_check_positions(),
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return DEPOSIT_AFTER_CHECK_POSITION
 

@@ -11,6 +11,8 @@ from common.constants import *
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     if isinstance(context.error, (TimedOut, NetworkError)):
         return
+    elif read_error(str(context.error)):
+        return
     tb_list = traceback.format_exception(
         None, context.error, context.error.__traceback__
     )
@@ -39,3 +41,10 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 def write_error(error: str):
     with open("errors.txt", "a", encoding="utf-8") as f:
         f.write(error + f"{'-'*100}\n\n\n")
+
+
+def read_error(error: str):
+    with open("errors.txt", "r", encoding="utf-8") as f:
+        if error in f.read():
+            return True
+    return False

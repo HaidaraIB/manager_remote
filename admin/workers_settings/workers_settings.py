@@ -69,11 +69,9 @@ async def position_to_show_remove_from(
             )
             return
 
-        keyboard = build_workers_keyboard(
-            workers,
-            option,
-        )
-
+        keyboard = build_workers_keyboard(workers, option)
+        keyboard.append(build_back_button(f"back_to_choose_position"))
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الموظف.",
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -96,11 +94,13 @@ async def choose_deposit_after_check_position_show_remove(
                 show_alert=True,
             )
             return
-        keyboard = build_workers_keyboard(
-            workers,
-            option,
+        keyboard = build_workers_keyboard(workers, option)
+        keyboard.append(
+            build_back_button(
+                f"back_to_choose_position_to_show_remove"
+            )
         )
-
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الموظف.",
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -114,9 +114,11 @@ async def choose_check_position_show_remove(
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         option = context.user_data["worker_settings_option"]
         pos = context.user_data[f"pos_to_{option}"]
-
-        method = update.callback_query.data.split("_")[1]
-        context.user_data[f"method_to_{option}"] = method
+        if not update.callback_query.data.startswith("back"):
+            method = update.callback_query.data.split("_")[1]
+            context.user_data[f"method_to_{option}"] = method
+        else:
+            method = context.user_data[f"method_to_{option}"]
 
         workers = Checker.get_workers(check_what=pos, method=method)
 
@@ -126,13 +128,14 @@ async def choose_check_position_show_remove(
                 show_alert=True,
             )
             return
-        keyboard = build_workers_keyboard(
-            workers,
-            option,
-        )
-
+        keyboard = build_workers_keyboard(workers, option)
+        keyboard.append(build_back_button(f"back_to_choose_position_to_show_remove"))
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الموظف.",
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return CHOOSE_WORKER
+
+
+back_to_choose_position_to_show_remove = position_to_show_remove_from

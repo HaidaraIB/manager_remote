@@ -52,9 +52,13 @@ async def choose_option(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["worker_settings_option"] = op
         else:
             op = context.user_data["worker_settings_option"]
+
+        keyboard = build_positions_keyboard(op=op)
+        keyboard.append(build_back_button("back_to_choose_option"))
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الوظيفة:",
-            reply_markup=build_positions_keyboard(op=op),
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return CHOOSE_POSITION
 
@@ -111,9 +115,7 @@ def build_checker_positions_keyboard(check_what: str, op: str):
 def build_worker_balance_keyboard():
     keyboard = build_checker_positions_keyboard(check_what="deposit", op="balance")
     keyboard += build_payment_positions_keyboard("balance")
-    keyboard.append(build_back_button("back_to_choose_option"))
-    keyboard.append(back_to_admin_home_page_button[0])
-    return InlineKeyboardMarkup(keyboard)
+    return keyboard
 
 
 def build_positions_keyboard(op: str):
@@ -138,14 +140,8 @@ def build_positions_keyboard(op: str):
             ),
         ],
         *build_payment_positions_keyboard(op),
-        (
-            build_back_button("back_to_worker_id")
-            if op == "add"
-            else build_back_button("back_to_choose_option")
-        ),
-        back_to_admin_home_page_button[0],
     ]
-    return InlineKeyboardMarkup(add_worker_keyboard)
+    return add_worker_keyboard
 
 
 def build_payment_positions_keyboard(op: str):
@@ -173,7 +169,7 @@ def build_workers_keyboard(
     workers: list[DepositAgent | PaymentAgent | Checker],
     t: str,
 ) -> list[list[InlineKeyboardButton]]:
-    keyboard: list[list] = []
+    keyboard: list[list[InlineKeyboardButton]] = []
     for i in range(0, len(workers), 2):
         row = []
         row.append(
@@ -190,8 +186,6 @@ def build_workers_keyboard(
                 )
             )
         keyboard.append(row)
-    keyboard.append(build_back_button(f"back_to_{t}"))
-    keyboard.append(back_to_admin_home_page_button[0])
     return keyboard
 
 
@@ -208,9 +202,8 @@ def build_deposit_after_check_positions():
             ),
         ],
     ]
-    keyboard.append(build_back_button("back_to_choose_add_position"))
-    keyboard.append(back_to_admin_home_page_button[0])
-    return InlineKeyboardMarkup(keyboard)
+    return keyboard
+
 
 def create_worker_info_text(
     t_worker: User,

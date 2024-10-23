@@ -58,14 +58,12 @@ async def position_for_worker_balance(
                 f"لا يوجد موظفين {checker_or_worker_en_to_ar_dict[checker_or_worker]} {pos} بعد ❗️"
             )
             return
+        keyboard = build_workers_keyboard(workers=workers, t="balance")
+        keyboard.append(build_back_button(f"back_to_choose_position"))
+        keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الموظف",
-            reply_markup=InlineKeyboardMarkup(
-                build_workers_keyboard(
-                    workers=workers,
-                    t="balance",
-                )
-            ),
+            reply_markup=InlineKeyboardMarkup(),
         )
         return CHOOSE_WORKER
 
