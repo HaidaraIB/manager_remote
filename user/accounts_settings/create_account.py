@@ -1,22 +1,21 @@
 from telegram import Update, Chat, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
+from common.common import build_back_button
+from common.force_join import check_if_user_member_decorator
+from common.back_to_home_page import back_to_user_home_page_button
+from common.constants import *
 from common.decorators import (
     check_if_user_present_decorator,
     check_user_call_on_or_off_decorator,
 )
-from common.common import format_amount, build_back_button
-from common.force_join import check_if_user_member_decorator
-from common.back_to_home_page import back_to_user_home_page_button
-from common.constants import HOME_PAGE_TEXT, CREATE_ACCOUNT_DEPOSIT
 from user.accounts_settings.common import (
-    choose_random_amount,
     check_balance_condition,
     build_accounts_settings_keyboard,
+    serve_gift,
 )
-from common.functions import send_deposit_without_check
+
 import models
 import asyncio
-import os
 from datetime import datetime, date
 
 create_account_lock = asyncio.Lock()
@@ -80,31 +79,20 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             await create_account_lock.acquire()
             account = models.Account.get_account(new=True)
-            balance_available = check_balance_condition(context)
-            if account and balance_available:
+            if account:
                 context.user_data["pending_create_account"] = True
                 await asyncio.sleep(5)
-                deposit_gift = choose_random_amount(context=context)
-                await send_deposit_without_check(
-                    context=context,
-                    acc_number=account.acc_num,
-                    user_id=update.effective_user.id,
-                    amount=deposit_gift,
-                    method=CREATE_ACCOUNT_DEPOSIT,
-                )
-                gift_line = f"قيمة الهدية: <b>{format_amount(deposit_gift)} ل.س</b>\n\n"
-                group_text = (
-                    "تم إنشاء حساب جديد مشحون بمبلغ ✅\n\n"
-                    f"رقم الحساب: <code>{account.acc_num}</code>\n"
-                ) + gift_line
 
-                await context.bot.send_message(
-                    chat_id=int(os.getenv("CHANNEL_ID")),
-                    text=group_text,
-                    message_thread_id=int(
-                        os.getenv("DEPOSIT_GIFT_ON_CREATE_ACCOUNT_SUCCESS_TOPIC_ID")
-                    ),
-                )
+                gift_line = ""
+                deposit_gift = 0
+                balance_available = check_balance_condition(context)
+                if balance_available:
+                    gift_line, deposit_gift = await serve_gift(
+                        user_id=update.effective_user.id,
+                        context=context,
+                        account=account,
+                    )
+
                 await models.Account.connect_account_to_user(
                     user_id=update.effective_user.id,
                     acc_num=account.acc_num,
