@@ -11,6 +11,7 @@ from common.decorators import (
 )
 from common.common import build_confirmation_keyboard, build_back_button
 from user.accounts_settings.common import reply_with_user_accounts
+from user.accounts_settings.accounts_settings import back_to_accounts_settings_handler
 from common.force_join import check_if_user_member_decorator
 import models
 from start import start_command
@@ -100,6 +101,7 @@ delete_account_handler = ConversationHandler(
     fallbacks=[
         start_command,
         back_to_user_home_page_handler,
+        back_to_accounts_settings_handler,
         CallbackQueryHandler(back_to_choose_account, "^back_to_choose_account$"),
     ],
     name="delete_account_conversation",

@@ -1,18 +1,8 @@
-from telegram import (
-    Update,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    ConversationHandler,
-)
+from telegram import Update
+from telegram.ext import ContextTypes, ConversationHandler
 import functools
 from common.constants import *
-from models import (
-    Account,
-    User,
-    TrustedAgent,
-)
+from models import Account, User, TrustedAgent
 from common.common import parent_to_child_models_mapper
 
 

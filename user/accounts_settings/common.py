@@ -22,6 +22,12 @@ def build_accounts_settings_keyboard():
                 callback_data="delete account",
             ),
         ],
+        [
+            InlineKeyboardButton(
+                text="حساباتي 👤",
+                callback_data="show_account",
+            )
+        ],
         back_to_user_home_page_button[0],
     ]
     return InlineKeyboardMarkup(keyboard)

@@ -8,3 +8,4 @@ from user.accounts_settings.store_account import (
     store_account_handler,
 )
 from user.accounts_settings.delete_account import delete_account_handler
+from user.accounts_settings.show_account import show_account_handler

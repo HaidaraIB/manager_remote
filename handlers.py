@@ -229,9 +229,10 @@ def main():
     app.add_handler(back_to_check_agent_order_handler)
 
     app.add_handler(accounts_settings_handler)
-    app.add_handler(back_to_accounts_settings_handler)
     app.add_handler(create_account_handler)
     app.add_handler(delete_account_handler)
+    app.add_handler(show_account_handler)
+    app.add_handler(back_to_accounts_settings_handler)
     app.add_handler(store_account_handler)
     app.add_handler(invalid_account_format_handler, group=3)
 

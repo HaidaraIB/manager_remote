@@ -332,3 +332,10 @@ async def create_order_user_info_line(user_id:int, context:ContextTypes.DEFAULT_
     except:
         tg_user = models.User.get_user(user_id=user_id)
     return f"\n\nصاحب الطلب: {"@" + tg_user.username if tg_user.username else (tg_user.name if isinstance(tg_user, models.User) else tg_user.full_name)}\n\n"
+
+
+def stringify_account(account:models.Account):
+    return (
+        f"رقم الحساب: <code>{account.acc_num}</code>\n"
+        f"كلمة المرور: <code>{account.password}</code>"
+    ) + (f"\nقيمة الهدية: <b>{account.deposit_gift}</b>" if account.deposit_gift else "")
