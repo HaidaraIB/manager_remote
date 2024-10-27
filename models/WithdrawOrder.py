@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, Integer, insert, select, desc
+from sqlalchemy import Column, String, Integer, TIMESTAMP, insert, select, desc
 from sqlalchemy.orm import Session
 from models.DB import connect_and_close, lock_and_release
 from models.PaymentOrder import PaymentOrder
+
+from datetime import datetime
 
 
 class WithdrawOrder(PaymentOrder):
@@ -11,9 +13,13 @@ class WithdrawOrder(PaymentOrder):
     agent_id = Column(Integer, default=0)
     gov = Column(String, default="")
 
-    @staticmethod
+    cancel_date = Column(TIMESTAMP)
+    split_date = Column(TIMESTAMP)
+
+    @classmethod
     @lock_and_release
     async def add_withdraw_order(
+        cls,
         user_id: int,
         group_id: int,
         method: str,
@@ -25,7 +31,7 @@ class WithdrawOrder(PaymentOrder):
         s: Session = None,
     ):
         res = s.execute(
-            insert(WithdrawOrder).values(
+            insert(cls).values(
                 user_id=user_id,
                 group_id=group_id,
                 method=method,
@@ -38,15 +44,43 @@ class WithdrawOrder(PaymentOrder):
         )
         return res.lastrowid
 
-    @staticmethod
+    @classmethod
     @connect_and_close
-    def check_withdraw_code(withdraw_code: str, s: Session = None):
+    def check_withdraw_code(cls, withdraw_code: str, s: Session = None):
         res = s.execute(
-            select(WithdrawOrder)
-            .where(WithdrawOrder.withdraw_code == withdraw_code)
-            .order_by(desc(WithdrawOrder.serial))
+            select(cls)
+            .where(cls.withdraw_code == withdraw_code)
+            .order_by(desc(cls.serial))
         )
         try:
             return res.fetchone().t[0]
         except:
             pass
+
+    @classmethod
+    @lock_and_release
+    async def cancel(cls, serial: int, s: Session = None):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "canceled",
+                cls.cancel_date: datetime.now(),
+            }
+        )
+
+    @classmethod
+    @lock_and_release
+    async def split(
+        cls,
+        serial: int,
+        pending_process_message_id: int,
+        amount: float,
+        s: Session = None,
+    ):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "split",
+                cls.pending_process_message_id: pending_process_message_id,
+                cls.amount: amount,
+                cls.split_date: datetime.now(),
+            }
+        )

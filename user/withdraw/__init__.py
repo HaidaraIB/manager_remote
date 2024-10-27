@@ -1,3 +1,3 @@
-from user.withdraw.withdraw import (
-    withdraw_handler
-)
+from user.withdraw.withdraw import withdraw_handler
+from user.withdraw.manage_pending_withdraws import manage_pending_withdraws_handler
+from user.withdraw.withdraw_settings import withdraw_settings_handler

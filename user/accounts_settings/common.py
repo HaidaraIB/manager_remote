@@ -33,14 +33,18 @@ def build_accounts_settings_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-async def reply_with_user_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def reply_with_user_accounts(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    back_data=None,
+):
     accounts = build_accounts_keyboard(user_id=update.effective_user.id)
     if not accounts:
         await accounts_settings.accounts_settings(update, context)
         return
     keybaord = [
         accounts,
-        build_back_button("back_to_accounts_settings"),
+        build_back_button(back_data) if back_data else [],
         back_to_user_home_page_button[0],
     ]
     await update.callback_query.edit_message_text(
@@ -94,3 +98,7 @@ async def serve_gift(
         ),
     )
     return gift_line, deposit_gift
+
+
+def flip_coin():
+    return random.choice([True, False])

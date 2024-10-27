@@ -9,6 +9,8 @@ PERFECT_MONEY = "PERFECT MONEY"
 POINT_DEPOSIT = "نقاط وكلاء"
 CREATE_ACCOUNT_DEPOSIT = "إيداع إنشاء حساب"
 GHAFLA_OFFER = "عرض الغفلة"
+CANCELED_ORDER = "طلب سحب ملغى رقم <code>{}</code>"
+SPLIT_ORDER = "طلب سحب مرتجع رقم <code>{}</code>"
 
 CRYPTO_LIST = [
     USDT,

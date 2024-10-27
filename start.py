@@ -12,11 +12,14 @@ from common.common import (
 from common.force_join import check_if_user_member
 from custom_filters import Admin, Worker, DepositAgent, Agent
 from common.constants import *
+import os
 
 
 # Fill this when you need to run a code only once and then clear it.
 async def inits(app: Application):
     app.bot_data["restart"] = False
+    await models.Admin.add_new_admin(admin_id=int(os.getenv("OWNER_ID")))
+    await models.PaymentMethod.init_payment_methods()
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -1,10 +1,10 @@
 from models import ComplaintConv
-from common.stringifies import complaint_stringify_order
+from common.stringifies import user_stringify_order
 
 def make_complaint_main_text(order_serial:int, order_type:str, reason:str):
     text = (
         f"شكوى جديدة:\n\n"
-        f"{complaint_stringify_order(serial=order_serial, order_type=order_type)}\n\n"
+        f"{user_stringify_order(serial=order_serial, order_type=order_type)}\n\n"
         "سبب الشكوى:\n"
         f"<b>{reason}</b>\n\n"
     )

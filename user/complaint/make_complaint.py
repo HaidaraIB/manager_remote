@@ -31,7 +31,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
-from common.stringifies import complaint_stringify_order
+from common.stringifies import user_stringify_order
 from user.complaint.notify import notify_order
 from user.complaint.common import *
 from start import start_command
@@ -105,7 +105,7 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         about = context.user_data["complaint_order_type"]
 
-        order_text = complaint_stringify_order(order_type=about, serial=serial)
+        order_text = user_stringify_order(order_type=about, serial=serial)
 
         back_buttons = [
             build_back_button("back_to_choose_order"),
@@ -153,6 +153,12 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 *back_buttons,
             ]
             ret = NOTIFY_ORDER
+        elif order.state in ["canceled", "split"]:
+            await update.callback_query.answer(
+                text="طلب سحب ملغى، لا يمكنك تقديم شكوى بشأنه.",
+                show_alert=True,
+            )
+            return
         else:
             keyboard = back_buttons
             text = order_text + "<b>أرسل سبب هذه الشكوى</b>"
@@ -171,7 +177,7 @@ back_to_choose_order = choose_order_type
 async def complaint_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         context.user_data["reason"] = update.message.text
-        comp_info = complaint_stringify_order(
+        comp_info = user_stringify_order(
             serial=context.user_data["complaint_serial"],
             order_type=context.user_data["complaint_order_type"],
         )
@@ -209,7 +215,7 @@ async def complaint_confirmation(update: Update, context: ContextTypes.DEFAULT_T
 
             complaint_text = (
                 f"شكوى جديدة:\n\n"
-                f"{complaint_stringify_order(serial=serial, order_type=order_type)}\n"
+                f"{user_stringify_order(serial=serial, order_type=order_type)}\n"
                 "سبب الشكوى:\n"
                 f"<b>{context.user_data['reason']}</b>\n"
             )

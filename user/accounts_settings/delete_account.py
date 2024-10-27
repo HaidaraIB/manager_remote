@@ -26,7 +26,11 @@ ACCOUNT, CONFIRM_DELETE_ACCOUNT = range(2)
 @check_if_user_created_account_from_bot_decorator
 async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await reply_with_user_accounts(update, context)
+        await reply_with_user_accounts(
+            update,
+            context,
+            back_data="back_to_accounts_settings",
+        )
         return ACCOUNT
 
 
@@ -73,7 +77,11 @@ async def confirm_delete_account(update: Update, context: ContextTypes.DEFAULT_T
             await update.callback_query.answer(
                 "تم حذف الحساب بنجاح ✅", show_alert=True
             )
-        await reply_with_user_accounts(update, context)
+        await reply_with_user_accounts(
+            update,
+            context,
+            back_data="back_to_accounts_settings",
+        )
         return ACCOUNT
 
 

@@ -12,6 +12,7 @@ async def send_deposit_without_check(
     user_id: int,
     amount: float,
     method: str,
+    from_withdraw_serial: int = 0,
 ):
     target_group = context.bot_data["data"]["deposit_orders_group"]
     serial = await DepositOrder.add_deposit_order(
@@ -20,6 +21,7 @@ async def send_deposit_without_check(
         method=method,
         amount=amount,
         acc_number=acc_number,
+        from_withdraw_serial=from_withdraw_serial,
     )
     order_text = stringify_deposit_order(
         amount=amount,

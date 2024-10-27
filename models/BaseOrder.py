@@ -84,6 +84,7 @@ class BaseOrder(Base):
     def get_orders(
         cls,
         user_id: int = None,
+        states: list[str] = [],
         limit: int = 0,
         time_window: int = 0,
         group_by: str = None,
@@ -94,6 +95,18 @@ class BaseOrder(Base):
 
         elif user_id:
             res = s.execute(select(cls).where(cls.user_id == user_id))
+
+        elif states:
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.user_id == user_id,
+                        cls.state.in_(states),
+                    ),
+                )
+                .order_by(desc(cls.order_date))
+            )
 
         elif time_window:
             today = datetime.date.today()
@@ -142,6 +155,8 @@ class BaseOrder(Base):
         ref_num: str = None,
         method: str = None,
         last: bool = None,
+        states: list[str] = [],
+        user_id: int = None,
         s: Session = None,
     ):
         if serial:
@@ -165,6 +180,18 @@ class BaseOrder(Base):
             )
         elif last is not None:
             res = s.execute(select(func.max(cls.serial)))
+
+        elif user_id and states:
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.user_id == user_id,
+                        cls.state.in_(states),
+                    ),
+                )
+                .order_by(desc(cls.order_date))
+            )
 
         try:
             return res.fetchone().t[0]
@@ -386,31 +413,10 @@ class BaseOrder(Base):
 
     @classmethod
     @connect_and_close
-    def check_user_pending_orders(cls, user_id: int, s: Session = None):
-        res = s.execute(
-            select(cls)
-            .where(
-                and_(
-                    or_(
-                        cls.state == "pending",
-                        cls.state == "sent",
-                        cls.state == "checking",
-                        cls.state == "processing",
-                    ),
-                    cls.user_id == user_id,
-                )
-            )
-            .order_by(desc(cls.order_date))
-        )
-        try:
-            return res.fetchone().t[0]
-        except:
-            pass
-
-    @classmethod
-    @connect_and_close
     def calc_daily_stats(cls, s: Session = None):
-        today = datetime.datetime.now(tz=pytz.timezone("Asia/Damascus")).strftime("%Y-%m-%d")
+        today = datetime.datetime.now(tz=pytz.timezone("Asia/Damascus")).strftime(
+            "%Y-%m-%d"
+        )
         res = s.execute(
             select(cls.method, func.sum(cls.amount))
             .where(

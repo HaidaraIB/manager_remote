@@ -7,23 +7,46 @@ from common.constants import *
 import asyncio
 
 
+def build_withdraw_settings_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="إنشاء طلب سحب 📝",
+                callback_data="withdraw",
+            ),
+            InlineKeyboardButton(
+                text="ادارة طلبات السحب المعلقة ⏳",
+                callback_data="manage_pending_withdraws",
+            ),
+        ]
+    ]
+    return keyboard
+
+
 def make_payment_method_info(payment_method_number):
     return f"<b>Payment info</b>: <code>{payment_method_number}</code>"
 
 
 async def send_withdraw_order_to_check(
     context: ContextTypes.DEFAULT_TYPE,
+    is_player_withdraw: bool,
     withdraw_code: str,
-    method: str,
-    target_group: int,
     user_id: int,
-    acc_number: str,
-    payment_method_number: str,
-    w_type: str,
-    password: str = "",
     agent_id: int = 0,
-    gov: str = "",
+    password: str = "",
 ):
+    if is_player_withdraw:
+        acc_number = context.user_data["withdraw_account"]
+        method = context.user_data["payment_method"]
+        payment_method_number = context.user_data["payment_method_number"]
+        target_group = context.bot_data["data"]["withdraw_orders_group"]
+        gov = context.user_data[f"{context.user_data['agent_option']}_point"]
+    else:
+        acc_number = context.user_data["withdraw_account"]
+        method = context.user_data["payment_method"]
+        payment_method_number = context.user_data["payment_method_number"]
+        target_group = context.bot_data["data"]["withdraw_orders_group"]
+        gov = ""
 
     code_present = WithdrawOrder.check_withdraw_code(withdraw_code=withdraw_code)
 
@@ -44,7 +67,6 @@ async def send_withdraw_order_to_check(
     message = await context.bot.send_message(
         chat_id=target_group,
         text=stringify_check_withdraw_order(
-            w_type=w_type,
             acc_number=acc_number,
             password=password,
             withdraw_code=withdraw_code,
@@ -83,4 +105,4 @@ async def send_withdraw_order_to_check(
             text=f"انتباه يوجد طلب سحب {method} قيد التحقق 🚨",
         )
     )
-    return True
+    return serial

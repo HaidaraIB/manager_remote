@@ -12,6 +12,7 @@ from user.accounts_settings.common import (
     check_balance_condition,
     build_accounts_settings_keyboard,
     serve_gift,
+    flip_coin,
 )
 
 import models
@@ -83,10 +84,11 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.user_data["pending_create_account"] = True
                 await asyncio.sleep(5)
 
+                gift_winner = flip_coin()
                 gift_line = ""
                 deposit_gift = 0
                 balance_available = check_balance_condition(context)
-                if balance_available:
+                if balance_available and gift_winner:
                     gift_line, deposit_gift = await serve_gift(
                         user_id=update.effective_user.id,
                         context=context,

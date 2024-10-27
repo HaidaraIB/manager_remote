@@ -12,6 +12,8 @@ state_dict_en_to_ar = {
     "checking": "قيد التحقق",
     "processing": "قيد التنفيذ",
     "deleted": "محذوف",
+    "canceled": "ملغى",
+    "split": "مرتجع",
 }
 
 worker_type_dict = {
@@ -153,7 +155,7 @@ def general_stringify_order(serial: int, order_type: str, name: str):
     )
 
 
-def complaint_stringify_order(serial: int, order_type: str):
+def user_stringify_order(serial: int, order_type: str):
     op = parent_to_child_models_mapper[order_type].get_one_order(serial=serial)
     payment_method_number = "لا يوجد"
     if order_type != "deposit":
@@ -220,7 +222,6 @@ def stringify_deposit_order(
 
 
 def stringify_check_withdraw_order(
-    w_type: str,
     acc_number: int,
     password: str,
     withdraw_code: str,
@@ -228,9 +229,8 @@ def stringify_check_withdraw_order(
     serial: int,
     method_info: str,
 ):
-    g_b_dict = {"gift": "مكافأة", "balance": "رصيد"}
     return (
-        f"تفاصيل طلب سحب {g_b_dict[w_type]}:\n\n"
+        "تفاصيل طلب سحب رصيد:\n\n"
         f"رقم الحساب 🔢: <code>{acc_number}</code>\n"
         f"كلمة المرور 🈴: <code>{password if password else 'لا يوجد'}</code>\n"
         f"كود السحب: <code>{withdraw_code}</code>\n"

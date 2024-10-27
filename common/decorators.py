@@ -31,8 +31,9 @@ def check_user_pending_orders_decorator(func):
         try:
             order = parent_to_child_models_mapper[
                 update.callback_query.data
-            ].check_user_pending_orders(
+            ].get_one_order(
                 user_id=update.effective_user.id,
+                states=["pending", "processing", "checking", "sent"],
             )
             if order:
                 await update.callback_query.answer(

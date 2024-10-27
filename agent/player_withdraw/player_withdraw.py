@@ -147,17 +147,13 @@ async def get_withdraw_code_player_withdraw(
 ):
     if update.effective_chat.type == Chat.PRIVATE and Agent().filter(update):
         res = await send_withdraw_order_to_check(
-            acc_number=context.user_data["withdraw_account"],
             context=context,
-            method=context.user_data["payment_method"],
-            payment_method_number=context.user_data["payment_method_number"],
-            target_group=context.bot_data["data"]["withdraw_orders_group"],
-            user_id=update.effective_user.id,
-            w_type="balance",
+            is_player_withdraw=True,
             withdraw_code=update.message.text,
+            user_id=update.effective_user.id,
             agent_id=update.effective_user.id,
-            gov=context.user_data[f"{context.user_data['agent_option']}_point"],
         )
+        
         if not res:
             await update.message.reply_text(
                 text="لقد تم إرسال هذا الكود إلى البوت من قبل ❗️",

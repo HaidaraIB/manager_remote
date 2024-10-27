@@ -236,7 +236,9 @@ def main():
     app.add_handler(store_account_handler)
     app.add_handler(invalid_account_format_handler, group=3)
 
+    app.add_handler(withdraw_settings_handler)
     app.add_handler(withdraw_handler)
+    app.add_handler(manage_pending_withdraws_handler)
 
     app.add_handler(busdt_handler)
 

@@ -14,6 +14,7 @@ class DepositOrder(Order):
     acc_number = Column(String)
     agent_id = Column(Integer, default=0)
     gov = Column(String, default="")
+    from_withdraw_serial = Column(Integer, default=0)
 
     @staticmethod
     @connect_and_close
@@ -55,6 +56,7 @@ class DepositOrder(Order):
         ref_number: str = "",
         agent_id: int = 0,
         gov: str = "",
+        from_withdraw_serial: int = 0,
         s: Session = None,
     ):
         res = s.execute(

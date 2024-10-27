@@ -14,19 +14,17 @@ from common.common import (
 )
 
 from common.decorators import (
-    check_if_user_created_account_from_bot_decorator,
-    check_if_user_present_decorator,
     check_user_call_on_or_off_decorator,
     check_user_pending_orders_decorator,
 )
 
-from common.force_join import check_if_user_member_decorator
 from common.back_to_home_page import (
     back_to_user_home_page_handler,
     back_to_user_home_page_button,
 )
 from user.accounts_settings.common import reply_with_user_accounts
 from user.withdraw.common import send_withdraw_order_to_check
+from user.withdraw.withdraw_settings import back_to_withdraw_settings_handler
 from start import start_command
 from models import PaymentMethod, Account
 from common.constants import *
@@ -42,12 +40,13 @@ import os
 
 @check_user_pending_orders_decorator
 @check_user_call_on_or_off_decorator
-@check_if_user_present_decorator
-@check_if_user_member_decorator
-@check_if_user_created_account_from_bot_decorator
 async def withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await reply_with_user_accounts(update, context)
+        await reply_with_user_accounts(
+            update,
+            context,
+            back_data="back_to_withdraw_settings",
+        )
         return WITHDRAW_ACCOUNT
 
 
@@ -140,25 +139,24 @@ back_to_get_payment_info = choose_payment_method
 async def get_withdraw_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         account = Account.get_account(acc_num=context.user_data["withdraw_account"])
-        res = await send_withdraw_order_to_check(
-            acc_number=context.user_data["withdraw_account"],
+        serial = await send_withdraw_order_to_check(
             context=context,
-            method=context.user_data["payment_method"],
-            payment_method_number=context.user_data["payment_method_number"],
-            target_group=context.bot_data["data"]["withdraw_orders_group"],
-            user_id=update.effective_user.id,
-            w_type=context.user_data.get("withdraw_type", "balance"),
-            password=account.password,
+            is_player_withdraw=False,
             withdraw_code=update.message.text,
+            user_id=update.effective_user.id,
+            password=account.password,
         )
-        if not res:
+        if not serial:
             await update.message.reply_text(
                 text="لقد تم إرسال هذا الكود إلى البوت من قبل ❗️",
             )
             return
 
         await update.message.reply_text(
-            text="شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
+            text=(
+                "شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.\n\n"
+                f"رقم الطلب: <code>{serial}</code>"
+            ),
             reply_markup=build_user_keyboard(),
         )
 
@@ -212,6 +210,7 @@ withdraw_handler = ConversationHandler(
             "^back_to_get_payment_info$",
         ),
         back_to_user_home_page_handler,
+        back_to_withdraw_settings_handler,
         start_command,
     ],
     name="withdraw_handler",

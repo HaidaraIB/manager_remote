@@ -33,7 +33,6 @@ async def return_order_to_checker(
     message = await context.bot.send_message(
         chat_id=w_order.checker_id,
         text=stringify_check_withdraw_order(
-            w_type="balance",
             acc_number=w_order.acc_number,
             password=account.password if account else None,
             withdraw_code=w_order.withdraw_code,

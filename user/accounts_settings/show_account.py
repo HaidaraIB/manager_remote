@@ -25,7 +25,11 @@ ACCOUNT = 0
 @check_if_user_created_account_from_bot_decorator
 async def show_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        await reply_with_user_accounts(update=update, context=context)
+        await reply_with_user_accounts(
+            update=update,
+            context=context,
+            back_data="back_to_accounts_settings",
+        )
         return ACCOUNT
 
 
