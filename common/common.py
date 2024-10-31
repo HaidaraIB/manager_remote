@@ -35,7 +35,10 @@ order_dict_en_to_ar = {
 
 async def check_referral(context: ContextTypes.DEFAULT_TYPE, new_user: User):
     if context.args:
-        referrer_id = int(context.args[0])
+        try:
+            referrer_id = int(context.args[0])
+        except ValueError:
+            return
         referrer = models.User.get_user(user_id=referrer_id)
         referral = models.Referral.get_by(referred_user_id=new_user.id)
         if referrer and not referral:
@@ -503,7 +506,7 @@ def build_complaint_keyboard(data: list[str], send_to_worker: bool):
     if send_to_worker:
         complaint_keyboard[0].append(
             InlineKeyboardButton(
-                text="إرسال إلى الموظف المسؤول",
+                text="إعادة إلى الموظف",
                 callback_data=f"send_to_worker_user_complaint_{order_type}_{data[-1]}",
             )
         )

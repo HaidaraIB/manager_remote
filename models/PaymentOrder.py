@@ -20,7 +20,11 @@ class PaymentOrder(Order):
         res = s.execute(
             select(cls)
             .where(
-                and_(cls.working_on_it == 0, cls.method == method, cls.state == "sent")
+                and_(
+                    cls.working_on_it == 0,
+                    cls.method == method,
+                    cls.state.in_(["sent", "split"]),
+                )
             )
             .limit(1)
         )

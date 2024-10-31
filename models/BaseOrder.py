@@ -296,7 +296,7 @@ class BaseOrder(Base):
     ):
         s.query(cls).filter_by(serial=serial).update(
             {
-                cls.state: "pending",
+                cls.state: "checking",
                 cls.reason: reason,
             }
         )

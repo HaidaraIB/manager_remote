@@ -15,7 +15,7 @@ def build_withdraw_settings_keyboard():
                 callback_data="withdraw",
             ),
             InlineKeyboardButton(
-                text="ادارة طلبات السحب المعلقة ⏳",
+                text="ادارة طلبات السحب ⏳",
                 callback_data="manage_pending_withdraws",
             ),
         ]

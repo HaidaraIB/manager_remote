@@ -11,6 +11,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     MessageHandler,
     filters,
+    CommandHandler,
 )
 from common.back_to_home_page import (
     back_to_admin_home_page_button,
@@ -21,7 +22,9 @@ from start import admin_command, start_command
 from custom_filters import Admin
 from admin.admin_calls.common import build_turn_user_calls_on_or_off_keyboard
 from common.constants import *
-
+from PyroClientSingleton import PyroClientSingleton
+import os
+from pyrogram.errors.exceptions.bad_request_400 import PeerIdInvalid
 
 USER_CALL_TO_TURN_ON_OR_OFF = 0
 
@@ -48,7 +51,7 @@ async def hide_ids_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.delete_message()
             await context.bot.send_message(
                 chat_id=update.effective_user.id,
-                text="تم الإخفاء✅",
+                text="تم الإخفاء ✅",
                 reply_markup=ReplyKeyboardRemove(),
             )
             await context.bot.send_message(
@@ -62,7 +65,7 @@ async def hide_ids_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.callback_query.delete_message()
             await context.bot.send_message(
                 chat_id=update.effective_user.id,
-                text="تم الإظهار✅",
+                text="تم الإظهار ✅",
                 reply_markup=ReplyKeyboardMarkup(request_buttons, resize_keyboard=True),
             )
             await context.bot.send_message(
@@ -96,6 +99,28 @@ async def turn_user_calls_on_or_off(update: Update, context: ContextTypes.DEFAUL
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return USER_CALL_TO_TURN_ON_OR_OFF
+
+
+async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        try:
+            res = await PyroClientSingleton().ban_chat_member(
+                chat_id=int(os.getenv("CHANNEL_ID")),
+                user_id=int(context.args[0]),
+            )
+            if res:
+                await update.message.reply_text(text="تم ✅")
+            else:
+                await update.message.reply_text(text="حصل خطأ ما ❗️")
+        except ValueError:
+            await update.message.reply_text(
+                text="تأكد من أن الآيدي بعد الأمر /ban عبارة عن أرقام فقط ❗️"
+            )
+        except PeerIdInvalid as p:
+            await update.message.reply_text(text="آيدي المستخدم غير صحيح ❗️")
+
+
+ban_command = CommandHandler("ban", ban)
 
 
 turn_user_calls_on_or_off_handler = ConversationHandler(

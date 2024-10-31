@@ -10,6 +10,7 @@ from common.common import (
     build_back_button,
     build_confirmation_keyboard,
     build_user_keyboard,
+    format_amount,
 )
 from common.back_to_home_page import (
     back_to_user_home_page_button,
@@ -182,7 +183,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             back_to_user_home_page_button[0],
         ]
         await update.message.reply_text(
-            text=f"هل أنت متأكد من إعادة مبلغ <b>{amount}</b> إلى حسابك وسحب الباقي؟",
+            text=f"هل أنت متأكد من إعادة مبلغ <b>{format_amount(amount)}</b> إلى حسابك وسحب الباقي؟",
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return CONFIRM_SPLIT
@@ -290,7 +291,7 @@ manage_pending_withdraws_handler = ConversationHandler(
         CONFIRM_SPLIT: [
             CallbackQueryHandler(
                 confirm_split,
-                "^((yes)|(no))_split_withdraw$"
+                "^((yes)|(no))_split_withdraw$",
             )
         ],
     },

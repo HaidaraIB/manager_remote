@@ -52,7 +52,7 @@ async def send_deposit_without_check(
         notify_workers(
             context=context,
             workers=workers,
-            text=f"انتباه تم استلام {method} جديد 🚨",
+            text=f"انتباه تم استلام إيداع {method} جديد 🚨",
         )
     )
     return amount
