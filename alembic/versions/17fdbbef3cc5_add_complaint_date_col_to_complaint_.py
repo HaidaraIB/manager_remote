@@ -20,14 +20,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("complaints") as batch_op:
-        batch_op.add_column(
-            sa.Column(
-                name="complaint_date",
-                type_=sa.TIMESTAMP,
-                server_default=sa.func.current_timestamp(),
+    try:
+        with op.batch_alter_table("complaints") as batch_op:
+            batch_op.add_column(
+                sa.Column(
+                    name="complaint_date",
+                    type_=sa.TIMESTAMP,
+                    server_default=sa.func.current_timestamp(),
+                )
             )
-        )
+    except:
+        pass
 
 
 def downgrade() -> None:

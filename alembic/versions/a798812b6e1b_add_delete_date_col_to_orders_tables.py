@@ -19,20 +19,23 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("deposit_orders") as batch_op:
-        batch_op.add_column(
-            sa.Column(name="delete_date", type_=sa.TIMESTAMP)
-        )
+    try:
+        with op.batch_alter_table("deposit_orders") as batch_op:
+            batch_op.add_column(
+                sa.Column(name="delete_date", type_=sa.TIMESTAMP)
+            )
 
-    with op.batch_alter_table("withdraw_orders") as batch_op:
-        batch_op.add_column(
-            sa.Column(name="delete_date", type_=sa.TIMESTAMP)
-        )
+        with op.batch_alter_table("withdraw_orders") as batch_op:
+            batch_op.add_column(
+                sa.Column(name="delete_date", type_=sa.TIMESTAMP)
+            )
 
-    with op.batch_alter_table("busdt_orders") as batch_op:
-        batch_op.add_column(
-            sa.Column(name="delete_date", type_=sa.TIMESTAMP)
-        )
+        with op.batch_alter_table("busdt_orders") as batch_op:
+            batch_op.add_column(
+                sa.Column(name="delete_date", type_=sa.TIMESTAMP)
+            )
+    except:
+        pass
 
 
 def downgrade() -> None:

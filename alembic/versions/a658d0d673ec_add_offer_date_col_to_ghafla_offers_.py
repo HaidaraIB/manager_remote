@@ -1,8 +1,8 @@
-"""add deposit_gift col to accounts table
+"""add offer_date col to ghafla_offers table
 
-Revision ID: 319c2620eb5e
-Revises: 9f5c9de8cbf8
-Create Date: 2024-09-22 20:10:43.771727
+Revision ID: a658d0d673ec
+Revises: 1220416d6ffd
+Create Date: 2024-11-02 21:17:35.276576
 
 """
 
@@ -13,19 +13,20 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "319c2620eb5e"
-down_revision: Union[str, None] = "9f5c9de8cbf8"
+revision: str = "a658d0d673ec"
+down_revision: Union[str, None] = "1220416d6ffd"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
     try:
-        with op.batch_alter_table("accounts") as batch_op:
+        with op.batch_alter_table("ghafla_offers") as batch_op:
             batch_op.add_column(
                 sa.Column(
-                    name="deposit_gift",
-                    type_=sa.Float,
+                    name="offer_date",
+                    type_=sa.TIMESTAMP,
+                    server_default=sa.func.current_timestamp(),
                 )
             )
     except:

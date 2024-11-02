@@ -20,13 +20,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("accounts") as batch_op:
-        batch_op.add_column(
-            sa.Column(
-                name="connect_to_user_date",
-                type_=sa.TIMESTAMP,
+    try:
+        with op.batch_alter_table("accounts") as batch_op:
+            batch_op.add_column(
+                sa.Column(
+                    name="connect_to_user_date",
+                    type_=sa.TIMESTAMP,
+                )
             )
-        )
+    except:
+        pass
 
 
 def downgrade() -> None:

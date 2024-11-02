@@ -88,6 +88,7 @@ class BaseOrder(Base):
         limit: int = 0,
         time_window: int = 0,
         group_by: str = None,
+        rang: list = None,
         s: Session = None,
     ):
         if limit:
@@ -106,6 +107,10 @@ class BaseOrder(Base):
                     ),
                 )
                 .order_by(desc(cls.order_date))
+            )
+        elif rang:
+            res = s.execute(
+                select(cls).where(cls.serial.in_(rang))
             )
 
         elif time_window:

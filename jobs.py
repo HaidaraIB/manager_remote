@@ -98,7 +98,7 @@ async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
-    time_window = 15
+    time_window = random.randint(7, 15)
     group_by_user = "user_id"
     group_by_interval = "interval"
 
@@ -117,6 +117,17 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
 
     if not selected_date:
         return
+
+    todays_offers = models.GhaflaOffer.get(today=True)
+    already_won_orders: list[models.DepositOrder] = models.DepositOrder.get_orders(
+        rang=[off.order_serial for off in todays_offers]
+    )
+    already_won_users = list(
+        map(
+            lambda x: x.user_id,
+            already_won_orders,
+        )
+    )
 
     selected_serials = [
         order[2] for order in distinct_user_id_orders if order[0] == selected_date
@@ -143,6 +154,8 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     )
     for serial in selected_serials:
         order = models.DepositOrder.get_one_order(serial=serial)
+        if order.user_id in already_won_users:
+            continue
         factor = 4
         amount = order.amount * factor
         try:
@@ -180,14 +193,14 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
     today = datetime.now(tz=tz)
     ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
     job_hours_dict = {
-        0: random.randint(7, 8),
-        1: random.randint(10, 11),
-        2: random.randint(12, 13),
-        3: random.randint(14, 15),
-        4: random.randint(16, 17),
-        5: random.randint(18, 19),
-        6: random.randint(20, 21),
-        7: random.randint(22, 23),
+        0: random.randint(0, 2),
+        1: random.randint(3, 5),
+        2: random.randint(6, 8),
+        3: random.randint(9, 11),
+        4: random.randint(12, 14),
+        5: random.randint(15, 17),
+        6: random.randint(18, 20),
+        7: random.randint(21, 23),
     }
     dev_id = int(os.getenv("DEV_ID"))
     await context.bot.send_message(

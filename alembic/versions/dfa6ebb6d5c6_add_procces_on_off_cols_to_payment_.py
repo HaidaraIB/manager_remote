@@ -20,26 +20,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("payment_methods") as batch_op:
-        batch_op.alter_column(
-            column_name="on_off",
-            new_column_name="deposit_on_off",
-            type_=sa.Boolean,
-        )
-        batch_op.add_column(
-            sa.Column(
-                name="withdraw_on_off",
+    try:
+        with op.batch_alter_table("payment_methods") as batch_op:
+            batch_op.alter_column(
+                column_name="on_off",
+                new_column_name="deposit_on_off",
                 type_=sa.Boolean,
-                default=1,
             )
-        )
-        batch_op.add_column(
-            sa.Column(
-                name="busdt_on_off",
-                type_=sa.Boolean,
-                default=1,
+            batch_op.add_column(
+                sa.Column(
+                    name="withdraw_on_off",
+                    type_=sa.Boolean,
+                    default=1,
+                )
             )
-        )
+            batch_op.add_column(
+                sa.Column(
+                    name="busdt_on_off",
+                    type_=sa.Boolean,
+                    default=1,
+                )
+            )
+    except:
+        pass
 
 
 def downgrade() -> None:

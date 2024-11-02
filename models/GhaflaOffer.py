@@ -1,6 +1,9 @@
-from sqlalchemy import Column, Integer, insert
-from models.DB import Base, lock_and_release
+from sqlalchemy import Column, Integer, TIMESTAMP, insert, select, func
+from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
+
+import datetime
+import pytz
 
 
 class GhaflaOffer(Base):
@@ -8,8 +11,41 @@ class GhaflaOffer(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_serial = Column(Integer)
     factor = Column(Integer)
+    offer_date = Column(TIMESTAMP, server_default=func.current_timestamp())
 
     @classmethod
     @lock_and_release
     async def add(cls, serial: int, factor: int, s: Session = None):
-        s.execute(insert(cls).values(order_serial=serial, factor=factor))
+        s.execute(
+            insert(cls).values(
+                order_serial=serial,
+                factor=factor,
+            )
+        )
+
+    @classmethod
+    @connect_and_close
+    def get(cls, offer_id: int = None, today: bool = None, s: Session = None):
+        if offer_id:
+            res = s.execute(select(cls).where(cls.id == offer_id))
+            try:
+                return res.fetchone().t[0]
+            except:
+                pass
+
+        elif today is not None:
+            today = datetime.datetime.now(tz=pytz.timezone("Asia/Damascus")).strftime(
+                "%Y-%m-%d"
+            )
+            res = s.execute(
+                select(cls).where(
+                    func.date(func.datetime(cls.offer_date, "+3 hours")) == today
+                )
+            )
+        else:
+            res = s.execute(select(cls))
+
+        try:
+            return list(map(lambda x: x[0], res.tuples().all()))
+        except:
+            pass
