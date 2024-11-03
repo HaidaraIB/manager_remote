@@ -89,6 +89,8 @@ class BaseOrder(Base):
         time_window: int = 0,
         group_by: str = None,
         rang: list = None,
+        method: str = None,
+        today: bool = None,
         s: Session = None,
     ):
         if limit:
@@ -96,6 +98,27 @@ class BaseOrder(Base):
 
         elif user_id:
             res = s.execute(select(cls).where(cls.user_id == user_id))
+
+        elif method:
+            if today is not None:
+                today = datetime.datetime.now(
+                    tz=pytz.timezone("Asia/Damascus")
+                ).strftime("%Y-%m-%d")
+                res = s.execute(
+                    select(cls).where(
+                        and_(
+                            cls.method == method,
+                            func.date(func.datetime(cls.order_date, "+3 hours"))
+                            == today,
+                        )
+                    )
+                )
+            else:
+                res = s.execute(
+                    select(cls).where(
+                        cls.method == method,
+                    )
+                )
 
         elif states:
             res = s.execute(
@@ -109,9 +132,7 @@ class BaseOrder(Base):
                 .order_by(desc(cls.order_date))
             )
         elif rang:
-            res = s.execute(
-                select(cls).where(cls.serial.in_(rang))
-            )
+            res = s.execute(select(cls).where(cls.serial.in_(rang)))
 
         elif time_window:
             now = datetime.datetime.now(datetime.UTC)

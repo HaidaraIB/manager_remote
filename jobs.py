@@ -118,9 +118,8 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     if not selected_date:
         return
 
-    todays_offers = models.GhaflaOffer.get(today=True)
     already_won_orders: list[models.DepositOrder] = models.DepositOrder.get_orders(
-        rang=[off.order_serial for off in todays_offers]
+        method=GHAFLA_OFFER, today=True
     )
     already_won_users = list(
         map(

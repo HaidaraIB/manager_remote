@@ -20,9 +20,6 @@ async def inits(app: Application):
     app.bot_data["restart"] = False
     await models.Admin.add_new_admin(admin_id=int(os.getenv("OWNER_ID")))
     await models.PaymentMethod.init_payment_methods()
-    if not app.bot_data("ghafla_offer_total_time_window", False):
-        app.bot_data["ghafla_offer_total_time_window_pin"] = 15
-        app.bot_data["ghafla_offer_total_time_window"] = 15
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
