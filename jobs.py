@@ -145,12 +145,13 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
         .strftime(r"%I:%M %p")
     )
 
-    group_text = (
+    base_group_text = (
         f"عرض الغفلة <b>500%</b> 🔥\n\n"
         f"من الساعة: <b>{start_time}</b>\n"
         f"حتى الساعة: <b>{end_time}</b>\n\n"
         "الرابحون:\n\n"
     )
+    group_text = base_group_text
     for serial in selected_serials:
         order = models.DepositOrder.get_one_order(serial=serial)
         if order.user_id in already_won_users:
@@ -179,12 +180,12 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
             context.bot_data["total_ghafla_offer"] += amount
 
         await models.GhaflaOffer.add(serial=serial, factor=factor)
-
-    await context.bot.send_message(
-        chat_id=int(os.getenv("CHANNEL_ID")),
-        text=group_text,
-        message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
-    )
+    if group_text != base_group_text:
+        await context.bot.send_message(
+            chat_id=int(os.getenv("CHANNEL_ID")),
+            text=group_text,
+            message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
+        )
 
 
 async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
