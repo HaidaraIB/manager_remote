@@ -18,7 +18,7 @@ from jobs import (
     remind_agent_to_clear_wallets,
     schedule_ghafla_offer_jobs,
     send_daily_stats,
-    process_orders_for_ghafla_offer
+    process_orders_for_ghafla_offer,
 )
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
@@ -380,11 +380,6 @@ def main():
             "coalesce": True,
             "replace_existing": True,
         },
-    )
-
-    app.job_queue.run_once(
-        process_orders_for_ghafla_offer,
-        when=10,
     )
 
     PyroClientSingleton().start()

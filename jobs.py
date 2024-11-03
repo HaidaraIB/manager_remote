@@ -99,14 +99,15 @@ async def remind_agent_to_clear_wallets(context: ContextTypes.DEFAULT_TYPE):
 
 async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     time_window = random.randint(7, 15)
-    group_by_user = "user_id"
-    group_by_interval = "interval"
+    group_by_interval = "GROUP BY interval"
 
     distinct_user_id_orders = models.DepositOrder.get_orders(
-        time_window=time_window, group_by=group_by_user
+        time_window=time_window,
     )
     amounts_sum = models.DepositOrder.get_orders(
-        time_window=time_window, group_by=group_by_interval
+        time_window=time_window,
+        group_by=group_by_interval,
+        agg="SUM(amount),",
     )
 
     selected_date = None
@@ -129,7 +130,7 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     )
 
     selected_serials = [
-        order[2] for order in distinct_user_id_orders if order[0] == selected_date
+        order[1] for order in distinct_user_id_orders if order[0] == selected_date
     ]
     start_time = (
         (datetime.fromisoformat(str(selected_date)) + timedelta(hours=3))

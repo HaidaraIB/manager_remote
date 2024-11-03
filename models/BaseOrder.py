@@ -87,7 +87,8 @@ class BaseOrder(Base):
         states: list[str] = [],
         limit: int = 0,
         time_window: int = 0,
-        group_by: str = None,
+        group_by: str = '',
+        agg: str = '',
         rang: list = None,
         method: str = None,
         today: bool = None,
@@ -147,7 +148,7 @@ class BaseOrder(Base):
                                 ) * {time_window * 60},
                                 'unixepoch'
                             ) interval,
-                            SUM(amount),
+                            {agg}
                             serial
                         FROM deposit_orders
                         WHERE state = 'approved'
@@ -156,7 +157,7 @@ class BaseOrder(Base):
                           AND agent_id = 0 -- exclude player deposits
                           AND ref_number != '' -- exclude create account deposits
                           AND acc_number != '' -- exclude point deposits
-                        GROUP BY {group_by}
+                        {group_by}
                         ORDER BY interval;
                     """
                 )

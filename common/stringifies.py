@@ -2,7 +2,7 @@ from telegram.ext import ContextTypes
 import models
 from common.common import format_amount, format_datetime, parent_to_child_models_mapper
 from common.constants import *
-
+from datetime import timedelta
 state_dict_en_to_ar = {
     "declined": "مرفوض",
     "approved": "تمت الموافقة",
@@ -146,12 +146,12 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"سبب رفض: <b>{'\n' + order.reason if order.reason else 'لا يوجد'}</b>\n\n"
         f"جاري العمل عليه: <b>{'نعم' if order.working_on_it else 'لا'}</b>\n"
         f"تم إغلاق شكوى عنه : <b>{'نعم' if order.complaint_took_care_of else 'لا'}</b>\n\n"
-        f"تاريخ الإنشاء:\n<b>{format_datetime(order.order_date)}</b>\n\n"
-        f"تاريخ الإرسال: <b>{'\n' + format_datetime(order.send_date) if order.send_date else 'لا يوجد'}</b>\n\n"
-        f"تاريخ الموافقة: <b>{'\n' + format_datetime(order.approve_date) if order.approve_date else 'لا يوجد'}</b>\n\n"
-        f"تاريخ الرفض: <b>{'\n' + format_datetime(order.decline_date) if order.decline_date else 'لا يوجد'}</b>\n\n"
-        f"تاريخ الإعادة: <b>{'\n' + format_datetime(order.return_date) if order.return_date else 'لا يوجد'}</b>\n\n"
-        f"تاريخ الرفض: <b>{'\n' + format_datetime(order.delete_date) if order.delete_date else 'لا يوجد'}</b>\n\n"
+        f"تاريخ الإنشاء:\n<b>{format_datetime(order.order_date + timedelta(hours=3))}</b>\n\n"
+        f"تاريخ الإرسال: <b>{'\n' + format_datetime(order.send_date + timedelta(hours=3)) if order.send_date else 'لا يوجد'}</b>\n\n"
+        f"تاريخ الموافقة: <b>{'\n' + format_datetime(order.approve_date + timedelta(hours=3)) if order.approve_date else 'لا يوجد'}</b>\n\n"
+        f"تاريخ الرفض: <b>{'\n' + format_datetime(order.decline_date + timedelta(hours=3)) if order.decline_date else 'لا يوجد'}</b>\n\n"
+        f"تاريخ الإعادة: <b>{'\n' + format_datetime(order.return_date + timedelta(hours=3)) if order.return_date else 'لا يوجد'}</b>\n\n"
+        f"تاريخ الرفض: <b>{'\n' + format_datetime(order.delete_date + timedelta(hours=3)) if order.delete_date else 'لا يوجد'}</b>\n\n"
     )
 
 
