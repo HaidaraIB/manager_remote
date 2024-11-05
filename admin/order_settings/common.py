@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 from custom_filters import Admin
 from common.common import parent_to_child_models_mapper
 from common.back_to_home_page import back_to_admin_home_page_button
-from common.stringifies import general_stringify_order, order_settings_dict
+from common.stringifies import general_stringify_order, order_settings_dict, state_dict_en_to_ar
 
 
 def build_order_types_keyboard():
@@ -90,6 +90,43 @@ def build_actions_keyboard(order_type: str, serial: int):
 
     actions_keyboard.append(back_to_admin_home_page_button[0])
     return actions_keyboard
+
+
+def build_order_settings_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="استعلام عن طلب",
+                callback_data="lookup_order",
+            ),
+            InlineKeyboardButton(
+                text="عدد الطلبات",
+                callback_data="count_orders"
+            )
+        ]
+    ]
+    return keyboard
+
+
+def build_states_keyboard():
+    keyboard: list[list[InlineKeyboardButton]] = []
+    for i in range(0, len(state_dict_en_to_ar), 2):
+        row = []
+        row.append(
+            InlineKeyboardButton(
+                text=list(state_dict_en_to_ar.values())[i],
+                callback_data=list(state_dict_en_to_ar.keys())[i],
+            )
+        )
+        if i + 1 < len(state_dict_en_to_ar):
+            row.append(
+                InlineKeyboardButton(
+                    text=list(state_dict_en_to_ar.values())[i + 1],
+                    callback_data=list(state_dict_en_to_ar.keys())[i + 1],
+                )
+            )
+        keyboard.append(row)
+    return keyboard
 
 
 async def back_to_choose_action(update: Update, context: ContextTypes.DEFAULT_TYPE):

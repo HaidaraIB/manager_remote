@@ -87,8 +87,8 @@ class BaseOrder(Base):
         states: list[str] = [],
         limit: int = 0,
         time_window: int = 0,
-        group_by: str = '',
-        agg: str = '',
+        group_by: str = "",
+        agg: str = "",
         rang: list = None,
         method: str = None,
         today: bool = None,
@@ -174,6 +174,16 @@ class BaseOrder(Base):
             return list(map(lambda x: x[0], res.tuples().all()))
         except:
             pass
+
+    @classmethod
+    @connect_and_close
+    def count_orders(
+        cls,
+        state: str,
+        s: Session = None,
+    ):
+        res = s.execute(select(func.count()).select_from(cls).where(cls.state == state))
+        return res.fetchone().t[0]
 
     @classmethod
     @connect_and_close

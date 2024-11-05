@@ -1,5 +1,11 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat
-from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
+from telegram.ext import (
+    ContextTypes,
+    ConversationHandler,
+    CallbackQueryHandler,
+    MessageHandler,
+    filters,
+)
 from worker.request_order.common import (
     build_payment_agent_keyboard,
     build_checker_keyboard,
@@ -7,7 +13,11 @@ from worker.request_order.common import (
     orders_dict,
 )
 from common.constants import *
-from common.common import build_back_button, parent_to_child_models_mapper
+from common.common import (
+    build_back_button,
+    format_amount,
+    parent_to_child_models_mapper,
+)
 from common.back_to_home_page import (
     back_to_worker_home_page_button,
     back_to_worker_home_page_handler,
@@ -15,7 +25,7 @@ from common.back_to_home_page import (
 from start import worker_command
 import models
 
-REQUEST_WHAT, CHECK_POSITION_REQUEST_ORDER = range(2)
+REQUEST_WHAT, CHECK_POSITION_REQUEST_ORDER, MAX_AMOUNT = range(3)
 
 
 async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,6 +94,7 @@ async def request_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
         role = update.callback_query.data.replace("request_", "")
+        context.user_data["request_order_role"] = role
         message_id, group_id, serial = 0, 0, 0
         if "deposit after check" in role:
             is_point_deposit = False
@@ -117,24 +128,15 @@ async def request_what(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return CHECK_POSITION_REQUEST_ORDER
 
         else:
-            w_order = models.WithdrawOrder.get_payment_order(method=role)
-            if not w_order:
-                bu_order = models.BuyUsdtdOrder.get_payment_order(method=role)
-                if not bu_order:
-                    await update.callback_query.answer(
-                        f"ليس هناك طلبات دفع {role} حالياً.",
-                        show_alert=True,
-                    )
-                    return
-                serial = bu_order.serial
-                order_type = "busdt"
-                message_id = bu_order.pending_process_message_id
-                group_id = bu_order.group_id
-            else:
-                serial = w_order.serial
-                order_type = "withdraw"
-                message_id = w_order.pending_process_message_id
-                group_id = w_order.group_id
+            back_buttons = [
+                build_back_button("back_to_request_what"),
+                back_to_worker_home_page_button[0],
+            ]
+            await update.callback_query.edit_message_text(
+                text="أرسل الحد الأعلى لمبلغ الطلب",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+            return MAX_AMOUNT
 
         await update.callback_query.edit_message_text(text="الرجاء الانتظار...")
         await send_requested_order(
@@ -188,6 +190,54 @@ async def choose_check_position_request_order(
         return ConversationHandler.END
 
 
+async def get_max_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE:
+        max_amount = float(update.message.text)
+        role = context.user_data["request_order_role"]
+        w_order = models.WithdrawOrder.get_payment_order(
+            method=role,
+            max_amount=max_amount,
+        )
+        if not w_order:
+            bu_order = models.BuyUsdtdOrder.get_payment_order(
+                method=role,
+                max_amount=max_amount,
+            )
+            if not bu_order:
+                back_buttons = [
+                    build_back_button("back_to_request_what"),
+                    back_to_worker_home_page_button[0],
+                ]
+                await update.message.reply_text(
+                    f"ليس هناك طلبات دفع {role} بمبلغ أصغر أو يساوي {format_amount(max_amount)} حالياً.",
+                    reply_markup=InlineKeyboardMarkup(back_buttons),
+                )
+                return
+            serial = bu_order.serial
+            order_type = "busdt"
+            message_id = bu_order.pending_process_message_id
+            group_id = bu_order.group_id
+        else:
+            serial = w_order.serial
+            order_type = "withdraw"
+            message_id = w_order.pending_process_message_id
+            group_id = w_order.group_id
+
+        wait_msg = await update.message.reply_text(text="الرجاء الانتظار...")
+        await send_requested_order(
+            serial=serial,
+            order_type=order_type,
+            message_id=message_id,
+            group_id=group_id,
+            worker_id=update.effective_user.id,
+            checker_id=update.effective_user.id if role.startswith("check") else 0,
+            state="checking" if role.startswith("check") else "processing",
+        )
+        await wait_msg.delete()
+
+        return ConversationHandler.END
+
+
 request_order_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
@@ -207,6 +257,12 @@ request_order_handler = ConversationHandler(
                 choose_check_position_request_order,
                 "^request_check_.*",
             ),
+        ],
+        MAX_AMOUNT: [
+            MessageHandler(
+                filters=filters.Regex("^\d+\.?\d*$"),
+                callback=get_max_amount,
+            )
         ],
     },
     fallbacks=[

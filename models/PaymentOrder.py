@@ -15,6 +15,7 @@ class PaymentOrder(Order):
     def get_payment_order(
         cls,
         method: str,
+        max_amount: float,
         s: Session = None,
     ):
         res = s.execute(
@@ -24,6 +25,7 @@ class PaymentOrder(Order):
                     cls.working_on_it == 0,
                     cls.method == method,
                     cls.state.in_(["sent", "split"]),
+                    cls.amount <= max_amount,
                 )
             )
             .limit(1)

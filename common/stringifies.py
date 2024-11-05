@@ -3,6 +3,7 @@ import models
 from common.common import format_amount, format_datetime, parent_to_child_models_mapper
 from common.constants import *
 from datetime import timedelta
+
 state_dict_en_to_ar = {
     "declined": "مرفوض",
     "approved": "تمت الموافقة",

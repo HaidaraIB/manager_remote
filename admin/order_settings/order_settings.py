@@ -11,18 +11,19 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
 )
+from common.stringifies import state_dict_en_to_ar
 from start import admin_command, start_command
 from custom_filters import Admin
 from admin.order_settings.common import (
-    order_settings_dict,
     build_order_types_keyboard,
-    general_stringify_order,
-    build_actions_keyboard,
+    build_order_settings_keyboard,
 )
+from admin.order_settings.lookup_order import lookup_order, get_serial, SERIAL
+from admin.order_settings.count_orders import count_orders, STATE
 
 (
     CHOOSE_ORDER_TYPE,
-    SERIAL,
+    CHOOSE_ORDER_SETTING,
 ) = range(2)
 
 
@@ -43,47 +44,21 @@ async def choose_order_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data["order_type_setting"] = update.callback_query.data.split(
                 "#"
             )[0].replace("_order", "")
-        back_buttons = [
+        keyboard = [
+            *build_order_settings_keyboard(),
             build_back_button("back_to_choose_order_type"),
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
-            text="أرسل الرقم التسلسلي للطلب",
-            reply_markup=InlineKeyboardMarkup(back_buttons),
+            text="اختر:",
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
-        return SERIAL
+        return CHOOSE_ORDER_SETTING
 
 
 back_to_choose_order_type = order_settings
 
-
-async def get_serial(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        serial = int(update.message.text)
-        order_type = context.user_data["order_type_setting"]
-        order = order_settings_dict[order_type]["cls"].get_one_order(serial=serial)
-        back_buttons = [
-            build_back_button("back_to_get_order_serial"),
-            back_to_admin_home_page_button[0],
-        ]
-        if not order:
-            await update.message.reply_text(
-                text="لم يتم العثور على الطلب، تأكد من الرقم التسلسلي وأعد المحاولة.",
-                reply_markup=InlineKeyboardMarkup(back_buttons),
-            )
-            return
-        actions_keyboard = build_actions_keyboard(order_type, serial)
-        tg_user = await context.bot.get_chat(chat_id=order.user_id)
-        await update.message.reply_text(
-            text=general_stringify_order(
-                serial,
-                order_type,
-                "@" + tg_user.username if tg_user.username else tg_user.full_name,
-            ),
-            reply_markup=InlineKeyboardMarkup(actions_keyboard),
-        )
-        return ConversationHandler.END
-
+back_to_choose_order_setting = choose_order_type
 
 back_to_get_order_serial = choose_order_type
 
@@ -102,16 +77,29 @@ order_settings_handler = ConversationHandler(
                 "^.+order#settings$",
             )
         ],
+        CHOOSE_ORDER_SETTING: [
+            CallbackQueryHandler(count_orders, "^count_orders$"),
+            CallbackQueryHandler(lookup_order, "^lookup_order$"),
+        ],
         SERIAL: [
             MessageHandler(
                 filters=filters.Regex("^\d+$"),
                 callback=get_serial,
             )
         ],
+        STATE: [
+            CallbackQueryHandler(
+                count_orders,
+                lambda x: x in state_dict_en_to_ar,
+            )
+        ],
     },
     fallbacks=[
         CallbackQueryHandler(back_to_choose_order_type, "^back_to_choose_order_type$"),
         CallbackQueryHandler(back_to_get_order_serial, "^back_to_get_order_serial$"),
+        CallbackQueryHandler(
+            back_to_choose_order_setting, "^back_to_choose_order_setting$"
+        ),
         admin_command,
         start_command,
         back_to_admin_home_page_handler,

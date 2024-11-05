@@ -51,7 +51,7 @@ async def return_order_to_checker(
 
     await WithdrawOrder.add_message_ids(
         serial=w_order.serial,
-        pending_check_message_id=message.id,
+        checking_message_id=message.id,
     )
     await context.bot.send_message(
         chat_id=w_order.checker_id,
