@@ -65,7 +65,7 @@ deposit_handler = ConversationHandler(
         ],
         REF_NUM: [
             MessageHandler(
-                filters=filters.Regex("^\d+$"),
+                filters=filters.Regex("^[0-9]+$"),
                 callback=get_ref_num,
             ),
         ],

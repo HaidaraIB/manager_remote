@@ -153,7 +153,7 @@ point_deposit_handler = ConversationHandler(
         ],
         REF_NUM: [
             MessageHandler(
-                filters=filters.TEXT & ~filters.COMMAND,
+                filters=filters.Regex("^[0-9]+$"),
                 callback=get_ref_num,
             )
         ],
