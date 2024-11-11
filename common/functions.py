@@ -1,9 +1,10 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from models import DepositAgent, DepositOrder
 from common.stringifies import stringify_deposit_order
 from common.common import notify_workers
 import asyncio
+import models
+from datetime import timedelta
 
 
 async def send_deposit_without_check(
@@ -15,7 +16,7 @@ async def send_deposit_without_check(
     from_withdraw_serial: int = 0,
 ):
     target_group = context.bot_data["data"]["deposit_orders_group"]
-    serial = await DepositOrder.add_deposit_order(
+    serial = await models.DepositOrder.add_deposit_order(
         user_id=user_id,
         group_id=target_group,
         method=method,
@@ -41,13 +42,13 @@ async def send_deposit_without_check(
         ),
     )
 
-    await DepositOrder.send_order(
+    await models.DepositOrder.send_order(
         pending_process_message_id=message.id,
         serial=serial,
         group_id=context.bot_data["data"]["deposit_after_check_group"],
-        ex_rate=0,
+        ex_rate=1,
     )
-    workers = DepositAgent.get_workers(is_point=False)
+    workers = models.DepositAgent.get_workers(is_point=False)
     asyncio.create_task(
         notify_workers(
             context=context,
@@ -56,3 +57,31 @@ async def send_deposit_without_check(
         )
     )
     return amount
+
+
+def find_min_hourly_sum(
+    orders: list[models.DepositOrder | models.WithdrawOrder],
+) -> dict:
+    min_sum = float("inf")
+    current_sum = 0
+    window_orders: list[models.DepositOrder | models.WithdrawOrder] = []
+
+    for order in orders:
+        # Add the current order to the window
+        window_orders.append(order)
+        current_sum += order.amount
+
+        # Remove orders outside the 1-hour window
+        while window_orders and window_orders[
+            0
+        ].order_date < order.order_date - timedelta(hours=1):
+            removed_order = window_orders.pop(0)
+            current_sum -= removed_order.amount
+
+            # Update min_sum if the current sum is smaller
+            min_sum = min(min_sum, current_sum)
+
+    return {
+        "min_sum": min(min_sum, current_sum),
+        "orders": window_orders,
+    }

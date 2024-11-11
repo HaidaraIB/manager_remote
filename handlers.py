@@ -16,9 +16,10 @@ from start import start_command, admin_command, worker_command, error_command, i
 from jobs import (
     reward_worker,
     remind_agent_to_clear_wallets,
-    schedule_ghafla_offer_jobs,
+    schedule_offers_jobs,
     send_daily_stats,
     process_orders_for_ghafla_offer,
+    process_orders_for_lucky_hour_offer,
 )
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
@@ -360,7 +361,7 @@ def main():
     )
 
     app.job_queue.run_daily(
-        callback=schedule_ghafla_offer_jobs,
+        callback=schedule_offers_jobs,
         time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
         name="schedule_ghafla_offer_jobs",
         job_kwargs={
@@ -380,6 +381,11 @@ def main():
             "coalesce": True,
             "replace_existing": True,
         },
+    )
+
+    app.job_queue.run_once(
+        callback=process_orders_for_lucky_hour_offer,
+        when=15,
     )
 
     PyroClientSingleton().start()

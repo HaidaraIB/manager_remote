@@ -1,19 +1,6 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-
-from telegram.ext import (
-    ContextTypes,
-    CallbackQueryHandler,
-    ConversationHandler,
-)
-
-from telegram.constants import (
-    ChatMemberStatus,
-)
-
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler
+from telegram.constants import ChatMemberStatus
 from common.common import build_user_keyboard
 import functools
 import os
@@ -36,14 +23,19 @@ async def check_if_user_member(update: Update, context: ContextTypes.DEFAULT_TYP
         user_id=update.effective_user.id,
     )
     if chat_member.status == ChatMemberStatus.LEFT:
-        text = f"""لبدء استخدام البوت  يجب عليك الانضمام الى قناة البوت أولاً.
-        
-✅ اشترك أولاً 👇.
-🔗 {os.getenv("CHANNEL_LINK")}
-
-ثم اضغط تحقق✅"""
+        text = (
+            f"لبدء استخدام البوت يجب عليك الانضمام الى قناة البوت أولاً.\n\n"
+            "✅ اشترك أولاً 👇.\n"
+            f"🔗 {os.getenv('CHANNEL_LINK')}\n\n"
+            "ثم اضغط تحقق✅"
+        )
         check_joined_button = [
-            [InlineKeyboardButton(text="تحقق✅", callback_data="check joined")]
+            [
+                InlineKeyboardButton(
+                    text="تحقق✅",
+                    callback_data="check joined",
+                ),
+            ]
         ]
         if update.callback_query:
             await update.callback_query.edit_message_text(

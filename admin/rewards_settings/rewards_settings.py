@@ -39,6 +39,12 @@ async def update_percentages(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     callback_data="update create_account_deposit_pin",
                 ),
             ],
+            [
+                InlineKeyboardButton(
+                    text="تعديل مبلغ ساعة الحظ 🕐",
+                    callback_data="update lucky_hour_amount",
+                ),
+            ],
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
@@ -52,7 +58,8 @@ reward_percentages_dict = {
     "workers_reward_withdraw_percentage": "نسبة مكافأة الموظفين اليومية",
     "workers_reward_percentage": "نسبة مكافأة الموظفين الأسبوعية",
     "deposit_gift_percentage": "نسبة مكافأة الإيداع",
-    "create_account_deposit_pin": "قيمة عدد إيداعات إنشاء الحسابات",
+    "create_account_deposit_pin": "قيمة مبالغ إيداع إنشاء الحسابات",
+    "lucky_hour_amount": "قيمة مبلغ ساعة الحظ",
 }
 
 
@@ -113,7 +120,7 @@ update_percentage_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             update_percentage,
-            "^update.*_((percentage)|(pin))$",
+            "^update.*_((percentage)|(pin)|(amount))$",
         ),
     ],
     states={

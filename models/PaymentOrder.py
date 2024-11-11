@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, select, and_
+from sqlalchemy import Column, String, select, and_
 from sqlalchemy.orm import Session
 from models.Order import Order
 from models.DB import connect_and_close, lock_and_release

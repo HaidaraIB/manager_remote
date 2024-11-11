@@ -26,5 +26,5 @@ from models.Partner import Partner
 from models.Conv import Conv
 from models.ReturnedConv import ReturnedConv
 from models.Wallet import Wallet
-from models.GhaflaOffer import GhaflaOffer
+from models.Offer import Offer
 from models.Referral import Referral

@@ -86,9 +86,8 @@ class BaseOrder(Base):
         user_id: int = None,
         states: list[str] = [],
         limit: int = 0,
-        time_window: int = 0,
-        group_by: str = "",
-        agg: str = "",
+        ghafla_offer: dict = {},
+        lucky_hour_offer: bool = None,
         rang: list = None,
         method: str = None,
         today: bool = None,
@@ -135,7 +134,7 @@ class BaseOrder(Base):
         elif rang:
             res = s.execute(select(cls).where(cls.serial.in_(rang)))
 
-        elif time_window:
+        elif ghafla_offer:
             now = datetime.datetime.now(datetime.UTC)
             today = now.date()
             hour = str(now.hour - 1).rjust(2, "0")
@@ -144,11 +143,11 @@ class BaseOrder(Base):
                     f"""
                         SELECT DATETIME(
                                 (
-                                    STRFTIME('%s', order_date) / {time_window * 60}
-                                ) * {time_window * 60},
+                                    STRFTIME('%s', order_date) / {ghafla_offer['time_window'] * 60}
+                                ) * {ghafla_offer['time_window'] * 60},
                                 'unixepoch'
                             ) interval,
-                            {agg}
+                            {ghafla_offer['agg']}
                             serial
                         FROM deposit_orders
                         WHERE state = 'approved'
@@ -157,7 +156,7 @@ class BaseOrder(Base):
                           AND agent_id = 0 -- exclude player deposits
                           AND ref_number != '' -- exclude create account deposits
                           AND acc_number != '' -- exclude point deposits
-                        {group_by}
+                        {ghafla_offer['group_by']}
                         ORDER BY interval;
                     """
                 )
@@ -166,6 +165,25 @@ class BaseOrder(Base):
                 return res.all()
             except:
                 pass
+
+        elif lucky_hour_offer:
+            now = datetime.datetime.now(datetime.UTC)
+            today = now.date()
+            start_hour = str(now.hour - 1).rjust(2, "0")
+            end_hour = str(now.hour + 2).rjust(2, "0")
+            res = s.execute(
+                select(cls).where(
+                    and_(
+                        cls.state == "approved",
+                        cls.acc_number != "",
+                        cls.agent_id == 0,
+                        cls.method.in_(PAYMENT_METHODS_LIST),
+                        func.date(cls.order_date) == today,
+                        func.strftime("%H", cls.order_date) >= start_hour,
+                        func.strftime("%H", cls.order_date) <= end_hour,
+                    )
+                ).order_by(cls.order_date)
+            )
 
         else:
             res = s.execute(select(cls))

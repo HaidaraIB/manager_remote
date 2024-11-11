@@ -1,25 +1,27 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, insert, select, func
+from sqlalchemy import Column, Integer, TIMESTAMP, String, insert, select, func
 from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
-
+from common.constants import GHAFLA_OFFER
 import datetime
 import pytz
 
 
-class GhaflaOffer(Base):
-    __tablename__ = "ghafla_offers"
+class Offer(Base):
+    __tablename__ = "offers"
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_serial = Column(Integer)
     factor = Column(Integer)
+    offer_name = Column(String, server_default=GHAFLA_OFFER)
     offer_date = Column(TIMESTAMP, server_default=func.current_timestamp())
 
     @classmethod
     @lock_and_release
-    async def add(cls, serial: int, factor: int, s: Session = None):
+    async def add(cls, serial: int, factor: int, offer_name:str, s: Session = None):
         s.execute(
             insert(cls).values(
                 order_serial=serial,
                 factor=factor,
+                offer_name=offer_name,
             )
         )
 

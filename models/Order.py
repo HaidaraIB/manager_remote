@@ -6,13 +6,14 @@ from sqlalchemy import (
     TIMESTAMP,
     func,
 )
-from models.BaseOrder import (
-    BaseOrder,
-)
+from models.BaseOrder import BaseOrder
 
 
 class Order(BaseOrder):
     __abstract__ = True
+
+    def __repr__(self):
+        return f"Order({self.serial})"
 
     serial = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer)

@@ -9,8 +9,8 @@ from common.stringifies import (
     stringify_daily_order_stats,
     stringify_daily_wallet_stats,
 )
-from common.common import notify_workers, format_amount, format_datetime
-from common.functions import send_deposit_without_check
+from common.common import notify_workers, format_amount
+from common.functions import send_deposit_without_check, find_min_hourly_sum
 
 import asyncio
 import os
@@ -102,12 +102,18 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
     group_by_interval = "GROUP BY interval"
 
     distinct_user_id_orders = models.DepositOrder.get_orders(
-        time_window=time_window,
+        ghafla_offer={
+            "time_window": time_window,
+            "group_by": "",
+            "agg": "",
+        }
     )
     amounts_sum = models.DepositOrder.get_orders(
-        time_window=time_window,
-        group_by=group_by_interval,
-        agg="SUM(amount),",
+        ghafla_offer={
+            "time_window": time_window,
+            "group_by": group_by_interval,
+            "agg": "SUM(amount),",
+        }
     )
 
     selected_date = None
@@ -148,8 +154,8 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
 
     base_group_text = (
         f"عرض الغفلة <b>500%</b> 🔥\n\n"
-        f"من الساعة: <b>{start_time}</b>\n"
-        f"حتى الساعة: <b>{end_time}</b>\n\n"
+        f"من ال: <b>{start_time}</b>\n"
+        f"حتى ال: <b>{end_time}</b>\n\n"
         "الرابحون:\n\n"
     )
     group_text = base_group_text
@@ -180,61 +186,116 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
         else:
             context.bot_data["total_ghafla_offer"] += amount
 
-        await models.GhaflaOffer.add(serial=serial, factor=factor)
+        await models.Offer.add(serial=serial, factor=factor, offer_name=GHAFLA_OFFER)
     if group_text != base_group_text:
         await context.bot.send_message(
             chat_id=int(os.getenv("CHANNEL_ID")),
             text=group_text,
             message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
         )
+        for serial in selected_serials:
+            order = models.DepositOrder.get_one_order(serial=serial)
+            await context.bot.send_message(
+                chat_id=order.user_id,
+                text=group_text,
+            )
 
 
-async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
+async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE):
+    team_names = ["مدريد", "برشلونة", "ميلان", "ليفربول", "باريس"]
+
+    order_type_dict = {
+        models.WithdrawOrder: "السحب",
+        models.DepositOrder: "الإيداع"
+    }
+
+    withdraw_orders = models.WithdrawOrder.get_orders(lucky_hour_offer=True)
+    deposit_orders = models.DepositOrder.get_orders(lucky_hour_offer=True)
+    min_withdraws = find_min_hourly_sum(withdraw_orders)
+    min_deposits = find_min_hourly_sum(deposit_orders)
+
+    if min_withdraws["min_sum"] == 0 and min_deposits["min_sum"] == 0:
+        return
+    elif min_withdraws["min_sum"] == 0:
+        min_sum = min_deposits["min_sum"]
+    elif min_deposits["min_sum"] == 0:
+        min_sum = min_withdraws["min_sum"]
+    else:
+        min_sum = min(min_withdraws["min_sum"], min_deposits["min_sum"])
+
+    min_orders = min_withdraws if min_withdraws["min_sum"] == min_sum else min_deposits
+    percentage = context.bot_data["lucky_hour_amount"] * 100 / min_orders["min_sum"]
+    start_time = (
+        (
+            datetime.fromisoformat(str(min_orders["orders"][0].order_date))
+            + timedelta(hours=3)
+        )
+        .time()
+        .strftime(r"%I:%M %p")
+    )
+    end_time = (
+        (
+            datetime.fromisoformat(str(min_orders["orders"][0].order_date))
+            + timedelta(hours=4)
+        )
+        .time()
+        .strftime(r"%I:%M %p")
+    )
+    offer_text = (
+        "خليك بساعة الحظ، الحظ بده رضاك\n"
+        "ما تروح وتسيبها، يمكن تربح معاك\n\n"
+        f"<b>ساعة {random.choice(team_names)} {format_amount(percentage)}%</b> 🔥\n\n"
+        f"لطلبات {order_type_dict[type(min_orders["orders"][0])]}\n"
+        f"من ال: <b>{start_time}</b>\n"
+        f"حتى ال: <b>{end_time}</b>\n\n"
+        "الرابحون:\n\n"
+    )
+    for order in min_orders["orders"]:
+        order: models.DepositOrder | models.WithdrawOrder = order
+        amount = order.amount * percentage / 100
+        try:
+            user = await context.bot.get_chat(chat_id=order.user_id)
+            name = "@" + user.username if user.username else f"<b>{user.full_name}</b>"
+        except BadRequest:
+            user = models.User.get_user(user_id=order.user_id)
+            name = "@" + user.username if user.username else f"<b>{user.name}</b>"
+        offer_text += (
+            f"الاسم:\n{name}\n" f"رقم الحساب: <code>{order.acc_number}</code>\n\n"
+        )
+        await send_deposit_without_check(
+            context=context,
+            acc_number=order.acc_number,
+            user_id=order.user_id,
+            amount=amount,
+            method=LUCKY_HOUR_OFFER,
+        )
+        if not context.bot_data.get("total_lucky_hour_offer", False):
+            context.bot_data["total_lucky_hour_offer"] = amount
+        else:
+            context.bot_data["total_lucky_hour_offer"] += amount
+
+        await models.Offer.add(
+            serial=order.serial, factor=percentage, offer_name=LUCKY_HOUR_OFFER
+        )
+
+    offer_text += "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>",
+    for order in min_orders["orders"]:
+        await context.bot.send_message(
+            chat_id=order.user_id,
+            text=offer_text,
+        )
+    await context.bot.send_message(
+        chat_id=int(os.getenv("CHANNEL_ID")),
+        text=offer_text,
+        message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
+    )
+
+
+async def schedule_offers_jobs(context: ContextTypes.DEFAULT_TYPE):
     tz = pytz.timezone("Asia/Damascus")
     today = datetime.now(tz=tz)
-    ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
-    job_hours_dict = {
-        0: random.randint(0, 2),
-        1: random.randint(3, 5),
-        2: random.randint(6, 8),
-        3: random.randint(9, 11),
-        4: random.randint(12, 14),
-        5: random.randint(15, 17),
-        6: random.randint(18, 20),
-        7: random.randint(21, 23),
-    }
-    dev_id = int(os.getenv("DEV_ID"))
-    await context.bot.send_message(
-        chat_id=dev_id,
-        text=f"أوقات عرض الغفلة:",
-    )
-    for i in range(8):
-        when = datetime(
-            year=today.year,
-            month=today.month,
-            day=today.day,
-            hour=job_hours_dict[i],
-            minute=0,
-            second=0,
-            microsecond=0,
-            tzinfo=tz,
-        )
-        await context.bot.send_message(
-            chat_id=dev_id,
-            text=format_datetime(when),
-        )
-        context.job_queue.run_once(
-            process_orders_for_ghafla_offer,
-            when=when,
-            name=ghafla_offer_base_job_name + f"_{i}",
-            job_kwargs={
-                "id": ghafla_offer_base_job_name + f"_{i}",
-                "misfire_grace_time": None,
-                "coalesce": True,
-                "replace_existing": True,
-            },
-        )
-
+    schedule_ghafla_offer_jobs(context=context, today=today, tz=tz)
+    schedule_lucky_hour_jobs(context=context, today=today, tz=tz)
     if not context.bot_data.get("total_ghafla_offer", False):
         context.bot_data["total_ghafla_offer"] = 0
     else:
@@ -263,6 +324,83 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
             "create_account_deposit_pin"
         ]
         context.bot_data["total_ghafla_offer"] = 0
+
+
+def schedule_ghafla_offer_jobs(
+    context: ContextTypes.DEFAULT_TYPE,
+    today: datetime,
+    tz,
+):
+    ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
+    job_hours_dict = {
+        0: random.randint(0, 2),
+        1: random.randint(3, 5),
+        2: random.randint(6, 8),
+        3: random.randint(9, 11),
+        4: random.randint(12, 14),
+        5: random.randint(15, 17),
+        6: random.randint(18, 20),
+        7: random.randint(21, 23),
+    }
+    for i in job_hours_dict:
+        when = datetime(
+            year=today.year,
+            month=today.month,
+            day=today.day,
+            hour=job_hours_dict[i],
+            minute=0,
+            second=0,
+            microsecond=0,
+            tzinfo=tz,
+        )
+        context.job_queue.run_once(
+            process_orders_for_ghafla_offer,
+            when=when,
+            name=ghafla_offer_base_job_name + f"_{i}",
+            job_kwargs={
+                "id": ghafla_offer_base_job_name + f"_{i}",
+                "misfire_grace_time": None,
+                "coalesce": True,
+                "replace_existing": True,
+            },
+        )
+
+
+def schedule_lucky_hour_jobs(
+    context: ContextTypes.DEFAULT_TYPE,
+    today: datetime,
+    tz,
+):
+    lucky_hour_offer_base_job_name = "process_orders_for_lucky_hour_offer"
+    job_hours_dict = {
+        0: random.randint(12, 14),
+        1: random.randint(15, 17),
+        2: random.randint(18, 20),
+        3: random.randint(21, 23),
+        4: random.randint(0, 2),
+    }
+    for i in job_hours_dict:
+        when = datetime(
+            year=today.year,
+            month=today.month,
+            day=today.day,
+            hour=job_hours_dict[i],
+            minute=0,
+            second=0,
+            microsecond=0,
+            tzinfo=tz,
+        )
+        context.job_queue.run_once(
+            process_orders_for_lucky_hour_offer,
+            when=when,
+            name=lucky_hour_offer_base_job_name + f"_{i}",
+            job_kwargs={
+                "id": lucky_hour_offer_base_job_name + f"_{i}",
+                "misfire_grace_time": None,
+                "coalesce": True,
+                "replace_existing": True,
+            },
+        )
 
 
 async def send_daily_stats(context: ContextTypes.DEFAULT_TYPE):

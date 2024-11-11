@@ -1,10 +1,4 @@
-from telegram import (
-    Update,
-    InlineKeyboardMarkup,
-    Chat,
-)
-
-
+from telegram import Update, InlineKeyboardMarkup, Chat
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -12,14 +6,12 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
 )
-
 from common.common import (
     build_agent_keyboard,
     build_methods_keyboard,
     payment_method_pattern,
     build_back_button,
 )
-
 from common.back_to_home_page import (
     back_to_agent_home_page_button,
     back_to_agent_home_page_handler,
@@ -141,7 +133,6 @@ async def get_payment_info_player_withdraw(
 back_to_get_payment_info_player_withdraw = choose_payment_method_player_withdraw
 
 
-
 async def get_withdraw_code_player_withdraw(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
@@ -153,7 +144,7 @@ async def get_withdraw_code_player_withdraw(
             user_id=update.effective_user.id,
             agent_id=update.effective_user.id,
         )
-        
+
         if not res:
             await update.message.reply_text(
                 text="لقد تم إرسال هذا الكود إلى البوت من قبل ❗️",
