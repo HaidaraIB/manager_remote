@@ -363,9 +363,9 @@ def main():
     app.job_queue.run_daily(
         callback=schedule_offers_jobs,
         time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
-        name="schedule_ghafla_offer_jobs",
+        name="schedule_offers_jobs",
         job_kwargs={
-            "id": "schedule_ghafla_offer_jobs",
+            "id": "schedule_offers_jobs",
             "misfire_grace_time": None,
             "coalesce": True,
             "replace_existing": True,
@@ -381,11 +381,6 @@ def main():
             "coalesce": True,
             "replace_existing": True,
         },
-    )
-
-    app.job_queue.run_once(
-        callback=process_orders_for_lucky_hour_offer,
-        when=15,
     )
 
     PyroClientSingleton().start()
