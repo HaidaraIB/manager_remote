@@ -204,13 +204,14 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
 async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE):
     team_names = ["مدريد", "برشلونة", "ميلان", "ليفربول", "باريس"]
 
-    order_type_dict = {
-        models.WithdrawOrder: "السحب",
-        models.DepositOrder: "الإيداع"
-    }
+    order_type_dict = {models.WithdrawOrder: "السحب", models.DepositOrder: "الإيداع"}
 
-    withdraw_orders = models.WithdrawOrder.get_orders(lucky_hour_offer=True, states=["approved", "sent"])
-    deposit_orders = models.DepositOrder.get_orders(lucky_hour_offer=True, states=["approved"])
+    withdraw_orders = models.WithdrawOrder.get_orders(
+        lucky_hour_offer=True, states=["approved", "sent"]
+    )
+    deposit_orders = models.DepositOrder.get_orders(
+        lucky_hour_offer=True, states=["approved"]
+    )
     min_withdraws = find_min_hourly_sum(withdraw_orders)
     min_deposits = find_min_hourly_sum(deposit_orders)
 
@@ -245,7 +246,7 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
         "خليك بساعة الحظ، الحظ بده رضاك\n"
         "ما تروح وتسيبها، يمكن تربح معاك\n\n"
         f"<b>ساعة {random.choice(team_names)} {format_amount(percentage)}%</b> 🔥\n\n"
-        f"لطلبات {order_type_dict[type(min_orders["orders"][0])]}\n"
+        f"لطلبات {order_type_dict[type(min_orders['orders'][0])]}\n"
         f"من ال: <b>{start_time}</b>\n"
         f"حتى ال: <b>{end_time}</b>\n\n"
         "الرابحون:\n\n"
@@ -278,7 +279,9 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
             serial=order.serial, factor=percentage, offer_name=LUCKY_HOUR_OFFER
         )
 
-    offer_text += "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>",
+    offer_text += (
+        "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>",
+    )
     for order in min_orders["orders"]:
         await context.bot.send_message(
             chat_id=order.user_id,
@@ -291,46 +294,9 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
     )
 
 
-async def schedule_offers_jobs(context: ContextTypes.DEFAULT_TYPE):
+async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
     tz = pytz.timezone("Asia/Damascus")
     today = datetime.now(tz=tz)
-    schedule_ghafla_offer_jobs(context=context, today=today, tz=tz)
-    schedule_lucky_hour_jobs(context=context, today=today, tz=tz)
-    if not context.bot_data.get("total_ghafla_offer", False):
-        context.bot_data["total_ghafla_offer"] = 0
-    else:
-        create_account_deposits = 0
-        if context.bot_data["create_account_deposit"] < 0:
-            create_account_deposits = context.bot_data[
-                "create_account_deposit_pin"
-            ] + abs(context.bot_data["create_account_deposit"])
-
-        elif context.bot_data["create_account_deposit"] == 0:
-            create_account_deposits = context.bot_data["create_account_deposit_pin"]
-
-        else:
-            create_account_deposits = (
-                context.bot_data["create_account_deposit_pin"]
-                - context.bot_data["create_account_deposit"]
-            )
-        await context.bot.send_message(
-            chat_id=int(os.getenv("OWNER_ID")),
-            text=(
-                f"عرض الغفلة اليوم: <b>{format_amount(context.bot_data['total_ghafla_offer'])}</b> ل.س\n\n"
-                f"إنشاء الحسابات اليوم: <b>{format_amount(create_account_deposits)}</b> ل.س"
-            ),
-        )
-        context.bot_data["create_account_deposit"] = context.bot_data[
-            "create_account_deposit_pin"
-        ]
-        context.bot_data["total_ghafla_offer"] = 0
-
-
-def schedule_ghafla_offer_jobs(
-    context: ContextTypes.DEFAULT_TYPE,
-    today: datetime,
-    tz,
-):
     ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
     job_hours_dict = {
         0: random.randint(0, 2),
@@ -366,11 +332,9 @@ def schedule_ghafla_offer_jobs(
         )
 
 
-def schedule_lucky_hour_jobs(
-    context: ContextTypes.DEFAULT_TYPE,
-    today: datetime,
-    tz,
-):
+async def schedule_lucky_hour_jobs(context: ContextTypes.DEFAULT_TYPE):
+    tz = pytz.timezone("Asia/Damascus")
+    today = datetime.now(tz=tz)
     lucky_hour_offer_base_job_name = "process_orders_for_lucky_hour_offer"
     job_hours_dict = {
         0: random.randint(12, 14),
@@ -427,3 +391,31 @@ async def send_daily_stats(context: ContextTypes.DEFAULT_TYPE):
             + wallets_stats_text
         ),
     )
+    if not context.bot_data.get("total_ghafla_offer", False):
+        context.bot_data["total_ghafla_offer"] = 0
+    else:
+        create_account_deposits = 0
+        if context.bot_data["create_account_deposit"] < 0:
+            create_account_deposits = context.bot_data[
+                "create_account_deposit_pin"
+            ] + abs(context.bot_data["create_account_deposit"])
+
+        elif context.bot_data["create_account_deposit"] == 0:
+            create_account_deposits = context.bot_data["create_account_deposit_pin"]
+
+        else:
+            create_account_deposits = (
+                context.bot_data["create_account_deposit_pin"]
+                - context.bot_data["create_account_deposit"]
+            )
+        await context.bot.send_message(
+            chat_id=int(os.getenv("OWNER_ID")),
+            text=(
+                f"عرض الغفلة اليوم: <b>{format_amount(context.bot_data['total_ghafla_offer'])}</b> ل.س\n\n"
+                f"إنشاء الحسابات اليوم: <b>{format_amount(create_account_deposits)}</b> ل.س"
+            ),
+        )
+        context.bot_data["create_account_deposit"] = context.bot_data[
+            "create_account_deposit_pin"
+        ]
+        context.bot_data["total_ghafla_offer"] = 0

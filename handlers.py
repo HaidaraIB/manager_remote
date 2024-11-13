@@ -16,10 +16,9 @@ from start import start_command, admin_command, worker_command, error_command, i
 from jobs import (
     reward_worker,
     remind_agent_to_clear_wallets,
-    schedule_offers_jobs,
+    schedule_ghafla_offer_jobs,
+    schedule_lucky_hour_jobs,
     send_daily_stats,
-    process_orders_for_ghafla_offer,
-    process_orders_for_lucky_hour_offer,
 )
 from common.common import invalid_callback_data, create_folders
 from common.error_handler import error_handler
@@ -361,11 +360,25 @@ def main():
     )
 
     app.job_queue.run_daily(
-        callback=schedule_offers_jobs,
+        callback=schedule_ghafla_offer_jobs,
         time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
-        name="schedule_offers_jobs",
+        days=(1,3,4,6), # monday, wednesday, thursday, saturday
+        name="schedule_ghafla_offer_jobs",
         job_kwargs={
-            "id": "schedule_offers_jobs",
+            "id": "schedule_ghafla_offer_jobs",
+            "misfire_grace_time": None,
+            "coalesce": True,
+            "replace_existing": True,
+        },
+    )
+
+    app.job_queue.run_daily(
+        callback=schedule_lucky_hour_jobs,
+        time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
+        days=(0,2,4,5), # sunday, tuesday, thursday, firday
+        name="schedule_lucky_hour_jobs",
+        job_kwargs={
+            "id": "schedule_lucky_hour_jobs",
             "misfire_grace_time": None,
             "coalesce": True,
             "replace_existing": True,
