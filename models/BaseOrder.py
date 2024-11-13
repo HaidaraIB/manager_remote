@@ -174,7 +174,7 @@ class BaseOrder(Base):
             res = s.execute(
                 select(cls).where(
                     and_(
-                        cls.state == "approved",
+                        cls.state.in_(states),
                         cls.acc_number != "",
                         cls.agent_id == 0,
                         cls.method.in_(PAYMENT_METHODS_LIST),

@@ -209,8 +209,8 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
         models.DepositOrder: "الإيداع"
     }
 
-    withdraw_orders = models.WithdrawOrder.get_orders(lucky_hour_offer=True)
-    deposit_orders = models.DepositOrder.get_orders(lucky_hour_offer=True)
+    withdraw_orders = models.WithdrawOrder.get_orders(lucky_hour_offer=True, states=["approved", "sent"])
+    deposit_orders = models.DepositOrder.get_orders(lucky_hour_offer=True, states=["approved"])
     min_withdraws = find_min_hourly_sum(withdraw_orders)
     min_deposits = find_min_hourly_sum(deposit_orders)
 
