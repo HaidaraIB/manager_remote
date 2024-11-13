@@ -1,0 +1,1 @@
+from admin.offers.offers import offers_handler

@@ -8,6 +8,7 @@ from common.stringifies import (
     stringify_reward_report,
     stringify_daily_order_stats,
     stringify_daily_wallet_stats,
+    order_settings_dict,
 )
 from common.common import notify_workers, format_amount
 from common.functions import send_deposit_without_check, find_min_hourly_sum
@@ -419,3 +420,16 @@ async def send_daily_stats(context: ContextTypes.DEFAULT_TYPE):
             "create_account_deposit_pin"
         ]
         context.bot_data["total_ghafla_offer"] = 0
+
+
+async def reset_offer_percentage(context: ContextTypes.DEFAULT_TYPE):
+    order_type = context.job.name.replace("_offer", "")
+    context.bot_data[f"{order_type}_offer_percentage"]
+    await context.bot.send_message(
+        chat_id=int(os.getenv("OWNER_ID")),
+        text=(
+            f"انتهى عرض ال{order_settings_dict[order_type]['t']}"
+            f" بنسبة {context.job.data['p']}%"
+            f" لمدة {context.job.data['t']} ساعة."
+        ),
+    )

@@ -33,6 +33,21 @@ order_dict_en_to_ar = {
 }
 
 
+
+def calc_period(seconds: int):
+    days = int(seconds // (3600 * 24))
+    hours = int((seconds % (3600 * 24)) // 3600)
+    left_minutes = (seconds % 3600) // 60
+    left_seconds = seconds - (days * (3600 * 24)) - (hours * 3600) - (left_minutes * 60)
+
+    days_text = f"{days} يوم " if days else ""
+    hours_text = f"{hours} ساعة " if hours else ""
+    minutes_text = f"{int(left_minutes)} دقيقة " if left_minutes else ""
+    seconds_text = f"{int(left_seconds)} ثانية" if left_seconds else ""
+
+    return days_text + hours_text + minutes_text + seconds_text
+
+
 async def check_referral(context: ContextTypes.DEFAULT_TYPE, new_user: User):
     if context.args:
         try:
@@ -140,9 +155,9 @@ def apply_ex_rate(
             amount = amount * 0.97 * ex_rate
         else:
             amount = amount * 0.97 / ex_rate
-        return amount, ex_rate
+        return amount + (amount * (context.bot_data[f'{order_type}_offer_percentage'] / 100)), ex_rate
     except:
-        return amount, 1
+        return amount + (amount * (context.bot_data[f'{order_type}_offer_percentage'] / 100)), 1
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
@@ -396,6 +411,10 @@ def build_admin_keyboard():
             InlineKeyboardButton(
                 text="إعدادات المكافآت 👨🏻‍💻",
                 callback_data="update percentages",
+            ),
+            InlineKeyboardButton(
+                text="عروض 💥",
+                callback_data="offers",
             ),
         ],
         [

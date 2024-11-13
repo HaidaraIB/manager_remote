@@ -41,6 +41,7 @@ from user.show_trusted_agents import *
 from user.complaint import *
 from user.respond_to_contact_msg import *
 
+from admin.offers import *
 from admin.stats import *
 from admin.admin_calls import *
 from admin.admin_settings import *
@@ -272,6 +273,8 @@ def main():
     app.add_handler(broadcast_message_handler)
 
     app.add_handler(request_order_handler)
+
+    app.add_handler(offers_handler)
 
     # WORKER SETTINGS
     app.add_handler(worker_balance_handler)
