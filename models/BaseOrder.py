@@ -119,7 +119,26 @@ class BaseOrder(Base):
                         cls.method == method,
                     )
                 )
-
+        elif lucky_hour_offer:
+            now = datetime.datetime.now(datetime.UTC)
+            today = now.date()
+            start_hour = str(now.hour - 1).rjust(2, "0")
+            end_hour = str(now.hour + 2).rjust(2, "0")
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.state.in_(states),
+                        cls.acc_number != "",
+                        cls.agent_id == 0,
+                        cls.method.in_(PAYMENT_METHODS_LIST),
+                        func.date(cls.order_date) == today,
+                        func.strftime("%H", cls.order_date) >= start_hour,
+                        func.strftime("%H", cls.order_date) <= end_hour,
+                    )
+                )
+                .order_by(cls.order_date)
+            )
         elif states:
             res = s.execute(
                 select(cls)
@@ -165,25 +184,6 @@ class BaseOrder(Base):
                 return res.all()
             except:
                 pass
-
-        elif lucky_hour_offer:
-            now = datetime.datetime.now(datetime.UTC)
-            today = now.date()
-            start_hour = str(now.hour - 1).rjust(2, "0")
-            end_hour = str(now.hour + 2).rjust(2, "0")
-            res = s.execute(
-                select(cls).where(
-                    and_(
-                        cls.state.in_(states),
-                        cls.acc_number != "",
-                        cls.agent_id == 0,
-                        cls.method.in_(PAYMENT_METHODS_LIST),
-                        func.date(cls.order_date) == today,
-                        func.strftime("%H", cls.order_date) >= start_hour,
-                        func.strftime("%H", cls.order_date) <= end_hour,
-                    )
-                ).order_by(cls.order_date)
-            )
 
         else:
             res = s.execute(select(cls))
