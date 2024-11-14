@@ -135,71 +135,64 @@ async def send_lucky_offer_text(update: Update, context: ContextTypes.DEFAULT_TY
         }
         team_names = ["مدريد", "برشلونة", "ميلان", "ليفربول", "باريس"]
 
-        offer_entries = models.Offer.get(offer_name=LUCKY_HOUR_OFFER)
-        orders = []
-        offer_orders = []
-        last_entry_factor = offer_entries[0].factor
+        offer_entries = models.Offer.get(
+            offer_name=LUCKY_HOUR_OFFER, factor=context.args[0]
+        )
+        offer_orders: list[models.DepositOrder | models.WithdrawOrder] = []
         for entry in offer_entries:
             order = models.WithdrawOrder.get_one_order(serial=entry.order_serial)
             if not order:
                 order = models.DepositOrder.get_one_order(serial=entry.order_serial)
             offer_orders.append(order)
-            if entry.factor != last_entry_factor:
-                orders.append((offer_orders, last_entry_factor))
-                last_entry_factor = entry.factor
-                offer_orders = []
-        for offer in orders:
-            orders = models.DepositOrder
-            start_time = (
-                (
-                    datetime.fromisoformat(str(offer[0][0].order_date))
-                    + timedelta(hours=3)
-                )
-                .time()
-                .strftime(r"%I:%M %p")
-            )
-            end_time = (
-                (
-                    datetime.fromisoformat(str(offer[0][0].order_date))
-                    + timedelta(hours=4)
-                )
-                .time()
-                .strftime(r"%I:%M %p")
-            )
-            offer_text = (
-                '"خليك بساعة الحظ، الحظ بده رضاك\n'
-                'ما تروح وتسيبها، يمكن تربح معاك"\n\n'
-                f"<b>ساعة {random.choice(team_names)} {format_amount(offer[1])}%</b> 🔥\n\n"
-                f"لطلبات {order_type_dict[type(offer[0][0])]}\n"
-                f"من ال: <b>{start_time}</b>\n"
-                f"حتى ال: <b>{end_time}</b>\n\n"
-                "الرابحون:\n\n"
-            )
-            for order in offer[0]:
-                order: models.DepositOrder | models.WithdrawOrder = order
-                try:
-                    user = await context.bot.get_chat(chat_id=order.user_id)
-                    name = (
-                        "@" + user.username
-                        if user.username
-                        else f"<b>{user.full_name}</b>"
-                    )
-                except BadRequest:
-                    user = models.User.get_user(user_id=order.user_id)
-                    name = (
-                        "@" + user.username if user.username else f"<b>{user.name}</b>"
-                    )
-                offer_text += (
-                    f"الاسم:\n{name}\n"
-                    f"رقم الحساب: <code>{order.acc_number}</code>\n\n"
-                )
 
-            offer_text += "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>"
-            await context.bot.send_message(
-                chat_id=int(os.getenv("CHANNEL_ID")),
-                text=offer_text,
-                message_thread_id=int(os.getenv("LUCKY_HOUR_TOPIC_ID")),
+        start_time = (
+            (
+                datetime.fromisoformat(str(offer_orders[0].order_date))
+                + timedelta(hours=3)
             )
+            .time()
+            .strftime(r"%I:%M %p")
+        )
+        end_time = (
+            (
+                datetime.fromisoformat(str(offer_orders[0].order_date))
+                + timedelta(hours=4)
+            )
+            .time()
+            .strftime(r"%I:%M %p")
+        )
+        offer_text = (
+            '"خليك بساعة الحظ، الحظ بده رضاك\n'
+            'ما تروح وتسيبها، يمكن تربح معاك"\n\n'
+            f"<b>ساعة {random.choice(team_names)} {format_amount(offer_entries[0].factor)}%</b> 🔥\n\n"
+            f"لطلبات {order_type_dict[type(offer_orders[0])]}\n"
+            f"من ال: <b>{start_time}</b>\n"
+            f"حتى ال: <b>{end_time}</b>\n\n"
+            "الرابحون:\n\n"
+        )
+
+        for order in offer_orders:
+            order: models.DepositOrder | models.WithdrawOrder = order
+            try:
+                user = await context.bot.get_chat(chat_id=order.user_id)
+                name = (
+                    "@" + user.username if user.username else f"<b>{user.full_name}</b>"
+                )
+            except BadRequest:
+                user = models.User.get_user(user_id=order.user_id)
+                name = "@" + user.username if user.username else f"<b>{user.name}</b>"
+            offer_text += (
+                f"الاسم:\n{name}\n" f"رقم الحساب: <code>{order.acc_number}</code>\n\n"
+            )
+
+        offer_text += (
+            "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>"
+        )
+        await context.bot.send_message(
+            chat_id=int(os.getenv("CHANNEL_ID")),
+            text=offer_text,
+            message_thread_id=int(os.getenv("LUCKY_HOUR_TOPIC_ID")),
+        )
 
 
 send_lucky_offer_text_command = CommandHandler(["slot"], send_lucky_offer_text)

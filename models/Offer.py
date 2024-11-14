@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, String, insert, select, func
+from sqlalchemy import Column, Integer, TIMESTAMP, String, insert, select, and_, func
 from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
 from common.constants import GHAFLA_OFFER
@@ -32,6 +32,7 @@ class Offer(Base):
         offer_id: int = None,
         today: bool = None,
         offer_name: str = "",
+        factor:float = 0,
         s: Session = None,
     ):
         if offer_id:
@@ -51,7 +52,7 @@ class Offer(Base):
                 )
             )
         elif offer_name:
-            res = s.execute(select(cls).where(cls.offer_name == offer_name))
+            res = s.execute(select(cls).where(and_(cls.offer_name == offer_name, cls.factor==factor)))
         else:
             res = s.execute(select(cls))
 
