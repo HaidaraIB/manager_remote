@@ -67,7 +67,11 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             "مبروك 🎉🎉🎉\n"
             f"تمت الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n\n"
             f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
+            f"المبلغ: <code>{d_order.amount}</code>\n"
             f"وسيلة الدفع: <code>{d_order.method}</code>\n"
+            f"رقم الحساب: <code>{d_order.acc_number}</code>\n"
+            f"رقم العملية: <code>{d_order.ref_number}</code>\n"
+            f"المحفظة: <code>{d_order.deposit_wallet}</code>\n"
         )
 
         media = [

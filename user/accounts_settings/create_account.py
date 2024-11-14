@@ -39,15 +39,15 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         today_count = models.Account.count_accounts(today=date.today())
-        if today_count >= 100:
-            await update.callback_query.answer(
-                text=(
-                    "بسبب حجم الحسابات الهائل المنجز خلال الأيام الماضية تم فرض قيود على عدد الحسابات ليصبح فقط 100 حساب لكل يوم يمنحها البوت\n"
-                    "يتجدد هذا العدد عند 3 بعد منتصف الليل من كل يوم."
-                ),
-                show_alert=True,
-            )
-            return
+        # if today_count >= 100:
+        #     await update.callback_query.answer(
+        #         text=(
+        #             "بسبب حجم الحسابات الهائل المنجز خلال الأيام الماضية تم فرض قيود على عدد الحسابات ليصبح فقط 100 حساب لكل يوم يمنحها البوت\n"
+        #             "يتجدد هذا العدد عند 3 بعد منتصف الليل من كل يوم."
+        #         ),
+        #         show_alert=True,
+        #     )
+        #     return
 
         accounts = models.Account.get_user_accounts(user_id=update.effective_user.id)
         try:
@@ -84,11 +84,12 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.user_data["pending_create_account"] = True
                 await asyncio.sleep(5)
 
-                gift_winner = flip_coin()
+                # gift_winner = flip_coin()
                 gift_line = ""
                 deposit_gift = 0
                 balance_available = check_balance_condition(context)
-                if balance_available and gift_winner:
+                # if balance_available and gift_winner:
+                if balance_available:
                     gift_line, deposit_gift = await serve_gift(
                         user_id=update.effective_user.id,
                         context=context,
