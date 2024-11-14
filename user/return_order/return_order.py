@@ -157,19 +157,27 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 order.ref_number,
                 workplace_id,
             )
-            try:
-                message = await context.bot.send_photo(
-                    chat_id=worker_id,
-                    photo=context.user_data["effective_photo"],
-                    caption=order_text,
-                    reply_markup=reply_markup,
-                )
-            except KeyError:
+
+            if order.ref_number:
                 message = await context.bot.send_message(
                     chat_id=worker_id,
                     text=order_text,
                     reply_markup=reply_markup,
                 )
+            else:
+                try:
+                    message = await context.bot.send_photo(
+                        chat_id=worker_id,
+                        photo=context.user_data["effective_photo"],
+                        caption=order_text,
+                        reply_markup=reply_markup,
+                    )
+                except KeyError:
+                    message = await context.bot.send_message(
+                        chat_id=worker_id,
+                        text=order_text,
+                        reply_markup=reply_markup,
+                    )
 
         await parent_to_child_models_mapper[order_type].return_order_to_worker(
             serial=serial,
