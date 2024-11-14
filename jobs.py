@@ -194,12 +194,6 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
             text=group_text,
             message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
         )
-        for serial in selected_serials:
-            order = models.DepositOrder.get_one_order(serial=serial)
-            await context.bot.send_message(
-                chat_id=order.user_id,
-                text=group_text,
-            )
 
 
 async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE):
@@ -277,21 +271,18 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
             context.bot_data["total_lucky_hour_offer"] += amount
 
         await models.Offer.add(
-            serial=order.serial, factor=percentage, offer_name=LUCKY_HOUR_OFFER
+            serial=order.serial,
+            factor=percentage,
+            offer_name=LUCKY_HOUR_OFFER,
         )
 
     offer_text += (
         "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>",
     )
-    for order in min_orders["orders"]:
-        await context.bot.send_message(
-            chat_id=order.user_id,
-            text=offer_text,
-        )
     await context.bot.send_message(
         chat_id=int(os.getenv("CHANNEL_ID")),
         text=offer_text,
-        message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
+        message_thread_id=int(os.getenv("LUCKY_HOUR_TOPIC_ID")),
     )
 
 
