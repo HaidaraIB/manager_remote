@@ -277,7 +277,7 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
         )
 
     offer_text += (
-        "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>",
+        "<b>ملاحظة: نظراً للعدد الكبير تم الاكتفاء بذكر أسماء أبرز المستفيدين</b>"
     )
     await context.bot.send_message(
         chat_id=int(os.getenv("CHANNEL_ID")),

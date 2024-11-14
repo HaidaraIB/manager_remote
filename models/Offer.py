@@ -16,7 +16,7 @@ class Offer(Base):
 
     @classmethod
     @lock_and_release
-    async def add(cls, serial: int, factor: int, offer_name:str, s: Session = None):
+    async def add(cls, serial: int, factor: int, offer_name: str, s: Session = None):
         s.execute(
             insert(cls).values(
                 order_serial=serial,
@@ -27,7 +27,13 @@ class Offer(Base):
 
     @classmethod
     @connect_and_close
-    def get(cls, offer_id: int = None, today: bool = None, s: Session = None):
+    def get(
+        cls,
+        offer_id: int = None,
+        today: bool = None,
+        offer_name: str = "",
+        s: Session = None,
+    ):
         if offer_id:
             res = s.execute(select(cls).where(cls.id == offer_id))
             try:
@@ -44,6 +50,8 @@ class Offer(Base):
                     func.date(func.datetime(cls.offer_date, "+3 hours")) == today
                 )
             )
+        elif offer_name:
+            res = s.execute(select(cls).where(cls.offer_name == offer_name))
         else:
             res = s.execute(select(cls))
 

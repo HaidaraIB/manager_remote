@@ -302,6 +302,7 @@ def main():
 
     app.add_handler(check_joined_handler)
 
+    app.add_handler(send_lucky_offer_text_command)
     app.add_handler(ban_command)
     app.add_handler(error_command)
     app.add_handler(agent_command)
