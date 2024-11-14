@@ -62,7 +62,7 @@ def check_balance_condition(context: ContextTypes.DEFAULT_TYPE):
 
 
 def choose_random_amount(context: ContextTypes.DEFAULT_TYPE):
-    rand = random.randint(1000, 20,000)
+    rand = random.randint(1000, 20000)
     if rand >= context.bot_data["create_account_deposit"]:
         rand = context.bot_data["create_account_deposit"]
         context.bot_data["create_account_deposit"] = 0
