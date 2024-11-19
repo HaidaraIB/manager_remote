@@ -76,6 +76,7 @@ def find_min_hourly_sum(
     min_sum = float("inf")
     current_sum = 0
     window_orders: list[models.DepositOrder | models.WithdrawOrder] = []
+    min_orders: list[models.DepositOrder | models.WithdrawOrder] = []
 
     for order in orders:
         # Add the current order to the window
@@ -89,12 +90,14 @@ def find_min_hourly_sum(
             removed_order = window_orders.pop(0)
             current_sum -= removed_order.amount
 
-            # Update min_sum if the current sum is smaller
-            min_sum = min(min_sum, current_sum)
+        # Update min_sum and min_window_orders if the current sum is smaller
+        if current_sum < min_sum:
+            min_sum = current_sum
+            min_orders = window_orders.copy()
 
     return {
-        "min_sum": min(min_sum, current_sum),
-        "orders": window_orders,
+        "min_sum": min_sum,
+        "orders": min_orders,
     }
 
 
