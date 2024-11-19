@@ -70,6 +70,7 @@ class DepositOrder(Order):
                 deposit_wallet=deposit_wallet,
                 agent_id=agent_id,
                 gov=gov,
+                from_withdraw_serial=from_withdraw_serial,
             ),
         )
         return res.lastrowid

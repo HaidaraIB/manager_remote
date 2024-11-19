@@ -1,5 +1,5 @@
 from telegram.ext import ContextTypes
-from telegram.error import RetryAfter, BadRequest
+from telegram.error import RetryAfter, BadRequest, TimedOut
 import models
 from common.constants import *
 from common.stringifies import (
@@ -12,7 +12,7 @@ from common.stringifies import (
 )
 from common.common import notify_workers, format_amount
 from common.functions import send_deposit_without_check, find_min_hourly_sum
-
+from common.error_handler import write_error
 import asyncio
 import os
 from datetime import datetime, timedelta

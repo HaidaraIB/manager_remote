@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, error
 from telegram.ext import ContextTypes
 from common.stringifies import stringify_deposit_order
 from common.common import notify_workers
@@ -31,16 +31,25 @@ async def send_deposit_without_check(
         account_number=acc_number,
     )
 
-    message = await context.bot.send_message(
-        chat_id=context.bot_data["data"]["deposit_after_check_group"],
-        text=order_text,
-        reply_markup=InlineKeyboardMarkup.from_button(
-            InlineKeyboardButton(
-                text="قبول الطلب ✅",
-                callback_data=f"verify_deposit_order_{serial}",
+    timed_out = True
+    while timed_out:
+        try:
+            message = await context.bot.send_message(
+                chat_id=context.bot_data["data"]["deposit_after_check_group"],
+                text=order_text,
+                reply_markup=InlineKeyboardMarkup.from_button(
+                    InlineKeyboardButton(
+                        text="قبول الطلب ✅",
+                        callback_data=f"verify_deposit_order_{serial}",
+                    )
+                ),
+                read_timeout=20,
+                write_timeout=20,
+                connect_timeout=20,
             )
-        ),
-    )
+            timed_out = False
+        except error.TimedOut:
+            pass
 
     await models.DepositOrder.send_order(
         pending_process_message_id=message.id,
