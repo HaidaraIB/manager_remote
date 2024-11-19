@@ -1,17 +1,18 @@
 from telegram import Chat, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 from custom_filters import Withdraw, Declined, Sent, DepositAgent
-from models import WithdrawOrder, PaymentAgent
-from common.constants import *
 import asyncio
-from common.stringifies import stringify_process_withdraw_order
 from worker.common import decline_order, decline_order_reason, check_order
+from common.constants import *
+from common.stringifies import stringify_process_withdraw_order
 from common.common import (
     build_worker_keyboard,
     apply_ex_rate,
     notify_workers,
     ensure_positive_amount,
 )
+from common.functions import end_offer
+import models
 
 
 async def check_withdraw(update: Update, _: ContextTypes.DEFAULT_TYPE):
@@ -48,30 +49,42 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 0
             ].callback_data.split("_")[-1]
         )
-        await WithdrawOrder.edit_order_amount(
+        await models.WithdrawOrder.edit_order_amount(
             new_amount=amount,
             serial=serial,
         )
 
-        w_order = WithdrawOrder.get_one_order(serial=serial)
+        w_order = models.WithdrawOrder.get_one_order(serial=serial)
 
         method = w_order.method
         target_group = f"{method}_group"
 
-        amount, ex_rate = apply_ex_rate(
+        amount, ex_rate, offer = apply_ex_rate(
             method=method,
             amount=amount,
             order_type="withdraw",
             context=context,
         )
+        total_amount = amount
+        if offer == -1:
+            await end_offer(context, "withdraw")
+        elif offer:
+            total_amount += amount * (offer / 100)
+            await models.Offer.add(
+                serial=w_order.serial,
+                factor=offer,
+                offer_name=WITHDRAW_OFFER,
+            )
 
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"][target_group],
             text=stringify_process_withdraw_order(
-                amount=amount,
+                amount=total_amount,
+                order_amount=amount,
                 serial=serial,
                 method=method,
                 payment_method_number=w_order.payment_method_number,
+                offer=offer,
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -100,13 +113,14 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-        await WithdrawOrder.send_order(
+        await models.WithdrawOrder.send_order(
             pending_process_message_id=message.id,
             serial=serial,
             group_id=context.bot_data["data"][target_group],
             ex_rate=ex_rate,
+            offer=offer,
         )
-        workers = PaymentAgent.get_workers(method=method)
+        workers = models.PaymentAgent.get_workers(method=method)
 
         asyncio.create_task(
             notify_workers(

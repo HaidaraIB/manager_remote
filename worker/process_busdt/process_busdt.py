@@ -21,6 +21,7 @@ from common.common import (
 )
 from common.stringifies import create_order_user_info_line
 
+
 async def user_payment_verified_busdt(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
@@ -64,11 +65,11 @@ async def reply_with_payment_proof_busdt(
 
         b_order = BuyUsdtdOrder.get_one_order(serial=serial)
 
-        amount = b_order.amount
-
+        offer_line = f"{b_order.amount} x {b_order.offer}% = {b_order.amount * (b_order.offer / 100)}"
         user_caption = (
-            f"مبروك، تم تأكيد عملية شراء <b>{format_amount(amount)} USDT</b> بنجاح ✅\n\n"
-            f"الرقم التسلسلي للطلب: <code>{serial}</code>"
+            f"مبروك، تم تأكيد عملية شراء <b>{format_amount(b_order.amount)} USDT</b> بنجاح ✅\n\n"
+            + (f"مضافاً إليها مبلغ العرض 💥:\n <b>{offer_line}</b>\n" if b_order.offer else "")
+            + f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
 
         media = [
@@ -125,7 +126,7 @@ async def reply_with_payment_proof_busdt(
             )
 
         await BuyUsdtdOrder.approve_payment_order(
-            amount=amount,
+            amount=b_order.amount,
             method=b_order.method,
             serial=serial,
             worker_id=update.effective_user.id,

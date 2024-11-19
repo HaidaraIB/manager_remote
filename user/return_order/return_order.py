@@ -106,7 +106,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 callback_data=f"verify_{order_type}_order_{order.serial}",
             )
         )
-        amount, _ = apply_ex_rate(
+        amount, _, __ = apply_ex_rate(
             method=order.method,
             amount=order.amount,
             order_type=order_type,

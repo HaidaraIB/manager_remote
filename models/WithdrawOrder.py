@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, TIMESTAMP, insert, select, desc
+from sqlalchemy import Column, String, Integer, TIMESTAMP, Float, insert, select, desc
 from sqlalchemy.orm import Session
 from models.DB import connect_and_close, lock_and_release
 from models.PaymentOrder import PaymentOrder

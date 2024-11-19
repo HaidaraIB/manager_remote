@@ -1,8 +1,8 @@
 from telegram.ext import ContextTypes
-import models
 from common.common import format_amount, format_datetime, parent_to_child_models_mapper
 from common.constants import *
 from datetime import timedelta
+import models
 
 state_dict_en_to_ar = {
     "declined": "مرفوض",
@@ -203,13 +203,17 @@ def stringify_deposit_order(
     wal: str = "لا يوجد",
     ref_num: str = "لا يوجد",
     workplace_id: int = None,
+    offer:str = 0,
+    order_amount: float = 0,
     *args,
 ):
+    offer_line = f"{order_amount} x {offer}% = {order_amount * (offer / 100)}"
     deposit_order_text = (
         "إيداع جديد:\n"
         f"رقم العملية: <code>{ref_num}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        f"رقم الحساب: <code>{account_number}</code>\n\n"
+        + (f"العرض 💥:\n <b>{offer_line}</b>\n" if offer else "")
+        + f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
         f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
@@ -248,12 +252,16 @@ def stringify_process_withdraw_order(
     serial: int,
     method: str,
     payment_method_number: str,
+    offer:str = 0,
+    order_amount:float = 0,
     *args,
 ):
+    offer_line = f"{order_amount} x {offer}% = {order_amount * (offer / 100)}"
     return (
         "تفاصيل طلب سحب :\n\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
+        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
+        + (f"العرض 💥:\n <b>{offer_line}</b>\n\n" if offer else "\n")
+        + f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
         "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."

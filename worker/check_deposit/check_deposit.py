@@ -1,10 +1,10 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, error
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from common.common import apply_ex_rate, notify_workers
 from common.stringifies import stringify_deposit_order, create_order_user_info_line
 from common.constants import *
-from models import RefNumber, DepositOrder, DepositAgent
-
+from common.functions import end_offer
+import models
 import os
 import asyncio
 
@@ -16,7 +16,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
         await check_deposit_lock.acquire()  # We're using the lock because we're checking deposit on storing ref too, so there's a possible conflict.
 
         serial = int(context.job.data)
-        d_order = DepositOrder.get_one_order(
+        d_order = models.DepositOrder.get_one_order(
             serial=serial,
         )
         if d_order and d_order.state != "pending":
@@ -28,7 +28,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
             "3_deposit_check": 600,
             "4_deposit_check": 600,
         }
-        ref_present = RefNumber.get_ref_number(
+        ref_present = models.RefNumber.get_ref_number(
             number=d_order.ref_number,
             method=d_order.method,
         )
@@ -91,7 +91,7 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
                 text=text,
             )
-            await DepositOrder.decline_order(
+            await models.DepositOrder.decline_order(
                 reason=reason,
                 serial=serial,
             )
@@ -100,21 +100,35 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_order_to_process(
-    d_order: DepositOrder, ref_info: RefNumber, context: ContextTypes.DEFAULT_TYPE
+    d_order: models.DepositOrder,
+    ref_info: models.RefNumber,
+    context: ContextTypes.DEFAULT_TYPE,
 ):
-    amount, ex_rate = apply_ex_rate(
+    amount, ex_rate, offer = apply_ex_rate(
         method=d_order.method,
         amount=ref_info.amount,
         order_type="deposit",
         context=context,
     )
+    total_amount = amount
+    if offer == -1:
+        await end_offer(context, "deposit")
+    elif offer:
+        total_amount += amount * (offer / 100)
+        await models.Offer.add(
+            serial=d_order.serial,
+            factor=offer,
+            offer_name=DEPOSIT_OFFER,
+        )
     order_text = stringify_deposit_order(
-        amount=amount,
+        amount=total_amount,
+        order_amount=amount,
         serial=d_order.serial,
         method=d_order.method,
         account_number=d_order.acc_number,
         wal=d_order.deposit_wallet,
         ref_num=ref_info.number,
+        offer=offer,
     )
 
     message = await context.bot.send_message(
@@ -128,14 +142,15 @@ async def send_order_to_process(
         ),
     )
 
-    await DepositOrder.send_order(
+    await models.DepositOrder.send_order(
         pending_process_message_id=message.id,
         serial=d_order.serial,
         ref_info=ref_info,
         group_id=context.bot_data["data"]["deposit_after_check_group"],
         ex_rate=ex_rate,
+        offer=offer,
     )
-    workers = DepositAgent.get_workers(is_point=False)
+    workers = models.DepositAgent.get_workers(is_point=False)
     asyncio.create_task(
         notify_workers(
             context=context,

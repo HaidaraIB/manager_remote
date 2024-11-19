@@ -102,7 +102,7 @@ class BaseOrder(Base):
         elif method:
             if today is not None:
                 today = datetime.datetime.now(
-                    tz=pytz.timezone("Asia/Damascus")
+                    tz=TIMEZONE
                 ).strftime("%Y-%m-%d")
                 res = s.execute(
                     select(cls).where(
@@ -396,6 +396,7 @@ class BaseOrder(Base):
         group_id: int,
         ex_rate: float,
         ref_info: RefNumber = None,
+        offer: float = 0,
         s: Session = None,
     ):
         if ref_info:
@@ -412,6 +413,7 @@ class BaseOrder(Base):
                 cls.ex_rate: ex_rate,
                 cls.send_date: datetime.datetime.now(),
                 cls.amount: ref_info.amount if ref_info else cls.amount,
+                cls.offer: offer,
             }
         )
 
@@ -470,7 +472,7 @@ class BaseOrder(Base):
     @classmethod
     @connect_and_close
     def calc_daily_stats(cls, s: Session = None):
-        today = datetime.datetime.now(tz=pytz.timezone("Asia/Damascus")).strftime(
+        today = datetime.datetime.now(TIMEZONE).strftime(
             "%Y-%m-%d"
         )
         res = s.execute(

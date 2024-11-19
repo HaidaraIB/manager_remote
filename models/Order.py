@@ -24,6 +24,7 @@ class Order(BaseOrder):
     method = Column(String)
     amount = Column(Float, default=0)
     ex_rate = Column(Float, default=1)
+    offer = Column(Float, default=0)
 
     reason = Column(String, default="")
     pending_check_message_id = Column(Integer, default=0)

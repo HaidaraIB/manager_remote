@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, select, insert, and_
+from sqlalchemy import Column, String, Integer, Float, select, insert, and_
 from models.Order import Order
 from models.DB import connect_and_close, lock_and_release
 from models.DepositAgent import DepositAgent

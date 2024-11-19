@@ -24,14 +24,12 @@ import os
 import uuid
 import logging
 from datetime import datetime
-import pytz
 
 order_dict_en_to_ar = {
     "withdraw": "سحب",
     "deposit": "إيداع",
     "busdt": "شراء USDT",
 }
-
 
 
 def calc_period(seconds: int):
@@ -112,9 +110,7 @@ def format_amount(amount: float):
 
 
 def format_datetime(d: datetime):
-    return d.replace(tzinfo=pytz.timezone("Asia/Damascus")).strftime(
-        r"%d/%m/%Y  %I:%M %p"
-    )
+    return d.replace(tzinfo=TIMEZONE).strftime(r"%d/%m/%Y  %I:%M %p")
 
 
 def pretty_time_delta(seconds):
@@ -155,9 +151,21 @@ def apply_ex_rate(
             amount = amount * 0.97 * ex_rate
         else:
             amount = amount * 0.97 / ex_rate
-        return amount + (amount * (context.bot_data[f'{order_type}_offer_percentage'] / 100)), ex_rate
     except:
-        return amount + (amount * (context.bot_data[f'{order_type}_offer_percentage'] / 100)), 1
+        ex_rate = 1
+    offer = context.bot_data[f"{order_type}_offer_percentage"]
+    if (
+        offer != 0
+        and amount <= context.bot_data[f"{order_type}_offer_max_amount"]
+        and amount >= context.bot_data[f"{order_type}_offer_min_amount"]
+    ):
+        gift = amount * (offer / 100)
+        if gift <= context.bot_data[f"{order_type}_offer_total"]:
+            context.bot_data[f"{order_type}_offer_total"] -= gift
+            context.bot_data[f"{order_type}_offer_total_stats"] += gift
+        else:
+            offer = -1
+    return amount, ex_rate, offer
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
@@ -412,10 +420,10 @@ def build_admin_keyboard():
                 text="إعدادات المكافآت 👨🏻‍💻",
                 callback_data="update percentages",
             ),
-            # InlineKeyboardButton(
-            #     text="عروض 💥",
-            #     callback_data="offers",
-            # ),
+            InlineKeyboardButton(
+                text="عروض 💥",
+                callback_data="offers",
+            ),
         ],
         [
             InlineKeyboardButton(

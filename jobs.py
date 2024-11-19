@@ -11,8 +11,7 @@ from common.stringifies import (
     order_settings_dict,
 )
 from common.common import notify_workers, format_amount
-from common.functions import send_deposit_without_check, find_min_hourly_sum
-
+from common.functions import send_deposit_without_check, find_min_hourly_sum, end_offer
 import asyncio
 import os
 from datetime import datetime, timedelta
@@ -238,8 +237,8 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
         .strftime(r"%I:%M %p")
     )
     offer_text = (
-        "\"خليك بساعة الحظ، الحظ بده رضاك\n"
-        "ما تروح وتسيبها، يمكن تربح معاك\"\n\n"
+        '"خليك بساعة الحظ، الحظ بده رضاك\n'
+        'ما تروح وتسيبها، يمكن تربح معاك"\n\n'
         f"<b>ساعة {random.choice(team_names)} {format_amount(percentage)}%</b> 🔥\n\n"
         f"لطلبات {order_type_dict[type(min_orders['orders'][0])]}\n"
         f"من ال: <b>{start_time}</b>\n"
@@ -287,18 +286,17 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
 
 
 async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
-    tz = pytz.timezone("Asia/Damascus")
-    today = datetime.now(tz=tz)
+    today = datetime.now(tz=TIMEZONE)
     ghafla_offer_base_job_name = "process_orders_for_ghafla_offer"
     job_hours_dict = {
-        0: random.randint(0, 2),
-        1: random.randint(3, 5),
-        2: random.randint(6, 8),
-        3: random.randint(9, 11),
-        4: random.randint(12, 14),
-        5: random.randint(15, 17),
-        6: random.randint(18, 20),
-        7: random.randint(21, 23),
+        0: random.randint(11, 12),
+        1: random.randint(13, 14),
+        2: random.randint(15, 16),
+        3: random.randint(17, 18),
+        4: random.randint(19, 20),
+        5: random.randint(21, 22),
+        6: random.randint(23, 0),
+        7: random.randint(1, 2),
     }
     for i in job_hours_dict:
         when = datetime(
@@ -309,7 +307,7 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
             minute=0,
             second=0,
             microsecond=0,
-            tzinfo=tz,
+            tzinfo=TIMEZONE,
         )
         context.job_queue.run_once(
             process_orders_for_ghafla_offer,
@@ -325,8 +323,7 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def schedule_lucky_hour_jobs(context: ContextTypes.DEFAULT_TYPE):
-    tz = pytz.timezone("Asia/Damascus")
-    today = datetime.now(tz=tz)
+    today = datetime.now(tz=TIMEZONE)
     lucky_hour_offer_base_job_name = "process_orders_for_lucky_hour_offer"
     job_hours_dict = {
         0: random.randint(12, 14),
@@ -344,7 +341,7 @@ async def schedule_lucky_hour_jobs(context: ContextTypes.DEFAULT_TYPE):
             minute=0,
             second=0,
             microsecond=0,
-            tzinfo=tz,
+            tzinfo=TIMEZONE,
         )
         context.job_queue.run_once(
             process_orders_for_lucky_hour_offer,
@@ -404,23 +401,39 @@ async def send_daily_stats(context: ContextTypes.DEFAULT_TYPE):
             chat_id=int(os.getenv("OWNER_ID")),
             text=(
                 f"عرض الغفلة اليوم: <b>{format_amount(context.bot_data['total_ghafla_offer'])}</b> ل.س\n\n"
-                f"إنشاء الحسابات اليوم: <b>{format_amount(create_account_deposits)}</b> ل.س"
+                f"إنشاء الحسابات اليوم: <b>{format_amount(create_account_deposits)}</b> ل.س\n\n"
+                f"عرض الإيداع اليوم: <b>{format_amount(context.bot_data['deposit_offer_total_stats'])}</b> ل.س\n\n"
+                f"عرض السحب اليوم: <b>{format_amount(context.bot_data['withdraw_offer_total_stats'])}</b> ل.س"
             ),
         )
         context.bot_data["create_account_deposit"] = context.bot_data[
             "create_account_deposit_pin"
         ]
         context.bot_data["total_ghafla_offer"] = 0
+        if context.bot_data[f"deposit_offer_total"] != 0:
+            await end_offer(context, "deposit")
+        if context.bot_data[f"withdraw_offer_total"] != 0:
+            await end_offer(context, "withdraw")
+        
 
 
-async def reset_offer_percentage(context: ContextTypes.DEFAULT_TYPE):
+
+async def start_offer(context: ContextTypes.DEFAULT_TYPE):
     order_type = context.job.name.replace("_offer", "")
-    context.bot_data[f"{order_type}_offer_percentage"]
+
+    offer_values = context.job.data
+
+    context.bot_data[f"{order_type}_offer_total"] = offer_values["total"]
+    context.bot_data[f"{order_type}_offer_percentage"] = offer_values["p"]
+    context.bot_data[f"{order_type}_offer_hour"] = offer_values["h"]
+    context.bot_data[f"{order_type}_offer_min_amount"] = offer_values["min_amount"]
+    context.bot_data[f"{order_type}_offer_max_amount"] = offer_values["max_amount"]
+
     await context.bot.send_message(
-        chat_id=int(os.getenv("OWNER_ID")),
+        chat_id=int(os.getenv("CHANNEL_ID")),
         text=(
-            f"انتهى عرض ال{order_settings_dict[order_type]['t']}"
-            f" بنسبة {context.job.data['p']}%"
-            f" لمدة {context.job.data['t']} ساعة."
+            f"عرض ال{order_settings_dict[order_type]['t']} 🔥\n\n"
+            f"زيادة بنسبة {format_amount(offer_values['p'])}% على مبالغ جميع الطلبات المقدمة بدءاً من الآن."
         ),
+        message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
     )

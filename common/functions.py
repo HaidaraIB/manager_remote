@@ -1,10 +1,12 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from common.stringifies import stringify_deposit_order
+from common.stringifies import stringify_deposit_order, order_settings_dict
 from common.common import notify_workers
+from admin.offers.common import get_offer_info
 import asyncio
 import models
 from datetime import timedelta
+import os
 
 
 async def send_deposit_without_check(
@@ -85,3 +87,23 @@ def find_min_hourly_sum(
         "min_sum": min(min_sum, current_sum),
         "orders": window_orders,
     }
+
+
+async def end_offer(context: ContextTypes.DEFAULT_TYPE, order_type: str):
+    total, p, h, min_amount, max_amount = get_offer_info(context, order_type)
+
+    context.bot_data[f"{order_type}_offer_total_stats"] = 0
+    context.bot_data[f"{order_type}_offer_total"] = 0
+    context.bot_data[f"{order_type}_offer_percentage"] = 0
+    context.bot_data[f"{order_type}_offer_hour"] = 0
+    context.bot_data[f"{order_type}_offer_min_amount"] = 0
+    context.bot_data[f"{order_type}_offer_max_amount"] = 0
+
+    await context.bot.send_message(
+        chat_id=int(os.getenv("CHANNEL_ID")),
+        text=(
+            f"انتهى عرض ال{order_settings_dict[order_type]['t']} 🔥\n\n"
+            f"زيادة بنسبة {p}% على مبالغ جميع الطلبات المقدمة بدءاً من الآن."
+        ),
+        message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
+    )

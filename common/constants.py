@@ -1,3 +1,5 @@
+import pytz
+
 USDT = "USDT"
 BEMO = "بيمو🇸🇦🇫🇷"
 BARAKAH = "بركة🇧🇭"
@@ -10,6 +12,8 @@ POINT_DEPOSIT = "نقاط وكلاء"
 CREATE_ACCOUNT_DEPOSIT = "إيداع إنشاء حساب"
 GHAFLA_OFFER = "عرض الغفلة"
 LUCKY_HOUR_OFFER = "ساعة الحظ"
+DEPOSIT_OFFER = "عرض الإيداع"
+WITHDRAW_OFFER = "عرض السحب"
 CANCELED_ORDER = "طلب سحب ملغى رقم <code>{}</code>"
 SPLIT_ORDER = "طلب سحب مرتجع رقم <code>{}</code>"
 
@@ -75,3 +79,6 @@ EXT_COMPLAINT_LINE = "<b>ملحق بالشكوى على الطلب ذي الرق
 
 DECLINE_TEXT = "تم رفض الطلب ❌"
 APPROVED_TEXT = "تمت الموافقة ✅"
+
+
+TIMEZONE = pytz.timezone("Asia/Damascus")

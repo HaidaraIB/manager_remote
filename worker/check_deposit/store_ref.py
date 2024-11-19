@@ -50,7 +50,9 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         await Wallet.update_balance(
-            amout=amount, number=d_order.deposit_wallet, method=method
+            amout=amount,
+            number=d_order.deposit_wallet,
+            method=method,
         )
 
         if d_order.amount and d_order.amount != amount:

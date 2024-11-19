@@ -6,18 +6,20 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from jobs import reset_offer_percentage
+import jobs
 from custom_filters import Admin
 from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
 )
-from common.common import build_back_button, build_admin_keyboard, calc_period
+from common.common import build_back_button, build_admin_keyboard
 from common.stringifies import order_settings_dict
-import datetime
+from common.constants import TIMEZONE
+from admin.offers.common import get_offer_info
 from start import admin_command
+import datetime
 
-ORDER_TYPE, PERCENTAGE, PERIOD = range(3)
+ORDER_TYPE, TOTAL, PERCENTAGE, HOUR, MIN, MAX = range(6)
 
 
 async def offers(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,80 +53,208 @@ async def choose_order_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order_type = context.user_data["offer_order_type"]
 
         old_offer_text = ""
-        offer_job = context.job_queue.get_jobs_by_name(f"{order_type}_offer")
-        if offer_job:
-            diff = offer_job[0].next_t - datetime.datetime.now()
-            seconds = diff.total_seconds() - (2 * 24 * 60 * 60)
+        total, p, h, min_amount, max_amount = get_offer_info(context, order_type)
+        if total:
             old_offer_text = (
-                f"\n\nملاحظة: هناك عرض {order_settings_dict[order_type]['t']}"
-                f" بنسبة {context.bot_data[f'{order_type}_offer_percentage']}%"
-                f" سينتهي بعد {calc_period(abs(seconds))}"
-                f" العرض الجديد سيحل محله."
+                f"\n\nملاحظة: هناك عرض {order_settings_dict[order_type]['t']} حالي:\n"
+                f"المبلغ الإجمالي: <b>{total}</b>\n"
+                f"النسبة: <b>{p}%</b>\n"
+                f"الموعد: <b>الساعة {h % 12} {'مساءً' if h > 12 else 'صباحاً'}</b>\n"
+                f"الحد الأدنى لمبلغ المستفيد: <code>{min_amount}</code>\n"
+                f"الحد الأعلى لمبلغ المستفيد: <code>{max_amount}</code>\n"
+                f"العرض الجديد سيحل محله."
             )
         back_buttons = [
             build_back_button("back_to_choose_order_type"),
             back_to_admin_home_page_button[0],
         ]
         await update.callback_query.edit_message_text(
-            text="أرسل النسبة" + old_offer_text,
+            text="أرسل المبلغ الإجمالي" + old_offer_text,
             reply_markup=InlineKeyboardMarkup(back_buttons),
         )
-        return PERCENTAGE
+        return TOTAL
 
 
 back_to_choose_order_type = offers
 
 
+async def get_total(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        order_type = context.user_data["offer_order_type"]
+        if update.message:
+            total = float(update.message.text)
+            context.user_data[f"{order_type}_offer_total"] = total
+        else:
+            total = context.user_data[f"{order_type}_offer_total"]
+
+        back_buttons = [
+            build_back_button("back_to_get_total"),
+            back_to_admin_home_page_button[0],
+        ]
+        await update.message.reply_text(
+            text="أرسل النسبة",
+            reply_markup=InlineKeyboardMarkup(back_buttons),
+        )
+        return PERCENTAGE
+
+
+back_to_get_total = choose_order_type
+
+
 async def get_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        p = float(update.message.text)
-        context.bot_data[f"offer_percentage"] = p
         back_buttons = [
             build_back_button("back_to_get_percentage"),
             back_to_admin_home_page_button[0],
         ]
-        await update.message.reply_text(
-            text="أرسل المدة بالساعة",
-            reply_markup=InlineKeyboardMarkup(back_buttons),
-        )
-        return PERIOD
-
-
-back_to_get_percentage = choose_order_type
-
-
-async def get_period(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
-        t = float(update.message.text)
         order_type = context.user_data["offer_order_type"]
-        p = context.bot_data[f"offer_percentage"]
+        if update.message:
+            p = float(update.message.text)
+            context.user_data[f"{order_type}_offer_percentage"] = p
+            await update.message.reply_text(
+                text=("أرسل ساعة العرض بنظام ال24 ساعة\n" "مثال: الساعة 11 مساءً = 23"),
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text=("أرسل ساعة العرض بنظام ال24 ساعة\n" "مثال: الساعة 11 مساءً = 23"),
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        return HOUR
+
+
+back_to_get_percentage = get_total
+
+
+async def get_hour(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        back_buttons = [
+            build_back_button("back_to_get_hour"),
+            back_to_admin_home_page_button[0],
+        ]
+        order_type = context.user_data["offer_order_type"]
+        if update.message:
+            t = int(update.message.text)
+            now = datetime.datetime.now(TIMEZONE)
+
+            back_to_get_percentage_buttons = [
+                build_back_button("back_to_get_percentage"),
+                back_to_admin_home_page_button[0],
+            ]
+            if now.hour >= t:
+                await update.message.reply_text(
+                    text="الرجاء إرسال ساعة في المستقبل ❗️",
+                    reply_markup=InlineKeyboardMarkup(back_to_get_percentage_buttons),
+                )
+                return
+            elif t > 23:
+                await update.message.reply_text(
+                    text="الرجاء إرسال ساعة صالحة ❗️",
+                    reply_markup=InlineKeyboardMarkup(back_to_get_percentage_buttons),
+                )
+                return
+
+            context.user_data[f"{order_type}_offer_hour"] = t
+            await update.message.reply_text(
+                text="أرسل الحد الأدنى لمبلغ المستفيد",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text="أرسل الحد الأدنى لمبلغ المستفيد",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        return MIN
+
+
+back_to_get_hour = get_percentage
+
+
+async def get_min(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        back_buttons = [
+            build_back_button("back_to_get_min"),
+            back_to_admin_home_page_button[0],
+        ]
+        order_type = context.user_data["offer_order_type"]
+        if update.message:
+            min_amount = float(update.message.text)
+            context.user_data[f"{order_type}_offer_min_amount"] = min_amount
+            await update.message.reply_text(
+                text="أرسل الحد الأعلى لمبلغ المستفيد",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text="أرسل الحد الأعلى لمبلغ المستفيد",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        return MAX
+
+
+back_to_get_min = get_hour
+
+
+async def get_max(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        order_type = context.user_data["offer_order_type"]
+
+        # getting temp offer values
+        total = context.user_data[f"{order_type}_offer_total"]
+        p = context.user_data[f"{order_type}_offer_percentage"]
+        h = context.user_data[f"{order_type}_offer_hour"]
+        min_amount = context.user_data[f"{order_type}_offer_min_amount"]
+        max_amount = float(update.message.text)
+
         job_name = f"{order_type}_offer"
         offer_jobs = context.job_queue.get_jobs_by_name(job_name)
         if offer_jobs:
             offer_jobs[0].schedule_removal()
+        now = datetime.datetime.now(TIMEZONE)
         context.job_queue.run_once(
-            callback=reset_offer_percentage,
-            when=t * 60 * 60,
+            callback=jobs.start_offer,
+            # when=datetime.datetime(
+            #     year=now.year,
+            #     month=now.month,
+            #     day=now.day,
+            #     hour=h,
+            #     tzinfo=TIMEZONE,
+            # ),
+            when=10,
             name=job_name,
-            data={"p": p, "t": t},
+            data={
+                "total": total,
+                "p": p,
+                "h": h,
+                "min_amount": min_amount,
+                "max_amount": max_amount,
+            },
             job_kwargs={
                 "id": job_name,
                 "coalesce": True,
                 "replace_existing": True,
+                "misfire_grace_time": None,
             },
         )
         await update.message.reply_text(
-            text=f"تم تحديث نسبة عرض ال{order_settings_dict[order_type]['t']} إلى {p}% لمدة {t} ساعة.",
+            text=(
+                f"تم تحديث عرض ال{order_settings_dict[order_type]['t']}:\n"
+                f"المبلغ الإجمالي: <b>{total}</b>\n"
+                f"النسبة: <b>{p}%</b>\n"
+                f"الموعد: <b>الساعة {h % 12} {'مساءً' if h > 12 else 'صباحاً'}</b>\n"
+                f"الحد الأدنى لمبلغ المستفيد: <code>{min_amount}</code>\n"
+                f"الحد الأعلى لمبلغ المستفيد: <code>{max_amount}</code>\n"
+            ),
             reply_markup=build_admin_keyboard(),
         )
         return ConversationHandler.END
 
 
-offers_handler  = ConversationHandler(
+offers_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
             offers,
-            "offers",
+            "^offers$",
         )
     ],
     states={
@@ -134,27 +264,44 @@ offers_handler  = ConversationHandler(
                 "^((withdraw)|(deposit))_offer$",
             )
         ],
+        TOTAL: [
+            MessageHandler(
+                filters=filters.Regex("^[0-9]+\.?[0-9]*$"),
+                callback=get_total,
+            )
+        ],
         PERCENTAGE: [
             MessageHandler(
-                filters=filters.Regex("^[0-9]+\.[0-9]*$"),
+                filters=filters.Regex("^[0-9]+\.?[0-9]*$"),
                 callback=get_percentage,
             )
         ],
-        PERIOD: [
+        HOUR: [
             MessageHandler(
-                filters=filters.Regex("^[0-9]+\.[0-9]*$"),
-                callback=get_period,
-            ) 
-        ]
+                filters=filters.Regex("^[0-9]+\.?[0-9]*$"),
+                callback=get_hour,
+            )
+        ],
+        MIN: [
+            MessageHandler(
+                filters=filters.Regex("^[0-9]+\.?[0-9]*$"),
+                callback=get_min,
+            )
+        ],
+        MAX: [
+            MessageHandler(
+                filters=filters.Regex("^[0-9]+\.?[0-9]*$"),
+                callback=get_max,
+            )
+        ],
     },
     fallbacks=[
         admin_command,
         back_to_admin_home_page_handler,
-        CallbackQueryHandler(
-            back_to_choose_order_type, "^back_to_choose_order_type$"
-        ),
-        CallbackQueryHandler(
-            back_to_get_percentage, "^back_to_get_percentage$"
-        )
-    ]
+        CallbackQueryHandler(back_to_choose_order_type, "^back_to_choose_order_type$"),
+        CallbackQueryHandler(back_to_get_total, "^back_to_get_total$"),
+        CallbackQueryHandler(back_to_get_percentage, "^back_to_get_percentage$"),
+        CallbackQueryHandler(back_to_get_hour, "^back_to_get_hour$"),
+        CallbackQueryHandler(back_to_get_min, "^back_to_get_min$"),
+    ],
 )

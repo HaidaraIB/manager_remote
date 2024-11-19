@@ -83,7 +83,7 @@ async def send_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
         serial = int(update.callback_query.data.split("_")[-1])
         d_order = models.DepositOrder.get_one_order(serial=serial)
 
-        amount, ex_rate = apply_ex_rate(
+        amount, ex_rate, _ = apply_ex_rate(
             method=d_order.method,
             amount=d_order.amount,
             order_type="deposit",

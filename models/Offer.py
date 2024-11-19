@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, TIMESTAMP, String, insert, select, and_, func
 from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
-from common.constants import GHAFLA_OFFER
+from common.constants import GHAFLA_OFFER, TIMEZONE
 import datetime
 import pytz
 
@@ -43,7 +43,7 @@ class Offer(Base):
                 pass
 
         elif today is not None:
-            today = datetime.datetime.now(tz=pytz.timezone("Asia/Damascus")).strftime(
+            today = datetime.datetime.now(TIMEZONE).strftime(
                 "%Y-%m-%d"
             )
             res = s.execute(

@@ -21,6 +21,7 @@ from jobs import (
     send_daily_stats,
 )
 from common.common import invalid_callback_data, create_folders
+from common.constants import TIMEZONE
 from common.error_handler import error_handler
 from common.force_join import check_joined_handler
 from common.back_to_home_page import (
@@ -353,7 +354,7 @@ def main():
 
     app.job_queue.run_daily(
         callback=remind_agent_to_clear_wallets,
-        time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
+        time=datetime.time(0, 0, tzinfo=TIMEZONE),
         name="remind_agent_to_clear_wallets",
         job_kwargs={
             "id": "remind_agent_to_clear_wallets",
@@ -365,7 +366,7 @@ def main():
 
     app.job_queue.run_daily(
         callback=schedule_ghafla_offer_jobs,
-        time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
+        time=datetime.time(0, 0, tzinfo=TIMEZONE),
         days=(1,3,4,6), # monday, wednesday, thursday, saturday
         name="schedule_ghafla_offer_jobs",
         job_kwargs={
@@ -378,7 +379,7 @@ def main():
 
     app.job_queue.run_daily(
         callback=schedule_lucky_hour_jobs,
-        time=datetime.time(0, 0, tzinfo=pytz.timezone("Asia/Damascus")),
+        time=datetime.time(0, 0, tzinfo=TIMEZONE),
         days=(0,2,4,5), # sunday, tuesday, thursday, firday
         name="schedule_lucky_hour_jobs",
         job_kwargs={
@@ -390,7 +391,7 @@ def main():
     )
     app.job_queue.run_daily(
         callback=send_daily_stats,
-        time=datetime.time(23, 59, tzinfo=pytz.timezone("Asia/Damascus")),
+        time=datetime.time(23, 59, tzinfo=TIMEZONE),
         name="send_daily_stats",
         job_kwargs={
             "id": "send_daily_stats",
