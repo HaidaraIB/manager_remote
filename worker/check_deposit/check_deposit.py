@@ -110,13 +110,14 @@ async def send_order_to_process(
         order_type="deposit",
         context=context,
     )
-    offer = check_offer(context, amount, "deposit")
+    offer_factor = check_offer(context, amount, "deposit")
+    offer_id = 0
     total_amount = amount
-    if offer:
-        total_amount += amount * (offer / 100)
+    if offer_factor:
+        total_amount += amount * (offer_factor / 100)
         offer_id = await models.Offer.add(
             serial=d_order.serial,
-            factor=offer,
+            factor=offer_factor,
             offer_name=DEPOSIT_OFFER,
             min_amount=context.bot_data[f"deposit_offer_min_amount"],
             max_amount=context.bot_data[f"deposit_offer_max_amount"],
@@ -131,7 +132,7 @@ async def send_order_to_process(
         account_number=d_order.acc_number,
         wal=d_order.deposit_wallet,
         ref_num=ref_info.number,
-        offer=offer,
+        offer=offer_factor,
     )
 
     message = await context.bot.send_message(

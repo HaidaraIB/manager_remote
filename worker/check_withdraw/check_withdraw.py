@@ -49,12 +49,14 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 0
             ].callback_data.split("_")[-1]
         )
+
+        w_order = models.WithdrawOrder.get_one_order(serial=serial)
+        
         await models.WithdrawOrder.edit_order_amount(
             new_amount=amount,
             serial=serial,
         )
 
-        w_order = models.WithdrawOrder.get_one_order(serial=serial)
 
         method = w_order.method
         target_group = f"{method}_group"
@@ -68,8 +70,8 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         total_amount = amount
         offer_id = 0
+        offer_factor = 0
         if w_order.return_date:
-            offer_factor = 0
             if w_order.offer:
                 offer = models.Offer.get(offer_id=w_order.offer)
                 offer_id = offer.id
@@ -89,7 +91,6 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     context.bot_data["withdraw_offer_total_stats"] += gift
                 else:
                     await models.WithdrawOrder.detach_offer(serial=serial)
-                    w_order = models.WithdrawOrder.get_one_order(serial=serial)
         else:
             offer_factor = check_offer(context, amount, "withdraw")
             if offer_factor:
