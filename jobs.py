@@ -430,11 +430,15 @@ async def start_offer(context: ContextTypes.DEFAULT_TYPE):
     context.bot_data[f"{order_type}_offer_min_amount"] = offer_values["min_amount"]
     context.bot_data[f"{order_type}_offer_max_amount"] = offer_values["max_amount"]
 
-    await context.bot.send_message(
+    msg = await context.bot.send_message(
         chat_id=int(os.getenv("CHANNEL_ID")),
         text=(
             f"عرض ال{order_settings_dict[order_type]['t']} 🔥\n\n"
-            f"زيادة بنسبة {format_amount(offer_values['p'])}% على مبالغ جميع الطلبات المقدمة بدءاً من الآن."
+            f"زيادة بنسبة <b>{format_amount(offer_values['p'])}%</b> على المبالغ بين "
+            f"<b>{format_amount(offer_values["min_amount"])} ل.س</b> "
+            f"و <b>{format_amount(offer_values["max_amount"])} ل.س</b> "
+            "بدءاً من الآن."
         ),
         message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
     )
+    context.bot_data[f"{order_type}_offer_msg_id"] = msg.id

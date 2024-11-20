@@ -132,7 +132,7 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"تفاصيل الطلب:\n\n"
         f"الرقم التسلسلي: <code>{order.serial}</code>\n\n"
         f"آيدي المستخدم صاحب الطلب: <code>{order.user_id}</code>\n"
-        f"اسمه: <b>{name}</b>\n\n"
+        f"اسمه:\n<b>{name}</b>\n\n"
         f"آيدي الوكيل: <code>{getattr(order, 'agent_id', 'لا يوجد')}</code>\n"
         f"آيدي موظف التحقق: <code>{order.checker_id}</code>\n"
         f"آيدي موظف الدفع: <code>{order.worker_id}</code>\n\n"
@@ -203,16 +203,19 @@ def stringify_deposit_order(
     wal: str = "لا يوجد",
     ref_num: str = "لا يوجد",
     workplace_id: int = None,
-    offer:str = 0,
+    offer: str = 0,
     order_amount: float = 0,
     *args,
 ):
-    offer_line = f"{order_amount} x {offer}% = {order_amount * (offer / 100)}"
     deposit_order_text = (
         "إيداع جديد:\n"
         f"رقم العملية: <code>{ref_num}</code>\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        + (f"العرض 💥:\n <b>{offer_line}</b>\n" if offer else "")
+        + (
+            f"العرض 💥:\n <b>{make_offer_line(order_amount, offer)}</b>\n"
+            if offer
+            else ""
+        )
         + f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
         f"المحفظة: <code>{wal}</code>\n\n"
@@ -252,15 +255,18 @@ def stringify_process_withdraw_order(
     serial: int,
     method: str,
     payment_method_number: str,
-    offer:str = 0,
-    order_amount:float = 0,
+    offer: str = 0,
+    order_amount: float = 0,
     *args,
 ):
-    offer_line = f"{order_amount} x {offer}% = {order_amount * (offer / 100)}"
     return (
         "تفاصيل طلب سحب :\n\n"
         f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        + (f"العرض 💥:\n <b>{offer_line}</b>\n\n" if offer else "\n")
+        + (
+            f"العرض 💥:\n <b>{make_offer_line(order_amount, offer)}</b>\n\n"
+            if offer
+            else "\n"
+        )
         + f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
@@ -283,12 +289,19 @@ def stringify_process_busdt_order(
     serial: int,
     method: str,
     payment_method_number: str,
+    offer: str = 0,
+    order_amount: float = 0,
     *args,
 ):
     return (
         "طلب شراء USDT جديد:\n\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n\n"
-        f"Serial: <code>{serial}</code>\n\n"
+        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
+        + (
+            f"العرض 💥:\n <b>{make_offer_line(order_amount, offer)}</b>\n\n"
+            if offer
+            else "\n"
+        )
+        + f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
         "تنبيه: اضغط على رقم المحفظة والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."
@@ -335,16 +348,38 @@ def stringify_daily_wallet_stats(method: str, stats: list[models.Wallet]):
     )
 
 
-async def create_order_user_info_line(user_id:int, context:ContextTypes.DEFAULT_TYPE):
+async def create_order_user_info_line(user_id: int, context: ContextTypes.DEFAULT_TYPE):
     try:
         tg_user = await context.bot.get_chat(chat_id=user_id)
     except:
         tg_user = models.User.get_user(user_id=user_id)
-    return f"\n\nصاحب الطلب: {"@" + tg_user.username if tg_user.username else (tg_user.name if isinstance(tg_user, models.User) else tg_user.full_name)}\n\n"
+    return f"\n\nصاحب الطلب: {'@' + tg_user.username if tg_user.username else (tg_user.name if isinstance(tg_user, models.User) else tg_user.full_name)}\n\n"
 
 
-def stringify_account(account:models.Account):
+def stringify_account(account: models.Account):
     return (
         f"رقم الحساب: <code>{account.acc_num}</code>\n"
         f"كلمة المرور: <code>{account.password}</code>"
-    ) + (f"\nقيمة الهدية: <b>{account.deposit_gift}</b>" if account.deposit_gift else "")
+    ) + (
+        f"\nقيمة الهدية: <b>{account.deposit_gift}</b>" if account.deposit_gift else ""
+    )
+
+
+def stringify_offer(
+    total: float,
+    p: float,
+    h: int,
+    min_amount: float,
+    max_amount: float,
+):
+    return (
+        f"المبلغ الإجمالي: <b>{format_amount(total)}</b>\n"
+        f"النسبة: <b>{format_amount(p)}%</b>\n"
+        f"الموعد: <b>الساعة {h % 12} {'مساءً' if h > 12 else 'صباحاً'}</b>\n"
+        f"الحد الأدنى لمبلغ المستفيد: <code>{format_amount(min_amount)}</code>\n"
+        f"الحد الأعلى لمبلغ المستفيد: <code>{format_amount(max_amount)}</code>\n"
+    )
+
+
+def make_offer_line(order_amount: float, offer: float):
+    return f"{format_amount(order_amount)} x {format_amount(offer)}% = {format_amount(order_amount * (offer / 100))}"

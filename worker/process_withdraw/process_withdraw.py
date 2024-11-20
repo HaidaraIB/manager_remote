@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, fil
 import os
 import datetime
 from custom_filters import Withdraw, Returned, DepositAgent, Approved
-from models import WithdrawOrder, ReturnedConv
+from models import WithdrawOrder, ReturnedConv, Offer
 from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
@@ -12,7 +12,7 @@ from common.common import (
     send_photo_to_user,
 )
 from common.constants import *
-from common.stringifies import create_order_user_info_line
+from common.stringifies import create_order_user_info_line, make_offer_line
 from worker.process_withdraw.common import (
     return_order_to_user,
     return_order_to_checker,
@@ -68,11 +68,13 @@ async def reply_with_payment_proof_withdraw(
         amount = w_order.amount
         user_id = w_order.user_id
 
-        offer_line = f"{w_order.amount} x {w_order.offer}% = {w_order.amount * (w_order.offer / 100)}"
-
         caption = (
             f"مبروك، تم تأكيد عملية سحب <b>{format_amount(amount)}</b> بنجاح ✅\n\n"
-            + (f"مضافاً إليها مبلغ العرض 💥:\n <b>{offer_line}</b>\n" if w_order.offer else "")
+            + (
+                f"مضافاً إليها مبلغ العرض 💥:\n <b>{make_offer_line(w_order.amount, Offer.get(offer_id=w_order.offer).factor)}</b>\n"
+                if w_order.offer
+                else ""
+            )
             + f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
 

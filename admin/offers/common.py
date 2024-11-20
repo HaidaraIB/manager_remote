@@ -7,4 +7,5 @@ def get_offer_info(context: ContextTypes.DEFAULT_TYPE, order_type: str):
     h = context.bot_data[f"{order_type}_offer_hour"]
     min_amount = context.bot_data[f"{order_type}_offer_min_amount"]
     max_amount = context.bot_data[f"{order_type}_offer_max_amount"]
-    return total, p, h, min_amount, max_amount
+    msg_id = context.bot_data[f"{order_type}_offer_msg_id"]
+    return total, p, h, min_amount, max_amount, msg_id

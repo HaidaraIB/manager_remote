@@ -22,18 +22,20 @@ async def inits(app: Application):
     await models.PaymentMethod.init_payment_methods()
     
     app.bot_data["deposit_offer_total_stats"] = 0
-    app.bot_data[f"deposit_offer_total"] = 0
-    app.bot_data[f"deposit_offer_percentage"] = 0
-    app.bot_data[f"deposit_offer_hour"] = 0
-    app.bot_data[f"deposit_offer_min_amount"] = 0
-    app.bot_data[f"deposit_offer_max_amount"] = 0
+    app.bot_data["deposit_offer_total"] = 0
+    app.bot_data["deposit_offer_percentage"] = 0
+    app.bot_data["deposit_offer_hour"] = 0
+    app.bot_data["deposit_offer_min_amount"] = 0
+    app.bot_data["deposit_offer_max_amount"] = 0
+    app.bot_data["deposit_offer_msg_id"] = 0
     
     app.bot_data["withdraw_offer_total_stats"] = 0
-    app.bot_data[f"withdraw_offer_total"] = 0
-    app.bot_data[f"withdraw_offer_percentage"] = 0
-    app.bot_data[f"withdraw_offer_hour"] = 0
-    app.bot_data[f"withdraw_offer_min_amount"] = 0
-    app.bot_data[f"withdraw_offer_max_amount"] = 0
+    app.bot_data["withdraw_offer_total"] = 0
+    app.bot_data["withdraw_offer_percentage"] = 0
+    app.bot_data["withdraw_offer_hour"] = 0
+    app.bot_data["withdraw_offer_min_amount"] = 0
+    app.bot_data["withdraw_offer_max_amount"] = 0
+    app.bot_data["withdraw_offer_msg_id"] = 0
 
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):

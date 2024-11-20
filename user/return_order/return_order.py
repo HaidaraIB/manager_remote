@@ -106,22 +106,30 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 callback_data=f"verify_{order_type}_order_{order.serial}",
             )
         )
-        amount, _, __ = apply_ex_rate(
+        amount, _ = apply_ex_rate(
             method=order.method,
             amount=order.amount,
             order_type=order_type,
             context=context,
         )
+        total_amount = amount
+        offer_factor = 0
+        if order.offer:
+            offer = models.Offer.get(offer_id=order.offer)
+            total_amount += amount * (offer.factor / 100)
+            offer_factor = offer.factor
         await context.bot.send_message(
             chat_id=worker_id,
             text="<b>" + "\n\nطلب معاد، محادثة الإعادة:\n\n" + conv_text + "</b>",
         )
         if order_type in ["withdraw", "busdt"]:
             common_args = (
-                amount,
+                total_amount,
                 order.serial,
                 order.method,
                 order.payment_method_number,
+                offer_factor,
+                amount,
             )
             order_text = (
                 stringify_process_withdraw_order(*common_args)
@@ -149,13 +157,15 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     gov=order.gov, user_id=order.agent_id
                 ).team_cash_workplace_id
             order_text = stringify_deposit_order(
-                amount,
-                order.serial,
-                order.method,
-                order.acc_number,
-                order.deposit_wallet,
-                order.ref_number,
-                workplace_id,
+                amount=total_amount,
+                serial=order.serial,
+                method=order.method,
+                account_number=order.acc_number,
+                wal=order.deposit_wallet,
+                ref_num=order.ref_number,
+                workplace_id=workplace_id,
+                offer=offer_factor,
+                order_amount=amount,
             )
 
             if order.ref_number:

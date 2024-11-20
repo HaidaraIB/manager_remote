@@ -16,26 +16,26 @@ class DepositOrder(Order):
     gov = Column(String, default="")
     from_withdraw_serial = Column(Integer, default=0)
 
-    @staticmethod
+    @classmethod
     @connect_and_close
-    def get_deposit_after_check_order(is_point_deposit: bool, s: Session = None):
+    def get_deposit_after_check_order(cls, is_point_deposit: bool, s: Session = None):
         if is_point_deposit:
             res = s.execute(
-                select(DepositOrder)
+                select(cls)
                 .where(
                     and_(
-                        DepositOrder.working_on_it == 0,
-                        DepositOrder.state == "sent",
-                        DepositOrder.acc_number == "",
+                        cls.working_on_it == 0,
+                        cls.state == "sent",
+                        cls.acc_number == "",
                     )
                 )
                 .limit(1)
             )
         else:
             res = s.execute(
-                select(DepositOrder)
+                select(cls)
                 .where(
-                    and_(DepositOrder.working_on_it == 0, DepositOrder.state == "sent")
+                    and_(cls.working_on_it == 0, cls.state == "sent")
                 )
                 .limit(1)
             )
@@ -44,9 +44,10 @@ class DepositOrder(Order):
         except:
             pass
 
-    @staticmethod
+    @classmethod
     @lock_and_release
     async def add_deposit_order(
+        cls,
         user_id: int,
         group_id: int,
         method: str,
@@ -60,7 +61,7 @@ class DepositOrder(Order):
         s: Session = None,
     ):
         res = s.execute(
-            insert(DepositOrder).values(
+            insert(cls).values(
                 user_id=user_id,
                 method=method,
                 amount=amount,
@@ -75,20 +76,21 @@ class DepositOrder(Order):
         )
         return res.lastrowid
 
-    @staticmethod
+    @classmethod
     @lock_and_release
     async def approve_deposit_order(
+        cls,
         serial: int,
         worker_id: int,
         user_id: int,
         amount: float,
         s: Session = None,
     ):
-        s.query(DepositOrder).filter_by(serial=serial).update(
+        s.query(cls).filter_by(serial=serial).update(
             {
-                DepositOrder.state: "approved",
-                DepositOrder.working_on_it: 0,
-                DepositOrder.approve_date: datetime.datetime.now(),
+                cls.state: "approved",
+                cls.working_on_it: 0,
+                cls.approve_date: datetime.datetime.now(),
             }
         )
         s.query(DepositAgent).filter_by(id=worker_id).update(
@@ -106,19 +108,20 @@ class DepositOrder(Order):
             }
         )
 
-    @staticmethod
+    @classmethod
     @lock_and_release
     async def unapprove_deposit_order(
+        cls,
         serial: int,
         worker_id: int,
         user_id: int,
         amount: float,
         s: Session = None,
     ):
-        s.query(DepositOrder).filter_by(serial=serial).update(
+        s.query(cls).filter_by(serial=serial).update(
             {
-                DepositOrder.state: "processing",
-                DepositOrder.working_on_it: 0,
+                cls.state: "processing",
+                cls.working_on_it: 0,
             }
         )
         s.query(DepositAgent).filter_by(id=worker_id).update(

@@ -90,9 +90,6 @@ async def get_new_amount(
                     amount=updated_amount,
                 )
 
-        new_order = parent_to_child_models_mapper[order_type].get_one_order(
-            serial=serial
-        )
         await update.message.delete()
         await context.bot.delete_message(
             chat_id=update.effective_chat.id,

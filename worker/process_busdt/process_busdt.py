@@ -19,7 +19,7 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
-from common.stringifies import create_order_user_info_line
+from common.stringifies import create_order_user_info_line, make_offer_line
 
 
 async def user_payment_verified_busdt(
@@ -65,10 +65,13 @@ async def reply_with_payment_proof_busdt(
 
         b_order = BuyUsdtdOrder.get_one_order(serial=serial)
 
-        offer_line = f"{b_order.amount} x {b_order.offer}% = {b_order.amount * (b_order.offer / 100)}"
         user_caption = (
             f"مبروك، تم تأكيد عملية شراء <b>{format_amount(b_order.amount)} USDT</b> بنجاح ✅\n\n"
-            + (f"مضافاً إليها مبلغ العرض 💥:\n <b>{offer_line}</b>\n" if b_order.offer else "")
+            + (
+                f"مضافاً إليها مبلغ العرض 💥:\n <b>{make_offer_line(b_order.amount, b_order.offer)}</b>\n"
+                if b_order.offer
+                else ""
+            )
             + f"الرقم التسلسلي للطلب: <code>{serial}</code>"
         )
 

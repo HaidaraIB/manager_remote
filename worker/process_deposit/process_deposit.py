@@ -7,7 +7,7 @@ from telegram import (
 )
 from telegram.ext import ContextTypes, filters, CallbackQueryHandler, MessageHandler
 from custom_filters import Deposit, Returned, DepositAgent, Approved
-from models import DepositOrder, ReturnedConv
+from models import DepositOrder, ReturnedConv, Offer
 from common.common import (
     build_worker_keyboard,
     pretty_time_delta,
@@ -17,7 +17,7 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
-from common.stringifies import create_order_user_info_line
+from common.stringifies import create_order_user_info_line, make_offer_line
 from common.constants import *
 import datetime
 import os
@@ -62,11 +62,14 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
         )
 
         d_order = DepositOrder.get_one_order(serial=serial)
-        offer_line = f"{d_order.amount} x {d_order.offer}% = {d_order.amount * (d_order.offer / 100)}"
         caption = (
             "مبروك 🎉🎉🎉\n"
             f"تمت الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n\n"
-            + (f"مضافاً إليها مبلغ العرض 💥:\n <b>{offer_line}</b>\n" if d_order.offer else "")
+            + (
+                f"مضافاً إليها مبلغ العرض 💥:\n <b>{make_offer_line(d_order.amount, Offer.get(offer_id=d_order.offer).factor)}</b>\n"
+                if d_order.offer
+                else ""
+            )
             + f"الرقم التسلسلي للطلب: <code>{serial}</code>\n"
             f"وسيلة الدفع: <code>{d_order.method}</code>\n"
             f"رقم الحساب: <code>{d_order.acc_number}</code>\n"

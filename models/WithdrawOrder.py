@@ -84,3 +84,8 @@ class WithdrawOrder(PaymentOrder):
                 cls.split_date: datetime.now(),
             }
         )
+
+    @classmethod
+    @lock_and_release
+    async def detach_offer(cls, serial: int, s: Session = None):
+        s.query(cls).filter_by(serial=serial).update({cls.offer: 0})

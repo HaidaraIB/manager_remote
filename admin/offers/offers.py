@@ -12,8 +12,8 @@ from common.back_to_home_page import (
     back_to_admin_home_page_button,
     back_to_admin_home_page_handler,
 )
-from common.common import build_back_button, build_admin_keyboard
-from common.stringifies import order_settings_dict
+from common.common import build_back_button, build_admin_keyboard, format_amount
+from common.stringifies import order_settings_dict, stringify_offer
 from common.constants import TIMEZONE
 from admin.offers.common import get_offer_info
 from start import admin_command
@@ -53,16 +53,12 @@ async def choose_order_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order_type = context.user_data["offer_order_type"]
 
         old_offer_text = ""
-        total, p, h, min_amount, max_amount = get_offer_info(context, order_type)
+        total, p, h, min_amount, max_amount, _ = get_offer_info(context, order_type)
         if total:
             old_offer_text = (
                 f"\n\nملاحظة: هناك عرض {order_settings_dict[order_type]['t']} حالي:\n"
-                f"المبلغ الإجمالي: <b>{total}</b>\n"
-                f"النسبة: <b>{p}%</b>\n"
-                f"الموعد: <b>الساعة {h % 12} {'مساءً' if h > 12 else 'صباحاً'}</b>\n"
-                f"الحد الأدنى لمبلغ المستفيد: <code>{min_amount}</code>\n"
-                f"الحد الأعلى لمبلغ المستفيد: <code>{max_amount}</code>\n"
-                f"العرض الجديد سيحل محله."
+                + stringify_offer(total, p, h, min_amount, max_amount)
+                + f"العرض الجديد سيحل محله."
             )
         back_buttons = [
             build_back_button("back_to_choose_order_type"),
@@ -239,11 +235,7 @@ async def get_max(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             text=(
                 f"تم تحديث عرض ال{order_settings_dict[order_type]['t']}:\n"
-                f"المبلغ الإجمالي: <b>{total}</b>\n"
-                f"النسبة: <b>{p}%</b>\n"
-                f"الموعد: <b>الساعة {h % 12} {'مساءً' if h > 12 else 'صباحاً'}</b>\n"
-                f"الحد الأدنى لمبلغ المستفيد: <code>{min_amount}</code>\n"
-                f"الحد الأعلى لمبلغ المستفيد: <code>{max_amount}</code>\n"
+                + stringify_offer(total, p, h, min_amount, max_amount)
             ),
             reply_markup=build_admin_keyboard(),
         )

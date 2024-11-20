@@ -1,8 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, error
 from telegram.ext import ContextTypes
 from common.stringifies import stringify_deposit_order, order_settings_dict
-from common.common import notify_workers
-from admin.offers.common import get_offer_info
+from common.common import notify_workers, format_amount
 import asyncio
 import models
 from datetime import timedelta
@@ -102,7 +101,8 @@ def find_min_hourly_sum(
 
 
 async def end_offer(context: ContextTypes.DEFAULT_TYPE, order_type: str):
-    total, p, h, min_amount, max_amount = get_offer_info(context, order_type)
+    p = context.bot_data[f"{order_type}_offer_percentage"]
+    msg_id = context.bot_data[f"{order_type}_offer_msg_id"]
 
     context.bot_data[f"{order_type}_offer_total_stats"] = 0
     context.bot_data[f"{order_type}_offer_total"] = 0
@@ -110,12 +110,33 @@ async def end_offer(context: ContextTypes.DEFAULT_TYPE, order_type: str):
     context.bot_data[f"{order_type}_offer_hour"] = 0
     context.bot_data[f"{order_type}_offer_min_amount"] = 0
     context.bot_data[f"{order_type}_offer_max_amount"] = 0
+    context.bot_data[f"{order_type}_offer_msg_id"] = 0
 
     await context.bot.send_message(
         chat_id=int(os.getenv("CHANNEL_ID")),
         text=(
-            f"انتهى عرض ال{order_settings_dict[order_type]['t']} 🔥\n\n"
-            f"زيادة بنسبة {p}% على مبالغ جميع الطلبات المقدمة بدءاً من الآن."
+            f"انتهى عرض ال{order_settings_dict[order_type]['t']} <b>{format_amount(p)}%</b> 🏁"
         ),
         message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),
+        reply_to_message_id=msg_id,
     )
+
+
+def check_offer(context: ContextTypes.DEFAULT_TYPE, amount: float, order_type: str):
+    offer = context.bot_data[f"{order_type}_offer_percentage"]
+    if (
+        offer != 0
+        and amount <= context.bot_data[f"{order_type}_offer_max_amount"]
+        and amount >= context.bot_data[f"{order_type}_offer_min_amount"]
+    ):
+        gift = amount * (offer / 100)
+        if gift < context.bot_data[f"{order_type}_offer_total"]:
+            context.bot_data[f"{order_type}_offer_total"] -= gift
+            context.bot_data[f"{order_type}_offer_total_stats"] += gift
+        elif gift == context.bot_data[f"{order_type}_offer_total"]:
+            context.bot_data[f"{order_type}_offer_total"] = -1  # to end offer
+            context.bot_data[f"{order_type}_offer_total_stats"] += gift
+        else:
+            context.bot_data[f"{order_type}_offer_total"] = -1  # to end offer
+            offer = 0
+    return offer

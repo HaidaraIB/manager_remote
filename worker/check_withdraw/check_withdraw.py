@@ -11,7 +11,7 @@ from common.common import (
     notify_workers,
     ensure_positive_amount,
 )
-from common.functions import end_offer
+from common.functions import end_offer, check_offer
 import models
 
 
@@ -59,22 +59,50 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         method = w_order.method
         target_group = f"{method}_group"
 
-        amount, ex_rate, offer = apply_ex_rate(
+        amount, ex_rate = apply_ex_rate(
             method=method,
             amount=amount,
             order_type="withdraw",
             context=context,
         )
+
         total_amount = amount
-        if offer == -1:
-            await end_offer(context, "withdraw")
-        elif offer:
-            total_amount += amount * (offer / 100)
-            await models.Offer.add(
-                serial=w_order.serial,
-                factor=offer,
-                offer_name=WITHDRAW_OFFER,
-            )
+        offer_id = 0
+        if w_order.return_date:
+            offer_factor = 0
+            if w_order.offer:
+                offer = models.Offer.get(offer_id=w_order.offer)
+                offer_id = offer.id
+                offer_factor = offer.factor
+                old_amount, _ = apply_ex_rate(
+                    method=method,
+                    amount=w_order.amount,
+                    order_type="withdraw",
+                    context=context,
+                )
+                context.bot_data["withdraw_offer_total_stats"] -= old_amount * (
+                    offer.factor / 100
+                )
+                if amount >= offer.min_amount and amount <= offer.max_amount:
+                    gift = amount * (offer.factor / 100)
+                    total_amount += gift
+                    context.bot_data["withdraw_offer_total_stats"] += gift
+                else:
+                    await models.WithdrawOrder.detach_offer(serial=serial)
+                    w_order = models.WithdrawOrder.get_one_order(serial=serial)
+        else:
+            offer_factor = check_offer(context, amount, "withdraw")
+            if offer_factor:
+                offer_id = await models.Offer.add(
+                    serial=w_order.serial,
+                    factor=offer_factor,
+                    offer_name=WITHDRAW_OFFER,
+                    min_amount=context.bot_data[f"withdraw_offer_min_amount"],
+                    max_amount=context.bot_data[f"withdraw_offer_max_amount"],
+                )
+                total_amount += amount * (offer_factor / 100)
+            if context.bot_data["withdraw_offer_total"] == -1:
+                await end_offer(context, "withdraw")
 
         message = await context.bot.send_message(
             chat_id=context.bot_data["data"][target_group],
@@ -84,7 +112,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 serial=serial,
                 method=method,
                 payment_method_number=w_order.payment_method_number,
-                offer=offer,
+                offer=offer_factor,
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
@@ -118,7 +146,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serial=serial,
             group_id=context.bot_data["data"][target_group],
             ex_rate=ex_rate,
-            offer=offer,
+            offer=offer_id,
         )
         workers = models.PaymentAgent.get_workers(method=method)
 

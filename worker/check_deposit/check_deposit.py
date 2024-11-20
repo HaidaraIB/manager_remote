@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes
 from common.common import apply_ex_rate, notify_workers
 from common.stringifies import stringify_deposit_order, create_order_user_info_line
 from common.constants import *
-from common.functions import end_offer
+from common.functions import end_offer, check_offer
 import models
 import os
 import asyncio
@@ -104,22 +104,25 @@ async def send_order_to_process(
     ref_info: models.RefNumber,
     context: ContextTypes.DEFAULT_TYPE,
 ):
-    amount, ex_rate, offer = apply_ex_rate(
+    amount, ex_rate = apply_ex_rate(
         method=d_order.method,
         amount=ref_info.amount,
         order_type="deposit",
         context=context,
     )
+    offer = check_offer(context, amount, "deposit")
     total_amount = amount
-    if offer == -1:
-        await end_offer(context, "deposit")
-    elif offer:
+    if offer:
         total_amount += amount * (offer / 100)
-        await models.Offer.add(
+        offer_id = await models.Offer.add(
             serial=d_order.serial,
             factor=offer,
             offer_name=DEPOSIT_OFFER,
+            min_amount=context.bot_data[f"deposit_offer_min_amount"],
+            max_amount=context.bot_data[f"deposit_offer_max_amount"],
         )
+    if context.bot_data["deposit_offer_total"] == -1:
+        await end_offer(context, "deposit")
     order_text = stringify_deposit_order(
         amount=total_amount,
         order_amount=amount,
@@ -148,7 +151,7 @@ async def send_order_to_process(
         ref_info=ref_info,
         group_id=context.bot_data["data"]["deposit_after_check_group"],
         ex_rate=ex_rate,
-        offer=offer,
+        offer=offer_id,
     )
     workers = models.DepositAgent.get_workers(is_point=False)
     asyncio.create_task(

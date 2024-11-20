@@ -153,19 +153,7 @@ def apply_ex_rate(
             amount = amount * 0.97 / ex_rate
     except:
         ex_rate = 1
-    offer = context.bot_data[f"{order_type}_offer_percentage"]
-    if (
-        offer != 0
-        and amount <= context.bot_data[f"{order_type}_offer_max_amount"]
-        and amount >= context.bot_data[f"{order_type}_offer_min_amount"]
-    ):
-        gift = amount * (offer / 100)
-        if gift <= context.bot_data[f"{order_type}_offer_total"]:
-            context.bot_data[f"{order_type}_offer_total"] -= gift
-            context.bot_data[f"{order_type}_offer_total_stats"] += gift
-        else:
-            offer = -1
-    return amount, ex_rate, offer
+    return amount, ex_rate
 
 
 def check_hidden_keyboard(context: ContextTypes.DEFAULT_TYPE):
