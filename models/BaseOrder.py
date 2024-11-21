@@ -123,7 +123,6 @@ class BaseOrder(Base):
             now = datetime.datetime.now(datetime.UTC)
             today = now.date()
             start_hour = str(now.hour - 1).rjust(2, "0")
-            end_hour = str(now.hour + 2).rjust(2, "0")
             res = s.execute(
                 select(cls)
                 .where(
@@ -134,7 +133,6 @@ class BaseOrder(Base):
                         cls.method.in_(PAYMENT_METHODS_LIST),
                         func.date(cls.order_date) == today,
                         func.strftime("%H", cls.order_date) >= start_hour,
-                        func.strftime("%H", cls.order_date) <= end_hour,
                     )
                 )
                 .order_by(cls.order_date)

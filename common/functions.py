@@ -69,30 +69,33 @@ async def send_deposit_without_check(
     return amount
 
 
+# Assuming DepositOrder and WithdrawOrder are defined as classes elsewhere
 def find_min_hourly_sum(
     orders: list[models.DepositOrder | models.WithdrawOrder],
-) -> dict:
+):
+    # Initialize variables
     min_sum = float("inf")
-    current_sum = 0
-    window_orders: list[models.DepositOrder | models.WithdrawOrder] = []
     min_orders: list[models.DepositOrder | models.WithdrawOrder] = []
 
-    for order in orders:
-        # Add the current order to the window
-        window_orders.append(order)
-        current_sum += order.amount
+    # Iterate through each order as the start of a potential 1-hour window
+    for i, order in enumerate(orders):
+        if i == len(orders) - 1:
+            break
+        current_sum = 0
+        window_orders = []
 
-        # Remove orders outside the 1-hour window
-        while window_orders and window_orders[
-            0
-        ].order_date < order.order_date - timedelta(hours=1):
-            removed_order = window_orders.pop(0)
-            current_sum -= removed_order.amount
+        # Collect all orders within the 1-hour window starting from `order`
+        for j in range(i, len(orders)):
+            if orders[j].order_date <= order.order_date + timedelta(hours=1):
+                window_orders.append(orders[j])
+                current_sum += orders[j].amount
+            else:
+                break  # Stop once we're beyond the 1-hour window
 
-        # Update min_sum and min_window_orders if the current sum is smaller
+        # Update the minimum sum and corresponding orders if this window is better
         if current_sum < min_sum:
             min_sum = current_sum
-            min_orders = window_orders.copy()
+            min_orders = window_orders
 
     return {
         "min_sum": min_sum,
