@@ -209,14 +209,13 @@ async def get_max(update: Update, context: ContextTypes.DEFAULT_TYPE):
         now = datetime.datetime.now(TIMEZONE)
         context.job_queue.run_once(
             callback=jobs.start_offer,
-            # when=datetime.datetime(
-            #     year=now.year,
-            #     month=now.month,
-            #     day=now.day,
-            #     hour=h,
-            #     tzinfo=TIMEZONE,
-            # ),
-            when=10,
+            when=datetime.datetime(
+                year=now.year,
+                month=now.month,
+                day=now.day,
+                hour=h,
+                tzinfo=TIMEZONE,
+            ),
             name=job_name,
             data={
                 "total": total,
