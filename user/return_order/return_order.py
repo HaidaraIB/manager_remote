@@ -113,11 +113,11 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context=context,
         )
         total_amount = amount
-        offer_factor = 0
+        gift = 0
         if order.offer:
             offer = models.Offer.get(offer_id=order.offer)
-            total_amount += offer.gift
-            offer_factor = offer.factor
+            gift = offer.gift
+            total_amount += gift
         await context.bot.send_message(
             chat_id=worker_id,
             text="<b>" + "\n\nطلب معاد، محادثة الإعادة:\n\n" + conv_text + "</b>",
@@ -128,8 +128,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 order.serial,
                 order.method,
                 order.payment_method_number,
-                offer_factor,
-                amount,
+                gift,
             )
             order_text = (
                 stringify_process_withdraw_order(*common_args)
@@ -164,8 +163,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 wal=order.deposit_wallet,
                 ref_num=order.ref_number,
                 workplace_id=workplace_id,
-                offer=offer_factor,
-                order_amount=amount,
+                offer=gift,
             )
 
             if order.ref_number:

@@ -111,6 +111,7 @@ async def send_order_to_process(
         context=context,
     )
     offer_factor = check_offer(context, amount, "deposit")
+    gift = 0
     offer_id = 0
     total_amount = amount
     if offer_factor:
@@ -128,13 +129,12 @@ async def send_order_to_process(
         await end_offer(context, "deposit")
     order_text = stringify_deposit_order(
         amount=total_amount,
-        order_amount=amount,
         serial=d_order.serial,
         method=d_order.method,
         account_number=d_order.acc_number,
         wal=d_order.deposit_wallet,
         ref_num=ref_info.number,
-        offer=offer_factor,
+        offer=gift,
     )
 
     message = await context.bot.send_message(

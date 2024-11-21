@@ -12,7 +12,7 @@ from common.common import (
     send_photo_to_user,
 )
 from common.constants import *
-from common.stringifies import create_order_user_info_line, make_offer_line
+from common.stringifies import create_order_user_info_line
 from worker.process_withdraw.common import (
     return_order_to_user,
     return_order_to_checker,
@@ -71,7 +71,7 @@ async def reply_with_payment_proof_withdraw(
         caption = (
             f"مبروك، تم تأكيد عملية سحب <b>{format_amount(amount)}</b> بنجاح ✅\n\n"
             + (
-                f"مضافاً إليها مبلغ العرض 💥:\n <b>{make_offer_line(w_order.amount, Offer.get(offer_id=w_order.offer).factor)}</b>\n"
+                f"مضافاً إليها مبلغ العرض 💥: <b>{format_amount(Offer.get(offer_id=w_order.offer).gift)}</b>\n"
                 if w_order.offer
                 else ""
             )

@@ -141,7 +141,7 @@ async def confirm_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if order.offer:
                 offer = models.Offer.get(offer_id=order.offer)
                 amount += offer.gift
-            await models.WithdrawOrder.cancel(serial=order.serial)
+            await models.WithdrawOrder.cancel(serial=order.serial, amount=amount)
             await send_deposit_without_check(
                 acc_number=order.acc_number,
                 amount=amount,
@@ -177,8 +177,13 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 offer = models.Offer.get(order.offer)
                 total_amount += offer.gift
             if amount >= total_amount:
+                back_buttons = [
+                    build_back_button("back_to_choose_option"),
+                    back_to_user_home_page_button[0],
+                ]
                 await update.message.reply_text(
-                    text="الرجاء إرسال مبلغ أصغر تماماً من مبلغ الطلب مضافاً إليه مبلغ العرض إن وجد."
+                    text="الرجاء إرسال مبلغ أصغر تماماً من مبلغ الطلب مضافاً إليه مبلغ العرض إن وجد ❗️",
+                    reply_markup=InlineKeyboardMarkup(back_buttons),
                 )
                 return
             context.user_data["split_withdraw_amount"] = amount
@@ -220,13 +225,23 @@ async def confirm_split(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=order.group_id,
                 message_ids=order.pending_process_message_id,
             )
+            new_order_amount = order.amount - context.user_data["split_withdraw_amount"]
             message = await context.bot.send_message(
                 chat_id=order.group_id,
                 text=stringify_process_withdraw_order(
-                    amount=order.amount - context.user_data["split_withdraw_amount"],
+                    amount=new_order_amount if new_order_amount > 0 else 0,
                     serial=order.serial,
                     method=order.method,
                     payment_method_number=order.payment_method_number,
+                    offer=(
+                        (
+                            models.Offer.get(order.offer).gift
+                            if new_order_amount > 0
+                            else models.Offer.get(order.offer).gift + new_order_amount
+                        )
+                        if order.offer
+                        else 0
+                    ),
                 ),
                 reply_markup=InlineKeyboardMarkup.from_button(
                     InlineKeyboardButton(

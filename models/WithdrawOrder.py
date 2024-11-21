@@ -59,11 +59,12 @@ class WithdrawOrder(PaymentOrder):
 
     @classmethod
     @lock_and_release
-    async def cancel(cls, serial: int, s: Session = None):
+    async def cancel(cls, serial: int, amount: float = 0, s: Session = None):
         s.query(cls).filter_by(serial=serial).update(
             {
                 cls.state: "canceled",
                 cls.cancel_date: datetime.now(),
+                cls.amount: amount,
             }
         )
 

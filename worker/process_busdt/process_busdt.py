@@ -8,7 +8,7 @@ from telegram import (
 from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 import os
 import datetime
-from models import BuyUsdtdOrder, ReturnedConv
+from models import BuyUsdtdOrder, ReturnedConv, Offer
 from custom_filters import BuyUSDT, Returned, DepositAgent, Approved
 from common.constants import *
 from common.common import (
@@ -19,7 +19,7 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
-from common.stringifies import create_order_user_info_line, make_offer_line
+from common.stringifies import create_order_user_info_line
 
 
 async def user_payment_verified_busdt(
@@ -68,7 +68,7 @@ async def reply_with_payment_proof_busdt(
         user_caption = (
             f"مبروك، تم تأكيد عملية شراء <b>{format_amount(b_order.amount)} USDT</b> بنجاح ✅\n\n"
             + (
-                f"مضافاً إليها مبلغ العرض 💥:\n <b>{make_offer_line(b_order.amount, b_order.offer)}</b>\n"
+                f"مضافاً إليها مبلغ العرض 💥: <b>{format_amount(Offer.get(offer_id=b_order.offer).gift)}</b>\n"
                 if b_order.offer
                 else ""
             )

@@ -171,8 +171,12 @@ def user_stringify_order(serial: int, order_type: str):
     return (
         f"نوع الطلب: <b>{order_settings_dict[order_type]['t']}</b>\n"
         f"الرقم التسلسلي: <code>{op.serial}</code>\n"
-        f"المبلغ: <b>{format_amount(op.amount)}</b>\n"
-        + (f"العرض:\n{make_offer_line(op.amount, offer.factor)}\n" if offer else "")
+        f"المبلغ: <b>{format_amount(op.amount) if op.amount > 0 else 0}</b>\n"
+        + (
+            f"العرض: <b>{format_amount(offer.gift if op.amount>0 else offer.gift + op.amount)}</b>\n"
+            if offer
+            else ""
+        )
         + f"وسيلة الدفع: <b>{op.method}</b>\n"
         f"عنوان الدفع: <code>{payment_method_number}</code>\n"
         f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
@@ -208,19 +212,14 @@ def stringify_deposit_order(
     wal: str = "لا يوجد",
     ref_num: str = "لا يوجد",
     workplace_id: int = None,
-    offer: str = 0,
-    order_amount: float = 0,
+    offer: float = 0,
     *args,
 ):
     deposit_order_text = (
         "إيداع جديد:\n"
         f"رقم العملية: <code>{ref_num}</code>\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        + (
-            f"العرض 💥:\n <b>{make_offer_line(order_amount, offer)}</b>\n"
-            if offer
-            else ""
-        )
+        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد'}</code>\n"
+        + (f"العرض 💥: <code>{offer}</code>\n" if offer else "")
         + f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
         f"المحفظة: <code>{wal}</code>\n\n"
@@ -260,18 +259,13 @@ def stringify_process_withdraw_order(
     serial: int,
     method: str,
     payment_method_number: str,
-    offer: str = 0,
-    order_amount: float = 0,
+    offer: float = 0,
     *args,
 ):
     return (
         "تفاصيل طلب سحب :\n\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        + (
-            f"العرض 💥:\n <b>{make_offer_line(order_amount, offer)}</b>\n\n"
-            if offer
-            else "\n"
-        )
+        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد'}</code>\n"
+        + (f"العرض 💥: <code>{offer}</code>\n\n" if offer else "\n")
         + f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
@@ -294,18 +288,13 @@ def stringify_process_busdt_order(
     serial: int,
     method: str,
     payment_method_number: str,
-    offer: str = 0,
-    order_amount: float = 0,
+    offer: float = 0,
     *args,
 ):
     return (
         "طلب شراء USDT جديد:\n\n"
-        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد بعد'}</code>\n"
-        + (
-            f"العرض 💥:\n <b>{make_offer_line(order_amount, offer)}</b>\n\n"
-            if offer
-            else "\n"
-        )
+        f"المبلغ 💵: <code>{amount if amount else 'لا يوجد'}</code>\n"
+        + (f"العرض 💥: <code>{offer}</code>\n\n" if offer else "\n")
         + f"Serial: <code>{serial}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n\n"
         f"Payment Info: <code>{payment_method_number}</code>\n\n"
@@ -384,7 +373,3 @@ def stringify_offer(
         f"الحد الأدنى لمبلغ المستفيد: <code>{format_amount(min_amount)}</code>\n"
         f"الحد الأعلى لمبلغ المستفيد: <code>{format_amount(max_amount)}</code>\n"
     )
-
-
-def make_offer_line(order_amount: float, offer: float):
-    return f"{format_amount(order_amount)} x {format_amount(offer)}% = {format_amount(order_amount * (offer / 100))}"

@@ -69,12 +69,12 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         total_amount = amount
         offer_id = 0
-        offer_factor = 0
+        gift = 0
         if w_order.return_date:
             if w_order.offer:
                 offer = models.Offer.get(offer_id=w_order.offer)
                 offer_id = offer.id
-                offer_factor = offer.factor
+                gift = offer.gift
                 old_amount, _ = apply_ex_rate(
                     method=method,
                     amount=w_order.amount,
@@ -112,11 +112,10 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=context.bot_data["data"][target_group],
             text=stringify_process_withdraw_order(
                 amount=total_amount,
-                order_amount=amount,
                 serial=serial,
                 method=method,
                 payment_method_number=w_order.payment_method_number,
-                offer=offer_factor,
+                offer=gift,
             ),
             reply_markup=InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(

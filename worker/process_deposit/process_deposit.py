@@ -17,7 +17,7 @@ from common.common import (
     send_photo_to_user,
     send_media_to_user,
 )
-from common.stringifies import create_order_user_info_line, make_offer_line
+from common.stringifies import create_order_user_info_line
 from common.constants import *
 import datetime
 import os
@@ -66,7 +66,7 @@ async def reply_with_payment_proof(update: Update, context: ContextTypes.DEFAULT
             "مبروك 🎉🎉🎉\n"
             f"تمت الموافقة على الإيداع بقيمة <b>{format_amount(d_order.amount)}</b>\n\n"
             + (
-                f"مضافاً إليها مبلغ العرض 💥:\n <b>{make_offer_line(d_order.amount, Offer.get(offer_id=d_order.offer).factor)}</b>\n"
+                f"مضافاً إليها مبلغ العرض 💥: <b>{format_amount(Offer.get(offer_id=d_order.offer).gift)}</b>\n"
                 if d_order.offer
                 else ""
             )
