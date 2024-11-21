@@ -187,7 +187,12 @@ async def process_orders_for_ghafla_offer(context: ContextTypes.DEFAULT_TYPE):
         else:
             context.bot_data["total_ghafla_offer"] += amount
 
-        await models.Offer.add(serial=serial, factor=factor, offer_name=GHAFLA_OFFER)
+        await models.Offer.add(
+            serial=serial,
+            factor=factor,
+            offer_name=GHAFLA_OFFER,
+            gift=amount,
+        )
     if group_text != base_group_text:
         await context.bot.send_message(
             chat_id=int(os.getenv("CHANNEL_ID")),
@@ -274,6 +279,7 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
             serial=order.serial,
             factor=percentage,
             offer_name=LUCKY_HOUR_OFFER,
+            gift=amount,
         )
 
     offer_text += (
@@ -415,8 +421,6 @@ async def send_daily_stats(context: ContextTypes.DEFAULT_TYPE):
             await end_offer(context, "deposit")
         if context.bot_data[f"withdraw_offer_total"] != 0:
             await end_offer(context, "withdraw")
-        
-
 
 
 async def start_offer(context: ContextTypes.DEFAULT_TYPE):
@@ -435,8 +439,8 @@ async def start_offer(context: ContextTypes.DEFAULT_TYPE):
         text=(
             f"عرض ال{order_settings_dict[order_type]['t']} 🔥\n\n"
             f"زيادة بنسبة <b>{format_amount(offer_values['p'])}%</b> على المبالغ بين "
-            f"<b>{format_amount(offer_values["min_amount"])} ل.س</b> "
-            f"و <b>{format_amount(offer_values["max_amount"])} ل.س</b> "
+            f"<b>{format_amount(offer_values['min_amount'])} ل.س</b> "
+            f"و <b>{format_amount(offer_values['max_amount'])} ل.س</b> "
             "بدءاً من الآن."
         ),
         message_thread_id=int(os.getenv("GHAFLA_OFFER_TOPIC_ID")),

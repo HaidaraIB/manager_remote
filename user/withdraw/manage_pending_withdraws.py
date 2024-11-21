@@ -137,10 +137,14 @@ async def confirm_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=build_user_keyboard(),
                 )
                 return ConversationHandler.END
+            amount = order.amount
+            if order.offer:
+                offer = models.Offer.get(offer_id=order.offer)
+                amount += offer.gift
             await models.WithdrawOrder.cancel(serial=order.serial)
             await send_deposit_without_check(
                 acc_number=order.acc_number,
-                amount=order.amount,
+                amount=amount,
                 context=context,
                 method=CANCELED_ORDER.format(order.serial),
                 user_id=update.effective_user.id,
@@ -168,9 +172,13 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order = models.WithdrawOrder.get_one_order(
                 serial=context.user_data["manage_withdraw_serial"]
             )
-            if amount >= order.amount:
+            total_amount = order.amount
+            if order.offer:
+                offer = models.Offer.get(order.offer)
+                total_amount += offer.gift
+            if amount >= total_amount:
                 await update.message.reply_text(
-                    text="الرجاء إرسال مبلغ أصغر تماماً من مبلغ الطلب"
+                    text="الرجاء إرسال مبلغ أصغر تماماً من مبلغ الطلب مضافاً إليه مبلغ العرض إن وجد."
                 )
                 return
             context.user_data["split_withdraw_amount"] = amount

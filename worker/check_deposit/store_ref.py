@@ -59,8 +59,8 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=d_order.user_id,
                 text=(
-                    f"تم تصحيح مبلغ إيداع الطلب صاحب رقم العملية: <b>{number}</b>\n"
-                    f"من: <b>{format_amount(d_order.amount)}</b>\n"
+                    f"تم تصحيح مبلغ إيداع الطلب صاحب رقم العملية: <code>{number}</code> "
+                    f"من: <b>{format_amount(d_order.amount)}</b> "
                     f"إلى: <b>{format_amount(amount)}</b>"
                 ),
             )

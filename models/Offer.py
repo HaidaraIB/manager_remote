@@ -13,7 +13,6 @@ from models.DB import Base, lock_and_release, connect_and_close
 from sqlalchemy.orm import Session
 from common.constants import GHAFLA_OFFER, TIMEZONE
 import datetime
-import pytz
 
 
 class Offer(Base):
@@ -24,6 +23,7 @@ class Offer(Base):
     offer_name = Column(String, server_default=GHAFLA_OFFER)
     min_amount = Column(Float, default=0)
     max_amount = Column(Float, default=0)
+    gift = Column(Float, default=0)
     offer_date = Column(TIMESTAMP, server_default=func.current_timestamp())
 
     @classmethod
@@ -35,6 +35,7 @@ class Offer(Base):
         offer_name: str,
         min_amount: float = 0,
         max_amount: float = 0,
+        gift: float = 0,
         s: Session = None,
     ):
         res = s.execute(
@@ -44,6 +45,7 @@ class Offer(Base):
                 offer_name=offer_name,
                 min_amount=min_amount,
                 max_amount=max_amount,
+                gift=gift,
             )
         )
         return res.lastrowid
@@ -85,3 +87,12 @@ class Offer(Base):
             return list(map(lambda x: x[0], res.tuples().all()))
         except:
             pass
+
+    @classmethod
+    @lock_and_release
+    async def update(cls, offer_id: int, field, value, s: Session = None):
+        s.query(cls).filter_by(id=offer_id).update(
+            {
+                getattr(cls, field): value,
+            }
+        )

@@ -123,13 +123,13 @@ async def end_offer(context: ContextTypes.DEFAULT_TYPE, order_type: str):
 
 
 def check_offer(context: ContextTypes.DEFAULT_TYPE, amount: float, order_type: str):
-    offer = context.bot_data[f"{order_type}_offer_percentage"]
+    p = context.bot_data[f"{order_type}_offer_percentage"]
     if (
-        offer != 0
+        p != 0
         and amount <= context.bot_data[f"{order_type}_offer_max_amount"]
         and amount >= context.bot_data[f"{order_type}_offer_min_amount"]
     ):
-        gift = amount * (offer / 100)
+        gift = amount * (p / 100)
         if gift < context.bot_data[f"{order_type}_offer_total"]:
             context.bot_data[f"{order_type}_offer_total"] -= gift
             context.bot_data[f"{order_type}_offer_total_stats"] += gift
@@ -138,5 +138,5 @@ def check_offer(context: ContextTypes.DEFAULT_TYPE, amount: float, order_type: s
             context.bot_data[f"{order_type}_offer_total_stats"] += gift
         else:
             context.bot_data[f"{order_type}_offer_total"] = -1  # to end offer
-            offer = 0
-    return offer
+            p = 0
+    return p

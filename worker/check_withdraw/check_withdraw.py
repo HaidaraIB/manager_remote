@@ -51,12 +51,11 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         w_order = models.WithdrawOrder.get_one_order(serial=serial)
-        
+
         await models.WithdrawOrder.edit_order_amount(
             new_amount=amount,
             serial=serial,
         )
-
 
         method = w_order.method
         target_group = f"{method}_group"
@@ -82,26 +81,30 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     order_type="withdraw",
                     context=context,
                 )
-                context.bot_data["withdraw_offer_total_stats"] -= old_amount * (
-                    offer.factor / 100
-                )
+                old_gift = old_amount * (offer.factor / 100)
+                context.bot_data["withdraw_offer_total_stats"] -= old_gift
                 if amount >= offer.min_amount and amount <= offer.max_amount:
-                    gift = amount * (offer.factor / 100)
-                    total_amount += gift
-                    context.bot_data["withdraw_offer_total_stats"] += gift
+                    new_gift = amount * (offer.factor / 100)
+                    total_amount += new_gift
+                    context.bot_data["withdraw_offer_total_stats"] += new_gift
+                    await models.Offer.update(
+                        offer_id=offer_id, field="gift", value=new_gift
+                    )
                 else:
                     await models.WithdrawOrder.detach_offer(serial=serial)
         else:
             offer_factor = check_offer(context, amount, "withdraw")
             if offer_factor:
+                gift = amount * (offer_factor / 100)
+                total_amount += gift
                 offer_id = await models.Offer.add(
                     serial=w_order.serial,
                     factor=offer_factor,
                     offer_name=WITHDRAW_OFFER,
                     min_amount=context.bot_data[f"withdraw_offer_min_amount"],
                     max_amount=context.bot_data[f"withdraw_offer_max_amount"],
+                    gift=gift,
                 )
-                total_amount += amount * (offer_factor / 100)
             if context.bot_data["withdraw_offer_total"] == -1:
                 await end_offer(context, "withdraw")
 

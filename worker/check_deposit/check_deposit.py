@@ -114,13 +114,15 @@ async def send_order_to_process(
     offer_id = 0
     total_amount = amount
     if offer_factor:
-        total_amount += amount * (offer_factor / 100)
+        gift = amount * (offer_factor / 100)
+        total_amount += gift
         offer_id = await models.Offer.add(
             serial=d_order.serial,
             factor=offer_factor,
             offer_name=DEPOSIT_OFFER,
             min_amount=context.bot_data[f"deposit_offer_min_amount"],
             max_amount=context.bot_data[f"deposit_offer_max_amount"],
+            gift=gift,
         )
     if context.bot_data["deposit_offer_total"] == -1:
         await end_offer(context, "deposit")

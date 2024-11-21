@@ -116,7 +116,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
         offer_factor = 0
         if order.offer:
             offer = models.Offer.get(offer_id=order.offer)
-            total_amount += amount * (offer.factor / 100)
+            total_amount += offer.gift
             offer_factor = offer.factor
         await context.bot.send_message(
             chat_id=worker_id,

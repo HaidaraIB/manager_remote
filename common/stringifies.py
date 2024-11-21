@@ -164,11 +164,16 @@ def user_stringify_order(serial: int, order_type: str):
             op.payment_method_number if op.payment_method_number else "لا يوجد"
         )
 
+    offer = None
+    if op.offer:
+        offer = models.Offer.get(offer_id=op.offer)
+
     return (
         f"نوع الطلب: <b>{order_settings_dict[order_type]['t']}</b>\n"
         f"الرقم التسلسلي: <code>{op.serial}</code>\n"
         f"المبلغ: <b>{format_amount(op.amount)}</b>\n"
-        f"وسيلة الدفع: <b>{op.method}</b>\n"
+        + (f"العرض:\n{make_offer_line(op.amount, offer.factor)}\n" if offer else "")
+        + f"وسيلة الدفع: <b>{op.method}</b>\n"
         f"عنوان الدفع: <code>{payment_method_number}</code>\n"
         f"الحالة: <b>{state_dict_en_to_ar[op.state]}</b>\n"
         f"سبب رفض: <b>{op.reason if op.reason else 'لا يوجد'}</b>\n\n"
