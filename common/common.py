@@ -408,10 +408,10 @@ def build_admin_keyboard():
                 text="إعدادات المكافآت 👨🏻‍💻",
                 callback_data="update percentages",
             ),
-            # InlineKeyboardButton(
-            #     text="عروض 💥",
-            #     callback_data="offers",
-            # ),
+            InlineKeyboardButton(
+                text="عروض 💥",
+                callback_data="offers",
+            ),
         ],
         [
             InlineKeyboardButton(
