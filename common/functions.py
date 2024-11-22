@@ -76,11 +76,10 @@ def find_min_hourly_sum(
     # Initialize variables
     min_sum = float("inf")
     min_orders: list[models.DepositOrder | models.WithdrawOrder] = []
+    last_order_reached = False
 
     # Iterate through each order as the start of a potential 1-hour window
     for i, order in enumerate(orders):
-        if i == len(orders) - 1:
-            break
         current_sum = 0
         window_orders = []
 
@@ -89,6 +88,7 @@ def find_min_hourly_sum(
             if orders[j].order_date <= order.order_date + timedelta(hours=1):
                 window_orders.append(orders[j])
                 current_sum += orders[j].amount
+                last_order_reached = j == (len(orders) - 1)
             else:
                 break  # Stop once we're beyond the 1-hour window
 
@@ -96,6 +96,9 @@ def find_min_hourly_sum(
         if current_sum < min_sum:
             min_sum = current_sum
             min_orders = window_orders
+
+        if last_order_reached:
+            break
 
     return {
         "min_sum": min_sum,

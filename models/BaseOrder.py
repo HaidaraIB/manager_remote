@@ -120,9 +120,6 @@ class BaseOrder(Base):
                     )
                 )
         elif lucky_hour_offer:
-            now = datetime.datetime.now(datetime.UTC)
-            today = now.date()
-            start_hour = str(now.hour - 1).rjust(2, "0")
             res = s.execute(
                 select(cls)
                 .where(
@@ -131,8 +128,7 @@ class BaseOrder(Base):
                         cls.acc_number != "",
                         cls.agent_id == 0,
                         cls.method.in_(PAYMENT_METHODS_LIST),
-                        func.date(cls.order_date) == today,
-                        func.strftime("%H", cls.order_date) >= start_hour,
+                        cls.order_date >= func.datetime("now", "-10 hour"),
                     )
                 )
                 .order_by(cls.order_date)
