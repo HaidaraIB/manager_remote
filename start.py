@@ -23,8 +23,6 @@ async def inits(app: Application):
     await models.Admin.add_new_admin(admin_id=int(os.getenv("OWNER_ID")))
     await models.PaymentMethod.init_payment_methods()
 
-    await end_offer()
-
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     st_cmd = ("start", "start command")
