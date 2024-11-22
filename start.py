@@ -12,6 +12,8 @@ from common.common import (
 from common.force_join import check_if_user_member
 from custom_filters import Admin, Worker, DepositAgent, Agent
 from common.constants import *
+from common import functions
+from common.stringifies import order_settings_dict
 import os
 
 
@@ -20,7 +22,9 @@ async def inits(app: Application):
     app.bot_data["restart"] = False
     await models.Admin.add_new_admin(admin_id=int(os.getenv("OWNER_ID")))
     await models.PaymentMethod.init_payment_methods()
-    
+
+    await end_offer()
+
 
 async def set_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     st_cmd = ("start", "start command")
@@ -115,8 +119,23 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     "".error()
 
 
+async def end_offer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
+        if not context.args or context.args[0] not in ["deposit", "withdraw"]:
+            await update.message.reply_text(text="اسم عرض خاطئ ❗️")
+            return
+        await functions.end_offer(
+            context=context,
+            order_type=context.args[0],
+        )
+        await update.message.reply_text(
+            text=f"تم إنهاء عرض ال{order_settings_dict[context.args[0]]['t']} ✅"
+        )
+
+
 worker_command = CommandHandler(command="worker", callback=worker)
 admin_command = CommandHandler(command="admin", callback=admin)
 start_command = CommandHandler(command="start", callback=start)
 agent_command = CommandHandler(command="agent", callback=agent)
 error_command = CommandHandler(command="error", callback=error)
+end_offer_command = CommandHandler(command="end_offer", callback=end_offer)

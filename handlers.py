@@ -12,7 +12,14 @@ from telegram.ext import (
 from telegram.constants import ParseMode
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 from PyroClientSingleton import PyroClientSingleton
-from start import start_command, admin_command, worker_command, error_command, inits
+from start import (
+    start_command,
+    admin_command,
+    worker_command,
+    error_command,
+    end_offer_command,
+    inits,
+)
 from jobs import (
     reward_worker,
     remind_agent_to_clear_wallets,
@@ -305,6 +312,7 @@ def main():
 
     app.add_handler(send_lucky_offer_text_command)
     app.add_handler(ban_command)
+    app.add_handler(end_offer_command)
     app.add_handler(error_command)
     app.add_handler(agent_command)
     app.add_handler(worker_command)
