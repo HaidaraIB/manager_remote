@@ -19,7 +19,7 @@ from admin.offers.common import get_offer_info
 from start import admin_command
 import datetime
 
-ORDER_TYPE, TOTAL, PERCENTAGE, HOUR, MIN, MAX = range(6)
+ORDER_TYPE, TOTAL, PERCENTAGE, DATE, MIN, MAX = range(6)
 
 
 async def offers(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -53,11 +53,12 @@ async def choose_order_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
             order_type = context.user_data["offer_order_type"]
 
         old_offer_text = ""
-        total, p, h, min_amount, max_amount, _ = get_offer_info(context, order_type)
+        total, p, d, min_amount, max_amount, _ = get_offer_info(context, order_type)
         if total:
             old_offer_text = (
-                f"\n\nملاحظة: هناك عرض {order_settings_dict[order_type]['t']} حالي:\n"
-                + stringify_offer(total, p, h, min_amount, max_amount)
+                f"\n\n<b>تنبيه</b> "
+                f"هناك عرض {order_settings_dict[order_type]['t']} حالي:\n"
+                + stringify_offer(total, p, d, min_amount, max_amount)
                 + f"العرض الجديد سيحل محله."
             )
         back_buttons = [
@@ -111,49 +112,52 @@ async def get_percentage(update: Update, context: ContextTypes.DEFAULT_TYPE):
             p = float(update.message.text)
             context.user_data[f"{order_type}_offer_percentage"] = p
             await update.message.reply_text(
-                text=("أرسل ساعة العرض بنظام ال24 ساعة\n" "مثال: الساعة 11 مساءً = 23"),
+                text=(
+                    "أرسل تاريخ بدء العرض بالتنسيق التالي:\n"
+                    "<code>YYYY-MM-DD HH:MM</code>\n"
+                    "مثال:\n"
+                    "<code>2024-11-22 14:13</code>"
+                ),
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
         else:
             await update.callback_query.edit_message_text(
-                text=("أرسل ساعة العرض بنظام ال24 ساعة\n" "مثال: الساعة 11 مساءً = 23"),
+                text=(
+                    "أرسل تاريخ بدء العرض بالتنسيق التالي: YYYY-MM-DD HH:MM\n"
+                    "مثال:\n2024-11-22 14:13"
+                ),
                 reply_markup=InlineKeyboardMarkup(back_buttons),
             )
-        return HOUR
+        return DATE
 
 
 back_to_get_percentage = get_total
 
 
-async def get_hour(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_date(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         back_buttons = [
-            build_back_button("back_to_get_hour"),
+            build_back_button("back_to_get_date"),
             back_to_admin_home_page_button[0],
         ]
         order_type = context.user_data["offer_order_type"]
         if update.message:
-            t = int(update.message.text)
+            d = datetime.datetime.strptime(
+                update.message.text, "%Y-%m-%d %H:%M"
+            ).astimezone(tz=TIMEZONE)
             now = datetime.datetime.now(TIMEZONE)
-
-            back_to_get_percentage_buttons = [
-                build_back_button("back_to_get_percentage"),
-                back_to_admin_home_page_button[0],
-            ]
-            if now.hour >= t:
+            if now >= d:
+                back_to_get_percentage_buttons = [
+                    build_back_button("back_to_get_percentage"),
+                    back_to_admin_home_page_button[0],
+                ]
                 await update.message.reply_text(
-                    text="الرجاء إرسال ساعة في المستقبل ❗️",
-                    reply_markup=InlineKeyboardMarkup(back_to_get_percentage_buttons),
-                )
-                return
-            elif t > 23:
-                await update.message.reply_text(
-                    text="الرجاء إرسال ساعة صالحة ❗️",
+                    text="الرجاء إرسال موعد في المستقبل ❗️",
                     reply_markup=InlineKeyboardMarkup(back_to_get_percentage_buttons),
                 )
                 return
 
-            context.user_data[f"{order_type}_offer_hour"] = t
+            context.user_data[f"{order_type}_offer_date"] = d
             await update.message.reply_text(
                 text="أرسل الحد الأدنى لمبلغ المستفيد",
                 reply_markup=InlineKeyboardMarkup(back_buttons),
@@ -166,7 +170,7 @@ async def get_hour(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MIN
 
 
-back_to_get_hour = get_percentage
+back_to_get_date = get_percentage
 
 
 async def get_min(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -191,7 +195,7 @@ async def get_min(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MAX
 
 
-back_to_get_min = get_hour
+back_to_get_min = get_date
 
 
 async def get_max(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -201,29 +205,21 @@ async def get_max(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # getting temp offer values
         total = context.user_data[f"{order_type}_offer_total"]
         p = context.user_data[f"{order_type}_offer_percentage"]
-        h = context.user_data[f"{order_type}_offer_hour"]
+        d: datetime = context.user_data[f"{order_type}_offer_date"]
         min_amount = context.user_data[f"{order_type}_offer_min_amount"]
         max_amount = float(update.message.text)
-
         job_name = f"{order_type}_offer"
         offer_jobs = context.job_queue.get_jobs_by_name(job_name)
         if offer_jobs:
             offer_jobs[0].schedule_removal()
-        now = datetime.datetime.now(TIMEZONE)
         context.job_queue.run_once(
             callback=jobs.start_offer,
-            when=datetime.datetime(
-                year=now.year,
-                month=now.month,
-                day=now.day,
-                hour=h,
-                tzinfo=TIMEZONE,
-            ),
+            when=d,
             name=job_name,
             data={
                 "total": total,
                 "p": p,
-                "h": h,
+                "d": d,
                 "min_amount": min_amount,
                 "max_amount": max_amount,
             },
@@ -237,7 +233,7 @@ async def get_max(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             text=(
                 f"تم تحديث عرض ال{order_settings_dict[order_type]['t']}:\n"
-                + stringify_offer(total, p, h, min_amount, max_amount)
+                + stringify_offer(total, p, d, min_amount, max_amount)
             ),
             reply_markup=build_admin_keyboard(),
         )
@@ -270,10 +266,10 @@ offers_handler = ConversationHandler(
                 callback=get_percentage,
             )
         ],
-        HOUR: [
+        DATE: [
             MessageHandler(
-                filters=filters.Regex("^[0-9]+\.?[0-9]*$"),
-                callback=get_hour,
+                filters=filters.Regex("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$"),
+                callback=get_date,
             )
         ],
         MIN: [
@@ -295,7 +291,7 @@ offers_handler = ConversationHandler(
         CallbackQueryHandler(back_to_choose_order_type, "^back_to_choose_order_type$"),
         CallbackQueryHandler(back_to_get_total, "^back_to_get_total$"),
         CallbackQueryHandler(back_to_get_percentage, "^back_to_get_percentage$"),
-        CallbackQueryHandler(back_to_get_hour, "^back_to_get_hour$"),
+        CallbackQueryHandler(back_to_get_date, "^back_to_get_date$"),
         CallbackQueryHandler(back_to_get_min, "^back_to_get_min$"),
     ],
 )

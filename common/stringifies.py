@@ -1,7 +1,7 @@
 from telegram.ext import ContextTypes
 from common.common import format_amount, format_datetime, parent_to_child_models_mapper
 from common.constants import *
-from datetime import timedelta
+from datetime import timedelta, datetime
 import models
 
 state_dict_en_to_ar = {
@@ -362,14 +362,14 @@ def stringify_account(account: models.Account):
 def stringify_offer(
     total: float,
     p: float,
-    h: int,
+    d: datetime,
     min_amount: float,
     max_amount: float,
 ):
     return (
         f"المبلغ الإجمالي: <b>{format_amount(total)}</b>\n"
         f"النسبة: <b>{format_amount(p)}%</b>\n"
-        f"الموعد: <b>الساعة {h % 12} {'مساءً' if h > 12 else 'صباحاً'}</b>\n"
+        f"الموعد:\n<b>{d.strftime("%Y-%m-%d %H:%M")}</b>\n"
         f"الحد الأدنى لمبلغ المستفيد: <code>{format_amount(min_amount)}</code>\n"
         f"الحد الأعلى لمبلغ المستفيد: <code>{format_amount(max_amount)}</code>\n"
     )

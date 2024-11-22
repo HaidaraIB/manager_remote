@@ -113,7 +113,7 @@ async def end_offer(context: ContextTypes.DEFAULT_TYPE, order_type: str):
     context.bot_data[f"{order_type}_offer_total_stats"] = 0
     context.bot_data[f"{order_type}_offer_total"] = 0
     context.bot_data[f"{order_type}_offer_percentage"] = 0
-    context.bot_data[f"{order_type}_offer_hour"] = 0
+    context.bot_data[f"{order_type}_offer_date"] = 0
     context.bot_data[f"{order_type}_offer_min_amount"] = 0
     context.bot_data[f"{order_type}_offer_max_amount"] = 0
     context.bot_data[f"{order_type}_offer_msg_id"] = 0
@@ -145,4 +145,5 @@ def check_offer(context: ContextTypes.DEFAULT_TYPE, amount: float, order_type: s
         else:
             context.bot_data[f"{order_type}_offer_total"] = -1  # to end offer
             p = 0
-    return p
+        return p
+    return 0

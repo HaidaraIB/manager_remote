@@ -302,7 +302,7 @@ async def schedule_ghafla_offer_jobs(context: ContextTypes.DEFAULT_TYPE):
         3: random.randint(17, 18),
         4: random.randint(19, 20),
         5: random.randint(21, 22),
-        6: random.randint(23, 0),
+        6: random.choice([23, 0]),
         7: random.randint(1, 2),
     }
     for i in job_hours_dict:
@@ -430,7 +430,7 @@ async def start_offer(context: ContextTypes.DEFAULT_TYPE):
 
     context.bot_data[f"{order_type}_offer_total"] = offer_values["total"]
     context.bot_data[f"{order_type}_offer_percentage"] = offer_values["p"]
-    context.bot_data[f"{order_type}_offer_hour"] = offer_values["h"]
+    context.bot_data[f"{order_type}_offer_date"] = offer_values["d"]
     context.bot_data[f"{order_type}_offer_min_amount"] = offer_values["min_amount"]
     context.bot_data[f"{order_type}_offer_max_amount"] = offer_values["max_amount"]
 

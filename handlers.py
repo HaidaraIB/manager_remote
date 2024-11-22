@@ -385,6 +385,11 @@ def main():
         },
     )
 
+    app.job_queue.run_once(
+        callback=schedule_ghafla_offer_jobs,
+        when=10,
+    )
+
     app.job_queue.run_daily(
         callback=schedule_lucky_hour_jobs,
         time=datetime.time(0, 0, tzinfo=TIMEZONE),
