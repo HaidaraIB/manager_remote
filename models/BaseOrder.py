@@ -128,7 +128,7 @@ class BaseOrder(Base):
                         cls.acc_number != "",
                         cls.agent_id == 0,
                         cls.method.in_(PAYMENT_METHODS_LIST),
-                        cls.order_date >= func.datetime("now", "-10 hour"),
+                        cls.order_date >= func.datetime("now", "-2 hour"),
                     )
                 )
                 .order_by(cls.order_date)
