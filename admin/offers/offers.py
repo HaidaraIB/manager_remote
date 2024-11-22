@@ -77,20 +77,23 @@ back_to_choose_order_type = offers
 async def get_total(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and Admin().filter(update):
         order_type = context.user_data["offer_order_type"]
-        if update.message:
-            total = float(update.message.text)
-            context.user_data[f"{order_type}_offer_total"] = total
-        else:
-            total = context.user_data[f"{order_type}_offer_total"]
-
         back_buttons = [
             build_back_button("back_to_get_total"),
             back_to_admin_home_page_button[0],
         ]
-        await update.message.reply_text(
-            text="أرسل النسبة",
-            reply_markup=InlineKeyboardMarkup(back_buttons),
-        )
+        if update.message:
+            total = float(update.message.text)
+            context.user_data[f"{order_type}_offer_total"] = total
+            await update.message.reply_text(
+                text="أرسل النسبة",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                text="أرسل النسبة",
+                reply_markup=InlineKeyboardMarkup(back_buttons),
+            )
+
         return PERCENTAGE
 
 

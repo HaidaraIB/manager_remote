@@ -42,6 +42,12 @@ async def choose_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
             acc_num = context.user_data["acc_num_to_show"]
 
         acc = models.Account.get_account(acc_num=acc_num)
+        if not acc:
+            await update.callback_query.answer(
+                text="هذا الحساب لم يعد موجوداً ❗️",
+                show_alert=True,
+            )
+            return
         accounts = build_accounts_keyboard(user_id=update.effective_user.id)
         keybaord = [
             accounts,
