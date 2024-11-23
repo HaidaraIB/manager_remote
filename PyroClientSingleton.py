@@ -9,7 +9,7 @@ class PyroClientSingleton(Client):
         if not cls._instance:
 
             cls._instance = Client(
-                name=os.getenv("SESSION"),
+                name="pyro_session",
                 api_id=int(os.getenv("API_ID")),
                 api_hash=os.getenv("API_HASH"),
                 bot_token=os.getenv("BOT_TOKEN"),

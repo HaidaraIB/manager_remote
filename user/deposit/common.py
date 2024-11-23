@@ -139,21 +139,31 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         wal = models.Wallet.get_wallets(amount=amount, method=method)
         if not wal:
-            await update.message.reply_text(
-                text=(
-                    "المبلغ المدخل تجاوز الحد المسموح لحسابات الشركة ❗️\n"
-                    "جرب مع قيمة أصغر"
-                ),
-                reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
+            wal = models.Wallet.get_wallets(
+                amount=amount, method=method, is_commercial=True
             )
-            return
+            if not wal or amount > 100000:
+                await update.message.reply_text(
+                    text=(
+                        "المبلغ المدخل تجاوز الحد المسموح لحسابات الشركة ❗️\n"
+                        "جرب مع قيمة أصغر"
+                    ),
+                    reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
+                )
+                return
         context.user_data["wal_num_deposit"] = wal.number
         text = (
-            f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
-            f"<code>{wal.number}</code>\n\n"
-            f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
-        ) + (
-            "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n" if method == USDT else ""
+            (
+                f"قم بإرسال المبلغ المراد إيداعه إلى:\n\n"
+                f"<code>{wal.number}</code>\n\n"
+                f"ثم أرسل رقم عملية الدفع إلى البوت لنقوم بتوثيقها.\n\n"
+            )
+            + (
+                "<b>ملاحظة هامة: الشبكة المستخدمه هي TRC20</b>\n"
+                if method == USDT
+                else ""
+            )
+            + ("<b>ملاحظة هامة: استخدم الدفع</b>\n" if wal.is_commercial else "")
         )
 
         if update.message:

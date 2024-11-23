@@ -37,8 +37,7 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 show_alert=True,
             )
             return
-        # today = date.today()
-        today = "2024-11-22"
+        today = date.today()
         today_count = models.Account.count_accounts(today=today)
         if today_count >= 100:
             await update.callback_query.answer(
@@ -84,12 +83,11 @@ async def create_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.user_data["pending_create_account"] = True
                 await asyncio.sleep(5)
 
-                # gift_winner = flip_coin()
+                gift_winner = flip_coin()
                 gift_line = ""
                 deposit_gift = 0
                 balance_available = check_balance_condition(context)
-                if balance_available:
-                # if balance_available and gift_winner:
+                if balance_available and gift_winner:
                     gift_line, deposit_gift = await serve_gift(
                         user_id=update.effective_user.id,
                         context=context,

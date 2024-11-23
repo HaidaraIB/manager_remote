@@ -42,6 +42,7 @@ def stringify_wallet(wallet: models.Wallet):
     return (
         "معلومات المحفظة:\n"
         f"الوسيلة: {wallet.method}\n"
+        f"النوع: {'تجارية' if wallet.is_commercial else 'عادية'}\n"
         f"الرقم: <code>{wallet.number}</code>\n"
         f"الرصيد: <b>{format_amount(wallet.balance)}</b>\n"
         f"الحد المسموح: <b>{format_amount(wallet.limit)}</b>"

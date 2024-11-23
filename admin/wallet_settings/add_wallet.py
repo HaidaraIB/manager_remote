@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardMarkup, Chat
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, Chat
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -18,56 +18,113 @@ from common.back_to_home_page import (
     back_to_admin_home_page_handler,
     back_to_admin_home_page_button,
 )
+from common.constants import SYRCASH
 from start import admin_command, start_command, worker_command
 from models import Wallet
 
-NUMBER, LIMIT = 1, 2
+NUMBER, WALLET_TYPE, LIMIT = 1, 2, 3
 
 
 async def choose_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and (
         Admin().filter(update) or DepositAgent().filter(update)
     ):
-        back_buttons = [
-            build_back_button("back_to_wallets_settings"),
-            back_to_admin_home_page_button[0],
-        ]
-
         if not update.callback_query.data.startswith("back"):
-            context.user_data["wallet_settings_method"] = update.callback_query.data
-
-        text = (
-            f"أرسل محفظة {update.callback_query.data} جديدة\n\n"
-            "<i><b>ملاحظة:</b></i> سيتم تهيئة رصيد المحفظة بالقيمة 0 تأكد من أنها فارغة بالفعل."
-        )
+            method = update.callback_query.data
+            context.user_data["wallet_settings_method"] = method
+        else:
+            method = context.user_data["wallet_settings_method"]
+        if method == SYRCASH:
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="تجارية",
+                        callback_data="commercial_wallet",
+                    ),
+                    InlineKeyboardButton(
+                        text="عادية",
+                        callback_data="regular_wallet",
+                    ),
+                ],
+                build_back_button("back_to_wallets_settings"),
+                back_to_admin_home_page_button[0],
+            ]
+            text = f"اختر نوع محفظة {method}"
+            ret = WALLET_TYPE
+        else:
+            context.user_data["wallet_settings_wallet_type"] = "regular"
+            keyboard = [
+                build_back_button("back_to_wallets_settings"),
+                back_to_admin_home_page_button[0],
+            ]
+            text = (
+                f"أرسل محفظة {method} جديدة\n\n"
+                "<i><b>ملاحظة:</b></i> سيتم تهيئة رصيد المحفظة بالقيمة 0 تأكد من أنها فارغة بالفعل."
+            )
+            ret = NUMBER
 
         await update.callback_query.edit_message_text(
             text=text,
-            reply_markup=InlineKeyboardMarkup(back_buttons),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+        return ret
+
+
+back_to_wallets_settings = choose_wallet_settings_option
+
+
+async def choose_wallet_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type == Chat.PRIVATE and (
+        Admin().filter(update) or DepositAgent().filter(update)
+    ):
+        if not update.callback_query.data.startswith("back"):
+            wallet_type = update.callback_query.data.split("_")[0]
+            context.user_data["wallet_settings_wallet_type"] = wallet_type
+        else:
+            wallet_type = context.user_data["wallet_settings_wallet_type"]
+
+        method = context.user_data["wallet_settings_method"]
+        keyboard = [
+            build_back_button("back_to_choose_wallet_type"),
+            back_to_admin_home_page_button[0],
+        ]
+        text = (
+            f"أرسل محفظة {method} جديدة\n\n"
+            "<i><b>ملاحظة:</b></i> سيتم تهيئة رصيد المحفظة بالقيمة 0 تأكد من أنها فارغة بالفعل."
+        )
+        await update.callback_query.edit_message_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return NUMBER
 
 
-back_to_wallets_settings = choose_wallet_settings_option
+back_to_choose_wallet_type = choose_method
 
 
 async def get_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and (
         Admin().filter(update) or DepositAgent().filter(update)
     ):
+        wallet_type = context.user_data["wallet_settings_wallet_type"]
         back_buttons = [
-            build_back_button("back_to_get_number"),
+            build_back_button(f"back_to_get_number_{wallet_type}"),
             back_to_admin_home_page_button[0],
         ]
         if update.message:
             number = update.message.text
+            method = context.user_data["wallet_settings_method"]
 
             wal = Wallet.get_wallets(
                 method=context.user_data["wallet_settings_method"], number=number
             )
             if wal:
                 back_buttons = [
-                    build_back_button("back_to_wallets_settings"),
+                    build_back_button(
+                        "back_to_wallets_settings"
+                        if method != SYRCASH
+                        else "back_to_choose_wallet_type"
+                    ),
                     back_to_admin_home_page_button[0],
                 ]
                 await update.message.reply_text(
@@ -89,17 +146,20 @@ async def get_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return LIMIT
 
 
-back_to_get_number = choose_method
+back_to_get_number_regular = choose_method
+back_to_get_number_commercial = choose_wallet_type
 
 
 async def get_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE and (
         Admin().filter(update) or DepositAgent().filter(update)
     ):
+        wallet_type = context.user_data["wallet_settings_wallet_type"]
         await Wallet.add_wallet(
             number=context.user_data["wallet_settings_number"],
             limit=float(update.message.text),
             method=context.user_data["wallet_settings_method"],
+            is_commercial=wallet_type == "commercial",
         )
         await update.message.reply_text(
             text="تمت إضافة المحفظة بنجاح ✅",
@@ -126,6 +186,11 @@ add_wallet_handler = ConversationHandler(
                 payment_method_pattern,
             )
         ],
+        WALLET_TYPE: [
+            CallbackQueryHandler(
+                choose_wallet_type, "^((regular)|(commercial))_wallet$"
+            )
+        ],
         NUMBER: [
             MessageHandler(
                 filters=filters.TEXT & ~filters.COMMAND,
@@ -145,8 +210,16 @@ add_wallet_handler = ConversationHandler(
             "^back_to_wallets_settings$",
         ),
         CallbackQueryHandler(
-            back_to_get_number,
-            "^back_to_get_number$",
+            back_to_get_number_regular,
+            "^back_to_get_number_regular$",
+        ),
+        CallbackQueryHandler(
+            back_to_get_number_commercial,
+            "^back_to_get_number_commercial$",
+        ),
+        CallbackQueryHandler(
+            back_to_choose_wallet_type,
+            "^back_to_choose_wallet_type$",
         ),
         admin_command,
         start_command,

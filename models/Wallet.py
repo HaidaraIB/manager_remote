@@ -2,6 +2,7 @@ from sqlalchemy import (
     Column,
     String,
     Float,
+    Boolean,
     PrimaryKeyConstraint,
     select,
     insert,
@@ -18,6 +19,11 @@ class Wallet(Base):
     method = Column(String)
     balance = Column(Float, default=0)
     limit = Column(Float)
+    is_commercial = Column(
+        Boolean,
+        server_default="0",
+        default=0,
+    )
     __table_args__ = (
         PrimaryKeyConstraint("number", "method", name="_number_method_uc"),
     )
@@ -29,6 +35,7 @@ class Wallet(Base):
         number: str,
         method: str,
         limit: float,
+        is_commercial: bool = False,
         s: Session = None,
     ):
         s.execute(
@@ -37,6 +44,7 @@ class Wallet(Base):
                 number=number,
                 method=method,
                 limit=limit,
+                is_commercial=is_commercial,
             )
             .prefix_with("OR IGNORE")
         )
@@ -59,6 +67,7 @@ class Wallet(Base):
         method: str = None,
         number: str = None,
         amount: float = None,
+        is_commercial: bool = False,
         s: Session = None,
     ):
         if amount:
@@ -69,6 +78,7 @@ class Wallet(Base):
                         cls.method == method,
                         cls.limit > cls.balance,
                         cls.limit - cls.balance >= amount,
+                        cls.is_commercial == is_commercial,
                     )
                     .order_by(cls.balance.desc())
                     .first()
@@ -91,7 +101,7 @@ class Wallet(Base):
                 return res.fetchone().t[0]
             except:
                 pass
-            
+
         elif method:
             res = s.execute(select(cls).where(cls.method == method))
 
