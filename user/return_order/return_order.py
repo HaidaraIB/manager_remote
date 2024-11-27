@@ -164,6 +164,11 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ref_num=order.ref_number,
                 workplace_id=workplace_id,
                 offer=gift,
+                bank=(
+                    models.BankAccount.get(user_id=order.user_id, bank=order.method)
+                    if order.method
+                    else None
+                ),
             )
 
             if order.ref_number:

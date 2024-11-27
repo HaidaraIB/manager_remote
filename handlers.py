@@ -48,6 +48,7 @@ from user.work_with_us import *
 from user.show_trusted_agents import *
 from user.complaint import *
 from user.respond_to_contact_msg import *
+from user.user_settings import *
 
 from admin.offers import *
 from admin.stats import *
@@ -257,6 +258,8 @@ def main():
     app.add_handler(complaint_handler)
 
     app.add_handler(referral_handler)
+
+    app.add_handler(user_settings_handler)
 
     # GROUPS SETTINGS
     app.add_handler(change_group_handler)

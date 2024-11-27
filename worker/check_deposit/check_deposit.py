@@ -82,6 +82,13 @@ async def check_deposit(context: ContextTypes.DEFAULT_TYPE):
                     account_number=d_order.acc_number,
                     wal=d_order.deposit_wallet,
                     ref_num=d_order.ref_number,
+                    bank=(
+                        models.BankAccount.get(
+                            user_id=d_order.user_id, bank=d_order.method
+                        )
+                        if d_order.method
+                        else None
+                    ),
                 )
                 + order_user_info_line
                 + f"السبب:\n<b>{reason}</b>"
@@ -135,6 +142,11 @@ async def send_order_to_process(
         wal=d_order.deposit_wallet,
         ref_num=ref_info.number,
         offer=gift,
+        bank=(
+            models.BankAccount.get(user_id=d_order.user_id, bank=d_order.method)
+            if d_order.method
+            else None
+        ),
     )
 
     message = await context.bot.send_message(

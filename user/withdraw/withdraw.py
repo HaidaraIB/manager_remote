@@ -26,7 +26,7 @@ from user.accounts_settings.common import reply_with_user_accounts
 from user.withdraw.common import send_withdraw_order_to_check
 from user.withdraw.withdraw_settings import back_to_withdraw_settings_handler
 from start import start_command
-from models import PaymentMethod, Account
+from models import PaymentMethod, Account, BankAccount
 from common.constants import *
 import os
 
@@ -57,11 +57,18 @@ async def choose_withdraw_account(update: Update, context: ContextTypes.DEFAULT_
         payment_methods = build_methods_keyboard()
         payment_methods.append(build_back_button("back_to_choose_withdraw_account"))
         payment_methods.append(back_to_user_home_page_button[0])
-
-        await update.callback_query.edit_message_text(
-            text="اختر وسيلة الدفع 💳",
-            reply_markup=InlineKeyboardMarkup(payment_methods),
-        )
+        try:
+            await update.callback_query.edit_message_text(
+                text="اختر وسيلة الدفع 💳",
+                reply_markup=InlineKeyboardMarkup(payment_methods),
+            )
+        except:
+            await update.callback_query.delete_message()
+            await context.bot.send_message(
+                chat_id=update.effective_user.id,
+                text="اختر وسيلة الدفع 💳",
+                reply_markup=InlineKeyboardMarkup(payment_methods),
+            )
         return PAYMENT_METHOD
 
 
@@ -72,8 +79,8 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
     if update.effective_chat.type == Chat.PRIVATE:
 
         if not update.callback_query.data.startswith("back"):
-            data = update.callback_query.data
-            method = PaymentMethod.get_payment_method(name=data)
+            method_name = update.callback_query.data
+            method = PaymentMethod.get_payment_method(name=method_name)
             if not method.withdraw_on_off:
                 await update.callback_query.answer(
                     "هذه الوسيلة متوقفة مؤقتاً❗️",
@@ -81,28 +88,56 @@ async def choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TY
                 )
                 return
 
-            context.user_data["payment_method"] = data
+            context.user_data["payment_method"] = method_name
         else:
-            data = context.user_data["payment_method"]
+            method_name = context.user_data["payment_method"]
 
         back_keyboard = [
             build_back_button("back_to_choose_payment_method"),
             back_to_user_home_page_button[0],
         ]
 
-        if context.user_data["payment_method"] == USDT:
+        if method_name == USDT:
             text = (
                 "أرسل كود محفظتك 👝\n\n"
                 "<b><i>ملاحظة هامة:</i> الشبكة المستخدمه هي TRC20</b>\n\n"
                 "<b><i>ملاحظة هامة ثانية:</i> العمولة = 2 usdt وأقل من 12 usdt غير قابلة للإرسال.</b>"
             )
+        elif method_name in BANKS:
+            bank = BankAccount.get(user_id=update.effective_user.id, bank=method_name)
+            if not bank:
+                await update.callback_query.answer(
+                    text=f"ليس لديك حساب {method_name} بعد، قم بإنشاء حساب من الإعدادات.",
+                    show_alert=True,
+                )
+                return
+            context.user_data["payment_method_number"] = bank.bank_account_number
+            await update.callback_query.delete_message()
+            await context.bot.send_video(
+                chat_id=update.effective_user.id,
+                video=os.getenv("VIDEO_ID"),
+                filename="how_to_get_withdraw_code",
+                caption=(
+                    "أرسل كود السحب\n\n" "يوضح الفيديو المرفق كيفية الحصول على الكود."
+                ),
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
+            return WITHDRAW_CODE
         else:
-            text = f"أرسل رقم حساب {data}"
+            text = f"أرسل رقم حساب {method_name}"
 
-        await update.callback_query.edit_message_text(
-            text=text,
-            reply_markup=InlineKeyboardMarkup(back_keyboard),
-        )
+        try:
+            await update.callback_query.edit_message_text(
+                text=text,
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
+        except:
+            await update.callback_query.delete_message()
+            await context.bot.send_message(
+                chat_id=update.effective_user.id,
+                text=text,
+                reply_markup=InlineKeyboardMarkup(back_keyboard),
+            )
 
         return PAYMENT_INFO
 

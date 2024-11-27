@@ -71,8 +71,12 @@ async def choose_deposit_method(update: Update, context: ContextTypes.DEFAULT_TY
             method_name = context.user_data["deposit_method"]
 
         text = (
-            ("أدخل المبلغ أكبر من 50 ألف\n" "الحد الأدنى للإيداع = 50,000 ل.س")
-            if method_name == BEMO
+            (
+                "أرسل مبلغ الإيداع\n"
+                "الحد الأدنى للإيداع = 50,000 ل.س\n\n"
+                "<b>تنبيه: الإيداع من حساب مختلف عن حسابك المرتبط بالبوت سيؤدي إلى فقدانك المبلغ</b>"
+            )
+            if method_name in BANKS
             else "أرسل مبلغ الإيداع"
         )
 
@@ -80,7 +84,17 @@ async def choose_deposit_method(update: Update, context: ContextTypes.DEFAULT_TY
             method = models.PaymentMethod.get_payment_method(name=method_name)
             if not method.deposit_on_off:
                 await update.callback_query.answer(
-                    "هذه الوسيلة متوقفة مؤقتاً ❗️",
+                    text="هذه الوسيلة متوقفة مؤقتاً ❗️",
+                    show_alert=True,
+                )
+                return
+
+            if (method_name in BANKS) and not models.BankAccount.get(
+                user_id=update.effective_user.id,
+                bank=method_name,
+            ):
+                await update.callback_query.answer(
+                    text=f"قم بإنشاء حساب {method_name} من الإعدادات أولاً ❗️",
                     show_alert=True,
                 )
                 return
@@ -126,7 +140,7 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 )
                 return
 
-            elif method == BEMO and amount < 50000:
+            elif method in BANKS and amount < 50000:
                 await update.message.reply_text(
                     text="الحد الأدنى للإيداع = 50,000 ل.س",
                     reply_markup=InlineKeyboardMarkup(back_to_deposit_method_buttons),
@@ -175,6 +189,14 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                         back_to_get_deposit_amount_buttons
                     ),
                 )
+            elif method == BARAKAH:
+                await update.message.reply_photo(
+                    photo=os.getenv("BARAKAH_REF_NUMBER_GUIDE_PHOTO_ID"),
+                    caption=text,
+                    reply_markup=InlineKeyboardMarkup(
+                        back_to_get_deposit_amount_buttons
+                    ),
+                )
             else:
                 await update.message.reply_text(
                     text=text,
@@ -184,7 +206,7 @@ async def get_deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 )
 
         else:
-            if method == BEMO:
+            if method in BANKS:
                 await update.callback_query.edit_message_caption(
                     caption=text,
                     reply_markup=InlineKeyboardMarkup(
@@ -274,6 +296,11 @@ async def send_to_check_deposit(
             account_number=acc_number,
             wal=deposit_wallet,
             ref_num=ref_num,
+            bank=(
+                models.BankAccount.get(user_id=update.effective_user.id, bank=method)
+                if method in BANKS
+                else None
+            ),
         ),
     )
 

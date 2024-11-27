@@ -246,7 +246,7 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
         '"خليك بساعة الحظ، الحظ بده رضاك\n'
         'ما تروح وتسيبها، يمكن تربح معاك"\n\n'
         f"<b>ساعة {random.choice(team_names)} {format_amount(percentage)}%</b> 🔥\n\n"
-        f"<b><i>لطلبات {order_type_dict[type(min_orders['orders'][0])]}</i></b>\n"
+        f"<b><i>لطلبات {order_type_dict[type(min_orders['orders'][0])]}</i></b>\n\n"
         f"من ال: <b>{start_time}</b>\n"
         f"حتى ال: <b>{end_time}</b>\n\n"
         "الرابحون:\n\n"

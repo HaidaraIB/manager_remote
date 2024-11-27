@@ -1,10 +1,33 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from common.common import notify_workers
 from common.stringifies import stringify_check_withdraw_order
-from models import WithdrawOrder, Checker, PaymentAgent
+from models import WithdrawOrder, Checker, PaymentAgent, BankAccount
 from common.constants import *
 import asyncio
+
+
+def build_pending_orders_keyboard(
+    orders: list[WithdrawOrder],
+) -> list[list[InlineKeyboardButton]]:
+    orders_keyboard = []
+    for i in range(0, len(orders), 2):
+        row = []
+        row.append(
+            InlineKeyboardButton(
+                text=orders[i].serial,
+                callback_data=orders[i].serial,
+            )
+        )
+        if i + 1 < len(orders):
+            row.append(
+                InlineKeyboardButton(
+                    text=orders[i + 1].serial,
+                    callback_data=orders[i + 1].serial,
+                )
+            )
+        orders_keyboard.append(row)
+    return orders_keyboard
 
 
 def build_withdraw_settings_keyboard():
@@ -23,8 +46,11 @@ def build_withdraw_settings_keyboard():
     return keyboard
 
 
-def make_payment_method_info(payment_method_number):
-    return f"<b>Payment info</b>: <code>{payment_method_number}</code>"
+def make_payment_method_info(payment_method_number: str, full_name: str = ""):
+    payment_info = f"<b>Payment info</b>: <code>{payment_method_number}</code>"
+    if full_name:
+        payment_info += f"\nالاسم: <b>{full_name}</b>"
+    return payment_info
 
 
 async def send_withdraw_order_to_check(
@@ -73,7 +99,12 @@ async def send_withdraw_order_to_check(
             method=method,
             serial=serial,
             method_info=make_payment_method_info(
-                payment_method_number=payment_method_number
+                payment_method_number=payment_method_number,
+                full_name=(
+                    BankAccount.get(user_id=user_id, bank=method).full_name
+                    if method in BANKS
+                    else ""
+                ),
             ),
         ),
         reply_markup=InlineKeyboardMarkup.from_button(

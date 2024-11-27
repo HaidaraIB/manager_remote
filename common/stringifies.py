@@ -214,6 +214,7 @@ def stringify_deposit_order(
     ref_num: str = "لا يوجد",
     workplace_id: int = None,
     offer: float = 0,
+    bank: models.BankAccount = None,
     *args,
 ):
     deposit_order_text = (
@@ -223,7 +224,15 @@ def stringify_deposit_order(
         + (f"العرض 💥: <code>{offer}</code>\n" if offer else "")
         + f"رقم الحساب: <code>{account_number}</code>\n\n"
         f"وسيلة الدفع: <code>{method}</code>\n"
-        f"المحفظة: <code>{wal}</code>\n\n"
+        + (
+            (
+                f"رقم حساب {bank.bank}: <code>{bank.bank_account_number}</code>\n"
+                f"الاسم: <b>{bank.full_name}</b>\n"
+            )
+            if bank
+            else ""
+        )
+        + f"المحفظة: <code>{wal}</code>\n\n"
         f"Serial: <code>{serial}</code>\n\n"
     )
     if workplace_id:
@@ -370,7 +379,7 @@ def stringify_offer(
     return (
         f"المبلغ الإجمالي: <b>{format_amount(total)}</b>\n"
         f"النسبة: <b>{format_amount(p)}%</b>\n"
-        f"الموعد:\n<b>{d.strftime("%Y-%m-%d %H:%M")}</b>\n"
+        f"الموعد:\n<b>{d.strftime('%Y-%m-%d %H:%M')}</b>\n"
         f"الحد الأدنى لمبلغ المستفيد: <code>{format_amount(min_amount)}</code>\n"
         f"الحد الأعلى لمبلغ المستفيد: <code>{format_amount(max_amount)}</code>\n"
     )

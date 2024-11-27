@@ -16,6 +16,7 @@ from common.back_to_home_page import (
     back_to_user_home_page_button,
     back_to_user_home_page_handler,
 )
+from user.withdraw.common import build_pending_orders_keyboard
 from common.constants import *
 from common.stringifies import user_stringify_order, stringify_process_withdraw_order
 from common.functions import send_deposit_without_check
@@ -29,11 +30,11 @@ SERIAL, OPTION, CONFIRM_CANCEL, AMOUNT, CONFIRM_SPLIT = range(5)
 
 async def manage_pending_withdraws(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == Chat.PRIVATE:
-        order = models.WithdrawOrder.get_one_order(
+        orders = models.WithdrawOrder.get_orders(
             user_id=update.effective_user.id,
             states=["sent", "split"],
         )
-        if not order:
+        if not orders:
             await update.callback_query.answer(
                 text="ليس لديك طلبات معلقة ❗️",
                 show_alert=True,
@@ -41,12 +42,7 @@ async def manage_pending_withdraws(update: Update, context: ContextTypes.DEFAULT
             return ConversationHandler.END
 
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=order.serial,
-                    callback_data=str(order.serial),
-                )
-            ],
+            *build_pending_orders_keyboard(orders),
             build_back_button("back_to_withdraw_settings"),
             back_to_user_home_page_button[0],
         ]

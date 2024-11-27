@@ -335,6 +335,12 @@ def build_user_keyboard():
                 callback_data="trusted agents",
             )
         ],
+        [
+            InlineKeyboardButton(
+                text="الإعدادات ⚙️",
+                callback_data="user_settings",
+            )
+        ],
         # [
         #     InlineKeyboardButton(
         #         text="دعوة الأصدقاء ✉️",

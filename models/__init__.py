@@ -28,3 +28,4 @@ from models.ReturnedConv import ReturnedConv
 from models.Wallet import Wallet
 from models.Offer import Offer
 from models.Referral import Referral
+from models.BankAccount import BankAccount

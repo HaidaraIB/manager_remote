@@ -144,7 +144,8 @@ async def get_date(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.message:
             d = datetime.datetime.strptime(
                 update.message.text, "%Y-%m-%d %H:%M"
-            ).astimezone(tz=TIMEZONE)
+            )
+            d = TIMEZONE.localize(d)
             now = datetime.datetime.now(TIMEZONE)
             if now >= d:
                 back_to_get_percentage_buttons = [

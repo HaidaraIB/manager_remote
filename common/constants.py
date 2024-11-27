@@ -23,6 +23,11 @@ CRYPTO_LIST = [
     PERFECT_MONEY,
 ]
 
+BANKS = [
+    BEMO,
+    BARAKAH,
+]
+
 PAYMENT_METHODS_LIST = [
     USDT,
     BEMO,

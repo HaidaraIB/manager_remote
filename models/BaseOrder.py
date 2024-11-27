@@ -95,15 +95,24 @@ class BaseOrder(Base):
     ):
         if limit:
             res = s.execute(select(cls).where(cls.user_id == user_id).limit(limit))
-
+            
+        elif states:
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.user_id == user_id,
+                        cls.state.in_(states),
+                    ),
+                )
+                .order_by(desc(cls.order_date))
+            )
         elif user_id:
             res = s.execute(select(cls).where(cls.user_id == user_id))
 
         elif method:
             if today is not None:
-                today = datetime.datetime.now(
-                    tz=TIMEZONE
-                ).strftime("%Y-%m-%d")
+                today = datetime.datetime.now(tz=TIMEZONE).strftime("%Y-%m-%d")
                 res = s.execute(
                     select(cls).where(
                         and_(
@@ -132,17 +141,6 @@ class BaseOrder(Base):
                     )
                 )
                 .order_by(cls.order_date)
-            )
-        elif states:
-            res = s.execute(
-                select(cls)
-                .where(
-                    and_(
-                        cls.user_id == user_id,
-                        cls.state.in_(states),
-                    ),
-                )
-                .order_by(desc(cls.order_date))
             )
         elif rang:
             res = s.execute(select(cls).where(cls.serial.in_(rang)))
@@ -466,9 +464,7 @@ class BaseOrder(Base):
     @classmethod
     @connect_and_close
     def calc_daily_stats(cls, s: Session = None):
-        today = datetime.datetime.now(TIMEZONE).strftime(
-            "%Y-%m-%d"
-        )
+        today = datetime.datetime.now(TIMEZONE).strftime("%Y-%m-%d")
         res = s.execute(
             select(cls.method, func.sum(cls.amount))
             .where(

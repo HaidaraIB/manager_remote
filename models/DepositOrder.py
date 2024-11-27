@@ -34,9 +34,7 @@ class DepositOrder(Order):
         else:
             res = s.execute(
                 select(cls)
-                .where(
-                    and_(cls.working_on_it == 0, cls.state == "sent")
-                )
+                .where(and_(cls.working_on_it == 0, cls.state == "sent"))
                 .limit(1)
             )
         try:
