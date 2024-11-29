@@ -155,13 +155,16 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 workplace_id = models.TrustedAgent.get_workers(
                     gov=order.gov, user_id=order.agent_id
                 ).team_cash_workplace_id
+            ref_info = models.RefNumber.get_ref_number(
+                number=order.ref_number, method=order.method
+            )
             order_text = stringify_deposit_order(
                 amount=total_amount,
                 serial=order.serial,
                 method=order.method,
                 account_number=order.acc_number,
                 wal=order.deposit_wallet,
-                ref_num=order.ref_number,
+                ref_num=ref_info.number,
                 workplace_id=workplace_id,
                 offer=gift,
                 bank=(
@@ -169,6 +172,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     if order.method
                     else None
                 ),
+                last_name=ref_info.last_name,
             )
 
             if order.ref_number:

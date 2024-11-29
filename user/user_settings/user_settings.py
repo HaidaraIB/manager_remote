@@ -314,7 +314,7 @@ user_settings_handler = ConversationHandler(
         ],
         NEW_BANK_ACCOUNT_FULL_NAME: [
             MessageHandler(
-                filters=filters.TEXT & ~filters.COMMAND,
+                filters=filters.Regex(r"[\u0621-\u064A]+ [\u0621-\u064A]+"),
                 callback=get_new_bank_account_full_name,
             )
         ],

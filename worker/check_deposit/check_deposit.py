@@ -147,6 +147,7 @@ async def send_order_to_process(
             if d_order.method
             else None
         ),
+        last_name=ref_info.last_name,
     )
 
     message = await context.bot.send_message(

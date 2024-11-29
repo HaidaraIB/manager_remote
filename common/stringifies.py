@@ -15,6 +15,7 @@ state_dict_en_to_ar = {
     "deleted": "محذوف",
     "canceled": "ملغى",
     "split": "مرتجع",
+    "ignored": "تم التجاهل",
 }
 
 worker_type_dict = {
@@ -154,6 +155,7 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"تاريخ الرفض: <b>{'\n' + format_datetime(order.decline_date + timedelta(hours=3)) if order.decline_date else 'لا يوجد'}</b>\n\n"
         f"تاريخ الإعادة: <b>{'\n' + format_datetime(order.return_date + timedelta(hours=3)) if order.return_date else 'لا يوجد'}</b>\n\n"
         f"تاريخ الرفض: <b>{'\n' + format_datetime(order.delete_date + timedelta(hours=3)) if order.delete_date else 'لا يوجد'}</b>\n\n"
+        f"تاريخ التجاهل: <b>{'\n' + format_datetime(order.ignore_date + timedelta(hours=3)) if hasattr(order, "ignore_date") else 'لا يوجد'}</b>\n\n"
     )
 
 
@@ -215,6 +217,7 @@ def stringify_deposit_order(
     workplace_id: int = None,
     offer: float = 0,
     bank: models.BankAccount = None,
+    last_name: str = "",
     *args,
 ):
     deposit_order_text = (
@@ -227,7 +230,8 @@ def stringify_deposit_order(
         + (
             (
                 f"رقم حساب {bank.bank}: <code>{bank.bank_account_number}</code>\n"
-                f"الاسم: <b>{bank.full_name}</b>\n"
+                f"اسم صاحب حساب {bank.bank}: <b>{bank.full_name}</b>\n"
+                + (f"الكنية: <b>{last_name}</b>\n" if last_name else "")
             )
             if bank
             else ""
@@ -237,6 +241,10 @@ def stringify_deposit_order(
     )
     if workplace_id:
         deposit_order_text += f"Workplace id: <code>{workplace_id}</code>\n\n"
+    if last_name:
+        deposit_order_text += (
+            "ملاحظة: يجب تطابق الاسم الأخير لصاحب الحساب البنكي مع الكنية.\n\n"
+        )
     return (
         deposit_order_text
         + "تنبيه: اضغط على رقم الحساب والمبلغ لنسخها كما هي في الرسالة تفادياً للخطأ."

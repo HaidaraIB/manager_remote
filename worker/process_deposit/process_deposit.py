@@ -32,21 +32,32 @@ async def user_deposit_verified(update: Update, context: ContextTypes.DEFAULT_TY
 
         order = DepositOrder.get_one_order(serial=serial)
         if order.state == "deleted":
-            button = InlineKeyboardButton(
-                text="طلب محذوف ⁉️",
-                callback_data="!?!?!?!?!?!?!?!?!?!?!?",
-            )
+            col = [
+                InlineKeyboardButton(
+                    text="طلب محذوف ⁉️",
+                    callback_data="!?!?!?!?!?!?!?!?!?!?!?",
+                )
+            ]
             text = "لقد قامت الإدارة بحذف هذا الطلب ⁉️"
         else:
-            button = InlineKeyboardButton(
-                text="إعادة الطلب📥",
-                callback_data=f"return_deposit_order_{serial}",
-            )
+            col = [
+                InlineKeyboardButton(
+                    text="إعادة الطلب 📥",
+                    callback_data=f"return_deposit_order_{serial}",
+                ),
+            ]
+            if order.method in BANKS:
+                col.append(
+                    InlineKeyboardButton(
+                        text="تجاهل الطلب 📪",
+                        callback_data=f"ignore_deposit_order_{serial}",
+                    )
+                )
             text = "قم بالرد على هذه الرسالة بصورة لإشعار الشحن، في حال وجود مشكلة يمكنك إعادة الطلب مرفقاً برسالة."
 
         await update.callback_query.answer(text=text, show_alert=True)
         await update.callback_query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup.from_button(button)
+            reply_markup=InlineKeyboardMarkup.from_column(col)
         )
 
 
@@ -297,6 +308,62 @@ async def return_deposit_order_reason(
         await DepositOrder.return_order_to_user(serial=serial)
 
 
+async def ignore_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type in [
+        Chat.PRIVATE,
+    ]:
+        serial = int(update.callback_query.data.split("_")[-1])
+        d_order = DepositOrder.get_one_order(serial=serial)
+
+        message = await send_message_to_user(
+            update=update,
+            context=context,
+            user_id=d_order.user_id,
+            msg=f"تم تجاهل طلب الإيداع رقم <code>{serial}</code> لعدم تطابق معلومات الدفع.",
+        )
+
+        if not message:
+            res_flag = "لقد قام هذا المستخدم بحظر البوت"
+        else:
+            res_flag = "تم تجاهل الطلب 📪"
+            await DepositOrder.add_message_ids(
+                serial=serial,
+                returned_message_id=message.id,
+            )
+
+        order_user_info_line = await create_order_user_info_line(
+            user_id=d_order.user_id, context=context
+        )
+        ar_text = (
+            update.effective_message.text_html
+            if update.effective_message.text_html
+            else update.effective_message.caption
+        ) + order_user_info_line
+
+        if update.effective_message.photo:
+            await context.bot.send_photo(
+                chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
+                photo=update.message.reply_to_message.photo[-1],
+                caption=res_flag + "\n" + ar_text,
+            )
+        else:
+            await context.bot.send_message(
+                chat_id=int(os.getenv("ARCHIVE_CHANNEL")),
+                text=res_flag + "\n" + ar_text,
+            )
+
+        await update.callback_query.edit_message_reply_markup(
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    text=res_flag,
+                    callback_data="📪📪📪📪📪📪📪",
+                )
+            ),
+        )
+
+        await d_order.ignore_order(serial=serial)
+
+
 async def back_from_return_deposit_order(update: Update, _: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type in [
         Chat.PRIVATE,
@@ -326,6 +393,11 @@ user_deposit_verified_handler = CallbackQueryHandler(
 reply_with_payment_proof_handler = MessageHandler(
     filters=filters.REPLY & filters.PHOTO & Deposit() & Approved(),
     callback=reply_with_payment_proof,
+)
+
+ignore_deposit_order_handler = CallbackQueryHandler(
+    ignore_deposit_order,
+    "^ignore_deposit_order",
 )
 
 

@@ -9,11 +9,7 @@ from sqlalchemy import (
     and_,
 )
 from sqlalchemy.orm import Session
-from models.DB import (
-    Base,
-    lock_and_release,
-    connect_and_close,
-)
+from models.DB import Base, lock_and_release, connect_and_close
 
 
 class RefNumber(Base):
@@ -22,6 +18,7 @@ class RefNumber(Base):
     number = Column(String)
     amount = Column(Float)
     method = Column(String)
+    last_name = Column(String, default="", server_default="")
     __table_args__ = (
         PrimaryKeyConstraint("number", "method", name="_number_method_uc"),
     )
@@ -29,13 +26,14 @@ class RefNumber(Base):
     @staticmethod
     @lock_and_release
     async def add_ref_number(
-        number: str, amount: float, method: str, s: Session = None
+        number: str, amount: float, method: str, last_name: str, s: Session = None
     ):
         s.execute(
             insert(RefNumber).values(
                 number=number,
                 method=method,
                 amount=amount,
+                last_name=last_name,
             )
         )
 

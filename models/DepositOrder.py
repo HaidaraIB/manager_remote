@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, select, insert, and_
+from sqlalchemy import Column, String, Integer, TIMESTAMP, select, insert, and_
 from models.Order import Order
 from models.DB import connect_and_close, lock_and_release
 from models.DepositAgent import DepositAgent
@@ -15,6 +15,8 @@ class DepositOrder(Order):
     agent_id = Column(Integer, default=0)
     gov = Column(String, default="")
     from_withdraw_serial = Column(Integer, default=0)
+
+    ignore_date = Column(TIMESTAMP)
 
     @classmethod
     @connect_and_close
@@ -136,5 +138,16 @@ class DepositOrder(Order):
         s.query(User).filter_by(id=user_id).update(
             {
                 User.deposit_balance: User.deposit_balance - amount,
+            }
+        )
+
+    @classmethod
+    @lock_and_release
+    async def ignore_order(cls, serial: int, s: Session = None):
+        s.query(cls).filter_by(serial=serial).update(
+            {
+                cls.state: "ignored",
+                cls.ignore_date: datetime.datetime.now(),
+                cls.working_on_it: 0,
             }
         )

@@ -3,5 +3,6 @@ from worker.process_deposit.process_deposit import (
     user_deposit_verified_handler,
     reply_with_payment_proof_handler,
     back_from_return_deposit_order_handler,
-    return_deposit_order_reason_handler
+    return_deposit_order_reason_handler,
+    ignore_deposit_order_handler,
 )

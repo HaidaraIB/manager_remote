@@ -159,6 +159,13 @@ async def choose_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 show_alert=True,
             )
             return
+        elif order.state == "ignored":
+            await update.callback_query.answer(
+                text="لقد تم تجاهل هذا الطلب ❗️",
+                show_alert=True,
+            )
+            return
+
         else:
             keyboard = back_buttons
             text = order_text + "<b>أرسل سبب هذه الشكوى</b>"

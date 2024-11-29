@@ -4,6 +4,7 @@ from custom_filters import Ref
 from models import RefNumber, DepositOrder, PaymentMethod, Wallet
 from worker.check_deposit.check_deposit import send_order_to_process, check_deposit_lock
 from common.common import ensure_positive_amount, format_amount
+from common.constants import BANKS
 
 
 async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -23,6 +24,10 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         number = ref_number_info[0].split(": ")[1]
         method = ref_number_info[1]
+        if method in BANKS:
+            last_name = ref_number_info[3].split(": ")[1]
+        else:
+            last_name = ""
 
         ref_present = RefNumber.get_ref_number(
             number=number,
@@ -34,9 +39,7 @@ async def store_ref_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         await RefNumber.add_ref_number(
-            number=number,
-            method=method,
-            amount=amount,
+            number=number, method=method, amount=amount, last_name=last_name
         )
         ref = RefNumber.get_ref_number(
             number=number,
@@ -80,6 +83,14 @@ def create_invalid_foramt_string():
     methods = PaymentMethod.get_payment_methods()
     res = "تنسيق خاطئ الرجاء نسخ أحد القوالب التالية لتفادي الخطأ:\n\n"
     for method in methods:
+        if method.name in BANKS:
+            res += (
+                "<code>رقم العملية: \n"
+                f"{method.name}\n"
+                "المبلغ: \n"
+                "الكنية: </code>\n\n\n"
+            )
+            continue
         res += "<code>رقم العملية: \n" f"{method.name}\n" "المبلغ: </code>\n\n"
     res += "مثال:\n" "رقم العملية: 1\n" "USDT\n" "المبلغ: 100"
 

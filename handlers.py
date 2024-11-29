@@ -148,6 +148,8 @@ def main():
     app.add_handler(reply_with_payment_proof_handler)
     app.add_handler(user_deposit_verified_handler)
 
+    app.add_handler(ignore_deposit_order_handler)
+
     app.add_handler(return_deposit_order_handler)
     app.add_handler(return_deposit_order_reason_handler)
     app.add_handler(back_from_return_deposit_order_handler)
