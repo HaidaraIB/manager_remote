@@ -3,7 +3,11 @@ from telegram.ext import ContextTypes, ConversationHandler
 from custom_filters import Admin
 from common.common import parent_to_child_models_mapper
 from common.back_to_home_page import back_to_admin_home_page_button
-from common.stringifies import general_stringify_order, order_settings_dict, state_dict_en_to_ar
+from common.stringifies import (
+    general_stringify_order,
+    order_settings_dict,
+    state_dict_en_to_ar,
+)
 
 
 def build_order_types_keyboard():
@@ -68,10 +72,10 @@ def build_actions_keyboard(order_type: str, serial: int):
     if order.state == "pending":
         actions_keyboard.append([])
 
-    elif order.state in ["checking", "processing"]:
+    elif order.state in ["checking", "processing", "ignored"]:
         if order.state == "checking":
             actions_keyboard.append([])
-        if order.working_on_it:
+        if order.working_on_it or order.state == "ignored":
             actions_keyboard.append([unset_working_on_it_button])
 
     elif order.state in ["declined", "sent", "approved"]:
@@ -99,10 +103,7 @@ def build_order_settings_keyboard():
                 text="استعلام عن طلب",
                 callback_data="lookup_order",
             ),
-            InlineKeyboardButton(
-                text="عدد الطلبات",
-                callback_data="count_orders"
-            )
+            InlineKeyboardButton(text="عدد الطلبات", callback_data="count_orders"),
         ]
     ]
     return keyboard

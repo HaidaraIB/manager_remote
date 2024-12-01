@@ -19,7 +19,7 @@ async def unset_working_on_it(update: Update, context: ContextTypes.DEFAULT_TYPE
         if order.state == "checking" and order_type in ["withdraw", "busdt"]:
             msg_id = order.checking_message_id
             state = "pending"
-        elif order.state == "processing":
+        elif order.state in ["processing", "ignored"]:
             msg_id = order.processing_message_id
             state = "sent"
         await parent_to_child_models_mapper[order_type].unset_working_on_it(
