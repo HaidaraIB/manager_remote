@@ -14,7 +14,7 @@ class Ref(UpdateFilter):
                     bool(re.search(r"^رقم العملية: [0-9]+$", ref_info[0]))
                     and payment_method_pattern(ref_info[1])
                     and bool(re.search(r"^المبلغ: \d+\.?\d*$", ref_info[2]))
-                    and bool(re.search(r"^الكنية: [\u0621-\u064A]+$", ref_info[3]))
+                    and bool(re.search(r"^الكنية: [\u0621-\u064AA-Za-z]+$", ref_info[3]))
                 )
             return (
                 bool(re.search(r"^رقم العملية: [0-9]+$", ref_info[0]))
