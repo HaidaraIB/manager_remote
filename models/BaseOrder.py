@@ -95,7 +95,20 @@ class BaseOrder(Base):
     ):
         if limit:
             res = s.execute(select(cls).where(cls.user_id == user_id).limit(limit))
-            
+        elif lucky_hour_offer:
+            res = s.execute(
+                select(cls)
+                .where(
+                    and_(
+                        cls.state.in_(states),
+                        cls.acc_number != "",
+                        cls.agent_id == 0,
+                        cls.method.in_(PAYMENT_METHODS_LIST),
+                        cls.order_date >= func.datetime("now", "-2 hour"),
+                    )
+                )
+                .order_by(cls.order_date)
+            )
         elif states:
             res = s.execute(
                 select(cls)
@@ -128,20 +141,6 @@ class BaseOrder(Base):
                         cls.method == method,
                     )
                 )
-        elif lucky_hour_offer:
-            res = s.execute(
-                select(cls)
-                .where(
-                    and_(
-                        cls.state.in_(states),
-                        cls.acc_number != "",
-                        cls.agent_id == 0,
-                        cls.method.in_(PAYMENT_METHODS_LIST),
-                        cls.order_date >= func.datetime("now", "-2 hour"),
-                    )
-                )
-                .order_by(cls.order_date)
-            )
         elif rang:
             res = s.execute(select(cls).where(cls.serial.in_(rang)))
 

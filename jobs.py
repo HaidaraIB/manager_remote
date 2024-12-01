@@ -215,11 +215,13 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
     min_withdraws = find_min_hourly_sum(withdraw_orders)
     min_deposits = find_min_hourly_sum(deposit_orders)
 
-    if min_withdraws["min_sum"] == 0 and min_deposits["min_sum"] == 0:
+    if min_withdraws["min_sum"] == float("inf") and min_deposits["min_sum"] == float(
+        "inf"
+    ):
         return
-    elif min_withdraws["min_sum"] == 0:
+    elif min_withdraws["min_sum"] == float("inf"):
         min_sum = min_deposits["min_sum"]
-    elif min_deposits["min_sum"] == 0:
+    elif min_deposits["min_sum"] == float("inf"):
         min_sum = min_withdraws["min_sum"]
     else:
         min_sum = min(min_withdraws["min_sum"], min_deposits["min_sum"])
