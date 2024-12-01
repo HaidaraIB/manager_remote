@@ -251,7 +251,11 @@ async def process_orders_for_lucky_hour_offer(context: ContextTypes.DEFAULT_TYPE
         f"حتى ال: <b>{end_time}</b>\n\n"
         "الرابحون:\n\n"
     )
+    gifted_users = []
     for order in min_orders["orders"]:
+        if order.user_id in gifted_users:
+            continue
+        gifted_users.append(order.user_id)
         order: models.DepositOrder | models.WithdrawOrder = order
         amount = order.amount * percentage / 100
         try:

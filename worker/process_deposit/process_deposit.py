@@ -319,7 +319,7 @@ async def ignore_deposit_order(update: Update, context: ContextTypes.DEFAULT_TYP
             update=update,
             context=context,
             user_id=d_order.user_id,
-            msg=f"تم تجاهل طلب الإيداع رقم <code>{serial}</code> لعدم تطابق معلومات الدفع.",
+            msg=f"تم تجاهل طلب الإيداع رقم <code>{serial}</code> لعدم تطابق معلومات الدفع، قم بكتابة رسالة في الغروب العام ليقوم الآدمن بالتواصل معك.",
         )
 
         if not message:
