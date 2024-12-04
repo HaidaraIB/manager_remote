@@ -155,7 +155,7 @@ def general_stringify_order(serial: int, order_type: str, name: str):
         f"تاريخ الرفض: <b>{'\n' + format_datetime(order.decline_date + timedelta(hours=3)) if order.decline_date else 'لا يوجد'}</b>\n\n"
         f"تاريخ الإعادة: <b>{'\n' + format_datetime(order.return_date + timedelta(hours=3)) if order.return_date else 'لا يوجد'}</b>\n\n"
         f"تاريخ الرفض: <b>{'\n' + format_datetime(order.delete_date + timedelta(hours=3)) if order.delete_date else 'لا يوجد'}</b>\n\n"
-        f"تاريخ التجاهل: <b>{'\n' + format_datetime(order.ignore_date + timedelta(hours=3)) if hasattr(order, "ignore_date") else 'لا يوجد'}</b>\n\n"
+        f"تاريخ التجاهل: <b>{'\n' + format_datetime(order.ignore_date + timedelta(hours=3)) if getattr(order, "ignore_date", None) else 'لا يوجد'}</b>\n\n"
     )
 
 
