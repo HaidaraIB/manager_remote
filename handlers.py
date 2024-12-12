@@ -377,31 +377,31 @@ def main():
         },
     )
 
-    app.job_queue.run_daily(
-        callback=schedule_ghafla_offer_jobs,
-        time=datetime.time(0, 0, tzinfo=TIMEZONE),
-        days=(1, 3, 4, 6),  # monday, wednesday, thursday, saturday
-        name="schedule_ghafla_offer_jobs",
-        job_kwargs={
-            "id": "schedule_ghafla_offer_jobs",
-            "misfire_grace_time": None,
-            "coalesce": True,
-            "replace_existing": True,
-        },
-    )
+    # app.job_queue.run_daily(
+    #     callback=schedule_ghafla_offer_jobs,
+    #     time=datetime.time(0, 0, tzinfo=TIMEZONE),
+    #     days=(1, 3, 4, 6),  # monday, wednesday, thursday, saturday
+    #     name="schedule_ghafla_offer_jobs",
+    #     job_kwargs={
+    #         "id": "schedule_ghafla_offer_jobs",
+    #         "misfire_grace_time": None,
+    #         "coalesce": True,
+    #         "replace_existing": True,
+    #     },
+    # )
 
-    app.job_queue.run_daily(
-        callback=schedule_lucky_hour_jobs,
-        time=datetime.time(0, 0, tzinfo=TIMEZONE),
-        days=(0, 2, 4, 5),  # sunday, tuesday, thursday, friday
-        name="schedule_lucky_hour_jobs",
-        job_kwargs={
-            "id": "schedule_lucky_hour_jobs",
-            "misfire_grace_time": None,
-            "coalesce": True,
-            "replace_existing": True,
-        },
-    )
+    # app.job_queue.run_daily(
+    #     callback=schedule_lucky_hour_jobs,
+    #     time=datetime.time(0, 0, tzinfo=TIMEZONE),
+    #     days=(0, 2, 4, 5),  # sunday, tuesday, thursday, friday
+    #     name="schedule_lucky_hour_jobs",
+    #     job_kwargs={
+    #         "id": "schedule_lucky_hour_jobs",
+    #         "misfire_grace_time": None,
+    #         "coalesce": True,
+    #         "replace_existing": True,
+    #     },
+    # )
     app.job_queue.run_daily(
         callback=send_daily_stats,
         time=datetime.time(23, 59, tzinfo=TIMEZONE),
