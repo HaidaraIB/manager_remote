@@ -63,7 +63,7 @@ async def position_for_worker_balance(
         keyboard.append(back_to_admin_home_page_button[0])
         await update.callback_query.edit_message_text(
             text="اختر الموظف",
-            reply_markup=InlineKeyboardMarkup(),
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return CHOOSE_WORKER
 
