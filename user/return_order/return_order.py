@@ -200,14 +200,17 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             serial=serial,
             processing_message_id=message.id,
         )
-        await context.bot.edit_message_reply_markup(
-            chat_id=update.effective_chat.id,
-            message_id=context.user_data["effective_return_message_id"],
-        )
-        await update.message.reply_text(
-            text="شكراً لك، تمت إعادة طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
-            reply_markup=build_user_keyboard(),
-        )
+        try:
+            await context.bot.edit_message_reply_markup(
+                chat_id=update.effective_chat.id,
+                message_id=context.user_data["effective_return_message_id"],
+            )
+            await update.message.reply_text(
+                text="شكراً لك، تمت إعادة طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.",
+                reply_markup=build_user_keyboard(),
+            )
+        except:
+            pass
         return ConversationHandler.END
 
 
