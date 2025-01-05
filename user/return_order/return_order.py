@@ -164,7 +164,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 method=order.method,
                 account_number=order.acc_number,
                 wal=order.deposit_wallet,
-                ref_num=ref_info.number,
+                ref_num=getattr(ref_info, "number", "لا يوجد"),
                 workplace_id=workplace_id,
                 offer=gift,
                 bank=(
@@ -172,7 +172,7 @@ async def send_attachments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     if order.method
                     else None
                 ),
-                last_name=ref_info.last_name,
+                last_name=getattr(ref_info, "last_name", "لا يوجد"),
             )
 
             if order.ref_number:
