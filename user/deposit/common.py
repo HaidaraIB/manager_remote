@@ -38,7 +38,12 @@ SEND_MONEY_TEXT = (
     "And send a screenshot or a pdf in order to confirm it."
 )
 
-ACCOUNT_DEPOSIT, DEPOSIT_METHOD, SCREENSHOT, DEPOSIT_AMOUNT = range(4)
+(
+    ACCOUNT_DEPOSIT,
+    DEPOSIT_METHOD,
+    SCREENSHOT,
+    DEPOSIT_AMOUNT,
+) = range(4)
 
 
 @check_user_pending_orders_decorator

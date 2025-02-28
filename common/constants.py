@@ -34,36 +34,6 @@ PAYMENT_METHODS_LIST = [
     EMONEY,
 ]
 
-TEAM_CASH_TEXT = (
-    "انسخ القالب أدناه واملأ معلومات TeamCash كما هو موضح في المثال أدناه:\n\n"
-    "<code>User ID: \n"
-    "Password: \n"
-    "Workplace ID: </code>\n\n"
-    "المثال:\n\n"
-    "<code>User ID: Someone\n"
-    "Password: 12345abcd\n"
-    "Workplace ID: 123456</code>\n\n"
-)
-
-AFFILIATE_TEXT = (
-    "جيد، الآن معلومات Affiliate أيضاً بنسخ القالب أدناه:\n\n"
-    "<code>Username: \n"
-    "Password: </code>\n\n"
-    "مثال:\n\n"
-    "<code>Username: SomeUsername\n"
-    "Password: 12345abcd</code>\n\n"
-)
-
-
-AGENT_COMMAND_TEXT = (
-    "سيظهر زر يؤدي إلى حسابك الشخصي بين قائمة الوكلاء الموصى بهم في محافظتك بعد أن تقوم بتسجيل الدخول بالمعلومات المرسلة\n\n"
-    "اضغط على الزر أدناه للتسجيل ⬇️⬇️⬇️\n\n"
-    "<b>ملاحظة: يمكنك الوصول إلى الزر في حال فقدانه بالضغط على الأمر /agent</b>"
-)
-
-LOGIN_GUIDE_TEXT = (
-    "يوضح الفيديو المرفق خطوات تسجيل الدخول ⬆️⬆️⬆️\n\n" "أرسل الرقم التسلسلي للطلب"
-)
 
 CHOOSE_OPERATIONS_TEXT = (
     "يمكنك اختيار الرقم التسلسلي للعملية التي تريد الشكوى عنها من الأسفل ⬇️\n\n"
@@ -94,10 +64,7 @@ THANK_YOU_TEXT = (
     "شكراً لك، تم إرسال طلبك إلى قسم المراجعة، سيصلك رد خلال وقت قصير.\n\n"
     "Thank you, your order is being checked, you'll receive a message from us when it's done."
 )
-SEND_AEBAN_NUMBER_TEXT = (
-    "أرسل رقم الآيبان.\n\n"
-    "Send the AEBAN number.\n\n"
-)
+SEND_AEBAN_NUMBER_TEXT = "أرسل رقم الآيبان.\n\n" "Send the AEBAN number.\n\n"
 SEND_BANK_ACCOUNT_NAME_TEXT = (
     "أرسل اسم صاحب الحساب كما هو مسجل بالبنك.\n\n"
     "Send this name of the owner of this bank account.\n\n"
