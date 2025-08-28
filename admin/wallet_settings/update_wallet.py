@@ -28,6 +28,7 @@ from admin.wallet_settings.common import (
     back_to_choose_wallet_settings_option_handler,
 )
 from start import admin_command, worker_command
+import re
 
 UPDATE_OPTION, NEW_VALUE = range(2, 4)
 
@@ -88,7 +89,7 @@ async def choose_update_wallet_option(
         else:
             update_option = context.user_data["update_wallet_option"]
         wal = Wallet.get_wallets(
-            method=context.user_data["wallet_setting_method"] ,
+            method=context.user_data["wallet_setting_method"],
             number=context.user_data["update_wallet_number"],
         )
         cur_val = getattr(wal, update_option)
@@ -110,6 +111,11 @@ async def get_new_value(update: Update, context: ContextTypes.DEFAULT_TYPE):
         Admin().filter(update) or DepositAgent().filter(update)
     ):
         new_val = update.message.text
+        if context.user_data["update_wallet_option"] == "number" and not re.match(
+            r"^P?[0-9]+$", new_val
+        ):
+            await update.message.reply_text(text="رقم محفظة خاطئ ❗️")
+            return
         await Wallet.update_wallets(
             method=context.user_data["wallet_setting_method"],
             number=context.user_data["update_wallet_number"],

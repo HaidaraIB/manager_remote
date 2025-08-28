@@ -188,12 +188,13 @@ add_wallet_handler = ConversationHandler(
         ],
         WALLET_TYPE: [
             CallbackQueryHandler(
-                choose_wallet_type, "^((regular)|(commercial))_wallet$"
+                choose_wallet_type,
+                "^((regular)|(commercial))_wallet$",
             )
         ],
         NUMBER: [
             MessageHandler(
-                filters=filters.TEXT & ~filters.COMMAND,
+                filters=filters.Regex(r"^P?[0-9]+$"),
                 callback=get_number,
             )
         ],
